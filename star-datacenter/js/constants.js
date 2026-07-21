@@ -1559,6 +1559,57 @@ function toScaledUrl(u, maxPx){
     return 'https://images.weserv.nl/?url='+encoded+'&w='+w+'&we=1&output=webp&q=80';
   }catch(e){ return s; }
 }
+// ══════════════════════════════════════════════════════════
+// 공용: 썸네일에 마우스를 올리면 두번째 프로필 이미지가 미리보기(스크럽)로 표시되는 기능
+// 스트리머탭 / 현황판 / 티어 순위표 / 각종 상세·공유 팝업 등 어디서든 재사용
+// - PC(마우스 hover 가능한 포인터)에서만 동작, 터치 기기에서는 동작 안 함
+// - 썸네일 우측 절반에 마우스가 있을 때만 두번째 이미지 표시
+// 사용법: 감싸는 요소에 class="ph-swap" 지정 + _phSwap2ndHTML(secondUrl)을 그 요소 내부에 삽입
+// ══════════════════════════════════════════════════════════
+function _phSwapIsVideoUrl(u){
+  const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+  return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+}
+function _phSwap2ndHTML(secondUrl, opt){
+  const raw = String(secondUrl||'').trim();
+  if(!raw) return '';
+  const cls = 'ph-swap-2' + (opt && opt.extraClass ? (' '+opt.extraClass) : '');
+  const fitStyle = (opt && opt.style) ? opt.style : '';
+  if(_phSwapIsVideoUrl(raw)){
+    const src = toHttpsUrl(raw);
+    return `<video class="${cls}" src="${src}" muted playsinline loop preload="metadata" style="${fitStyle}"></video>`;
+  }
+  const isGif = /\.gif(\?|$)/i.test(raw);
+  // gif는 toScaledUrl(webp변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+  const src = isGif ? toHttpsUrl(raw) : toScaledUrl(raw, (opt && opt.px) || 320);
+  const orig = toHttpsUrl(raw);
+  return `<img class="${cls}" src="${src}" data-orig="${orig}" loading="lazy" decoding="async" alt="" style="${fitStyle}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`;
+}
+(function(){
+  if(window._phSwapDelegatedInit) return; // 중복 등록 방지
+  window._phSwapDelegatedInit = true;
+  const _isPcHover = () => !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  document.addEventListener('mousemove', function(e){
+    if(!_isPcHover()) return;
+    const wrap = e.target && e.target.closest ? e.target.closest('.ph-swap') : null;
+    if(!wrap) return;
+    const sec = wrap.querySelector('.ph-swap-2');
+    if(!sec) return;
+    const rect = wrap.getBoundingClientRect();
+    if(!rect.width) return;
+    const x = e.clientX - rect.left;
+    if(x > rect.width / 2) sec.classList.add('is-visible');
+    else sec.classList.remove('is-visible');
+  }, {passive:true});
+  document.addEventListener('mouseout', function(e){
+    const wrap = e.target && e.target.closest ? e.target.closest('.ph-swap') : null;
+    if(!wrap) return;
+    if(e.relatedTarget && wrap.contains(e.relatedTarget)) return;
+    const sec = wrap.querySelector('.ph-swap-2');
+    if(sec) sec.classList.remove('is-visible');
+  }, {passive:true});
+})();
+
 // 썸네일 프록시 실패 시 원본으로 폴백 → 그래도 실패하면 숨김. onerror 핸들러에서 공용으로 호출.
 function _thumbFallback(el){
   try{

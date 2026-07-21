@@ -1,0 +1,661 @@
+/* LAZY-LOADED — index.html에서 직접 로드되지 않음. 룰렛탭('teammatch') 진입 시 동적으로 로드됨. */
+// ─── 🧩 소속 매칭 게임 (같은 소속끼리 사각형으로 묶어서 제거) ──────────────────────
+// 규칙: 드래그로 사각형을 그려서 그 안의 선수가 전부 같은 소속(대학/팀)이면 제거.
+//       다른 소속이 하나라도 섞여있으면 무효. 제거된 자리는 위에서 새 선수가 떨어져 채움.
+
+(function _tmInjectCSS() {
+  if (document.getElementById('tm-style')) return;
+  const s = document.createElement('style');
+  s.id = 'tm-style';
+  s.textContent = [
+    '#tm-root{font-family:inherit;width:100%}',
+    '.tm-shell{display:flex;flex-direction:column;gap:14px}',
+    '.tm-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);border-radius:26px;box-shadow:0 20px 44px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.9);padding:22px 22px 20px;overflow:hidden}',
+    '.tm-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#fb7185,#f43f5e,#ec4899,#f43f5e,#fb7185)}',
+    '.tm-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}',
+    '.tm-head-left{display:flex;align-items:flex-start;gap:12px;min-width:0}',
+    '.tm-icon-badge{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;background:linear-gradient(135deg,#fb7185,#ec4899);box-shadow:0 8px 16px rgba(236,72,153,.32)}',
+    '.tm-title-group{min-width:0}',
+    '.tm-title{font-size:17px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
+    '.tm-desc{margin-top:4px;font-size:var(--fs-sm);line-height:1.6;color:var(--text3);max-width:440px}',
+    '.tm-btn{padding:11px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:var(--fs-base);font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.tm-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb;transform:translateY(-1px)}',
+    '.tm-btn.tm-btn-primary{background:linear-gradient(135deg,#fb7185,#f43f5e 52%,#ec4899);color:#fff;border:none;box-shadow:0 7px 0 #9f1239,0 16px 26px rgba(244,63,94,.24)}',
+    '.tm-btn.tm-btn-primary:hover{color:#fff;transform:translateY(-2px)}',
+    '.tm-btn.tm-btn-primary:active{transform:translateY(1px);box-shadow:0 3px 0 #9f1239,0 8px 14px rgba(244,63,94,.24)}',
+    '.tm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}',
+    '.tm-stat{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:var(--r2);background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);box-shadow:0 8px 16px rgba(15,23,42,.05);min-width:0}',
+    '.tm-stat-icon{flex:none;width:30px;height:30px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);background:#f1f5f9}',
+    '.tm-stat-meta{display:flex;flex-direction:column;min-width:0;line-height:1.25}',
+    '.tm-stat-val{font-size:var(--fs-md);font-weight:950;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.tm-stat-label{font-size:10.5px;font-weight:800;color:var(--text3)}',
+    '.tm-stat.is-combo .tm-stat-icon{background:linear-gradient(135deg,#fef3c7,#fde68a)}',
+    '.tm-stat.is-combo .tm-stat-val{color:#92400e}',
+    '.tm-stat.is-best .tm-stat-icon{background:linear-gradient(135deg,#fde68a,#fbbf24)}',
+    '.tm-stat.is-best .tm-stat-val{color:#92400e}',
+    '.tm-stat.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;animation:tmPulse 1s ease-in-out infinite}',
+    '.tm-stat.is-time-low .tm-stat-icon{background:#fecaca}',
+    '.tm-stat.is-time-low .tm-stat-val{color:#b91c1c}',
+    '@keyframes tmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}',
+    '.tm-section-label{margin-top:16px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);letter-spacing:.02em}',
+    '.tm-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}',
+    '.tm-diff-pill{padding:8px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:var(--fs-sm);font-weight:800;cursor:pointer;font-family:inherit;transition:.14s;white-space:nowrap}',
+    '.tm-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb;transform:translateY(-1px)}',
+    '.tm-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.3)}',
+    '.tm-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}',
+    '.tm-stage{position:relative;margin-top:16px}',
+    '.tm-grid{display:grid;grid-template-columns:repeat(var(--tm-cols,8),1fr);gap:7px;position:relative;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:18px;padding:10px;background:linear-gradient(180deg,#f8fafc,#f1f5f9);border:1px solid rgba(148,163,184,.14)}',
+    '.tm-cell{position:relative;aspect-ratio:1/1;border-radius:var(--r2);overflow:hidden;background:var(--tm-cell-color,#f1f5f9);box-shadow:0 2px 0 rgba(15,23,42,.08),0 4px 8px rgba(15,23,42,.08),inset 0 0 0 2.5px rgba(255,255,255,.9);animation:tmDropIn .28s ease both;transition:transform .12s}',
+    '.tm-cell.tm-empty{box-shadow:none;background:transparent;animation:none}',
+    '.tm-cell.tm-sel{outline:3px solid #2563eb;outline-offset:-2px;filter:brightness(1.06);transform:scale(1.06);z-index:2}',
+    '.tm-cell.tm-invalid{animation:tmShake .32s ease}',
+    '.tm-cell.tm-clear{animation:tmPopOut .26s ease forwards}',
+    '.tm-cell img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;border-radius:13.5px}',
+    '.tm-cell-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fff;pointer-events:none}',
+    '.tm-selbox{position:absolute;border:2px dashed #2563eb;background:rgba(37,99,235,.10);border-radius:var(--r);pointer-events:none;z-index:5;display:none}',
+    '.tm-result{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:1px solid rgba(251,113,133,.28);border-radius:22px;padding:22px 20px;text-align:center;margin-top:16px;animation:tmPopIn .4s cubic-bezier(.175,.885,.32,1.35)}',
+    '.tm-result-emoji{font-size:44px;display:block;margin-bottom:4px}',
+    '.tm-result-score{font-size:clamp(24px,5vw,34px);font-weight:900;color:#C0274A;margin:4px 0 4px}',
+    '.tm-result-sub{font-size:var(--fs-sm);color:var(--text3)}',
+    '.tm-empty-note{font-size:var(--fs-sm);color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-top:14px;line-height:1.6}',
+    '.tm-status{margin-top:14px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;font-size:var(--fs-sm);font-weight:800;line-height:1.5}',
+    '.tm-status::before{content:"";flex:none;width:7px;height:7px;border-radius:50%}',
+    '.tm-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.tm-status.is-info::before{background:#3b82f6}',
+    '.tm-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.tm-status.is-good::before{background:#10b981}',
+    '.tm-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
+    '.tm-status.is-bad::before{background:#ef4444}',
+    '@keyframes tmDropIn{from{opacity:0;transform:translateY(-14px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}',
+    '@keyframes tmPopOut{to{opacity:0;transform:scale(.55)}}',
+    '@keyframes tmShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}',
+    '@keyframes tmPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}',
+    'body.dark .tm-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
+    'body.dark .tm-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
+    'body.dark .tm-stat,body.dark .tm-btn,body.dark .tm-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .tm-stat-icon{background:#1e293b}',
+    'body.dark .tm-diff-pill.on{color:#fff}',
+    'body.dark .tm-title{color:#f8fafc}',
+    'body.dark .tm-desc{color:#94a3b8}',
+    'body.dark .tm-grid{background:linear-gradient(180deg,#0f172a,#0b1322);border-color:#243349}',
+    'body.dark .tm-cell{box-shadow:0 2px 0 rgba(0,0,0,.3),0 4px 8px rgba(0,0,0,.3),inset 0 0 0 2.5px rgba(15,23,42,.6)}',
+    'body.dark .tm-section-label{color:#94a3b8}',
+    '@media (max-width:520px){.tm-card{padding:16px 14px 16px}.tm-stats{grid-template-columns:repeat(2,1fr)}.tm-icon-badge{width:38px;height:38px;font-size:var(--fs-lg)}.tm-title{font-size:var(--fs-md)}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+// ─── 사운드 ────────────────────────────────────────────────────────────────────
+let _tmAC = null;
+function _tmPlayMatch(n) {
+  try {
+    if (!_tmAC) _tmAC = new (window.AudioContext || window.webkitAudioContext)();
+    // 제거된 칸 수가 많을수록 더 화려한 아르페지오
+    const notes = n >= 6 ? [523, 659, 784, 1047] : n >= 4 ? [523, 659, 784] : [659, 880];
+    notes.forEach((f, i) => {
+      setTimeout(() => {
+        const o = _tmAC.createOscillator(), g = _tmAC.createGain();
+        o.connect(g); g.connect(_tmAC.destination);
+        o.frequency.value = f; o.type = 'triangle';
+        g.gain.setValueAtTime(0.14, _tmAC.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, _tmAC.currentTime + 0.22);
+        o.start(); o.stop(_tmAC.currentTime + 0.22);
+      }, i * 70);
+    });
+  } catch (e) {}
+}
+function _tmPlayInvalid() {
+  try {
+    if (!_tmAC) _tmAC = new (window.AudioContext || window.webkitAudioContext)();
+    const o = _tmAC.createOscillator(), g = _tmAC.createGain();
+    o.connect(g); g.connect(_tmAC.destination);
+    o.frequency.value = 160; o.type = 'sawtooth';
+    g.gain.setValueAtTime(0.09, _tmAC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, _tmAC.currentTime + 0.18);
+    o.start(); o.stop(_tmAC.currentTime + 0.18);
+  } catch (e) {}
+}
+
+// ─── 상태 ────────────────────────────────────────────────────────────────────
+const _TM_TIME_LIMIT = 110; // 초 — 모든 난이도 공통 (난이도는 보드 크기/소속 수/클러스터링으로만 구분)
+// ─── 난이도 설정 ──────────────────────────────────────────────────────────────
+// maxGroups: 판에 등장하는 소속(팀) 종류 수 상한 — 많을수록 헷갈림.
+// bias: 인접 칸이 같은 소속으로 나올 확률 — 낮을수록 소속이 흩어져서 사각형 찾기가 어려워짐.
+// colBump/rowBump: 기본 그리드 크기에 더할 보정값 — 클수록 판이 커져서 스캔하기 어려워짐.
+const _TM_DIFFICULTIES = {
+  beginner: { key: 'beginner', label: '초급',   emoji: '🌱', maxGroups: 4,  bias: 0.82, colBump: -1, rowBump: -1 },
+  normal:   { key: 'normal',   label: '중급',   emoji: '⚔️', maxGroups: 6,  bias: 0.68, colBump: 0,  rowBump: 0 },
+  hard:     { key: 'hard',     label: '고수',   emoji: '🔥', maxGroups: 8,  bias: 0.55, colBump: 0,  rowBump: 1 },
+  extreme:  { key: 'extreme',  label: '초고수', emoji: '💀', maxGroups: 10, bias: 0.42, colBump: 1,  rowBump: 1 },
+  god:      { key: 'god',      label: '신',     emoji: '👑', maxGroups: 99, bias: 0.30, colBump: 1,  rowBump: 2 },
+};
+const _TM_DIFF_ORDER = ['beginner', 'normal', 'hard', 'extreme', 'god'];
+
+function _tmReadStoredDifficulty() {
+  try {
+    const v = localStorage.getItem('su_tm_diff');
+    if (v && _TM_DIFFICULTIES[v]) return v;
+  } catch (e) {}
+  return 'normal';
+}
+
+window._tmState = window._tmState || {
+  difficulty: _tmReadStoredDifficulty(),
+  cols: 0, rows: 0, board: null, teamPool: [], teamBags: {},
+  score: 0, combo: 0, bestCombo: 0, timeLeft: _TM_TIME_LIMIT, running: false, ended: false,
+  timerId: null, dragging: false, selStart: null, selCur: null, uidSeq: 1,
+  statusText: '큰 사각형보다 2x2, 2x3처럼 깔끔한 박스를 빠르게 이어서 그리면 점수가 잘 오릅니다.',
+  statusTone: 'info',
+};
+
+function _tmDiffObj() {
+  return _TM_DIFFICULTIES[window._tmState.difficulty] || _TM_DIFFICULTIES.normal;
+}
+
+function _tmSetDifficulty(key) {
+  if (!_TM_DIFFICULTIES[key]) return;
+  const st = window._tmState;
+  st.difficulty = key;
+  try { localStorage.setItem('su_tm_diff', key); } catch (e) {}
+  _tmStart();
+}
+window._tmSetDifficulty = _tmSetDifficulty;
+
+function _tmDiffBarHTML() {
+  const st = window._tmState;
+  return _TM_DIFF_ORDER.map(k => {
+    const d = _TM_DIFFICULTIES[k];
+    const on = st.difficulty === k;
+    return `<button class="tm-diff-pill${on ? ' on' : ''}" onclick="_tmSetDifficulty('${k}')">${d.emoji} ${d.label}</button>`;
+  }).join('');
+}
+
+function _tmCols() {
+  const base = (window.innerWidth || 375) >= 700 ? 8 : 5;
+  return Math.max(4, base + (_tmDiffObj().colBump || 0));
+}
+function _tmRows() {
+  const base = (window.innerWidth || 375) >= 700 ? 7 : 8;
+  return Math.max(4, base + (_tmDiffObj().rowBump || 0));
+}
+
+function _tmBestScore(diffKey) {
+  const key = diffKey || window._tmState.difficulty || 'normal';
+  try {
+    const v = localStorage.getItem('su_tm_best_' + key);
+    if (v != null) return parseInt(v, 10) || 0;
+    if (key === 'normal') return parseInt(localStorage.getItem('su_tm_best') || '0', 10) || 0; // 구버전 기록 이관
+  } catch (e) {}
+  return 0;
+}
+function _tmSaveBest(v, diffKey) {
+  const key = diffKey || window._tmState.difficulty || 'normal';
+  try { localStorage.setItem('su_tm_best_' + key, String(v)); } catch (e) {}
+}
+
+// ─── 팀(소속) 풀 구성 ─────────────────────────────────────────────────────────
+function _tmBuildTeamPool() {
+  const players = Array.isArray(window.players) ? window.players : [];
+  const univCfgArr = (typeof univCfg !== 'undefined' && Array.isArray(univCfg)) ? univCfg : [];
+  const dissolved = new Set(univCfgArr.filter(u => u && u.dissolved).map(u => u.name));
+  const pool = {};
+  const seenByUniv = {}; // [버그수정] 동일 인물이 같은 소속에 중복 등록돼 있으면 그 사람만 과도하게 자주 뽑히는 문제 방지
+  players.forEach(p => {
+    if (!p || p.hidden || p.retired || p.hideFromBoard) return;
+    const u = String(p.univ || '').trim();
+    if (!u || u === '무소속' || u === 'YB' || dissolved.has(u)) return;
+    const name = String(p.name || '').trim();
+    if (!name) return;
+    if (!seenByUniv[u]) seenByUniv[u] = new Set();
+    if (seenByUniv[u].has(name)) return; // 중복 인물 스킵
+    seenByUniv[u].add(name);
+    if (!pool[u]) pool[u] = [];
+    pool[u].push({ name, photo: p.photo });
+  });
+  let teams = Object.keys(pool).map(u => ({
+    univ: u,
+    color: (typeof gc === 'function') ? gc(u) : '#6b7280',
+    players: pool[u],
+  }));
+  // [버그수정] 소속에 등록된 선수가 1명뿐이면 그 소속이 나올 때마다 항상 같은 사람 사진만 보이게 되어
+  // "같은 사람만 계속 나온다"는 체감으로 이어짐 → 최소 2명 이상 등록된 소속만 게임 풀에 포함
+  const diverseTeams = teams.filter(t => t.players.length >= 2);
+  if (diverseTeams.length >= 2) teams = diverseTeams;
+  // 셔플 후 난이도별 상한만큼만 팀 사용 (너무 많으면 색 구분이 어려워지고 매칭도 어려워짐)
+  for (let i = teams.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [teams[i], teams[j]] = [teams[j], teams[i]];
+  }
+  const maxGroups = _tmDiffObj().maxGroups || 8;
+  if (teams.length > maxGroups) teams = teams.slice(0, maxGroups);
+  return teams;
+}
+
+// 팀별로 "가방(bag)" 방식 셔플 큐를 유지해서 같은 선수 사진이 너무 몰리지 않게 함
+function _tmDrawFromTeam(teamIdx) {
+  const st = window._tmState;
+  const team = st.teamPool[teamIdx];
+  let bag = st.teamBags[teamIdx];
+  if (!bag || !bag.length) {
+    bag = team.players.slice();
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    // [버그수정] 이전 가방의 마지막 인물과 새 가방의 첫 뽑힘(맨 뒤 요소)이 같으면
+    // 바로 직전과 동일 인물이 연속으로 뽑혀 "같은 사람만 나온다"고 느껴짐 → 가능하면 위치를 바꿔줌
+    const lastPicked = st.teamLastPicked && st.teamLastPicked[teamIdx];
+    if (lastPicked && bag.length > 1 && bag[bag.length - 1].name === lastPicked) {
+      const swapWith = Math.floor(Math.random() * (bag.length - 1));
+      [bag[bag.length - 1], bag[swapWith]] = [bag[swapWith], bag[bag.length - 1]];
+    }
+    st.teamBags[teamIdx] = bag;
+  }
+  const picked = bag.pop();
+  if (!st.teamLastPicked) st.teamLastPicked = {};
+  st.teamLastPicked[teamIdx] = picked.name;
+  return picked;
+}
+
+function _tmTeamIndexByUniv(univ) {
+  const st = window._tmState;
+  return st.teamPool.findIndex(team => String(team?.univ || '').trim() === String(univ || '').trim());
+}
+
+function _tmPickTeamIndex(neighborSpecs) {
+  const st = window._tmState;
+  const weighted = [];
+  (neighborSpecs || []).forEach(spec => {
+    const cell = spec?.cell;
+    const weight = Math.max(0, spec?.weight || 0);
+    const univ = String(cell?.univ || '').trim();
+    if (!univ || !weight) return;
+    const idx = _tmTeamIndexByUniv(univ);
+    if (idx < 0) return;
+    for (let i = 0; i < weight; i++) weighted.push(idx);
+  });
+  if (weighted.length && Math.random() < _tmDiffObj().bias) {
+    return weighted[Math.floor(Math.random() * weighted.length)];
+  }
+  return Math.floor(Math.random() * st.teamPool.length);
+}
+
+function _tmRandomCell(neighborSpecs) {
+  const st = window._tmState;
+  const teamIdx = _tmPickTeamIndex(neighborSpecs);
+  const team = st.teamPool[teamIdx];
+  const picked = _tmDrawFromTeam(teamIdx);
+  return {
+    uid: st.uidSeq++,
+    univ: team.univ,
+    color: team.color,
+    name: picked.name,
+    photo: picked.photo,
+  };
+}
+
+// ─── 보드 초기화 ──────────────────────────────────────────────────────────────
+function _tmNewBoard() {
+  const st = window._tmState;
+  st.teamPool = _tmBuildTeamPool();
+  st.teamBags = {};
+  st.cols = _tmCols();
+  st.rows = _tmRows();
+  st.score = 0;
+  st.combo = 0;
+  st.bestCombo = 0;
+  st.timeLeft = _TM_TIME_LIMIT;
+  st.running = false;
+  st.ended = false;
+  st.dragging = false;
+  st.selStart = null;
+  st.selCur = null;
+  st.statusText = '같은 소속이 붙은 줄을 찾아 작은 직사각형부터 빠르게 지워보세요.';
+  st.statusTone = 'info';
+  if (st.teamPool.length < 2) { st.board = null; return; }
+  st.board = Array.from({ length: st.rows }, () => Array(st.cols).fill(null));
+  for (let r = 0; r < st.rows; r++) {
+    for (let c = 0; c < st.cols; c++) {
+      st.board[r][c] = _tmRandomCell([
+        { cell: c > 0 ? st.board[r][c - 1] : null, weight: 4 },
+        { cell: r > 0 ? st.board[r - 1][c] : null, weight: 3 },
+        { cell: c > 1 ? st.board[r][c - 2] : null, weight: 1 },
+      ]);
+    }
+  }
+}
+
+function _tmStart() {
+  const st = window._tmState;
+  _tmNewBoard();
+  if (!st.board) { _tmRenderRoot(); return; }
+  st.running = true;
+  _tmRenderRoot();
+  if (st.timerId) clearInterval(st.timerId);
+  st.timerId = setInterval(_tmTick, 1000);
+}
+
+function _tmTick() {
+  const st = window._tmState;
+  if (!st.running) return;
+  st.timeLeft--;
+  const timeVal = document.getElementById('tm-time-val');
+  const timeStat = document.getElementById('tm-time-chip');
+  if (timeVal) timeVal.textContent = `${st.timeLeft}초`;
+  if (timeStat) timeStat.classList.toggle('is-time-low', st.timeLeft <= 15);
+  if (st.timeLeft <= 0) _tmEndGame();
+}
+
+function _tmEndGame() {
+  const st = window._tmState;
+  st.running = false;
+  st.ended = true;
+  if (st.timerId) { clearInterval(st.timerId); st.timerId = null; }
+  if (st.score > _tmBestScore()) _tmSaveBest(st.score);
+  _tmRenderRoot();
+}
+
+function _tmCleanup() {
+  const st = window._tmState;
+  if (st.timerId) { clearInterval(st.timerId); st.timerId = null; }
+  st.running = false;
+  st.dragging = false;
+}
+window._tmCleanup = _tmCleanup;
+
+// ─── 렌더링 ──────────────────────────────────────────────────────────────────
+function _tmEsc(s) {
+  return (typeof escHTML === 'function') ? escHTML(s) : String(s == null ? '' : s);
+}
+function _tmUrl(u) {
+  return (typeof toHttpsUrl === 'function') ? toHttpsUrl(u) : u;
+}
+const _TM_CUTE_COLORS = ['#FFD6E8', '#D6F0FF', '#FFF3C4', '#DAFBD9', '#E7DBFF', '#FFE1CC', '#D6FFF3', '#F6D9FF'];
+function _tmCuteColor(uid) {
+  return _TM_CUTE_COLORS[uid % _TM_CUTE_COLORS.length];
+}
+
+function _tmCellHTML(cell) {
+  if (!cell) return `<div class="tm-cell tm-empty"></div>`;
+  const cute = _tmCuteColor(cell.uid);
+  const initial = _tmEsc(String(cell.name || '?').trim().slice(0, 1));
+  const img = cell.photo
+    ? `<img src="${_tmEsc(_tmUrl(cell.photo))}" alt="${_tmEsc(cell.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="tm-cell-fallback" style="display:none;background:${cute}">${initial}</div>`
+    : `<div class="tm-cell-fallback" style="background:${cute}">${initial}</div>`;
+  return `<div class="tm-cell" data-uid="${cell.uid}" style="--tm-cell-color:${cute}">
+    ${img}
+  </div>`;
+}
+
+function _tmGridHTML() {
+  const st = window._tmState;
+  if (!st.board) return '';
+  let html = '';
+  for (let r = 0; r < st.rows; r++) {
+    for (let c = 0; c < st.cols; c++) html += _tmCellHTML(st.board[r][c]);
+  }
+  return html;
+}
+
+function _tmRenderRoot() {
+  const root = document.getElementById('tm-root');
+  if (!root) return;
+  const st = window._tmState;
+  const best = _tmBestScore();
+
+  if (!st.board && !st.ended) {
+    root.innerHTML = `<div class="tm-shell">
+      <div class="tm-card">
+        <div class="tm-head-row">
+          <div class="tm-head-left">
+            <div class="tm-icon-badge">🧩</div>
+            <div class="tm-title-group">
+              <div class="tm-title">소속 매칭</div>
+              <div class="tm-desc">사각형으로 드래그해서 같은 소속(팀) 선수들만 모아 제거하는 매칭 게임입니다.</div>
+            </div>
+          </div>
+        </div>
+        <div class="tm-section-label">난이도 선택</div>
+        <div class="tm-diff-bar">${_tmDiffBarHTML()}</div>
+        <div class="tm-empty-note">⚠️ 게임을 만들 만큼 소속(팀) 정보와 프로필 사진이 등록된 선수가 부족합니다. 선수 데이터에 소속/사진을 더 등록한 뒤 다시 시도해주세요.</div>
+        <div class="tm-actions"><button class="tm-btn tm-btn-primary" onclick="_tmStart()">🔄 다시 확인</button></div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const resultHTML = st.ended ? `<div class="tm-result">
+    <span class="tm-result-emoji">🏆</span>
+    <div class="tm-result-score">${st.score}점</div>
+    <div class="tm-result-sub">최고 기록 ${Math.max(best, st.score)}점${st.score >= best && st.score > 0 ? ' · 신기록!' : ''} · 최고 콤보 ${Math.max(st.bestCombo || 0, st.combo || 0)}</div>
+  </div>` : '';
+
+  root.innerHTML = `<div class="tm-shell">
+    <div class="tm-card">
+      <div class="tm-head-row">
+        <div class="tm-head-left">
+          <div class="tm-icon-badge">🧩</div>
+          <div class="tm-title-group">
+            <div class="tm-title">소속 매칭</div>
+            <div class="tm-desc">드래그해서 사각형을 그리세요. 안에 있는 선수 사진이 <b>전부 같은 소속</b>이면 사라지고 점수를 얻습니다. 다른 소속이 하나라도 섞이면 무효!</div>
+          </div>
+        </div>
+        <button class="tm-btn tm-btn-primary" onclick="_tmStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
+      </div>
+      <div class="tm-stats">
+        <div class="tm-stat"><span class="tm-stat-icon">🏅</span><div class="tm-stat-meta"><span class="tm-stat-val" id="tm-score-val">${st.score}</span><span class="tm-stat-label">점수</span></div></div>
+        <div class="tm-stat is-combo"><span class="tm-stat-icon">🔥</span><div class="tm-stat-meta"><span class="tm-stat-val" id="tm-combo-val">${st.combo || 0}</span><span class="tm-stat-label">콤보</span></div></div>
+        <div class="tm-stat" id="tm-time-chip"><span class="tm-stat-icon">⏱️</span><div class="tm-stat-meta"><span class="tm-stat-val" id="tm-time-val">${st.timeLeft}초</span><span class="tm-stat-label">남은 시간</span></div></div>
+        <div class="tm-stat is-best"><span class="tm-stat-icon">🥇</span><div class="tm-stat-meta"><span class="tm-stat-val">${best}</span><span class="tm-stat-label">최고 기록</span></div></div>
+      </div>
+      <div class="tm-section-label">난이도 선택</div>
+      <div class="tm-diff-bar">${_tmDiffBarHTML()}</div>
+      ${resultHTML}
+      <div class="tm-status is-${_tmEsc(st.statusTone || 'info')}" id="tm-status">${_tmEsc(st.statusText || '')}</div>
+      <div class="tm-stage">
+        <div class="tm-selbox" id="tm-selbox"></div>
+        <div class="tm-grid" id="tm-grid" style="--tm-cols:${st.cols}">${_tmGridHTML()}</div>
+      </div>
+    </div>
+  </div>`;
+
+  _tmAttachPointerHandlers();
+}
+
+// ─── 드래그 선택 로직 ─────────────────────────────────────────────────────────
+function _tmCellFromPoint(gridEl, clientX, clientY) {
+  const st = window._tmState;
+  const rect = gridEl.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  const cw = rect.width / st.cols;
+  const ch = rect.height / st.rows;
+  let c = Math.floor(x / cw);
+  let r = Math.floor(y / ch);
+  c = Math.max(0, Math.min(st.cols - 1, c));
+  r = Math.max(0, Math.min(st.rows - 1, r));
+  return { r, c };
+}
+
+function _tmUpdateSelectionVisual() {
+  const st = window._tmState;
+  const gridEl = document.getElementById('tm-grid');
+  const boxEl = document.getElementById('tm-selbox');
+  if (!gridEl || !boxEl || !st.selStart || !st.selCur) return;
+  const minR = Math.min(st.selStart.r, st.selCur.r), maxR = Math.max(st.selStart.r, st.selCur.r);
+  const minC = Math.min(st.selStart.c, st.selCur.c), maxC = Math.max(st.selStart.c, st.selCur.c);
+
+  gridEl.querySelectorAll('.tm-cell').forEach((el, idx) => {
+    const r = Math.floor(idx / st.cols), c = idx % st.cols;
+    el.classList.toggle('tm-sel', r >= minR && r <= maxR && c >= minC && c <= maxC);
+  });
+
+  const cellW = gridEl.clientWidth / st.cols;
+  const cellH = gridEl.clientHeight / st.rows;
+  boxEl.style.display = 'block';
+  boxEl.style.left = (minC * cellW) + 'px';
+  boxEl.style.top = (minR * cellH) + 'px';
+  boxEl.style.width = ((maxC - minC + 1) * cellW) + 'px';
+  boxEl.style.height = ((maxR - minR + 1) * cellH) + 'px';
+}
+
+function _tmClearSelectionVisual() {
+  const gridEl = document.getElementById('tm-grid');
+  const boxEl = document.getElementById('tm-selbox');
+  if (gridEl) gridEl.querySelectorAll('.tm-cell.tm-sel').forEach(el => el.classList.remove('tm-sel'));
+  if (boxEl) boxEl.style.display = 'none';
+}
+
+function _tmFinishSelection() {
+  const st = window._tmState;
+  if (!st.selStart || !st.selCur) return;
+  const minR = Math.min(st.selStart.r, st.selCur.r), maxR = Math.max(st.selStart.r, st.selCur.r);
+  const minC = Math.min(st.selStart.c, st.selCur.c), maxC = Math.max(st.selStart.c, st.selCur.c);
+  st.selStart = null; st.selCur = null; st.dragging = false;
+  _tmClearSelectionVisual();
+  if (!st.running) return;
+
+  const cells = [];
+  for (let r = minR; r <= maxR; r++) {
+    for (let c = minC; c <= maxC; c++) {
+      const cell = st.board[r][c];
+      if (cell) cells.push({ r, c, cell });
+    }
+  }
+  if (cells.length < 2) return;
+
+  const firstUniv = String(cells[0]?.cell?.univ || '').trim();
+  const matched = cells.filter(({ cell }) => String(cell?.univ || '').trim() === firstUniv);
+  const gridEl = document.getElementById('tm-grid');
+  if (!firstUniv || matched.length !== cells.length) {
+    // 박스 안 전체가 같은 소속이 아니면 무효 처리
+    st.combo = 0;
+    st.statusText = `조건 불일치: ${cells.length}칸이 모두 같은 소속이어야 합니다.`;
+    st.statusTone = 'bad';
+    _tmUpdateHud();
+    _tmPlayInvalid();
+    if (gridEl) {
+      cells.forEach(({ r, c }) => {
+        const idx = r * st.cols + c;
+        const el = gridEl.children[idx];
+        if (el) el.classList.add('tm-invalid');
+      });
+      setTimeout(() => {
+        cells.forEach(({ r, c }) => {
+          const idx = r * st.cols + c;
+          const el = gridEl.children[idx];
+          if (el) el.classList.remove('tm-invalid');
+        });
+      }, 320);
+    }
+    return;
+  }
+
+  // 유효한 매칭: 점수 추가 + 제거 애니메이션 후 낙하 보충 (매칭된 셀만)
+  st.combo = (st.combo || 0) + 1;
+  st.bestCombo = Math.max(st.bestCombo || 0, st.combo);
+  const areaBonus = matched.length >= 6 ? 4 : matched.length >= 4 ? 2 : 0;
+  const comboBonus = Math.max(0, st.combo - 1) * 2;
+  const gained = matched.length + areaBonus + comboBonus;
+  st.score += gained;
+  st.statusText = `${matched.length}칸 제거 성공! +${gained}점${areaBonus ? ` · 큰 박스 보너스 +${areaBonus}` : ''}${comboBonus ? ` · 콤보 보너스 +${comboBonus}` : ''}`;
+  st.statusTone = 'good';
+  _tmPlayMatch(matched.length);
+  _tmUpdateHud();
+
+  if (gridEl) {
+    matched.forEach(({ r, c }) => {
+      const idx = r * st.cols + c;
+      const el = gridEl.children[idx];
+      if (el) el.classList.add('tm-clear');
+    });
+  }
+  setTimeout(() => {
+    matched.forEach(({ r, c }) => { st.board[r][c] = null; });
+    _tmApplyGravity(minC, maxC);
+    _tmRenderRoot();
+  }, 220);
+}
+
+function _tmUpdateHud() {
+  const st = window._tmState;
+  const scoreVal = document.getElementById('tm-score-val');
+  if (scoreVal) scoreVal.textContent = st.score;
+  const comboVal = document.getElementById('tm-combo-val');
+  if (comboVal) comboVal.textContent = st.combo || 0;
+  const statusEl = document.getElementById('tm-status');
+  if (statusEl) {
+    statusEl.className = `tm-status is-${st.statusTone || 'info'}`;
+    statusEl.textContent = st.statusText || '';
+  }
+}
+
+function _tmApplyGravity(minC, maxC) {
+  const st = window._tmState;
+  for (let c = minC; c <= maxC; c++) {
+    const remaining = [];
+    for (let r = 0; r < st.rows; r++) if (st.board[r][c]) remaining.push(st.board[r][c]);
+    const removed = st.rows - remaining.length;
+    const newCol = new Array(st.rows);
+    for (let i = removed - 1; i >= 0; i--) {
+      newCol[i] = _tmRandomCell([
+        { cell: c > 0 ? st.board[i][c - 1] : null, weight: 3 },
+        { cell: c < st.cols - 1 ? st.board[i][c + 1] : null, weight: 2 },
+        { cell: i === removed - 1 ? remaining[0] : newCol[i + 1], weight: 4 },
+      ]);
+    }
+    for (let i = 0; i < remaining.length; i++) newCol[removed + i] = remaining[i];
+    for (let r = 0; r < st.rows; r++) st.board[r][c] = newCol[r];
+  }
+}
+
+function _tmAttachPointerHandlers() {
+  const gridEl = document.getElementById('tm-grid');
+  if (!gridEl || gridEl._tmBound) return;
+  gridEl._tmBound = true;
+
+  const onDown = (e) => {
+    const st = window._tmState;
+    if (!st.running) return;
+    const p = e.touches ? e.touches[0] : e;
+    const cell = _tmCellFromPoint(gridEl, p.clientX, p.clientY);
+    st.dragging = true;
+    st.selStart = cell;
+    st.selCur = cell;
+    _tmUpdateSelectionVisual();
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    const st = window._tmState;
+    if (!st.dragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    st.selCur = _tmCellFromPoint(gridEl, p.clientX, p.clientY);
+    _tmUpdateSelectionVisual();
+    e.preventDefault();
+  };
+  const onUp = () => {
+    const st = window._tmState;
+    if (!st.dragging) return;
+    _tmFinishSelection();
+  };
+
+  gridEl.addEventListener('pointerdown', onDown);
+  gridEl.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  gridEl.addEventListener('touchstart', onDown, { passive: false });
+  gridEl.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend', onUp);
+}
+
+// ─── 진입점 ──────────────────────────────────────────────────────────────────
+function _tmInit() {
+  const st = window._tmState;
+  if (st.timerId) { clearInterval(st.timerId); st.timerId = null; }
+  if (!st.board) { _tmStart(); return; }
+  st.running = !st.ended;
+  _tmRenderRoot();
+  if (st.running) st.timerId = setInterval(_tmTick, 1000);
+}
+window._tmInit = _tmInit;
+window._tmStart = _tmStart;

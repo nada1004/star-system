@@ -6,6 +6,7 @@
    - su_rsp_size         : 이미지 크기 (px)
    - su_rsp_valign       : 이미지 세로 위치 (top | center | bottom)
    - su_rsp_hoffset      : 이미지 수평 이동 (px, -200~+200, 양수=카드 중앙 방향)
+   - su_rsp_voffset      : 이미지 수직 이동 (px, -200~+200, 양수=아래쪽)
    - su_rsp_brightness   : 밝기
    - su_rsp_effect       : 필터 효과
    - su_rsp_width        : 패널 너비 (px)
@@ -75,6 +76,11 @@
     catch(e){ return 0.15; }
   }
 
+  function _getLoseTeamWinBrightness(){
+    try{ return Math.max(0.5, Math.min(1.8, parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0')||1.0)); }
+    catch(e){ return 1.0; }
+  }
+
   function _getLoseTeamLoseOpacity(){
     try{ return Math.max(0.1, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45')||0.45)); }
     catch(e){ return 0.45; }
@@ -89,6 +95,68 @@
   function _cfg(key, def){
     try{ var v = localStorage.getItem(key); return v == null ? def : v; }
     catch(e){ return def; }
+  }
+
+  /* ── 프로필 모양 → border-radius / clip-path 계산 ── */
+  var _SHAPE_RADIUS_MAP = {
+    circle:'50%', square:'6px', rounded:'22%', squircle:'28%',
+    diamond:'50%', hexagon:'50%', shield:'50% 50% 45% 45% / 60% 60% 40% 40%',
+    star:'50%', pentagon:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
+    leaf:'50%', triangle:'0', octagon:'50%', cross:'0',
+    heart:'50% 50% 50% 50%/60% 60% 40% 40%', parallelogram:'0', arrow:'0',
+    'rounded-top':'50% 50% 10% 10% / 70% 70% 10% 10%',
+    cloud:'50%', arch:'50% 50% 8px 8px / 60% 60% 8px 8px',
+    badge:'0', chevron:'0', clover:'50%', gem:'0', flag:'0',
+    pill:'50px', stadium:'40% 40% 40% 40% / 60% 60% 60% 60%',
+    teardrop:'50% 50% 50% 50% / 60% 60% 40% 40%',
+    moon:'50%', tv:'14%', flower:'50%', pac:'50%',
+    'ring-cut':'50%', kite:'0', notch:'8px',
+    thunder:'0', versus:'0', esports:'0', trophy:'0', crown:'0',
+    target:'50%', fist:'0', arena:'50%', medal:'50%', saber:'0', blast:'0'
+  };
+  var _SHAPE_CLIP_MAP = {
+    diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+    hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+    shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+    star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+    pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+    leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+    triangle:'polygon(50% 0%, 0% 100%, 100% 100%)',
+    octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
+    cross:'polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)',
+    parallelogram:'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
+    arrow:'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)',
+    cloud:'polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)',
+    badge:'polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)',
+    chevron:'polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)',
+    clover:'polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)',
+    gem:'polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)',
+    flag:'polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)',
+    moon:'ellipse(50% 50% at 65% 50%)',
+    flower:'polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)',
+    pac:'polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)',
+    kite:'polygon(50% 0%,100% 40%,50% 100%,0% 40%)',
+    notch:'polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)',
+    thunder:'polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)',
+    versus:'polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)',
+    esports:'polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)',
+    trophy:'polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)',
+    crown:'polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)',
+    fist:'polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)',
+    arena:'polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)',
+    medal:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)',
+    saber:'polygon(0% 15%,15% 0%,100% 85%,85% 100%)',
+    blast:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)'
+  };
+  function _getProfileShape(){
+    try{ return localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle'; }
+    catch(e){ return 'circle'; }
+  }
+  function _getProfileRadius(){
+    return _SHAPE_RADIUS_MAP[_getProfileShape()] || '50%';
+  }
+  function _getProfileClip(){
+    return _SHAPE_CLIP_MAP[_getProfileShape()] || 'none';
   }
 
   /* ── 승/패 선수 분리 수집 (양쪽 구분) ──
@@ -183,7 +251,7 @@
       // 패배팀 패널: 진 선수(개인전 패)는 연하게
       if(isLose && !playerWon) combined += ' grayscale('+_getLoseTeamLoseGray().toFixed(2)+') opacity('+_getLoseTeamLoseOpacity().toFixed(2)+')';
       // 패배팀에서 개인전 이긴 선수: 약간만 처리 (팀은 졌지만 개인전은 이겼으므로)
-      if(!isLose && playerWon) combined += ' grayscale('+_getLoseTeamWinGray().toFixed(2)+') opacity('+_getLoseTeamWinOpacity().toFixed(2)+')';
+      if(!isLose && playerWon) combined += ' grayscale('+_getLoseTeamWinGray().toFixed(2)+') opacity('+_getLoseTeamWinOpacity().toFixed(2)+') brightness('+_getLoseTeamWinBrightness().toFixed(2)+')';
     }
     return combined;
   }
@@ -196,10 +264,11 @@
         if(found) url = found.icon || '';
       }
       if(!url) return '';
-      var radius = _cfg('su_profile_radius', '6px') || '6px';
+      var radius = _getProfileRadius();
+      var clip = _getProfileClip();
       return '<img src="' + (typeof toHttpsUrl==='function'?toHttpsUrl(url):url) + '"'
-           + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';display:block;"'
-           + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">';
+           + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';'+(clip!=='none'?'clip-path:'+clip+';':'')+';display:block;"'
+           + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">' ;
     }catch(e){ return ''; }
   }
 
@@ -226,11 +295,6 @@
       ? '0 6px 28px '+col+'88, 0 0 0 '+(ringSize+2)+'px '+col+'55'
       : '0 6px 20px rgba(0,0,0,.22)';
 
-    // 왕관 배지
-    var crownBadge = (playerWon && isWinTeam)
-      ? '<div class="rsp-crown">👑</div>'
-      : '';
-
     // 이름 레이블 — textContent로 XSS 방지
     var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';
     var nameLblGlow  = (playerWon && isWinTeam) ? '0 0 8px '+col+'77' : 'none';
@@ -248,9 +312,11 @@
       +'--rsp-glow-base:'+glowBase+';'
       +'--rsp-glow-peak:'+glowPeak+';';
 
+    var _clipVal = (typeof _getProfileClip==='function') ? _getProfileClip() : 'none';
     var innerStyle = ''
       +'width:'+sizePx+'px;height:'+sizePx+'px;'
       +'border-radius:'+(isCircle?'50%':radius)+';'
+      +(_clipVal!=='none'?'clip-path:'+_clipVal+';':'')
       +'overflow:hidden;'
       +'display:flex;align-items:center;justify-content:center;'
       +'border:'+ringSize+'px solid '+ringColor+';'
@@ -259,7 +325,6 @@
       +'background:#e2e8f0;';
 
     return '<div class="rsp-imgbox'+(playerWon&&isWinTeam?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
-      + crownBadge
       + '<div class="rsp-imginner" style="'+innerStyle+'">'
       + raw
       + '</div>'
@@ -275,10 +340,12 @@
     var brightness= _cfg('su_rsp_brightness','1.0');
     var effect    = _cfg('su_rsp_effect','none');
     var widthPx   = Math.max(60, Math.min(180, parseInt(_cfg('su_rsp_width','90'),10)||90));
-    var radius    = _cfg('su_profile_radius','6px')||'6px';
+    var radius    = _getProfileRadius();
+    var profileClip = _getProfileClip();
     var imageType = _getImageType();
     var rawOffset = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_hoffset','0'),10)||0));
     var hoffset   = isLeft ? rawOffset : -rawOffset;
+    var voffset   = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_voffset','0'),10)||0));
     var showBox   = (_cfg('su_rsp_show_box','0')!=='0');
     var rotateOn  = _isRotateOn();
     var rotateSec = _getRotateSec();
@@ -306,7 +373,10 @@
     if(!validPlayers.length) return '';
 
     var jc = valign==='top'?'flex-start':valign==='bottom'?'flex-end':'center';
-    var translateStyle = hoffset!==0?'transform:translateX('+hoffset+'px);':'';
+    var _tx = hoffset!==0?'translateX('+hoffset+'px)':'';
+    var _ty = voffset!==0?'translateY('+voffset+'px)':'';
+    var _tf = [_tx,_ty].filter(Boolean).join(' ');
+    var translateStyle = _tf?'transform:'+_tf+';':'';
     var panelBg  = showBox?(isWinTeam?_rgba(col,0.12):'rgba(148,163,184,0.07)'):'transparent';
     var panelBrd = showBox?(isWinTeam?_rgba(col,0.30):'rgba(148,163,184,0.18)'):'transparent';
     var uid = 'rsp'+Math.random().toString(36).slice(2,9);
@@ -484,31 +554,32 @@
       var on = !!(document.getElementById('cfg-rec-side-panel-on')||{}).checked;
       localStorage.setItem('su_rec_side_panel_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspSize = function(v){
-    try{ localStorage.setItem('su_rsp_size', String(parseInt(v,10)||72)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_size', String(parseInt(v,10)||72)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWidth = function(v){
-    try{ localStorage.setItem('su_rsp_width', String(parseInt(v,10)||90)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_width', String(parseInt(v,10)||90)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspValign = function(v){
-    try{ localStorage.setItem('su_rsp_valign', v||'center'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_valign', v||'center'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspBrightness = function(v){
-    try{ localStorage.setItem('su_rsp_brightness', String(parseFloat(v)||1.0)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_brightness', String(parseFloat(v)||1.0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspEffect = function(v){
-    try{ localStorage.setItem('su_rsp_effect', v||'none'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_effect', v||'none'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspImageType = function(v){
-    try{ localStorage.setItem('su_rsp_image_type', v||'profile'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_image_type', v||'profile'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspCompOn = function(){
@@ -516,19 +587,24 @@
       var on = !!(document.getElementById('cfg-rsp-comp-on')||{}).checked;
       localStorage.setItem('su_rsp_comp_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspHalign = function(v){
-    try{ localStorage.setItem('su_rsp_halign', v||'center'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_halign', v||'center'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspHoffset = function(v){
-    try{ localStorage.setItem('su_rsp_hoffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_hoffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
+  };
+
+  window.cfgSetRspVoffset = function(v){
+    try{ localStorage.setItem('su_rsp_voffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspShowBox = function(on){
-    try{ localStorage.setItem('su_rsp_show_box', on ? '1' : '0'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_show_box', on ? '1' : '0'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspRotateOn = function(){
@@ -536,35 +612,40 @@
       var on = !!(document.getElementById('cfg-rsp-rotate-on')||{}).checked;
       localStorage.setItem('su_rsp_rotate_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspRotateSec = function(v){
-    try{ localStorage.setItem('su_rsp_rotate_sec', String(Math.max(1,Math.min(60,parseInt(v,10)||5)))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_rotate_sec', String(Math.max(1,Math.min(60,parseInt(v,10)||5)))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWinTeamLoseOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_winteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.65)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_winteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.65)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWinTeamLoseGray = function(v){
-    try{ localStorage.setItem('su_rsp_winteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.35)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_winteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.35)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamWinOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_win_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.80)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_win_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.80)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamWinGray = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_win_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.15)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_win_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.15)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
+  };
+
+  window.cfgSetRspLoseTeamWinBrightness = function(v){
+    try{ localStorage.setItem('su_rsp_loseteam_win_brightness', String(Math.max(0.5,Math.min(1.8,parseFloat(v)||1.0)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamLoseOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.45)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.45)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamLoseGray = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.75)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.75)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
 })();

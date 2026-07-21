@@ -5,17 +5,67 @@ window._lazy = window._lazy || {loaded:{}, loading:{}};
 function _loadScriptOnce(src){
   return new Promise((resolve, reject)=>{
     try{
-      if(window._lazy.loaded[src]) return resolve(true);
-      if(window._lazy.loading[src]) return window._lazy.loading[src].then(resolve).catch(reject);
+      const _canonKey = (u)=>{
+        try{
+          const url = new URL(u, window.location.href);
+          const isSameOrigin = url.origin === window.location.origin;
+          if(!isSameOrigin) return url.href;
+          if(!String(url.pathname||'').toLowerCase().endsWith('.js')) return url.href;
+          return url.origin + url.pathname;
+        }catch(e){
+          return String(u||'');
+        }
+      };
+      const key = _canonKey(src);
+      if(window._lazy.loaded[src] || window._lazy.loaded[key]) return resolve(true);
+      if(window._lazy.loading[src] || window._lazy.loading[key]) return (window._lazy.loading[src] || window._lazy.loading[key]).then(resolve).catch(reject);
+      try{
+        const resolvedSrc = new URL(src, window.location.href).href;
+        const resolvedKey = _canonKey(resolvedSrc);
+        const existing = [...document.scripts].find(s => {
+          try{
+            const ex = new URL(s.src, window.location.href).href;
+            return ex === resolvedSrc || _canonKey(ex) === resolvedKey;
+          }
+          catch(e){ return false; }
+        });
+        if(existing){
+          window._lazy.loaded[src]=true;
+          window._lazy.loaded[key]=true;
+          return resolve(true);
+        }
+      }catch(e){}
       const p = new Promise((res, rej)=>{
-        const s=document.createElement('script');
-        s.src=src;
-        s.async=true;
-        s.onload=()=>{ window._lazy.loaded[src]=true; res(true); };
-        s.onerror=()=>{ rej(new Error('load fail: '+src)); };
-        document.head.appendChild(s);
+        const _try = (u, retrying)=>{
+          const s=document.createElement('script');
+          s.src=u;
+          // async=false 로 지정하면(동적으로 추가한 script 태그 기준) 여러 개를 동시에
+          // 병렬로 다운로드하면서도 head에 추가한 순서대로 실행되는 걸 보장할 수 있음
+          // (roulette.js가 team-match-game.js보다 먼저 실행돼야 하는 등 순서 의존성 보호).
+          s.async=false;
+          s.onload=()=>{
+            try{ window._lazy.loaded[src]=true; }catch(e){}
+            try{ window._lazy.loaded[u]=true; }catch(e){}
+            try{ window._lazy.loaded[key]=true; }catch(e){}
+            try{ window._lazy.loaded[_canonKey(u)]=true; }catch(e){}
+            res(true);
+          };
+          s.onerror=()=>{
+            // 일부 호스팅/환경에서 쿼리스트링(?)이 붙은 로컬 경로 로드가 실패하는 케이스가 있어 1회만 재시도
+            if(!retrying && typeof u==='string' && u.includes('?')){
+              try{
+                const base = u.split('?')[0];
+                if(base && base !== u) return _try(base, true);
+              }catch(e){}
+            }
+            rej(new Error('load fail: '+u));
+          };
+          document.head.appendChild(s);
+        };
+        _try(src, false);
       });
       window._lazy.loading[src]=p;
+      window._lazy.loading[key]=p;
       p.then(resolve).catch(reject);
     }catch(e){ reject(e); }
   });
@@ -41,37 +91,86 @@ function _lazyLoadingView(T, C, title, desc){
 
 async function _ensureRouletteLoaded(){
   const scripts=[
-    'js/roulette.js?v=20260424-08',
-    'js/duck-race.js?v=20260424-04',
-    'js/wheel.js?v=20260416-08',
+    'js/wheel.js?v=20260717-ds03',
+    'js/duck-race.js?v=20260717-ds03',
+    'js/roulette.js?v=20260717-ds03',
+    'js/team-match-game.js?v=20260717-ds03',
+    'js/tier-match-game.js?v=20260717-ds03',
+    'js/photo-quiz-game.js?v=20260717-ds03',
+    'js/memory-match-game.js?v=20260717-ds03',
+    'js/mole-whack-game.js?v=20260717-ds03',
   ];
-  for(const src of scripts) await _loadScriptOnce(src);
+  // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
+  // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.
+  await Promise.all(scripts.map(src => _loadScriptOnce(src)));
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260503-60');
-  await _loadScriptOnce('js/share-card-modal.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-basic.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-theme.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-team.js?v=20260503-02');
-  await _loadScriptOnce('js/share-card-match-sets.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-actions.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match.js?v=20260503-03');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
+  await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
+  await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
+  await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/stats-core.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
 }
-window._ensureStatsLoaded = window._ensureStatsLoaded || _ensureStatsLoaded;
-async function _ensureShareCardLoaded(){
-  await _loadScriptOnce('js/stats.js?v=20260503-60');
-  await _loadScriptOnce('js/share-card-modal.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-basic.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-theme.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-team.js?v=20260503-02');
-  await _loadScriptOnce('js/share-card-match-sets.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match-actions.js?v=20260503-01');
-  await _loadScriptOnce('js/share-card-match.js?v=20260503-03');
-}
-window._ensureShareCardLoaded = window._ensureShareCardLoaded || _ensureShareCardLoaded;
+window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
+  await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
+  await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
+  await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
+  await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/stats-core.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+};
 async function _ensureCalendarLoaded(){
-  await _loadScriptOnce('js/calendar.js?v=20260502-01');
+  await _loadScriptOnce('js/calendar.js?v=20260717-ds03');
 }
 try{
   const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
@@ -81,28 +180,64 @@ try{
     setTimeout(_prewarmCalendar, 1200);
   }
 }catch(e){}
+// 앱 초기화 후 idle에 전체 플레이어 프로필 이미지 미리 로드
+// → 스트리머탭/현황판탭 진입 시 이미 캐시에 있어 즉시 표시
+try{
+  const _prewarmAllProfileImages = ()=>{
+    try{
+      if(typeof prewarmImageUrls !== 'function') return;
+      if(!Array.isArray(window.players)) return;
+      const urls = [];
+      window.players.forEach(p=>{
+        if(!p) return;
+        if(p.photo) urls.push(p.photo);
+      });
+      prewarmImageUrls(urls, 240);
+    }catch(e){}
+  };
+  // 데이터 로드가 완료된 뒤 실행되도록 500ms 후 idle 큐에 등록
+  const _scheduleProfilePrewarm = ()=>{
+    if(typeof window.requestIdleCallback === 'function'){
+      window.requestIdleCallback(_prewarmAllProfileImages, { timeout: 3000 });
+    }else{
+      setTimeout(_prewarmAllProfileImages, 800);
+    }
+  };
+  setTimeout(_scheduleProfilePrewarm, 500);
+}catch(e){}
+try{
+  const _prewarmShareCard = ()=>{ try{ window._ensureShareCardRuntime && window._ensureShareCardRuntime(); }catch(e){} };
+  if(typeof window.requestIdleCallback === 'function'){
+    window.requestIdleCallback(_prewarmShareCard, { timeout: 2200 });
+  }else{
+    setTimeout(_prewarmShareCard, 900);
+  }
+}catch(e){}
 async function _ensureVoteLoaded(){
   await window.ensureHtml2Canvas();
   await _loadScriptOnce('js/vote.js');
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/cloud-board.js?v=20260503-12');
+  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sync/cloud-status.js?v=20260503-01');
+  await _loadScriptOnce('js/cloud-board-state.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-render.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-drag.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-rank-sync.js?v=20260717-ds01');
 }
-async function _ensureBoard2Loaded(){
-  await _loadScriptOnce('js/board2-image-utils.js?v=20260501-68');
-  await _loadScriptOnce('js/board2-card-utils.js?v=20260501-10');
-  await _loadScriptOnce('js/board2.js?v=20260502-03');
-}
-async function _ensureMobileBarLoaded(){
-  await _loadScriptOnce('js/mobile-bar.js?v=20260422-02');
-}
-window._ensureCloudBoardLoaded = window._ensureCloudBoardLoaded || _ensureCloudBoardLoaded;
-window._ensureBoard2Loaded = window._ensureBoard2Loaded || _ensureBoard2Loaded;
-window._ensureMobileBarLoaded = window._ensureMobileBarLoaded || _ensureMobileBarLoaded;
 async function _ensureSettingsLoaded(){
-  if(typeof window.rCfg === 'function') return;
-  await _loadScriptOnce('js/settings.js?v=20260502-09');
+  await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
+  await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
+  await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
+  await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
+  await _loadScriptOnce('js/settings-base.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-presets.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-femco-cfg.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-cfg-modal.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-cfg-apply.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-cfg-misc.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-render.js?v=20260717-ds03');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
@@ -145,7 +280,7 @@ window.fbCloudSave = window.fbCloudSave || _lazyFbCloudSave;
 window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
 window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
 async function _ensureElboardLoaded(){
-  await _loadScriptOnce('js/elboard.js?v=20260422-01');
+  await _loadScriptOnce('js/elboard.js?v=20260717-ds03');
 }
 function _lazyRCfg(C, T){
   _lazyLoadingView(T, C, '설정', '설정 모듈을 불러오는 중...');
@@ -154,7 +289,8 @@ function _lazyRCfg(C, T){
       await _ensureSettingsLoaded();
       const fn = window.rCfg;
       if(typeof fn === 'function' && fn !== _lazyRCfg) fn(C, T);
-      else render(true);
+      // else: 무한루프 방지 - settings 로드 후에도 rCfg 없으면 에러 표시
+      else if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">새로고침(F5) 후 다시 시도해주세요.</div></div>';
     }catch(e){
       console.error('[lazy] settings load fail', e);
       try{
@@ -170,8 +306,7 @@ function _lazyCfgGo(secId){
       const fn = window.cfgGo;
       if(typeof fn === 'function' && fn !== _lazyCfgGo) fn(secId);
       else{
-        const cfgTab = document.getElementById('tabCfg') || document.querySelector('.tab[onclick*="sw(\'cfg\'"]');
-        if(cfgTab && typeof sw === 'function') sw('cfg', cfgTab);
+        if(typeof window._goTopTab === 'function') window._goTopTab('cfg');
       }
     }catch(e){
       console.error('[lazy] cfgGo load fail', e);
@@ -185,14 +320,32 @@ function _lazyReCfg(){
       await _ensureSettingsLoaded();
       const fn = window.reCfg;
       if(typeof fn === 'function' && fn !== _lazyReCfg) fn();
-      else render(true);
+      // else: settings 로드 후에도 reCfg 없으면 무시 (무한루프 방지)
     }catch(e){
       console.error('[lazy] reCfg load fail', e);
     }
   })();
 }
 async function _ensureChatbotLoaded(){
-  await _loadScriptOnce('js/chatbot.js?v=20260503-13');
+  await _loadScriptOnce('js/chatbot.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-utils.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-fuzzy.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-sync.js?v=20260720-ds02');
+  await _loadScriptOnce('js/chatbot-aibot.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260720-mo04');
+  await _loadScriptOnce('js/chatbot-formatters-recent.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-stats.js?v=20260717-ds03');
+  await _loadScriptOnce('js/chatbot-formatters-matches.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-daily.js?v=20260719-ds02');
+  await _loadScriptOnce('js/chatbot-changelog.js?v=20260719-ds02');
+  await _loadScriptOnce('js/chatbot-formatters-records.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-search.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-extra.js?v=20260720-ds02');
+  await _loadScriptOnce('js/chatbot-handlers.js?v=20260720-ds02');
+  await _loadScriptOnce('js/chatbot-ui.js?v=20260719-ds01');
 }
 function _lazyOpenChatbot(mode){
   (async()=>{

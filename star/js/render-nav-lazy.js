@@ -1,3 +1,66 @@
+// ── [BUG-FIX #2,#3,#4,#5] bnav 동기화 헬퍼 & swNav 조기 stub ──────────────
+// bottomNav 버튼(total/board2/tier/hist/stats)과 실제 탭 간의 매핑.
+// 서브탭(ind, comp, pro, cal, roulette, univm, gj, tiertour, civil 등)도
+// 부모 bnav 항목이 하이라이트되도록 처리.
+window._BNAV_TAB_MAP = {
+  total:    'total',
+  board2:   'board2',
+  tier:     'tier',
+  hist:     'hist',
+  stats:    'stats',
+  // 메인 탭이 bnav에 없는 경우 → 더보기(bn5) 버튼으로 매핑
+  ind:      '__more__',
+  gj:       '__more__',
+  univm:    '__more__',
+  univck:   '__more__',
+  mini:     'total',
+  comp:     '__more__',
+  tiertour: 'tier',
+  pro:      '__more__',
+  progj:    '__more__',
+  cal:      '__more__',
+  roulette: '__more__',
+  civil:    'total',
+  cfg:      '__more__',
+};
+
+// bnav 하이라이트를 탭 ID 기준으로 동기화하는 공통 헬퍼
+window._syncBnav = function(tabId) {
+  try {
+    const bnavTarget = (window._BNAV_TAB_MAP && window._BNAV_TAB_MAP[tabId]) || tabId;
+    // __more__ 매핑 → 더보기(#bn5)를 on으로, 나머지 off
+    if (bnavTarget === '__more__') {
+      document.querySelectorAll('.bnav-item').forEach(function(b) {
+        b.classList.remove('on');
+        b.setAttribute('aria-selected', 'false');
+      });
+      const moreBtn = document.getElementById('bn5');
+      if (moreBtn) {
+        moreBtn.classList.add('on');
+        moreBtn.setAttribute('aria-selected', 'true');
+      }
+      return;
+    }
+    document.querySelectorAll('.bnav-item').forEach(function(b) {
+      const oc = b.getAttribute('onclick') || '';
+      const isOn = oc.includes("'" + bnavTarget + "'") || oc.includes('"' + bnavTarget + '"');
+      b.classList.toggle('on', isOn);
+      b.setAttribute('aria-selected', isOn ? 'true' : 'false');
+    });
+  } catch(e) {}
+};
+
+// [BUG-FIX #2] swNav가 calendar.js 로드 전에 호출되면 에러 발생.
+// calendar.js 로드 후 실제 함수로 교체되는 조기 stub.
+if (typeof window.swNav === 'undefined') {
+  window.swNav = function(t, el) {
+    // stub: 실제 swNav(calendar.js)가 로드될 때까지 sw()로 폴백
+    window._syncBnav(t);
+    if (typeof window.sw === 'function') window.sw(t, el);
+  };
+}
+// ── [BUG-FIX #2,#3,#4,#5] END ─────────────────────────────────────────────
+
 window._centerActiveTopTab = function(smooth){
   try{
     const on = document.querySelector('.tabs .tab.on');
@@ -5,8 +68,13 @@ window._centerActiveTopTab = function(smooth){
     const tabs = on.closest('.tabs');
     if(!tabs) return;
     const mode = (localStorage.getItem('su_top_tab_align_mb')||'start').trim();
-    if(window.innerWidth <= 768 && mode === 'center'){
-      on.scrollIntoView({ behavior: smooth===false ? 'auto' : 'smooth', inline:'center', block:'nearest' });
+    if(window.innerWidth <= 768){
+      if(mode === 'center'){
+        on.scrollIntoView({ behavior: 'auto', inline:'center', block:'nearest' });
+      } else {
+        /* [UX] 선택된 탭이 뷰포트 밖으로 벗어나면 자동 스크롤 */
+        on.scrollIntoView({ behavior: 'smooth', inline:'nearest', block:'nearest' });
+      }
     }
   }catch(e){}
 };
@@ -270,8 +338,11 @@ window._applyTabLinkFromUrl = function(){
     else if(tab === 'ind' && sub && ['ind','gj'].includes(sub)){
       _mergedIndSub = sub;
       try{
-        if(sub === 'ind' && typeof indSub!=='undefined' && indSub==='input') indSub='records';
-        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+        // ✅ 버그픽스: 수정 모드(_editCtx)일 때는 input 탭을 records로 강제 전환하지 않음
+        const _indEditCtx = !!(window.BLD && window.BLD['ind'] && window.BLD['ind']._editCtx);
+        const _gjEditCtx = !!(window.BLD && window.BLD['gj'] && window.BLD['gj']._editCtx);
+        if(sub === 'ind' && typeof indSub!=='undefined' && indSub==='input' && !_indEditCtx) indSub='records';
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input' && !_gjEditCtx) gjSub='records';
       }catch(e){}
     }
     else if(tab === 'mini' && sub && ['civil','mini','univm','univck'].includes(sub)) _mergedUnivSub = sub;
@@ -279,7 +350,9 @@ window._applyTabLinkFromUrl = function(){
     else if(tab === 'pro' && sub && ['pro','gj','comp'].includes(sub)){
       _mergedProSub = sub;
       try{
-        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+        // ✅ 버그픽스: 수정 모드(_editCtx)일 때는 input 탭을 records로 강제 전환하지 않음
+        const _gjEditCtx = !!(window.BLD && window.BLD['gj'] && window.BLD['gj']._editCtx);
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input' && !_gjEditCtx) gjSub='records';
       }catch(e){}
     }
     else if(tab === 'stats' && sub) window.statsSub = sub;
@@ -291,33 +364,46 @@ window._applyTabLinkFromUrl = function(){
   }
 };
 
+// [FIX-14] 탭별 onEnter 초기화 로직을 TAB_ENTER 맵으로 분리.
+// 탭 추가 시 sw() 함수 본문을 건드리지 않고 이 맵에만 항목 추가.
+const _TAB_ENTER = {
+  comp:     () => { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; },
+  mini:     () => { miniSub='records'; _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; },
+  ind:      () => { indSub='records'; _mergedIndSub = _mergedIndSub || 'ind'; },
+  gj:       () => { gjSub='records'; _mergedIndSub = 'gj'; },
+  univck:   () => { ckSub='records'; _mergedUnivSub = 'univck'; },
+  univm:    () => { univmSub='records'; _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; },
+  tiertour: () => { _mergedCompSub = 'tiertour'; },
+  pro:      () => { _mergedProSub = _mergedProSub || 'pro'; }, // 재진입 시 마지막 탭 기억
+  hist:     () => { histSub = histSub || 'race'; }, // [FIX-5]
+  stats:    () => { window._statsTabEntered = true; }, // [FIX-12]
+  total:    () => { totalSearch = ''; },
+};
+// comp/tiertour는 _mergedCompSub도 초기화
+_TAB_ENTER._compFallback = () => { _mergedCompSub = _mergedCompSub || 'comp'; };
+
 function sw(t,el){
   try{
-    if(t==='cfg' && !window.isLoggedIn){
+    // [FIX-4] 인증 체크 단일화: getIsLoggedIn() 헬퍼 사용 (auth.js)
+    const _swIsLoggedIn = typeof window.getIsLoggedIn === 'function'
+      ? window.getIsLoggedIn()
+      : !!(window.isLoggedIn) && localStorage.getItem('su_session') === '1';
+    if(t==='cfg' && !_swIsLoggedIn){
       if(typeof showToast==='function') showToast('설정탭은 관리자만 접근할 수 있습니다.');
       return;
     }
   }catch(e){}
-  if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
-  if(t==='mini') miniSub='records';
-  if(t==='ind') indSub='records';
-  if(t==='gj') gjSub='records';
-  if(t==='univck') ckSub='records';
-  if(t==='univm') univmSub='records';
-  if(t==='ind')      _mergedIndSub = _mergedIndSub || 'ind';
-  if(t==='gj')       _mergedIndSub='gj';
-  if(t==='univm'||t==='mini') { _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; }
-  if(t==='univck')   _mergedUnivSub='univck';
-  if(t==='comp')     _mergedCompSub = _mergedCompSub || 'comp';
-  if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') { _mergedProSub = _mergedProSub || 'pro'; } // 의도: 이전 선택한 프로리그 하위탭 유지 (재진입 시 마지막 탭 기억)
-  if(t==='hist') histSub = histSub || 'mini';
+
+  // [FIX-14] TAB_ENTER 맵 실행
+  try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
+  // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
+  if(t==='comp') try{ _TAB_ENTER._compFallback(); }catch(e){}
+
   if(window._recQ){
     const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};
     const m=tabModeMap[t];
     if(m)window._recQ[m]='';
   }
-  if(t==='total')totalSearch='';
   curTab=t;openDetails={};
   const tabs = [...document.querySelectorAll('.tab')];
   const resolvedEl = (typeof window._resolveTopTabEl === 'function')
@@ -325,14 +411,21 @@ function sw(t,el){
     : null;
   tabs.forEach(b=>b.classList.remove('on'));
   if(resolvedEl && resolvedEl.classList) resolvedEl.classList.add('on');
-  document.querySelectorAll('.bnav-item').forEach(b=>{
-    const oc=b.getAttribute('onclick')||'';
-    b.classList.toggle('on',oc.includes("'"+t+"'"));
-  });
+  // [BUG-FIX #3,#4] _syncBnav: ind/comp/pro/cal/roulette/univm 등 bnav에
+  // 직접 없는 탭도 _BNAV_TAB_MAP 기반으로 올바른 항목을 하이라이트
+  if (typeof window._syncBnav === 'function') {
+    window._syncBnav(t);
+  } else {
+    document.querySelectorAll('.bnav-item').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      b.classList.toggle('on',oc.includes("'"+t+"'"));
+    });
+  }
   const _fs=document.getElementById('fstrip');
-  if(_fs)_fs.style.display=(t==='total'&&isLoggedIn)?'block':'none';
-  const C=document.getElementById('rcont');
-  if(C) C.innerHTML='';
+  if(_fs)_fs.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
+  // [FIX-6] 탭 전환 시 CSS scale/theme 재적용 (render-core.js의 매번 호출 제거에 대응)
+  try{ window._resetScaleSettingsFlag && window._resetScaleSettingsFlag(); }catch(e){}
+  try{ window._applyScaleSettings && window._applyScaleSettings(); }catch(e){}
   render();
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('push'); }catch(e){}
   try{ setTimeout(()=>{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(); }, 30); }catch(e){}
@@ -382,10 +475,23 @@ async function _ensureStatsFeatureReady(){
   }
 }
 
+async function _ensureGlobalSearchReady(){
+  try{
+    await _loadScriptOnce('js/stats-core.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+    return typeof window.onGlobalSearch === 'function' && window.onGlobalSearch !== _lazyOnGlobalSearch;
+  }catch(e){
+    console.error('[lazy] global search load fail', e);
+    return false;
+  }
+}
+
 function _lazyOnGlobalSearch(val){
   const q = String(val||'');
   (async()=>{
-    const ok = await _ensureStatsFeatureReady();
+    const ok = await _ensureGlobalSearchReady();
     if(!ok) return;
     const fn = window.onGlobalSearch;
     if(typeof fn === 'function' && fn !== _lazyOnGlobalSearch) fn(q);

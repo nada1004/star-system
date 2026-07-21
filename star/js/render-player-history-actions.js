@@ -5,7 +5,12 @@ window._goPlayerHistPage = function(page, name){
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
   const _st = _mb.scrollTop;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -18,7 +23,12 @@ window._goPlayerOppPage = function(page, name){
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
   const _st = _mb.scrollTop;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -28,7 +38,12 @@ window._rebuildPlayerDetail = function(name){
   if(!_p) return;
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   injectUnivIcons(_mb);
 };
 
@@ -161,7 +176,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
     const found = _findProTourStageRecordByMeta(meta);
     if(!found || !found.rec) return;
     if(!_guardRecentEdit(found.rec.d||'')) return;
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       if(typeof window.pcDeleteStageRec === 'function'){
         window.pcDeleteStageRec(found.tn.id, found.round, found.idx);
@@ -275,7 +290,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
       const m=(typeof indM!=='undefined'?indM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       const m=(typeof indM!=='undefined'?indM:[])[idx];
       if(m){
@@ -296,7 +311,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
       const m=(typeof gjM!=='undefined'?gjM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       const m=(typeof gjM!=='undefined'?gjM:[])[idx];
       if(m){
@@ -323,7 +338,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
   const currentOpp = selfIsA ? rec.b : rec.a;
   const currentResult = ((selfIsA && rec.winner==='A') || (!selfIsA && rec.winner==='B')) ? '승' : '패';
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
-  document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${currentOpp||''}`;
+  document.getElementById('reTitle').textContent=`경기 수정 — ${playerName} vs ${currentOpp||''}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
       <div><label>날짜</label><input id="phe-date" type="date" value="${rec.d||''}" style="width:100%"></div>
@@ -432,7 +447,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
       const gm=tn && tn.gjMatches && tn.gjMatches[gjIdx];
       if(gm && !_guardRecentEdit(gm.d||'')) return;
     }catch(e){}
-    // 프로리그 끝장전은 pro-comp.js의 GJ 섹션에서 수정 가능
+    // 프로리그 끝장전은 pro-comp-edit.js의 GJ 섹션에서 수정 가능
     if(typeof window.proCompSub === 'function' && typeof window.render === 'function'){
       window.proCompSub='gj';
       window.render();
@@ -481,7 +496,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
 
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
-  if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
+  if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.'))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
@@ -503,15 +518,25 @@ function deletePlayerHist(playerName, histIdx){
   }
   p.history.splice(histIdx,1);
   if(hh.matchId){
-    const mid=hh.matchId;
-    const _arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM};
+    const mid=String(hh.matchId||'').trim();
+    const baseMid=mid.replace(/_s\d+_g\d+$/,'').replace(/_g\d+$/,'');
+    const _targetIds=new Set([mid, baseMid].filter(Boolean));
+    const _arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM,tt:ttM};
     const _modeArrKey={'미니대전':'mini','시빌워':'mini','대학대전':'univm','대학CK':'ck','프로리그':'pro','티어대회':'tt'};
     const _targetKey=hh.mode?_modeArrKey[hh.mode]:null;
     const _searchArrs=_targetKey?[[_targetKey,_arrMap[_targetKey]]]:Object.entries(_arrMap);
     for(const [,arr] of _searchArrs){
       if(!arr)continue;
-      const idx=arr.findIndex(m=>m._id===mid);
-      if(idx>=0){ arr.splice(idx,1); break; }
+      const idx=arr.findIndex(m=>_targetIds.has(String(m&&m._id||'').trim()));
+      if(idx>=0){
+        try{
+          if(hh.mode==='티어대회' && typeof window._rememberDeletedTierGeneralRestoreMatch === 'function'){
+            window._rememberDeletedTierGeneralRestoreMatch(arr[idx]);
+          }
+        }catch(e){}
+        arr.splice(idx,1);
+        break;
+      }
     }
   }
   if(hh.mode==='개인전'||hh.mode==='프로리그'||hh.mode==='끝장전'||hh.mode==='프로리그끝장전'){
@@ -528,7 +553,12 @@ function deletePlayerHist(playerName, histIdx){
   if(pb){
     const p=players.find(x=>x.name===playerName);
     if(p){
-      pb.innerHTML=buildPlayerDetailHTML(p);
+      const _fn = (typeof window.buildPlayerDetailHTML==='function')
+        ? window.buildPlayerDetailHTML
+        : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -548,7 +578,7 @@ function deletePlayerHistBulk(playerName){
     alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
     return;
   }
-  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.`))return;
   const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
   sortedIdx.forEach(idx=>{
     if(p.history[idx]){
@@ -568,14 +598,46 @@ function deletePlayerHistBulk(playerName){
           oppHist.splice(oppIdx,1);
         }
       }
+      if(hh.matchId){
+        const mid=String(hh.matchId||'').trim();
+        const baseMid=mid.replace(/_s\d+_g\d+$/,'').replace(/_g\d+$/,'');
+        const ids=new Set([mid, baseMid].filter(Boolean));
+        const arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM,tt:ttM};
+        const modeArrKey={'미니대전':'mini','시빌워':'mini','대학대전':'univm','대학CK':'ck','프로리그':'pro','티어대회':'tt'};
+        const targetKey=hh.mode?modeArrKey[hh.mode]:null;
+        const searchArrs=targetKey?[[targetKey,arrMap[targetKey]]]:Object.entries(arrMap);
+        for(const [,arr] of searchArrs){
+          if(!arr) continue;
+          const arrIdx=arr.findIndex(m=>ids.has(String(m&&m._id||'').trim()));
+          if(arrIdx>=0){
+            try{
+              if(hh.mode==='티어대회' && typeof window._rememberDeletedTierGeneralRestoreMatch === 'function'){
+                window._rememberDeletedTierGeneralRestoreMatch(arr[arrIdx]);
+              }
+            }catch(e){}
+            arr.splice(arrIdx,1);
+            break;
+          }
+        }
+      }
       p.history.splice(idx,1);
     }
   });
   _playerHistBulkSelected.clear();
   if(typeof fixPoints==='function')fixPoints();
   save();
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  {
+    const _fn = (typeof window.buildPlayerDetailHTML==='function')
+      ? window.buildPlayerDetailHTML
+      : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+    const pb = document.getElementById('playerModalBody');
+    if(pb){
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+      injectUnivIcons(pb);
+    }
+  }
 }
 
 function togglePlayerHistBulkMode(){
@@ -589,7 +651,7 @@ function togglePlayerHistSelect(idx){
   if(_playerHistBulkSelected.has(idx)) _playerHistBulkSelected.delete(idx);
   else _playerHistBulkSelected.add(idx);
   const btn=document.getElementById('bulk-delete-btn');
-  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  if(btn) btn.textContent=`선택 삭제 (${_playerHistBulkSelected.size})`;
 }
 
 function togglePlayerHistSelectAll(playerName, allIndices){
@@ -598,9 +660,9 @@ function togglePlayerHistSelectAll(playerName, allIndices){
   if(_playerHistBulkSelected.size===allowed.length) _playerHistBulkSelected.clear();
   else allowed.forEach(idx=>_playerHistBulkSelected.add(idx));
   const btn=document.getElementById('bulk-delete-btn');
-  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  if(btn) btn.textContent=`선택 삭제 (${_playerHistBulkSelected.size})`;
   const editBtn=document.getElementById('bulk-edit-btn');
-  if(editBtn) editBtn.textContent=`✏️ 선택 수정 (${_playerHistBulkSelected.size})`;
+  if(editBtn) editBtn.textContent=`선택 수정 (${_playerHistBulkSelected.size})`;
   const checkboxes=document.querySelectorAll('.hist-select-checkbox');
   checkboxes.forEach(cb=>cb.checked=_playerHistBulkSelected.has(parseInt(cb.value)));
 }
@@ -621,12 +683,12 @@ function openPlayerHistBulkEdit(playerName){
   }
   const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
   const allModes=[...new Set(selectedHists.map(h=>h.mode).filter(Boolean))];
-  document.getElementById('reTitle').textContent=`✏️ 일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
+  document.getElementById('reTitle').textContent=`일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">⚠️ 선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:var(--fs-caption);color:#92400e">선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">종목 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">종목 변경</label>
         <select id="phe-bulk-mode" style="width:100%">
           <option value="">변경 안함</option>
           ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
@@ -634,7 +696,7 @@ function openPlayerHistBulkEdit(playerName){
         </select>
       </div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">맵 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">맵 변경</label>
         <div style="display:flex;gap:6px">
           <select id="phe-bulk-map-sel" data-pha-action="bulk-map-sync" style="flex:1">
             <option value="">목록에서 선택</option>
@@ -644,7 +706,7 @@ function openPlayerHistBulkEdit(playerName){
         </div>
       </div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">날짜 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">날짜 변경</label>
         <input id="phe-bulk-date" type="date" placeholder="YYYY-MM-DD" style="width:100%">
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -691,7 +753,12 @@ function savePlayerHistBulkEdit(playerName){
   if(pb){
     const p=players.find(x=>x.name===playerName);
     if(p){
-      pb.innerHTML=buildPlayerDetailHTML(p);
+      const _fn = (typeof window.buildPlayerDetailHTML==='function')
+        ? window.buildPlayerDetailHTML
+        : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -705,7 +772,7 @@ function openPlayerHistEdit(playerName, histIdx){
   if(!_guardRecentEdit(hh.date)) return;
   const races=['T','Z','P'];
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
-  document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${hh.opp}`;
+  document.getElementById('reTitle').textContent=`경기 수정 — ${playerName} vs ${hh.opp}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
       <div><label>날짜</label><input id="phe-date" type="date" value="${hh.date||''}" style="width:100%"></div>
@@ -802,7 +869,12 @@ function openPlayerHistEdit(playerName, histIdx){
       if(pb){
         const p=players.find(x=>x.name===playerName);
         if(p){
-          pb.innerHTML=buildPlayerDetailHTML(p);
+          const _fn = (typeof window.buildPlayerDetailHTML==='function')
+            ? window.buildPlayerDetailHTML
+            : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+          pb.innerHTML = _fn
+            ? _fn(p)
+            : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
           injectUnivIcons(pb);
         }
       }

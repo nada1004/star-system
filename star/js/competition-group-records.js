@@ -20,11 +20,11 @@ function rCompLeague(tn){
   const _pctColor=_pct===100?'#16a34a':_pct>=50?'#2563eb':'#d97706';
   let h=``;
   if(_totalM>0){
-    h+=`<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
+    h+=`<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:${_pctColor}">📊 진행률</span>
-        <span style="font-size:12px;color:var(--gray-l)">${_doneM}/${_totalM}경기 완료</span>
-        <span style="margin-left:auto;font-size:13px;font-weight:800;color:${_pctColor}">${_pct}%</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${_pctColor}">📊 진행률</span>
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_doneM}/${_totalM}경기 완료</span>
+        <span style="margin-left:auto;font-size:var(--fs-base);font-weight:800;color:${_pctColor}">${_pct}%</span>
       </div>
       <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
         <div style="height:100%;width:${_pct}%;background:${_pctColor};border-radius:4px;transition:.3s"></div>
@@ -32,7 +32,7 @@ function rCompLeague(tn){
     </div>`;
   }
   h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
+    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏆 ${tn.name}</div>
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export grp-univ-action-row" style="margin-bottom:12px">
@@ -78,7 +78,7 @@ function rCompLeague(tn){
   if(leagueFilterDate) filtered=filtered.filter(m=>m.d===leagueFilterDate);
   if(leagueFilterGrp) filtered=filtered.filter(m=>m.grpName===leagueFilterGrp);
   if(!filtered.length){
-    h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px">
+    h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">
       ${allMatches.length?'해당 조건의 경기가 없습니다.':'아직 등록된 경기가 없습니다.'}
       ${isLoggedIn?`<br><br><button class="btn btn-b btn-sm" onclick="compSub='grpedit';render()">+ 조편성 관리에서 경기 추가</button>`:''}
     </div>`;
@@ -95,7 +95,7 @@ function rCompLeague(tn){
     }
     h+=`<div style="margin-bottom:22px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
+        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
         ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="grpAddMatchByDate('${tn.id}','${date}')">+ 경기 추가</button>`:''}
       </div>`;
     byDate[date].forEach(m=>{
@@ -128,8 +128,8 @@ function rCompLeague(tn){
       }
       const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'");
       const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
-      const aBtnColor = ca || '#3b82f6';
-      const bBtnColor = cb || '#ef4444';
+      const aBtnColor = (isDone && bWin) ? '#94a3b8' : (ca || '#3b82f6');
+      const bBtnColor = (isDone && aWin) ? '#94a3b8' : (cb || '#ef4444');
       const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
       const _fxOn=!!_fxCfg.on;
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
@@ -142,40 +142,47 @@ function rCompLeague(tn){
       const _compSide=(typeof window._buildRecSideProfilePanel==='function')
         ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
         : {left:'',right:''};
-      h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
-          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
-          <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
-          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+      const _grpWinnerName = isDone ? (aWin ? (m.a||'') : bWin ? (m.b||'') : '') : '';
+      const _grpWinnerCol  = isDone ? (aWin ? ca : bWin ? cb : '') : '';
+      const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
+      h+=`<div class="grp-match-wrap">
+        <div class="grp-card-meta-bar no-export">
+          <span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}44">GROUP ${m.grpLetter}</span>
+          
+          <span class="grp-meta-spacer"></span>
+          ${_leagueMenu?`<span class="grp-meta-menu">${_leagueMenu}</span>`:''}
+        </div>
+        `+`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
+        <div class="grp-match-leftpad" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
+          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:var(--r);border:1px solid var(--border)">예정</span>`:''}
         </div>
         ${_compSide.left||''}
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-            <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26);${(isDone && bWin)?'opacity:.55;filter:saturate(0.65) grayscale(.15)':''}" onclick="openUnivModal('${m.a||''}')">
-            ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
+            <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${m.a||''}')">
+            ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.a||'—'}</span>
             </div>
-            ${aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${m.a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+            ${aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${m.a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
               <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
             </button>` : ''}
           </div>
           <div class="grp-score-col" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:80px">
-            ${isDone?`<div class="grp-match-score score-click" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span class="${aWin?'wt':bWin?'lt':''}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span class="${bWin?'wt':aWin?'lt':''}">${m.sb}</span></div>
-            `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
+            ${isDone?`<div class="grp-match-score score-click" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text2)'}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text2)'}">${m.sb}</span></div>
+            `:`<div class="grp-vs-text" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-            <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26);${(isDone && aWin)?'opacity:.55;filter:saturate(0.65) grayscale(.15)':''}" onclick="openUnivModal('${m.b||''}')">
-            ${(()=>{const url=UNIV_ICONS[m.b]||(univCfg.find(x=>x.name===m.b)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
+            <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${m.b||''}')">
+            ${(()=>{const url=UNIV_ICONS[m.b]||(univCfg.find(x=>x.name===m.b)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.b||'—'}</span>
             </div>
-            ${bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${m.b.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+            ${bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};${(isDone&&aWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${m.b.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
               <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
             </button>` : ''}
           </div>
         </div>
         ${_compSide.right||''}
-        ${_leagueMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_leagueMenu}</div>`:''}
-      </div>`;
+      </div></div>`;
     });
     h+=`</div>`;
   });
@@ -209,14 +216,14 @@ function openCompAutoDetectPaste(tnId){
 }
 
 function grpMatchDetail(m){
-  if(!m.sets||!m.sets.length) return `<div style="font-size:12px;color:var(--gray-l)">상세 기록이 없습니다.</div>`;
-  let h=`<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔍 세부 경기 기록</div>`;
+  if(!m.sets||!m.sets.length) return `<div style="font-size:var(--fs-sm);color:var(--gray-l)">상세 기록이 없습니다.</div>`;
+  let h=`<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🔍 세부 경기 기록</div>`;
   m.sets.forEach((set,si)=>{
     const lbl=si===2?'🎯 에이스전':`${si+1}세트`;
     const sA=set.scoreA||0;const sB=set.scoreB||0;
     h+=`<div style="margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:${si===2?'#f5f3ff':'var(--blue-l)'};border-radius:6px;margin-bottom:6px">
-        <strong style="font-size:11px;color:${si===2?'#7c3aed':'var(--blue)'}">${lbl}</strong>
+        <strong style="font-size:var(--fs-caption);color:${si===2?'#7c3aed':'var(--blue)'}">${lbl}</strong>
         <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px"><span class="${sA>sB?'wt':''}">${sA}</span><span style="color:var(--gray-l)">:</span><span class="${sB>sA?'wt':''}">${sB}</span></span>
         </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">`;
@@ -226,7 +233,7 @@ function grpMatchDetail(m){
       const wA=g.winner==='A';const wB=g.winner==='B';
       const _ct=t=>t?t.replace(/티어$/,''):'';
       const _tb=tier=>tier?`<span style="background:${getTierBtnColor(tier)||'#64748b'};color:${getTierBtnTextColor(tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;flex-shrink:0"><span class="tier-pc">${tier}</span><span class="tier-mob">${_ct(tier)}</span></span>`:'';
-      h+=`<div style="font-size:11px;background:var(--white);padding:5px 10px;border-radius:6px;border:1px solid ${wA?'var(--green)33':wB?'var(--red)33':'var(--border)'};display:flex;align-items:center;gap:4px">
+      h+=`<div style="font-size:var(--fs-caption);background:var(--white);padding:5px 10px;border-radius:6px;border:1px solid ${wA?'var(--green)33':wB?'var(--red)33':'var(--border)'};display:flex;align-items:center;gap:4px">
         <span style="font-size:10px;color:var(--gray-l);min-width:14px;flex-shrink:0">${gi+1}</span>
         <span style="font-weight:${wA?'800':'400'};color:${wA?'var(--green)':'var(--text)'};white-space:nowrap">${g.playerA||'?'}</span>
         ${pa?`<span class="rbadge r${pa.race}" style="font-size:9px;padding:0 3px">${pa.race||''}</span>`:''}

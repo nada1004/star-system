@@ -1,4 +1,57 @@
 (function(){
+  function _scClampPct(n, d){
+    const v = Number(n);
+    if(!Number.isFinite(v)) return d;
+    return Math.max(0, Math.min(100, v));
+  }
+  function _scResolvePersonalFaceUrl(player){
+    try{
+      const url = String(player && player.shareCardPhoto || '').trim();
+      if(url) return url;
+    }catch(e){}
+    try{
+      const nm = String((player && player.name) || '').trim();
+      if(nm && Array.isArray(window.players)){
+        const p = window.players.find(x=>x && x.name===nm);
+        const url = String(p && p.shareCardPhoto || '').trim();
+        if(url) return url;
+      }
+    }catch(e){}
+    try{
+      const url = String(player && player.photo || '').trim();
+      if(url) return url;
+    }catch(e){}
+    try{
+      const nm = String((player && player.name) || '').trim();
+      if(nm && Array.isArray(window.players)){
+        const p = window.players.find(x=>x && x.name===nm);
+        const url = String(p && p.photo || '').trim();
+        if(url) return url;
+      }
+    }catch(e){}
+    return '';
+  }
+  function _scResolvePersonalFacePos(player, fallback){
+    const def = fallback || 'center 22%';
+    try{
+      let src = player;
+      try{
+        const nm = String((player && player.name) || '').trim();
+        if(nm && Array.isArray(window.players)){
+          const p = window.players.find(x=>x && x.name===nm);
+          if(p) src = p;
+        }
+      }catch(e){}
+      if(src && src.shareCardPhotoPosUse === false) return def;
+      const x = _scClampPct(src && src.shareCardPhotoPosX, null);
+      const y = _scClampPct(src && src.shareCardPhotoPosY, null);
+      if(x==null || y==null) return def;
+      return `${x}% ${y}%`;
+    }catch(e){
+      return def;
+    }
+  }
+
   function buildShareMatchHeroSideBlock(args){
     const {
       side, aWin, bWin, a, b, _dispA, _dispB, ca, cb, caRgb, cbRgb, isCivil, civUniv,
@@ -45,14 +98,16 @@
       : '';
     const safeName = String(name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const heroCoverH = _isPersonalScoreCard ? _photoCoverH : Math.round(118*(scp.profileScale||1));
+    const _faceUrl = _isPersonalScoreCard ? _scResolvePersonalFaceUrl(player) : (player?.photo || '');
+    const _facePos = _isPersonalScoreCard ? _scResolvePersonalFacePos(player, 'center 22%') : 'center center';
     const photoHTML = !m._noUnivIcon ? (_usePlayerPhoto
-      ? (player?.photo
+      ? (_faceUrl
         ? `<div style="width:100%;height:${heroCoverH}px;border-radius:18px;overflow:hidden;margin:0 0 12px;position:relative;${_isPersonalScoreCard?'box-shadow:0 6px 18px rgba(15,23,42,.12);border:1px solid rgba(255,255,255,.22);':(isWin?`box-shadow:0 10px 22px rgba(0,0,0,.18), 0 0 0 2px ${univColor}aa`:`opacity:.98;box-shadow:0 6px 16px rgba(2,6,23,.14), 0 0 0 1px ${univColor}66`)}">
-            <img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${Math.round((scp.loserGray||.55)*100)}%) brightness(${scp.loserPhotoBrightness||.92})`};">
+            <img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(_faceUrl)}" style="width:100%;height:100%;object-fit:cover;object-position:${_facePos};display:block;cursor:pointer;filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${Math.round((scp.loserGray||.55)*100)}%) brightness(${scp.loserPhotoBrightness||.92})`};">
             <div style="position:absolute;inset:0;background:${_isPersonalScoreCard?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.08))':(isWin?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.14))':'linear-gradient(180deg,rgba(15,23,42,.03),rgba(15,23,42,.18))')};pointer-events:none"></div>
           </div>`
-        : `<div style="width:${_photoOuter}px;height:${_photoOuter}px;border-radius:var(--su_profile_radius,50%);margin:0 auto 10px;overflow:hidden;${isWin?`box-shadow:0 0 0 2px rgba(255,255,255,.26),0 8px 18px rgba(0,0,0,.12)`:`opacity:.97;filter:grayscale(${(scp.loserGray||.55).toFixed(2)});box-shadow:0 0 0 1px rgba(255,255,255,.18)`}">
-          ${getPlayerPhotoHTML(name,`${_photoOuter}px`,'width:100%;height:100%;object-fit:cover')}
+        : `<div onclick="openPlayerModal('${safeName}')" title="스트리머 상세" style="width:${_photoOuter}px;height:${_photoOuter}px;border-radius:var(--su_profile_radius,50%);margin:0 auto 10px;overflow:hidden;cursor:pointer;${isWin?`box-shadow:0 0 0 2px rgba(255,255,255,.26),0 8px 18px rgba(0,0,0,.12)`:`opacity:.97;filter:grayscale(${(scp.loserGray||.55).toFixed(2)});box-shadow:0 0 0 1px rgba(255,255,255,.18)`}">
+          ${getPlayerPhotoHTML(name,`${_photoOuter}px`,'width:100%;height:100%;object-fit:cover;pointer-events:none')}
         </div>`)
       : `<div style="width:${_iconOuter}px;height:${_iconOuter}px;border-radius:18px;background:${isWin?`rgba(${rgb},.38)`:'rgba(148,163,184,.18)'};margin:0 auto 10px;display:flex;align-items:center;justify-content:center;${isWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':`opacity:.92;filter:grayscale(1);border:1px solid rgba(148,163,184,.40);`}overflow:hidden">
           ${univIconHTML(iconName,`${_iconInner}px`)}
@@ -108,9 +163,11 @@
     const univ = (!hideTeamUnivOnTop && player?.univ) ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;max-width:100%;text-align:center">${hasUnivLogo(player.univ)?`<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'', '30px')}</span>`:''}<span style="font-size:${Math.round(12*(args?.scp?.fontScale||1)*(args?.scp?.univScale||1))}px;font-weight:900;color:${univTextColor};line-height:1.2;word-break:keep-all;white-space:normal;overflow-wrap:anywhere">${player.univ}</span></div>` : '';
     const titleLogo = (!hideTeamUnivOnTop && player?.univ && hasUnivLogo(player.univ)) ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'', '22px')}</span>` : '';
     const safeName = String(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    const media = player?.photo
-      ? `<img class="share-poster-media" onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block;cursor:pointer;filter:${isWin?`brightness(${args?.scp?.heroBrightness||1})`:`grayscale(${Math.round(_loserGray*100)}%) brightness(${args?.scp?.loserPhotoBrightness||.92})`};">`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${isWin?`linear-gradient(135deg,rgba(${rgb},.58),rgba(15,23,42,.92))`:'linear-gradient(135deg,rgba(100,116,139,.46),rgba(15,23,42,.96))'};">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
+    const _faceUrl = _scResolvePersonalFaceUrl(player);
+    const _facePos = _scResolvePersonalFacePos(player, 'center 22%');
+    const media = _faceUrl
+      ? `<img class="share-poster-media" onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(_faceUrl)}" style="width:100%;height:100%;object-fit:cover;object-position:${_facePos};display:block;cursor:pointer;filter:${isWin?`brightness(${args?.scp?.heroBrightness||1})`:`grayscale(${Math.round(_loserGray*100)}%) brightness(${args?.scp?.loserPhotoBrightness||.92})`};">`
+      : `<div onclick="openPlayerModal('${safeName}')" title="스트리머 상세" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:${isWin?`linear-gradient(135deg,rgba(${rgb},.58),rgba(15,23,42,.92))`:'linear-gradient(135deg,rgba(100,116,139,.46),rgba(15,23,42,.96))'};">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
     return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 24px rgba(2,6,23,.12);transform:translateY(${isWin?'-1':'2'}px) scale(${isWin?'1.005':'.992'});transform-origin:center center">
       ${media}
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.04) 18%,rgba(15,23,42,.34));pointer-events:none"></div>
@@ -131,10 +188,10 @@
     const typeLbl = {ind:'🎯 개인전',gj:'⚡ 끝장전',progj:'🏆 프로리그 끝장전'}[m?m._matchType:''] || '🎮 개인전';
     return `<div class="share-personal-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <div class="share-personal-meta-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
-        <div style="font-size:11px;color:rgba(255,255,255,.96);font-weight:800;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:4px 12px;border-radius:999px;backdrop-filter:blur(6px);white-space:nowrap">${typeLbl}${m&&m._subLabel?` · ${m._subLabel}`:''}</div>
+        <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.96);font-weight:800;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:4px 12px;border-radius:999px;backdrop-filter:blur(6px);white-space:nowrap">${typeLbl}${m&&m._subLabel?` · ${m._subLabel}`:''}</div>
         ${scoreInlineHTML('personal')}
       </div>
-      <div class="share-personal-meta-date" style="font-size:11px;color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
+      <div class="share-personal-meta-date" style="font-size:var(--fs-caption);color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
     </div>`;
   }
 

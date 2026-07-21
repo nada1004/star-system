@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════
    개인전
 ══════════════════════════════════════ */
-let _indInput={date:'',playerA:'',playerB:'',games:[]};
+var _indInput={date:'',playerA:'',playerB:'',games:[]}; // ✅ var: IIFE 내부에서 window._indInput으로 접근 가능
 
 /* ══════════════════════════════════════
    개인전 직접 입력
@@ -15,8 +15,8 @@ let _indInput={date:'',playerA:'',playerB:'',games:[]};
 /* ══════════════════════════════════════
    끝장전
 ══════════════════════════════════════ */
-let _gjInput={date:'',playerA:'',playerB:'',games:[]};
-let _gjProMode=false;
+var _gjInput={date:'',playerA:'',playerB:'',games:[]}; // ✅ var: IIFE 내부에서 window._gjInput으로 접근 가능
+var _gjProMode=false; // ✅ var: IIFE 내부에서 window._gjProMode로 접근 가능
 
 /* ══════════════════════════════════════
    끝장전 공유카드

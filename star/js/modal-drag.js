@@ -167,7 +167,7 @@ function closeMobileMatchSheet(e){
           else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세') && !t.includes('닫기') && !t.includes(':')) nameStr=nameStr||t;
         });
         if(badges.length>=2){
-          titleText = (dateStr?`<span style="font-size:11px;opacity:.7">${dateStr}</span><br>`:'') +
+          titleText = (dateStr?`<span style="font-size:var(--fs-caption);opacity:.7">${dateStr}</span><br>`:'') +
             badges[0].textContent.trim() + ' vs ' + badges[1].textContent.trim();
         } else if(nameStr){
           titleText = (dateStr?dateStr+' ':'')+nameStr;
@@ -221,12 +221,12 @@ function closeMobileMatchSheet(e){
     const bWin = parseInt(sb)>parseInt(sa);
     return `
       <div class="mobile-match-sheet-team" style="color:${aColor}">
-        <div style="font-size:11px;opacity:.7;margin-bottom:2px">${aName}</div>
+        <div style="font-size:var(--fs-caption);opacity:.7;margin-bottom:2px">${aName}</div>
         <div class="mobile-match-sheet-num" style="${aWin?'':'opacity:.45'}">${sa}</div>
       </div>
       <div class="mobile-match-sheet-sep">:</div>
       <div class="mobile-match-sheet-team" style="color:${bColor}">
-        <div style="font-size:11px;opacity:.7;margin-bottom:2px">${bName}</div>
+        <div style="font-size:var(--fs-caption);opacity:.7;margin-bottom:2px">${bName}</div>
         <div class="mobile-match-sheet-num" style="${bWin?'':'opacity:.45'}">${sb}</div>
       </div>`;
   }

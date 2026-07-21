@@ -68,7 +68,8 @@ function preparePlayerHeaderDisplayData(opts){
       const _profClipInline=_profClipMap[_profShape]?`clip-path:${_profClipMap[_profShape]};`:'';
       // 모양이 cover가 아닐 경우 강제 cover 적용 (꽉 채워야 모양이 깔끔함)
       const _finalFit=(imageFit==='contain'&&_profShape!=='circle'&&_profShape!=='square'&&_profShape!=='rounded')?'cover':imageFit;
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_finalFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness});${_profClipInline}" onerror="this.style.display='none'">`;
+      const _2ndHtml = (typeof _phSwap2ndHTML==='function' && p.secondProfileFile) ? _phSwap2ndHTML(p.secondProfileFile, {style:`object-position:${imagePos};${_profClipInline}`}) : '';
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_finalFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness});${_profClipInline}" onerror="this.style.display='none'">${_2ndHtml}`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     if(url){

@@ -56,24 +56,31 @@ function buildPlayerModeStatsHTML(opts){
     fixedModes=[],
     modeColors={},
     modeTint=0,
-    cWin='#16a34a',
-    cLoss='#dc2626'
+    cWin='#dc2626',
+    cLoss='#2563eb'
   } = opts || {};
-  let h=`<div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:#6b7280;border-radius:2px"></span>
-      모드별 전적
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+  let h=`<div class="su-sec" style="--su-sec-accent:#6b7280">
+    <div class="su-sec__title">모드별 전적</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">`;
   fixedModes.forEach(({key,w,l})=>{
     const t=w+l;
     const wr=t?Math.round(w/t*100):0;
     const mc=modeColors[key]||'#6b7280';
-    const wrCol=t?(wr>=50?cWin:cLoss):'#9ca3af';
-    h+=`<div style="background:${mc}${_rpPctToHex(modeTint)};border:1.5px solid ${mc}${_rpPctToHex(Math.min(99,modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
-      <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
-      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${cWin}">${w}승</span> <span style="color:${cLoss}">${l}패</span></div>
-      <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
+    const wrCol=t?(wr>=50?cWin:'#64748b'):'#9ca3af';
+    // (개선) 카드 전체를 진하게 물들이지 않고, 옅은 배경 + 상단 포인트 바 + 좌측 얇은 라인으로
+    // 모드 색상은 "표시"만 하고 텍스트 대비(가독성)는 항상 확보
+    // 설정(모드별 전적 배경 색상 강도)의 modeTint 값을 실제로 카드 배경에 반영해 은은한 모드색 배경을 만든다
+    const cardBg = modeTint>0
+      ? `linear-gradient(160deg,var(--surface),${mc}${_rpPctToHex(modeTint)})`
+      : 'var(--surface)';
+    h+=`<div class="pd-mode-card" style="position:relative;background:${cardBg};border-top:1px solid var(--border);border-bottom:1px solid var(--border);border-right:none;border-left:3px solid ${mc}${_rpPctToHex(45)};border-radius:12px;padding:10px 8px 8px;text-align:center;overflow:hidden;transition:transform .15s,box-shadow .15s;box-shadow:0 1px 3px rgba(15,23,42,.04)">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}${_rpPctToHex(32)}"></div>
+      <div style="font-size:10px;color:${mc}${_rpPctToHex(80)};font-weight:900;margin-bottom:6px;letter-spacing:.2px">${key}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:var(--fs-sm);font-weight:800;margin-bottom:4px">
+        <span style="color:${cWin};background:${cWin}14;border-radius:6px;padding:1px 6px">${w}승</span>
+        <span style="color:${cLoss};background:${cLoss}1f;border-radius:6px;padding:1px 6px">${l}패</span>
+      </div>
+      <div style="font-size:var(--fs-base);font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;
   });
   h+=`</div></div>`;
@@ -92,24 +99,22 @@ function buildPlayerRaceStatsHTML(modeHist){
   const raceBox=(r,label,barCol)=>{
     const w=raceAgg[r].w, l=raceAgg[r].l, t=w+l;
     const wr=t?Math.round(w/t*100):0;
-    return `<div style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
+    return `<div class="pd-race-card" style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--surface)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-        <span style="font-weight:1000;font-size:12px;color:var(--text2)">${label}</span>
+        <span style="font-weight:1000;font-size:var(--fs-sm);color:var(--text2)">${label}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:900">${t}게임</span>
       </div>
       <div style="display:flex;align-items:baseline;gap:6px">
         <span style="font-weight:1000;font-size:14px;color:${t?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${t?wr+'%':'-'}</span>
-        <span style="font-size:11px;color:var(--gray-l)">승 ${w} · 패 ${l}</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">승 ${w} · 패 ${l}</span>
       </div>
       <div style="height:6px;border-radius:999px;background:var(--bg2);overflow:hidden;margin-top:8px">
         <div style="height:100%;width:${t?wr:0}%;background:${barCol}"></div>
       </div>
     </div>`;
   };
-  return `<div style="margin:10px 0 14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>상대 종족별 전적
-    </div>
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title">상대 종족별 전적</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${raceBox('Z','저그','#a855f7')}
       ${raceBox('T','테란','#3b82f6')}
@@ -135,20 +140,17 @@ function buildPlayerOppTableHTML(opts){
   const oppTotalPages=Math.ceil(oppList.length/oppPageSize)||1;
   const oppCurPage=Math.max(0,Math.min(oppPage,oppTotalPages-1));
   const oppDisplay=oppList.slice(oppCurPage*oppPageSize,(oppCurPage+1)*oppPageSize);
-  return `<div style="margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px">
-        <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
-        상대 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${oppList.length}명)</span>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:4px">
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title-row">
+      <div class="su-sec__title">상대 전적 <small>(${oppList.length}명)</small></div>
+      <div class="su-sec__tools">
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="tot" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${oppSort==='tot'?'var(--blue)':'var(--white)'};color:${oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="w" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='w'?'var(--blue)':'var(--border2)'};background:${oppSort==='w'?'var(--blue)':'var(--white)'};color:${oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="wr" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${oppSort==='wr'?'var(--blue)':'var(--white)'};color:${oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
       </div>
     </div>
-    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <table style="margin:0;border:none;border-radius:0">
+    <div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="pd-opp-table" style="margin:0;border:none;border-radius:0">
         <thead><tr>
           <th style="text-align:left;padding:7px 12px">선수</th>
           <th style="text-align:center;width:40px">종족</th>
@@ -168,21 +170,21 @@ function buildPlayerOppTableHTML(opts){
               <td style="padding:6px 12px">
                 <div style="display:flex;align-items:center;gap:7px">
                   ${getPlayerPhotoHTML(opp,'36px')}
-                  <span style="font-weight:700;font-size:13px">${opp}</span>
+                  <span style="font-weight:700;font-size:var(--fs-base)">${opp}</span>
                 </div>
               </td>
               <td style="text-align:center"><span class="rbadge r${s.race||op?.race||'?'}" style="font-size:10px">${s.race||op?.race||'?'}</span></td>
               <td style="text-align:center"><span style="background:${oc};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${op?.univ||'-'}</span></td>
-              <td style="text-align:center;font-weight:700;color:#16a34a">${s.w}</td>
-              <td style="text-align:center;font-weight:700;color:#dc2626">${s.l}</td>
-              <td style="text-align:center;font-weight:800;font-size:12px;color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
+              <td style="text-align:center;font-weight:700;color:#dc2626">${s.w}</td>
+              <td style="text-align:center;font-weight:700;color:#2563eb">${s.l}</td>
+              <td style="text-align:center;font-weight:800;font-size:var(--fs-sm);color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
             </tr>`;
           }).join('')}
         </tbody>
       </table>
       ${oppTotalPages>1?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
         <button class="btn btn-w btn-xs" ${oppCurPage===0?'disabled':''} data-po-action="opp-page" data-po-name="${safeName}" data-po-page="${oppCurPage-1}">◀ 이전</button>
-        <span style="font-size:12px;color:var(--gray-l)">${oppCurPage+1} / ${oppTotalPages} 페이지</span>
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">${oppCurPage+1} / ${oppTotalPages} 페이지</span>
         <button class="btn btn-w btn-xs" ${oppCurPage>=oppTotalPages-1?'disabled':''} data-po-action="opp-page" data-po-name="${safeName}" data-po-page="${oppCurPage+1}">다음 ▶</button>
       </div>`:''}
     </div>
@@ -200,25 +202,22 @@ function buildPlayerVsUnivSectionHTML(opts){
   const visible = rows.slice(0, maxVisible);
   const hidden = rows.slice(maxVisible);
   const card = (row)=>`
-    <div style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.88);padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
+    <div class="pd-univ-card" style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.88);padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
           ${row.univ&&row.univ!=='무소속'?`onclick="openUnivModal('${(typeof escJS==='function'?escJS(row.univ):String(row.univ).replace(/'/g,"\\'"))}')"`:''}
           style="background:#f8fafc;color:#0f172a;border:1px solid rgba(148,163,184,.28);font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
       </div>
-      <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
-        <span style="color:#16a34a">${row.w}승</span>
+      <div style="margin-top:7px;font-size:var(--fs-base);font-weight:900;color:#0f172a">
+        <span style="color:#dc2626">${row.w}승</span>
         <span style="color:var(--gray-l);margin:0 5px">/</span>
-        <span style="color:#dc2626">${row.l}패</span>
+        <span style="color:#2563eb">${row.l}패</span>
       </div>
-      <div style="margin-top:4px;font-size:11px;color:var(--gray-l);font-weight:700">${row.tot}전</div>
+      <div style="margin-top:4px;font-size:var(--fs-caption);color:var(--gray-l);font-weight:700">${row.tot}전</div>
     </div>`;
-  return `<div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
-      대학별 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${rows.length}개 대학 · 미니대전/대학대전/대회 기준)</span>
-    </div>
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title">대학별 전적 <small>(${rows.length}개 대학 · 미니대전/대학대전/대회 기준)</small></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
       ${visible.map(card).join('')}
     </div>

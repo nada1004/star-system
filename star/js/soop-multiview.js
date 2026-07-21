@@ -74,7 +74,7 @@
             <div style="font-weight:1000;white-space:nowrap">📺 SOOP 방송보기</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-            <button class="btn btn-r btn-sm" onclick="window.closeSoopMulti()">닫기</button>
+            <button type="button" id="soopCloseBtn" class="btn btn-r btn-sm">닫기</button>
           </div>
         </div>
         <div class="su-modal-bd" style="padding:10px;overflow:hidden;flex:1;min-height:0">
@@ -85,14 +85,20 @@
     `;
     document.body.appendChild(ov);
 
-    // 배경 클릭 닫기
-    ov.addEventListener('click', (e)=>{
-      if(e.target === ov) window.closeSoopMulti();
-    });
-
     // 드래그 이동 (PC 마우스)
     const modal = ov.querySelector('.su-modal');
     const handle = ov.querySelector('#soopDragHandle');
+    const closeBtn = ov.querySelector('#soopCloseBtn');
+    if(closeBtn && !closeBtn.dataset.bound){
+      closeBtn.dataset.bound='1';
+      closeBtn.addEventListener('click', (e)=>{
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        window.closeSoopMulti();
+      });
+      closeBtn.addEventListener('mousedown', (e)=>{
+        try{ e.stopPropagation(); }catch(_){}
+      });
+    }
     if(modal && handle && !handle.dataset.bound){
       handle.dataset.bound='1';
       handle.addEventListener('mousedown', (e)=>{
@@ -202,7 +208,7 @@
     grid.innerHTML = ids.map(id=>`
       <div class="soop-cell" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface);border-bottom:1px solid var(--border2)">
-          <div style="font-weight:900;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${id}</div>
+          <div style="font-weight:900;font-size:var(--fs-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${id}</div>
         </div>
         <iframe src="${embedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer" style="width:100%;height:100%;border:0;background:#000;flex:1;min-height:0"></iframe>
       </div>
@@ -220,7 +226,6 @@
     buildModal();
     const ov = $('soopMultiOverlay');
     ov.style.display = 'flex';
-    document.body.classList.add('su-modal-open');
     // 초기 위치: 화면 중앙
     try{
       const modal = ov.querySelector('.su-modal');
@@ -255,7 +260,6 @@
     const ov = $('soopMultiOverlay');
     if(!ov) return;
     ov.style.display = 'none';
-    document.body.classList.remove('su-modal-open');
     // iframe 정지(리소스 절약)
     try{
       const grid = $('soop-grid');

@@ -30,7 +30,9 @@
     'su_p','su_pp','su_t','su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
     'su_rank_snap','su_cal_sched','su_votes','su_notices','su_seasons',
     // 빌더 편집 상태는 크기가 커질 수 있고, 백업 대상으로 우선순위 낮음
-    'su_bld_ck','su_bld_pro'
+    'su_bld_ck','su_bld_pro',
+    // UI 전용 상태 키: 섹션 열고 닫을 때마다 변경되므로 스냅샷에서 제외
+    'su_cfg_open','su_cfg_bottom_open','su_cfg_view_mode'
   ]);
   const _MAX_VAL_LEN = 12000; // 12KB 이상이면 스냅샷에서 제외 (설정 스냅샷 용도)
 
@@ -51,9 +53,16 @@
     if(!k || typeof k!=='string') return 'misc';
     if(k.startsWith('su_b2_') || k.startsWith('su_img')) return 'images';
     if(k.startsWith('su_pd_') || k.startsWith('su_md_')) return 'matchdetail';
-    if(k.startsWith('su_rc_') || k.startsWith('su_tc_')) return 'cards';
+    if(k.startsWith('su_rc_') || k.startsWith('su_tc_') ||
+       k.startsWith('su_mini_') || k.startsWith('su_ck_card') ||
+       k.startsWith('su_univm_') || k.startsWith('su_univck_') ||
+       k.startsWith('su_tt_') || k.startsWith('su_pcomp_') ||
+       k.startsWith('su_h2h_') || k==='su_tier_view_mode' ||
+       k.startsWith('su_match_btn_') || k.startsWith('su_ym_') ||
+       k.startsWith('su_rec_avatar') || k.startsWith('su_avatar_') ||
+       k.startsWith('su_team_color_')) return 'cards';
     if(k.startsWith('su_hdr_') || k.startsWith('su_design_v2') || k==='su_dark' || k.startsWith('su_ui_') || k.startsWith('su_btn_') || k.startsWith('su_app_font_')) return 'ui';
-    if(k.includes('femco') || k.startsWith('su_board') || k==='su_boardOrder' || k==='su_old_board' || k.startsWith('su_board2') || k.startsWith('su_chip')) return 'board';
+    if(k.includes('femco') || k.startsWith('su_board') || k==='su_boardOrder' || k==='su_old_board' || k.startsWith('su_board2') || k.startsWith('su_chip') || k.startsWith('su_b2mvp_') || k==='su_b2_briefing_theme') return 'board';
     if(k.startsWith('su_bgm_') || k.startsWith('su_soop_') || k.startsWith('su_paste_') || k==='su_paste_route_rules' || k.startsWith('su_auto_')) return 'automation';
     if(k.startsWith('su_cal_') || k.startsWith('su_date_')) return 'calendar';
     return 'misc';
@@ -64,7 +73,7 @@
       const v = JSON.parse(localStorage.getItem(SNAP_KEY)||'null');
       if(v && typeof v==='object') return v;
     }catch(e){}
-    return {v:1, updatedAt:0, cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
+    return {v:2, updatedAt:0, cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
   }
 
   function _saveSnap(s){
@@ -78,7 +87,7 @@
   }
 
   function _rebuildFromLocalStorage(){
-    const snap = {v:1, updatedAt:_now(), cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
+    const snap = {v:2, updatedAt:_now(), cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
     try{
       for(let i=0;i<localStorage.length;i++){
         const k = localStorage.key(i);
@@ -141,8 +150,22 @@
       if(!cats) throw new Error('invalid format');
       const flat = Object.values(cats).flatMap(obj => Object.entries(obj||{}));
       if(!confirm(`통합 설정을 적용할까요?\n총 ${flat.length}개의 su_* 키를 덮어씁니다.`)) return false;
-      flat.forEach(([k,v])=>{ try{ localStorage.setItem(k, v); }catch(e){} });
+      // (버그픽스) import 중 각 setItem이 클라우드 트리거를 반복 발생시키는 문제 방지
+      // _inSync=true로 래퍼를 우회하고, 완료 후 단 한 번만 스냅샷 재구축 + 클라우드 트리거
+      _inSync = true;
+      try{
+        flat.forEach(([k,v])=>{ try{ _origSet(k, v); }catch(e){} });
+      }finally{
+        _inSync = false;
+      }
       _rebuildFromLocalStorage();
+      // 임포트 완료 후 클라우드 동기화 1회 예약
+      try{
+        clearTimeout(_cloudDebounceT);
+        _cloudDebounceT = setTimeout(function(){
+          try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+        }, 600);
+      }catch(e){}
       try{ if(typeof render==='function') render(); }catch(e){}
       return true;
     }catch(e){
@@ -151,16 +174,62 @@
     }
   };
 
+  // ── 클라우드 자동 동기화: su_* 설정 키 변경 시 GitHub에 자동 반영 ──
+  // 대용량/경기기록/보안/상태 키는 제외하고, 순수 "설정" 키만 트리거
+  const _CLOUD_EXCLUDE_EXACT = new Set([
+    'su_p','su_pp','su_t','su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
+    'su_rank_snap','su_cal_sched','su_votes','su_notices','su_seasons',
+    'su_bld_ck','su_bld_pro',
+    'su_unified_settings_v1','su_unified_settings_migrated_v2',
+    'su_gh_token','su_fb_pw','su_admin_hash','su_admin_hashes',
+    'su_last_admin_save','su_last_save_time','su_admin_hashes_updated_at',
+  ]);
+  const _CLOUD_EXCLUDE_PREFIX = [
+    'su_sync_','su_match_store_','su_sharecard_cache_',
+    'su_hist_ext_','su_hist_ext_meta_',
+  ];
+  // UI 전용 상태 키 (너무 자주 바뀌어서 클라우드 저장 불필요)
+  const _CLOUD_EXCLUDE_UI_STATE = new Set([
+    'su_cfg_open','su_cfg_bottom_open','su_cfg_view_mode',
+  ]);
+
+  let _cloudDebounceT = null;
+  function _maybeScheduleCloud(k){
+    try{
+      if(_inSync) return;
+      if(!k || typeof k!=='string') return;
+      if(!k.startsWith('su_') && k!=='b2_femco_settings_v1' && k!=='cfg_femco_univ') return;
+      if(_CLOUD_EXCLUDE_EXACT.has(k)) return;
+      if(_CLOUD_EXCLUDE_UI_STATE.has(k)) return;
+      for(const p of _CLOUD_EXCLUDE_PREFIX){ if(k.startsWith(p)) return; }
+      // 디바운스: 연속 변경 시 마지막 변경 후 600ms에 한 번만 실행
+      clearTimeout(_cloudDebounceT);
+      _cloudDebounceT = setTimeout(function(){
+        try{
+          if(typeof window._scheduleCloudAppSettingsSave === 'function'){
+            window._scheduleCloudAppSettingsSave();
+          }
+        }catch(e){}
+      }, 600);
+    }catch(e){}
+  }
+
   // install wrappers
   try{
     localStorage.setItem = function(k, v){
       const r = _origSet(k, v);
-      if(!_inSync) _upsert(String(k), String(v));
+      if(!_inSync){
+        _upsert(String(k), String(v));
+        _maybeScheduleCloud(String(k));
+      }
       return r;
     };
     localStorage.removeItem = function(k){
       const r = _origRem(k);
-      if(!_inSync) _del(String(k));
+      if(!_inSync){
+        _del(String(k));
+        _maybeScheduleCloud(String(k));
+      }
       return r;
     };
     localStorage.clear = function(){

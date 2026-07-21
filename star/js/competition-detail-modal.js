@@ -2,6 +2,8 @@
 
 function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   try{ window.__detailCtx = 'compModal'; }catch(_){}
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn=tourneys.find(t=>t.id===tnId);
   if(!tn)return;
   let m;
@@ -38,12 +40,15 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       if(isDone){
         const sa = m.sa ?? '';
         const sb = m.sb ?? '';
-        const aBg = aWin ? (ca || '#64748b') : 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))';
-        const bBg = bWin ? (cb || '#64748b') : 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))';
-        const aBd = aWin ? _compMenuTint(ca || '#64748b', .46) : 'rgba(203,213,225,.88)';
-        const bBd = bWin ? _compMenuTint(cb || '#64748b', .46) : 'rgba(203,213,225,.88)';
-        const aFg = aWin ? '#ffffff' : '#1f2937';
-        const bFg = bWin ? '#ffffff' : '#1f2937';
+        // ✅ 수정: 패배팀만 회색 처리 (동점/무승부 시 양쪽 모두 컬러 유지)
+        const loseA = isDone && bWin;
+        const loseB = isDone && aWin;
+        const aBg = loseA ? 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))' : (ca || '#64748b');
+        const bBg = loseB ? 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))' : (cb || '#64748b');
+        const aBd = loseA ? 'rgba(203,213,225,.88)' : _compMenuTint(ca || '#64748b', .46);
+        const bBd = loseB ? 'rgba(203,213,225,.88)' : _compMenuTint(cb || '#64748b', .46);
+        const aFg = loseA ? '#1f2937' : '#ffffff';
+        const bFg = loseB ? '#1f2937' : '#ffffff';
         const uicon = (team)=>{
           try{
             const cfgList = Array.isArray(window.univCfg) && window.univCfg.length
@@ -54,9 +59,9 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
           }catch(e){ return ''; }
         };
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team" style="background:${aBg};border:1px solid ${aBd};justify-content:center;text-align:center;position:relative;color:${aFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 78px);white-space:nowrap">${uicon(m.a||'')}<span>${safe(m.a||'A팀')}</span></span></div>
-          <div class="cmd-mid"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'#111827'}">${sa}</span><span class="cmd-colon">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'#111827'}">${sb}</span></div>
-          <div class="cmd-team" style="background:${bBg};border:1px solid ${bBd};justify-content:center;text-align:center;position:relative;color:${bFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 78px);white-space:nowrap">${uicon(m.b||'')}<span>${safe(m.b||'B팀')}</span></span></div>
+          <div class="cmd-team" style="background:${aBg};border:1px solid ${aBd};justify-content:center;text-align:center;position:relative;color:${aFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2">${uicon(m.a||'')}<span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.a||'A팀')}</span></span></div>
+          <div class="cmd-mid"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'#111827'}">${sa}</span><span class="cmd-colon">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'#111827'}">${sb}</span></div>
+          <div class="cmd-team" style="background:${bBg};border:1px solid ${bBd};justify-content:center;text-align:center;position:relative;color:${bFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2">${uicon(m.b||'')}<span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.b||'B팀')}</span></span></div>
         </div>`;
         bar.style.display='block';
       }else{
@@ -68,9 +73,20 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
     if(headActions){
       const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';
       const okShare=(!_adm||isLoggedIn) && isDone;
-      headActions.innerHTML = okShare
-        ? `<button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:104px;padding:7px 12px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 20px rgba(37,99,235,.22);color:#fff;font-weight:900" onclick="${(gi!=null && (rnd==null || rnd===undefined) && !isManual)?`openCompMatchShareCard('${tnId}',${gi},${mi})`:`openBktShareCard('${tnId}',${rnd},${mi})`}">🎴 공유 카드</button>`
-        : '';
+      const isLeagueMatch=(gi!=null && (rnd==null || rnd===undefined) && !isManual);
+      let btnHtml='';
+      if(isLoggedIn){
+        // 수정 버튼
+        if(isLeagueMatch){
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openCompMatchEditModal==='function')openCompMatchEditModal('${tnId}',${gi},${mi});else if(typeof grpEditMatchInline==='function')grpEditMatchInline('${tnId}',${gi},${mi})">✏️ 수정</button>`;
+        } else if(isManual){
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openBktManualEditModal==='function')openBktManualEditModal('${tnId}',${mi})">✏️ 수정</button>`;
+        }
+      }
+      if(okShare){
+        btnHtml+=`<button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:104px;padding:7px 12px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 20px rgba(37,99,235,.22);color:#fff;font-weight:900" onclick="${isLeagueMatch?`openCompMatchShareCard('${tnId}',${gi},${mi})`:`openBktShareCard('${tnId}',${rnd},${mi})`}">🎴 공유 카드</button>`;
+      }
+      headActions.innerHTML=btnHtml;
     }
     window._cmdDetailState = { tnId, gi, mi, rnd, isManual, isLeague: (gi!=null && (rnd==null || rnd===undefined) && !isManual) };
   }catch(e){}
@@ -79,6 +95,29 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   if(content){
     content.innerHTML=`<div class="cmd-detail">${buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin)}</div>`;
   }
+  try{
+    const modal=document.getElementById('compMatchDetailModal');
+    if(modal){
+      modal.setAttribute('data-md-mode', _mdDesignMode);
+      modal.setAttribute('data-md-layout', _mdLayoutMode);
+      const box = modal.querySelector('.mbox--matchdetail');
+      const body = modal.querySelector('.cmd-body');
+      if(box){
+        box.setAttribute('data-md-mode', _mdDesignMode);
+        box.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+      if(body){
+        body.setAttribute('data-md-mode', _mdDesignMode);
+        body.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+    }
+  }catch(e){}
+  try{
+    document.querySelectorAll('#compMatchDetailModal .cmd-detail-shell').forEach(el=>{
+      el.setAttribute('data-md-mode', _mdDesignMode);
+      el.setAttribute('data-md-layout', _mdLayoutMode);
+    });
+  }catch(e){}
   try{
     if(typeof om==='function') om('compMatchDetailModal');
     else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='flex'; }

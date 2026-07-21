@@ -80,7 +80,7 @@ function _renderShareCardByPlayerFallback(name){
   const bgPosX=((p.shareCardBgPosX||'center')+'').trim();
   const bgPosY=((p.shareCardBgPosY||'center')+'').trim();
   const bgPos=`${bgPosX} ${bgPosY}`;
-  const recent=h.slice(0,5).map(x=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:${x.result==='승'?'#16a34a':'#dc2626'};color:#fff;font-size:11px;font-weight:900">${x.result==='승'?'W':'L'}</span>`).join('');
+  const recent=h.slice(0,5).map(x=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:${x.result==='승'?'#dc2626':'#2563eb'};color:#fff;font-size:var(--fs-caption);font-weight:900">${x.result==='승'?'W':'L'}</span>`).join('');
   const photo = p.photo ? `<img src="${toHttpsUrl(p.photo)}" style="width:88px;height:88px;border-radius:24px;object-fit:cover;display:block" onerror="this.remove()">` : '';
   const pts=p.points||0;
   const ptsColor=pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.8)';
@@ -114,7 +114,7 @@ function _renderShareCardByPlayerFallback(name){
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${raceLabel}</span>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${recent||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${recent||'<span style="opacity:.6;font-size:var(--fs-sm)">기록없음</span>'}</div>
         </div>
         <div style="min-width:92px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:10px 12px;text-align:center">
           <div style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">승률</div>
@@ -123,8 +123,8 @@ function _renderShareCardByPlayerFallback(name){
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px">
         <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800">승패</div><div style="margin-top:5px;font-size:16px;font-weight:1000"><span style="color:#4ade80">${w}</span> / <span style="color:#f87171">${l}</span></div></div>
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800">포인트</div><div style="margin-top:5px;font-size:18px;font-weight:1000;color:${ptsColor}">${pts>=0?'+':''}${pts}</div></div>
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800">총 경기</div><div style="margin-top:5px;font-size:18px;font-weight:1000">${tot}</div></div>
+        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800">포인트</div><div style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;color:${ptsColor}">${pts>=0?'+':''}${pts}</div></div>
+        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800">총 경기</div><div style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000">${tot}</div></div>
       </div>
     </div>
   </div>`;

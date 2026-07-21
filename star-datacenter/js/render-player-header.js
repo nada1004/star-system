@@ -165,7 +165,7 @@ function buildPlayerHeaderCardHTML(opts){
 
   const hdrContent_PC = `
     <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
-      <div class="pd-hero-photo" style="${photoBorder}">${photoHTML}</div>
+      <div class="pd-hero-photo ph-swap" style="${photoBorder}">${photoHTML}</div>
       <div class="pd-hero-meta" style="min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
@@ -182,7 +182,7 @@ function buildPlayerHeaderCardHTML(opts){
   const hdrContent_MB = `
     <div class="pd-hero-main pd-hero-main--mb" style="display:flex;flex-direction:column;gap:11px;position:relative">
       <div class="pd-hero-row" style="display:flex;align-items:center;gap:12px">
-        <div class="pd-hero-photo" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
+        <div class="pd-hero-photo ph-swap" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
         <div class="pd-hero-meta" style="min-width:0;flex:1">
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">

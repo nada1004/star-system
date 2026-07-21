@@ -23,7 +23,9 @@ const GH_SPLIT_SCHEMA_VERSION = 2;
 const GH_MONTHLY_KEYS = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
 const FB_AUX_DATABASE_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
 const FB_AUX_SIGNAL_PATH = 'syncSignals/star-datacenter';
-const FB_AUX_DEFAULT_PW = 'haram1019!@';
+// [보안 수정] 하드코딩된 기본 비밀번호(FB_AUX_DEFAULT_PW)를 제거했습니다.
+// 관리자는 localStorage의 su_fb_pw 값을 직접 설정해야 신호 동기화가 동작합니다.
+// (기존에는 평문 비밀번호가 공개 클라이언트 소스에 그대로 노출되어 있었습니다.)
 
 let _pending = null;
 let _lastSnapshot = null;

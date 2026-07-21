@@ -1,8 +1,35 @@
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
+
+// [FIX-18] J()와 _lsSave()를 파일 최상단으로 이동.
+// 기존 위치: 1088줄 (function 호이스팅으로 동작은 했으나 정의를 찾으려면 1000줄 스크롤 필요)
+// localStorage JSON/LZString 로드 헬퍼 — 파일 전체에서 사용
+function J(k){
+  try{
+    const v=localStorage.getItem(k);
+    if(!v)return null;
+    if(typeof LZString!=='undefined'){
+      try{return JSON.parse(v);}catch{
+        const d=LZString.decompressFromUTF16(v);
+        return d?JSON.parse(d):null;
+      }
+    }
+    return JSON.parse(v);
+  }catch{return null;}
+}
+function _lsSave(k,obj){
+  const s=JSON.stringify(obj);
+  if(typeof LZString!=='undefined'){
+    localStorage.setItem(k,LZString.compressToUTF16(s));
+  }else{
+    localStorage.setItem(k,s);
+  }
+}
+
 // 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
-const DATA_VERSION = 1;
+const DATA_VERSION = 2;
+try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260717-ds03'; }catch(e){}
 
 // 캐시 관리 함수
 function _checkDataVersion(){
@@ -22,16 +49,24 @@ function _checkDataVersion(){
     console.error('[Cache] 버전 확인 실패:', e);
   }
 }
+try{ _checkDataVersion(); }catch(e){}
 
 function _clearCacheByVersionChange(){
   try{
     // 먼저 새 버전을 저장하여 무한 루프 방지
     localStorage.setItem('su_data_version', String(DATA_VERSION));
     
-    const cacheKeys = ['su_tiers', 'su_u', 'su_m', 'su_t', 'su_cn', 'su_cc', 'su_ptc', 'su_ttcur', 'su_boardOrder', 'su_bpo', 'su_notices', 'su_seasons', 'su_cal_sched'];
+    const cacheKeys = [
+      'su_tiers', 'su_u', 'su_m', 'su_t', 'su_cn', 'su_cc', 'su_ptc', 'su_ttcur', 'su_boardOrder', 'su_bpo', 'su_notices', 'su_seasons', 'su_cal_sched',
+      'su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm','su_p','su_pp','su_last_save_time'
+    ];
     cacheKeys.forEach(key => {
       try{ localStorage.removeItem(key); }catch(e){}
     });
+    try{ localStorage.setItem('su_force_autoload', '1'); }catch(e){}
+    try{ sessionStorage.setItem('su_force_autoload', '1'); }catch(e){}
+    try{ if(window.MatchStore && typeof window.MatchStore.clear === 'function') window.MatchStore.clear(); }catch(e){}
+    try{ if(window.PlayerStore && typeof window.PlayerStore.clear === 'function') window.PlayerStore.clear(); }catch(e){}
     console.log('[Cache] 캐시 초기화 완료');
     // (요청) 버전 변경 시 강제 새로고침은 하지 않음
     // - 일부 환경에서 localStorage/sessionStorage 반영 타이밍 문제로 "계속 새로고침"처럼 느껴질 수 있음
@@ -66,6 +101,29 @@ window.clearSpecificCache = function(keys){
     console.error('[Cache] 특정 캐시 삭제 실패:', e);
     return false;
   }
+};
+
+window.escJS = function(s){
+  return String(s || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n');
+};
+window.escHTML = function(s){
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+window.escAttr = function(s){
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 };
 
 let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];if(!t.includes('미정'))t.push('미정');return t;})();
@@ -113,7 +171,7 @@ function applyMainTabLabels(){
       pro:'프로리그',
       stats:'통계',
       cal:'캘린더',
-      roulette:'룰렛',
+      roulette:'룰렛/게임',
       cfg:'설정'
     };
     document.querySelectorAll('.tab').forEach(btn=>{
@@ -301,8 +359,72 @@ function applyProfileShapeVars(){
     // (보강) 전역 프로필 모양은 su_profile_shape를 우선 사용하고,
     // 없으면 과거 호환으로 su_bcp_shape(현황판 칩 모양)를 사용
     const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
-    const radius = (shape === 'square') ? '8px' : '50%';
+    const _shapeRadius = {
+      circle:'50%', square:'6px', rounded:'22%', squircle:'28%',
+      diamond:'50%', hexagon:'50%', shield:'50% 50% 45% 45% / 60% 60% 40% 40%',
+      pentagon:'50%', star:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
+      leaf:'50%', triangle:'0', octagon:'50%', cross:'0',
+      heart:'50% 50% 50% 50%/60% 60% 40% 40%',
+      parallelogram:'0', arrow:'0',
+      'rounded-top':'50% 50% 10% 10% / 70% 70% 10% 10%',
+      cloud:'50%', arch:'50% 50% 8px 8px / 60% 60% 8px 8px',
+      badge:'0', chevron:'0', clover:'50%', gem:'0', flag:'0',
+      pill:'50px', stadium:'40% 40% 40% 40% / 60% 60% 60% 60%',
+      teardrop:'50% 50% 50% 50% / 60% 60% 40% 40%',
+      moon:'50%', tv:'14%', flower:'50%', pac:'50%',
+      'ring-cut':'50%', kite:'0', notch:'8px',
+      // ── 스포츠 대결 ──
+      thunder:'0', versus:'0', esports:'0', trophy:'0', crown:'0',
+      target:'50%', fist:'0', arena:'50%', medal:'50%', saber:'0', blast:'0',
+      // ── 추가 모양 ──
+      puzzle:'8px', 'ribbon-banner':'0', envelope:'4px', spark:'0', 'tag-corner':'0', 'wave-bottom':'0 0 50% 50% / 0 0 30% 30%'
+    };
+    const radius = _shapeRadius[shape] || '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
+    // 특수 모양(diamond/hexagon/shield)은 clip-path로 처리
+    const _shapeClip = {
+      diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+      hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+      shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+      pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+      star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+      leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+      triangle:'polygon(50% 0%, 0% 100%, 100% 100%)',
+      octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
+      cross:'polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)',
+      parallelogram:'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
+      arrow:'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)',
+      cloud:'polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)',
+      badge:'polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)',
+      chevron:'polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)',
+      clover:'polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)',
+      gem:'polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)',
+      flag:'polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)',
+      moon:'ellipse(50% 50% at 65% 50%)',
+      flower:'polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)',
+      pac:'polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)',
+      kite:'polygon(50% 0%,100% 40%,50% 100%,0% 40%)',
+      notch:'polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)',
+      // ── 스포츠 대결 ──
+      thunder:'polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)',
+      versus:'polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)',
+      esports:'polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)',
+      trophy:'polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)',
+      crown:'polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)',
+      fist:'polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)',
+      arena:'polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)',
+      medal:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)',
+      saber:'polygon(0% 15%,15% 0%,100% 85%,85% 100%)',
+      blast:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)',
+      // ── 추가 모양 ──
+      puzzle:'polygon(0% 0%,40% 0%,40% 10%,60% 10%,60% 0%,100% 0%,100% 40%,90% 40%,90% 60%,100% 60%,100% 100%,60% 100%,60% 90%,40% 90%,40% 100%,0% 100%,0% 60%,10% 60%,10% 40%,0% 40%)',
+      'ribbon-banner':'polygon(0% 0%,100% 0%,100% 80%,75% 80%,75% 100%,50% 80%,25% 100%,25% 80%,0% 80%)',
+      envelope:'polygon(0% 15%,50% 0%,100% 15%,100% 100%,0% 100%)',
+      spark:'polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)',
+      'tag-corner':'polygon(8% 0%,92% 0%,100% 8%,100% 92%,92% 100%,8% 100%,0% 92%,0% 8%)'
+    };
+    const clipPath = _shapeClip[shape] || 'none';
+    document.documentElement.style.setProperty('--su_profile_clip', clipPath);
 
     // (추가) 기기별 프로필 이미지 크기 배율
     // - PC/태블릿/모바일 각각 %로 저장
@@ -314,13 +436,9 @@ function applyProfileShapeVars(){
     const sc = Math.max(0.7, Math.min(1.3, pct/100));
     document.documentElement.style.setProperty('--su_profile_scale', String(sc));
 
-    // (추가) 프로필 이미지 효과
-    const fx = (localStorage.getItem('su_profile_fx')||'none').trim();
-    let shadow = 'none';
-    if(fx==='shadow') shadow = '0 6px 16px rgba(0,0,0,.18)';
-    if(fx==='ring') shadow = '0 0 0 2px rgba(255,255,255,.85)';
-    if(fx==='both') shadow = '0 0 0 2px rgba(255,255,255,.85), 0 6px 16px rgba(0,0,0,.18)';
-    document.documentElement.style.setProperty('--su_profile_fx', shadow);
+    // 프로필 이미지 효과 — 기능 완전 제거(항상 "없음"으로 고정)
+    document.documentElement.style.setProperty('--su_profile_fx', 'none');
+    document.documentElement.style.setProperty('--su_profile_filter_fx', 'none');
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
   }
@@ -343,15 +461,38 @@ try{
 ══════════════════════════════════════ */
 function applyUnivLogoVars(){
   try{
-    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
+    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square|rounded|squircle|hexagon|shield|pentagon|star|diamond|blob|leaf|octagon
     const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
     const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
     // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
-    const dSize = parseInt(localStorage.getItem('su_ul_size_detail') || String(size), 10);
-    const dBox  = parseInt(localStorage.getItem('su_ul_box_detail')  || String(box), 10);
-    const radius = (shape === 'square') ? '10px' : '50%';
+    const dSizeRaw = parseInt(localStorage.getItem('su_ul_size_detail') || '0', 10);
+    const dBoxRaw  = parseInt(localStorage.getItem('su_ul_box_detail')  || '0', 10);
+    const dSize = Math.max(132, Number.isFinite(dSizeRaw) && dSizeRaw > 0 ? dSizeRaw : size);
+    const dBox  = Math.max(166, Number.isFinite(dBoxRaw) && dBoxRaw > 0 ? dBoxRaw : box);
+    // (요청사항) 대학 로고/팀버튼 이미지 모양 다양화
+    const _ulRadiusMap = {
+      circle:'50%', square:'10px', rounded:'22%', squircle:'28%',
+      hexagon:'50%', shield:'50%', pentagon:'50%', star:'50%',
+      diamond:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
+      leaf:'50%', octagon:'50%', heart:'50% 50% 50% 50%/60% 60% 40% 40%'
+    };
+    const _ulClipMap = {
+      hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+      shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+      pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+      star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+      diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+      leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+      octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)'
+    };
+    const radius = _ulRadiusMap[shape] || '50%';
+    const ulClip = _ulClipMap[shape] || 'none';
     document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
+    document.documentElement.style.setProperty('--su_univ_logo_clip', ulClip);
     document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
+    // tc-uicon (팀버튼 내 대학 로고) 모양도 같이 적용
+    document.documentElement.style.setProperty('--su_tc_uicon_radius', radius);
+    document.documentElement.style.setProperty('--su_tc_uicon_clip', ulClip);
     document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
     // 대학 상세(모달)용
     document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');
@@ -671,7 +812,8 @@ function getMatchDetailAvatarSetting(kind){
     const dk = _getMdDeviceKey();
     if(kind === 'fit'){
       const v = localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || 'cover';
-      return ['cover','contain'].includes(String(v).trim()) ? String(v).trim() : 'cover';
+      // fill(늘리기) 옵션도 지원 - fill은 '100% 100%'로 렌더링됨
+      return ['cover','contain','fill'].includes(String(v).trim()) ? String(v).trim() : 'cover';
     }
     const raw = localStorage.getItem(`su_md_avatar_scale_${dk}`) || localStorage.getItem('su_md_avatar_scale') || '100';
     const n = parseInt(raw, 10);
@@ -801,35 +943,43 @@ function escAttr(s){
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;');
 }
+// HTML 이스케이프 — 전역 단일 정의 (stats.js / settings.js 등의 중복 guard가 이 정의를 우선 사용)
+const _ESC_HTML_MAP={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+window.escHTML = function(s){
+  return String(s??'').replace(/[&<>"']/g, function(m){
+    return _ESC_HTML_MAP[m];
+  });
+};
 
+const _TIER_SHADOW_MAP={
+  'G':'0 2px 14px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3)',
+  'K':'0 2px 10px rgba(26,42,82,.5),0 0 0 1px rgba(226,201,126,.2)',
+  'JA':'0 2px 10px rgba(12,74,92,.5)',
+  'J':'0 2px 10px rgba(6,78,59,.5)',
+  'S':'0 2px 10px rgba(30,58,95,.5)',
+};
 function getTierBadge(tier){
   if(!tier) return '';
   const ic=(_TIER_ICON&&_TIER_ICON[tier])||'';
   const bg=getTierBtnColor(tier)||'#64748b';
   const col=getTierBtnTextColor(tier)||'#fff';
   // 현황판과 동일한 그라디언트 스타일 (box-shadow 포함)
-  const shadowMap={
-    'G':'0 2px 14px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3)',
-    'K':'0 2px 10px rgba(26,42,82,.5),0 0 0 1px rgba(226,201,126,.2)',
-    'JA':'0 2px 10px rgba(12,74,92,.5)',
-    'J':'0 2px 10px rgba(6,78,59,.5)',
-    'S':'0 2px 10px rgba(30,58,95,.5)',
-  };
-  const shadow=shadowMap[tier]||'0 1px 5px rgba(0,0,0,.25)';
-  return `<span class="tbadge" style="background:${bg};color:${col};box-shadow:${shadow};border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">${ic?ic+' ':''}${tier}</span>`;
+  const shadow=_TIER_SHADOW_MAP[tier]||'0 1px 5px rgba(0,0,0,.25)';
+  return `<span class="tbadge" style="background:${bg};color:${col};box-shadow:${shadow};border-radius:6px;padding:1px 5px;font-size:9.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px">${ic?ic+' ':''}${tier}</span>`;
 }
 
+const _TIER_LABEL_ICONS_DEFAULT={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
+const _TIER_LABEL_MAP={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
 function getTierLabel(tier){
-  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
-  const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
+  const icons=_TIER_ICON||_TIER_LABEL_ICONS_DEFAULT;
   const ic=icons[tier]||'';
-  return ic?`${ic} ${labels[tier]||tier}`:tier;
+  return ic?`${ic} ${_TIER_LABEL_MAP[tier]||tier}`:tier;
 }
 
+const _TIER_PILL_ICONS_DEFAULT={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
 function getTierPillLabel(tier){
-  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
-  const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
-  return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
+  const icons=_TIER_ICON||_TIER_PILL_ICONS_DEFAULT;
+  return icons[tier]?`${icons[tier]} ${_TIER_LABEL_MAP[tier]||tier}`:tier;
 }
 
 // ── (설정) 티어 색상/이모지 커스텀 ──
@@ -987,11 +1137,11 @@ const MAIN_ROLES = ['이사장','동아리 회장','총장','부총장','총괄'
 const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯','대표':'👥'};
 const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490','대표':'#8b5cf6'};
 
+const _ROLE_ORDER_MAP = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
 function getRoleOrder(role){
   // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
-  const ORDER = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
   if(!role) return 99;
-  return role in ORDER ? ORDER[role] : 99;
+  return role in _ROLE_ORDER_MAP ? _ROLE_ORDER_MAP[role] : 99;
 }
 function getRoleBadgeHTML(role, size='11px'){
   if(!role) return '';
@@ -1000,51 +1150,69 @@ function getRoleBadgeHTML(role, size='11px'){
   // MAIN_ROLES는 진한 배경색, 그 외는 연한 배경
   const isMain = MAIN_ROLES.includes(role);
   if(isMain){
-    return `<span style="font-size:${size};padding:2px 7px;border-radius:5px;background:${col};color:#fff;font-weight:800;white-space:nowrap;flex-shrink:0;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.2)">${icon} ${role}</span>`;
+    return `<span style="font-size:${size};padding:1px 5px;border-radius:5px;background:${col};color:#fff;font-weight:800;white-space:nowrap;flex-shrink:0;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.2)">${icon} ${role}</span>`;
   }
-  return `<span style="font-size:${size};padding:1px 6px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
+  return `<span style="font-size:${size};padding:1px 4px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
 }
 
 /* ══════════════════════════════════════
    DATA LOAD
+   [FIX-18] J()와 _lsSave()는 파일 최상단으로 이동됨. 이 섹션에서는 제거.
 ══════════════════════════════════════ */
-function J(k){
+
+function _normalizeLoadedPlayers(list){
   try{
-    const v=localStorage.getItem(k);
-    if(!v)return null;
-    // LZ-String 압축 여부 자동 감지: 압축된 데이터는 JSON으로 파싱 불가
-    if(typeof LZString!=='undefined'){
-      try{return JSON.parse(v);}catch{
-        const d=LZString.decompressFromUTF16(v);
-        return d?JSON.parse(d):null;
+    let changed = false;
+    const next = (Array.isArray(list) ? list : []).map(p=>{
+      if(!p || typeof p !== 'object'){ changed = true; return null; }
+      const n = { ...p };
+      const rawType = String(n.gameType || '').trim().toLowerCase();
+      if(rawType === 'general' || n.gameType === '종합게임'){
+        n.gameType = 'starcraft';
+        changed = true;
+      }else if(!n.gameType){
+        n.gameType = 'starcraft';
+        changed = true;
       }
-    }
-    return JSON.parse(v);
-  }catch{return null;}
-}
-function _lsSave(k,obj){
-  const s=JSON.stringify(obj);
-  if(typeof LZString!=='undefined'){
-    localStorage.setItem(k,LZString.compressToUTF16(s));
-  }else{
-    localStorage.setItem(k,s);
+      if(!String(n.univ || '').trim()){
+        n.univ = '무소속';
+        changed = true;
+      }
+      if(!String(n.race || '').trim()){
+        n.race = 'N';
+        changed = true;
+      }
+      if(Object.prototype.hasOwnProperty.call(n, 'displayName')){
+        delete n.displayName;
+        changed = true;
+      }
+      if(Object.prototype.hasOwnProperty.call(n, 'crew')){
+        delete n.crew;
+        changed = true;
+      }
+      return n;
+    }).filter(Boolean);
+    try{ window._playerSchemaNeedsSave = window._playerSchemaNeedsSave || changed; }catch(e){}
+    return next;
+  }catch(e){
+    return Array.isArray(list) ? list : [];
   }
 }
-
 // (복구/호환) su_p가 {v:2,p:[...],d:{...}} 형태여도 정상 동작하도록 unpack
 function _unpackPlayers(raw){
   try{
     if(!raw) return [];
-    if(Array.isArray(raw)) return raw;
+    if(Array.isArray(raw)) return _normalizeLoadedPlayers(raw);
     if(typeof raw!=='object') return [];
     if(raw.v!==2 || !Array.isArray(raw.p) || !raw.d) return [];
     const d=raw.d||{};
     const res=d.res||[], opp=d.opp||[], race=d.race||[], map=d.map||[], univ=d.univ||[], mode=d.mode||[];
     const get=(arr,i)=> (i==null||i<0)?'':(arr[i]||'');
-    return raw.p.map(pp=>{
-      const p={...pp};
+    return _normalizeLoadedPlayers(raw.p.map(pp=>{
+      const base = (pp && typeof pp === 'object') ? pp : {};
+      const p={...base};
       const hp=Array.isArray(p.h)?p.h:[];
-      p.history = hp.map(r=>({
+      p.history = hp.filter(r=>Array.isArray(r)).map(r=>({
         date: r[0]||'',
         time: r[1]||0,
         result: get(res, r[2]),
@@ -1060,7 +1228,7 @@ function _unpackPlayers(raw){
       }));
       delete p.h;
       return p;
-    });
+    }));
   }catch(e){
     return [];
   }
@@ -1080,8 +1248,27 @@ let players    = _unpackPlayers(playersRaw) || [];
 (function(){ if(!_playerLegacyLoadEnabled) return; const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 try{ window.players = players; }catch(e){}
 try{ window.playerPhotos = _playerLegacyLoadEnabled ? (J('su_pp') || {}) : {}; }catch(e){}
-let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
-let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
+try{
+  if(window._playerSchemaNeedsSave){
+    setTimeout(()=>{
+      try{
+        if(window._playerSchemaNeedsSave && typeof localSave === 'function'){
+          localSave();
+          window._playerSchemaNeedsSave = false;
+        }
+      }catch(e){}
+    }, 0);
+  }
+}catch(e){}
+var boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
+var b2LabelAlpha  = J('su_b2la')  ?? 16;
+var b2BgAlpha     = J('su_b2ba')  ?? 9;
+var b2BgImgAlpha      = J('su_b2bia')  ?? 12;
+var b2FreeBgAlpha     = J('su_b2fba')  ?? 25;
+var b2FreeTierBgAlpha = J('su_b2ftba') ?? 15;
+var b2ProfileBgAlpha  = J('su_b2pba') ?? 10;
+function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
+var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
@@ -1109,7 +1296,7 @@ let notices    = J('su_notices') || [];
 // (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
 try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
 
-let BLD = {};
+var BLD = {}; // ✅ var로 선언해야 window.BLD와 동일 객체로 IIFE 내부에서도 접근 가능
 let openDetails = {};
 let tierRankModeFilter = '전체';
 
@@ -1168,6 +1355,7 @@ const STATUS_ICON_DEFS = {
 let _customStatusIcons = _ICON_LEGACY_LOAD_ENABLED ? (J('su_si_customs') || []) : [];
 function _rebuildCustomStatusDefs(){
   Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
+  if(!Array.isArray(_customStatusIcons)) _customStatusIcons = [];
   _customStatusIcons.forEach((c,i)=>{ STATUS_ICON_DEFS['_c'+i]={label:c.label||'커스텀'+(i+1),emoji:c.emoji}; });
 }
 _rebuildCustomStatusDefs();
@@ -1184,9 +1372,9 @@ function _iconNormalizeState(v){
 }
 function _iconApplyState(v){
   const s=_iconNormalizeState(v);
-  playerStatusIcons = {...s.playerStatusIcons};
-  playerStatusExpiry = {...s.playerStatusExpiry};
-  _customStatusIcons = [...s.customStatusIcons];
+  playerStatusIcons = s.playerStatusIcons ? {...s.playerStatusIcons} : {};
+  playerStatusExpiry = s.playerStatusExpiry ? {...s.playerStatusExpiry} : {};
+  _customStatusIcons = Array.isArray(s.customStatusIcons) ? [...s.customStatusIcons] : [];
   _rebuildCustomStatusDefs();
   return s;
 }
@@ -1345,6 +1533,92 @@ function toHttpsUrl(u){
   const s = String(u||'');
   return s.startsWith('http://') ? ('https://' + s.slice('http://'.length)) : s;
 }
+// 프로필 사진 썸네일 URL (images.weserv.nl 리사이즈 프록시)
+// 사용자가 imgur/디스코드 등에 올린 원본(수백KB~수MB, 고해상도)을
+// 실제 표시 크기(px)에 맞게 축소+webp 재인코딩하여 전송량/디코딩 비용을 크게 줄인다.
+function toThumbUrl(u, px){
+  const s = toHttpsUrl(u);
+  if(!s || !/^https:\/\//.test(s)) return s; // data: 등은 그대로 통과
+  if(s.indexOf('images.weserv.nl') !== -1) return s; // 이미 프록시된 URL이면 중복 방지
+  try{
+    const dpr = (typeof window!=='undefined' && window.devicePixelRatio > 1) ? 2 : 1;
+    const w = Math.max(32, Math.min(640, Math.round((parseInt(px,10)||64) * dpr)));
+    const encoded = encodeURIComponent(s.replace(/^https?:\/\//,''));
+    return 'https://images.weserv.nl/?url='+encoded+'&w='+w+'&h='+w+'&fit=cover&we=1&output=webp&q=78';
+  }catch(e){ return s; }
+}
+// 정사각형으로 자르지 않고 원본 비율을 유지한 채 최대 너비만 제한 (배너/상세 사진 등)
+function toScaledUrl(u, maxPx){
+  const s = toHttpsUrl(u);
+  if(!s || !/^https:\/\//.test(s)) return s;
+  if(s.indexOf('images.weserv.nl') !== -1) return s;
+  try{
+    const dpr = (typeof window!=='undefined' && window.devicePixelRatio > 1) ? 2 : 1;
+    const w = Math.max(64, Math.min(1200, Math.round((parseInt(maxPx,10)||480) * dpr)));
+    const encoded = encodeURIComponent(s.replace(/^https?:\/\//,''));
+    return 'https://images.weserv.nl/?url='+encoded+'&w='+w+'&we=1&output=webp&q=80';
+  }catch(e){ return s; }
+}
+// ══════════════════════════════════════════════════════════
+// 공용: 썸네일에 마우스를 올리면 두번째 프로필 이미지가 미리보기(스크럽)로 표시되는 기능
+// 스트리머탭 / 현황판 / 티어 순위표 / 각종 상세·공유 팝업 등 어디서든 재사용
+// - PC(마우스 hover 가능한 포인터)에서만 동작, 터치 기기에서는 동작 안 함
+// - 썸네일 우측 절반에 마우스가 있을 때만 두번째 이미지 표시
+// 사용법: 감싸는 요소에 class="ph-swap" 지정 + _phSwap2ndHTML(secondUrl)을 그 요소 내부에 삽입
+// ══════════════════════════════════════════════════════════
+function _phSwapIsVideoUrl(u){
+  const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+  return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+}
+function _phSwap2ndHTML(secondUrl, opt){
+  const raw = String(secondUrl||'').trim();
+  if(!raw) return '';
+  const cls = 'ph-swap-2' + (opt && opt.extraClass ? (' '+opt.extraClass) : '');
+  const fitStyle = (opt && opt.style) ? opt.style : '';
+  if(_phSwapIsVideoUrl(raw)){
+    const src = toHttpsUrl(raw);
+    return `<video class="${cls}" src="${src}" muted playsinline loop preload="metadata" style="${fitStyle}"></video>`;
+  }
+  const isGif = /\.gif(\?|$)/i.test(raw);
+  // gif는 toScaledUrl(webp변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+  const src = isGif ? toHttpsUrl(raw) : toScaledUrl(raw, (opt && opt.px) || 320);
+  const orig = toHttpsUrl(raw);
+  return `<img class="${cls}" src="${src}" data-orig="${orig}" loading="lazy" decoding="async" alt="" style="${fitStyle}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`;
+}
+(function(){
+  if(window._phSwapDelegatedInit) return; // 중복 등록 방지
+  window._phSwapDelegatedInit = true;
+  const _isPcHover = () => !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  document.addEventListener('mousemove', function(e){
+    if(!_isPcHover()) return;
+    const wrap = e.target && e.target.closest ? e.target.closest('.ph-swap') : null;
+    if(!wrap) return;
+    const sec = wrap.querySelector('.ph-swap-2');
+    if(!sec) return;
+    const rect = wrap.getBoundingClientRect();
+    if(!rect.width) return;
+    const x = e.clientX - rect.left;
+    if(x > rect.width / 2) sec.classList.add('is-visible');
+    else sec.classList.remove('is-visible');
+  }, {passive:true});
+  document.addEventListener('mouseout', function(e){
+    const wrap = e.target && e.target.closest ? e.target.closest('.ph-swap') : null;
+    if(!wrap) return;
+    if(e.relatedTarget && wrap.contains(e.relatedTarget)) return;
+    const sec = wrap.querySelector('.ph-swap-2');
+    if(sec) sec.classList.remove('is-visible');
+  }, {passive:true});
+})();
+
+// 썸네일 프록시 실패 시 원본으로 폴백 → 그래도 실패하면 숨김. onerror 핸들러에서 공용으로 호출.
+function _thumbFallback(el){
+  try{
+    if(!el) return;
+    const orig = el.getAttribute('data-orig');
+    if(orig && el.src !== orig){ el.onerror = function(){ this.style.display='none'; }; el.src = orig; }
+    else { el.style.display='none'; }
+  }catch(e){ try{ el.style.display='none'; }catch(e2){} }
+}
 function getStatusIcon(name){
   const expiry = playerStatusExpiry[name];
   if(expiry && expiry < new Date().toISOString().slice(0,10)){
@@ -1495,1277 +1769,25 @@ function fixPoints(){
   });
 }
 
-function localSave(){
-  try{
-    _lsSave('su_tiers',TIERS);
-    // 데이터 버전 관리 - 캐시 무효화용
-    _lsSave('su_data_version', DATA_VERSION || 1);
-    // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
-    const _trimM=arr=>arr.map(m=>{
-      if(!m.teamAMembers&&!m.teamBMembers)return m;
-      const r={...m};
-      if(r.teamAMembers)r.teamAMembers=r.teamAMembers.map(x=>({name:x.name,univ:x.univ}));
-      if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
-      return r;
-    });
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
-    _lsSave('su_mAlias',userMapAlias);
-    _lsSave('su_t',tourD);
-    // 경기 기록 원본은 IndexedDB 우선 저장
-    _lsSave('su_cn',compNames);
-    _lsSave('su_cc',curComp);
-    _lsSave('su_ptc',curProComp);
-    _lsSave('su_ttcur',_ttCurComp);
-    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
-    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
-    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
-    _lsSave('su_notices',notices);
-    _lsSave('su_seasons',seasons);
-    _lsSave('su_cal_sched',calScheduled);
-    if(window.MatchStore && typeof window.MatchStore.save==='function'){
-      window._lastMatchStoreSavePromise = window.MatchStore.save().catch(e=>{
-        console.warn('[MatchStore.save]', e && e.message ? e.message : e);
-        return false;
-      });
-    }else{
-      window._lastMatchStoreSavePromise = Promise.resolve(true);
-    }
-    if(window.PlayerStore && typeof window.PlayerStore.save==='function'){
-      window._lastPlayerStoreSavePromise = window.PlayerStore.save().catch(e=>{
-        console.warn('[PlayerStore.save]', e && e.message ? e.message : e);
-        return false;
-      });
-    }else{
-      const _pPhotoMap={};
-      const _pNoPhoto=players.map(p=>{
-        const c=_stripPlayerHistoryForSave(p);
-        if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-        return c;
-      });
-      _lsSave('su_pp',_pPhotoMap);
-      _lsSave('su_p',_pNoPhoto);
-      window._lastPlayerStoreSavePromise = Promise.resolve(true);
-    }
-    localStorage.setItem('su_last_save_time',Date.now().toString());
-    if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
-    if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
-  }catch(e){
-    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
-      if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
-      else alert('⚠️ 저장 공간이 부족합니다! 브라우저 저장소를 정리해 주세요.');
-    }else{
-      console.error('[localSave error]',e);
-    }
-  }
-}
-
-// 설정 전용 경량 저장 — 선수 기록·대전 데이터 직렬화 없음, Firebase 스킵
-// 맵·약자·상태아이콘·티어·대학 설정 변경 시 사용
-function saveCfg(){
-  try{
-    _lsSave('su_tiers',TIERS);
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
-    _lsSave('su_mAlias',userMapAlias);
-    localStorage.setItem('su_last_save_time',Date.now().toString());
-    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
-
-    // 설정 변경 GitHub 자동 반영은 옵션이 켜진 경우에만 수행
-    try{
-      const statusEl = document.getElementById('cloudStatus');
-      if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-        const token = localStorage.getItem('su_gh_token') || '';
-        const autoCfgRemote = (localStorage.getItem('su_cfg_remote_auto') ?? '1') === '1';
-        if (token && autoCfgRemote && typeof window.fbUpdate === 'function') {
-          // su_* 키 일부(큰 값/비밀 값 제외)도 함께 동기화 → 설정탭 변경이 다른 기기에 바로 적용
-          const _syncLs = {};
-          try{
-            for(let i=0;i<localStorage.length;i++){
-              const k = localStorage.key(i);
-              if(!k || typeof k!=='string') continue;
-              if(!k.startsWith('su_')) continue;
-              if(k.startsWith('su_pp')) continue;
-              if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_admin_hashes') continue;
-              if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
-              const v = localStorage.getItem(k);
-              if(v==null) continue;
-              if(String(v).length > 200000) continue;
-              _syncLs[k] = v;
-            }
-          }catch(e){}
-
-          const patch = {
-            tiers: TIERS,
-            univCfg,
-            maps,
-            userMapAlias,
-            playerStatusIcons: (typeof playerStatusIcons!=='undefined' ? playerStatusIcons : {}),
-            appSettings: { ls: _syncLs },
-          };
-          if(statusEl){ statusEl.style.color=''; statusEl.textContent='⏫ 설정 GitHub 저장 중...'; }
-          window.fbUpdate(patch)
-            .then(()=>{ if(statusEl){ statusEl.style.color='#16a34a'; statusEl.textContent='✅ 설정 GitHub 반영됨'; setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2500);} })
-            .catch((e)=>{ if(statusEl){ statusEl.style.color='#dc2626'; statusEl.textContent='❌ 설정 GitHub 실패'; } console.error('[fbUpdate cfg]',e); });
-        } else {
-          // GitHub 토큰 미설정이거나 자동 반영 OFF면 로컬만 저장
-          if(statusEl){
-            if(!token){
-              statusEl.style.color='#d97706';
-              statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
-              setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
-            }else if(!autoCfgRemote){
-              statusEl.style.color='#64748b';
-              statusEl.textContent='💾 로컬 저장만 수행됨 (설정 자동 GitHub 저장 OFF)';
-              setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2200);
-            }
-          }
-        }
-      }
-    }catch(e){}
-  }catch(e){console.error('[saveCfg error]',e);}
-}
-// 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
-function savePhotos(){
-  try{
-    if(window.PlayerStore && typeof window.PlayerStore.save==='function'){
-      window.PlayerStore.save().catch(e=>console.warn('[PlayerStore.savePhotos]', e && e.message ? e.message : e));
-    }else{
-      const _ppm={};
-      players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
-      _lsSave('su_pp',_ppm);
-    }
-    localStorage.setItem('su_last_save_time',Date.now().toString());
-  }catch(e){console.error('[savePhotos error]',e);}
-}
-const _REMOTE_SAVE_DEBOUNCE_MS = 1000; // 1초 간격으로 저장 요청 취합 (즉시 동기화를 위해 감소)
-let _remoteCloudSaveTimer = null;
-let _remoteCloudSaveBusy = false;
-function _setPendingRemoteSave(reason, failMsg, mode){
-  try{
-    localStorage.setItem('su_sync_pending_save', '1');
-    localStorage.setItem('su_sync_pending_save_at', String(Date.now()));
-    if(reason) localStorage.setItem('su_sync_pending_save_reason', String(reason));
-    if(mode) localStorage.setItem('su_sync_pending_save_mode', String(mode));
-    if(failMsg) localStorage.setItem('su_sync_last_fail_msg', String(failMsg));
-  }catch(e){}
-  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
-}
-function _clearPendingRemoteSave(){
-  try{
-    localStorage.removeItem('su_sync_pending_save');
-    localStorage.removeItem('su_sync_pending_save_at');
-    localStorage.removeItem('su_sync_pending_save_reason');
-    localStorage.removeItem('su_sync_pending_save_mode');
-    localStorage.removeItem('su_sync_last_fail_msg');
-  }catch(e){}
-  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
-}
-function _setCloudStatusMsg(msg, color){
-  try{
-    if(typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus(msg, color);
-    else{
-      const statusEl = document.getElementById('cloudStatus');
-      if(statusEl){
-        statusEl.style.color = color || '';
-        statusEl.textContent = msg;
-      }
-    }
-  }catch(e){}
-}
-function _updateSyncNetworkBadge(){
-  try{
-    const el = document.getElementById('syncNetBadge');
-    if(!el) return;
-    const online = navigator.onLine !== false;
-    const pending = localStorage.getItem('su_sync_pending_save') === '1';
-    if(!online){
-      el.textContent = '오프라인';
-      el.style.color = '#b45309';
-      el.style.borderColor = '#fbbf24';
-      el.style.background = '#fffbeb';
-    }else if(pending){
-      el.textContent = '미전송 있음';
-      el.style.color = '#b91c1c';
-      el.style.borderColor = '#fca5a5';
-      el.style.background = '#fef2f2';
-    }else{
-      el.textContent = '온라인';
-      el.style.color = 'var(--text2)';
-      el.style.borderColor = 'var(--border)';
-      el.style.background = 'var(--surface)';
-    }
-    el.title = pending ? '아직 다른 기기에 반영되지 않은 저장이 있습니다' : (online ? '네트워크 연결됨' : '오프라인 상태입니다');
-  }catch(e){}
-}
-try{ window._updateSyncNetworkBadge = _updateSyncNetworkBadge; }catch(e){}
-const _MATCH_SYNC_SIG_KEYS = {
-  pending: 'su_sync_pending_match_sig',
-  uploaded: 'su_sync_last_uploaded_match_sig'
-};
-let _lastObservedMatchSyncSig = '';
-function _matchSyncHash(str){
-  let h = 2166136261;
-  for(let i=0;i<str.length;i++){
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0).toString(16);
-}
-function _buildMatchSyncSignature(){
-  const _playersForSig = (Array.isArray(players)?players:[]).map(p=>_stripPlayerHistoryForSave(p));
-  const payload = {
-    miniM,
-    univM,
-    comps,
-    ckM,
-    proM,
-    ttM,
-    indM,
-    gjM,
-    players:_playersForSig,
-    TIERS,
-    univCfg,
-    maps,
-    userMapAlias,
-    notices,
-    seasons,
-    calScheduled,
-    boardOrder:(typeof boardOrder!=='undefined' ? boardOrder : []),
-    boardPlayerOrder:(typeof boardPlayerOrder!=='undefined' ? boardPlayerOrder : []),
-    tourD
+// (정렬 보강) 저장 전 날짜 내림차순 정렬 — 과거 날짜 경기를 나중에 저장해도 순서 유지
+function _sortMatchArrByDate(arr){
+  if(!Array.isArray(arr)||arr.length<2) return;
+  const _nd=(d)=>{
+    const s=String(d||'').trim();
+    const m=s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m) return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}-${String(parseInt(m[3],10)).padStart(2,'0')}`;
+    return s;
   };
-  const json = JSON.stringify(payload);
-  return `${json.length}:${_matchSyncHash(json)}`;
-}
-function _primeMatchSyncSignature(force){
-  try{
-    const sig = _buildMatchSyncSignature();
-    if(force || !_lastObservedMatchSyncSig) _lastObservedMatchSyncSig = sig;
-    return sig;
-  }catch(e){
-    if(force) _lastObservedMatchSyncSig = '';
-    return _lastObservedMatchSyncSig || '';
-  }
-}
-try{ window._primeMatchSyncSignature = _primeMatchSyncSignature; }catch(e){}
-async function _ensureRemoteSaveReady(){
-  if(typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function') return true;
-  try{
-    if (typeof window._ensureCloudBoardLoaded === 'function') {
-      await window._ensureCloudBoardLoaded();
-    } else if (typeof window._loadScriptOnce === 'function') {
-      await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
-    }
-  }catch(e){
-    console.error('[save] cloud-board load fail', e);
-  }
-  return typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function';
-}
-async function _flushRemoteCloudSave(reason){
-  if(_remoteCloudSaveTimer){
-    clearTimeout(_remoteCloudSaveTimer);
-    _remoteCloudSaveTimer = null;
-  }
-  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
-  if(!localStorage.getItem('su_gh_token')){
-    try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
-    _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
-    return false;
-  }
-  if(navigator.onLine === false){
-    _setPendingRemoteSave(reason || 'save', '오프라인 상태', 'offline');
-    _setCloudStatusMsg('📴 오프라인 상태 — 온라인 복귀 시 자동 업로드', '#d97706');
-    return false;
-  }
-  if(_remoteCloudSaveBusy){
-    _setPendingRemoteSave(reason || 'save', '', 'queued');
-    return false;
-  }
-  _remoteCloudSaveBusy = true;
-  try{
-    const ready = await _ensureRemoteSaveReady();
-    if(!ready){
-      _setPendingRemoteSave(reason || 'save', 'GitHub 저장 모듈 미연결', 'failed');
-      // 에러 메시지를 부드럽게 표시 (3초 후 사라짐)
-      _setCloudStatusMsg('⚠️ GitHub 연결 확인 중...', '#d97706');
-      setTimeout(() => { _setCloudStatusMsg('', ''); }, 3000);
-      return false;
-    }
-    _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
-    await window.fbCloudSave({ includeSettings:false });
-    try{
-      const now = Date.now();
-      const uploadedSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || _buildMatchSyncSignature();
-      localStorage.setItem('su_last_save_time', String(now));
-      localStorage.setItem('su_sync_last_upload_ok_at', String(now));
-      localStorage.setItem(_MATCH_SYNC_SIG_KEYS.uploaded, uploadedSig);
-      localStorage.removeItem(_MATCH_SYNC_SIG_KEYS.pending);
-      localStorage.removeItem('su_sync_last_fail_msg');
-      _primeMatchSyncSignature(true);
-    }catch(e){}
-    _clearPendingRemoteSave();
-    _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
-    return true;
-  }catch(e){
-    const errMsg = String((e&&e.message)||e||'');
-    const isRateLimit = errMsg.includes('403') || errMsg.includes('rate') || errMsg.includes('limit');
-    const isNetwork = errMsg.includes('network') || errMsg.includes('fetch') || errMsg.includes('timeout');
-    
-    if(isRateLimit){
-      _setPendingRemoteSave(reason || 'save', 'GitHub API 제한', 'retry');
-      _setCloudStatusMsg('⏳ GitHub API 제한 — 잠시 후 재시도', '#d97706');
-    }else if(isNetwork){
-      _setPendingRemoteSave(reason || 'save', '네트워크 오류', 'retry');
-      _setCloudStatusMsg('📴 네트워크 불안정 — 자동 재시도 예정', '#d97706');
-    }else{
-      _setPendingRemoteSave(reason || 'save', errMsg, 'failed');
-      _setCloudStatusMsg('⚠️ GitHub 저장 지연 — 로컬은 안전함', '#d97706');
-    }
-    
-    console.error('[fbCloudSave]',e);
-    // 5초 후 자동 재시도
-    setTimeout(() => {
-      if(localStorage.getItem('su_sync_pending_save') === '1'){
-        _scheduleRemoteCloudSave(30000, 'retry');
-      }
-    }, 5000);
-    return false;
-  }finally{
-    _remoteCloudSaveBusy = false;
-    try{ _updateSyncNetworkBadge(); }catch(e){}
-  }
-}
-function _scheduleRemoteCloudSave(delay, reason){
-  try{
-    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
-    const wait = Math.max(0, parseInt(delay, 10) || 0);
-    _setPendingRemoteSave(reason || 'save', '', 'queued');
-    if(_remoteCloudSaveTimer){
-      clearTimeout(_remoteCloudSaveTimer);
-      _remoteCloudSaveTimer = null;
-    }
-    _setCloudStatusMsg('💾 로컬 저장됨 · GitHub 업로드 대기', '#2563eb');
-    _remoteCloudSaveTimer = setTimeout(()=>{
-      _remoteCloudSaveTimer = null;
-      _flushRemoteCloudSave(reason || 'save').catch(e=>{
-        console.error('[scheduleRemoteCloudSave]', e);
-      });
-    }, wait);
-    try{ _updateSyncNetworkBadge(); }catch(e){}
-    return true;
-  }catch(e){
-    console.error('[scheduleRemoteCloudSave]', e);
-    return false;
-  }
-}
-window._retryPendingRemoteSave = function(force){
-  try{
-    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
-    const pending = localStorage.getItem('su_sync_pending_save') === '1';
-    const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending);
-    if(!force && !pending && !pendingSig) return false;
-    if(force){
-      _flushRemoteCloudSave('retry').catch(e=>console.error('[retryPendingRemoteSave]', e));
-      return true;
-    }
-    return _scheduleRemoteCloudSave(0, 'retry');
-  }catch(e){
-    console.error('[retryPendingRemoteSave]', e);
-    return false;
-  }
-};
-window.addEventListener('online', ()=>{
-  _updateSyncNetworkBadge();
-  _setCloudStatusMsg('🌐 온라인 복귀', '#2563eb');
-  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(); }catch(e){}
-});
-window.addEventListener('offline', ()=>{
-  _updateSyncNetworkBadge();
-  _setCloudStatusMsg('📴 오프라인 상태 — 로컬 저장만 유지', '#d97706');
-});
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'visible'){
-    _updateSyncNetworkBadge();
-  }
-});
-window.addEventListener('DOMContentLoaded', ()=>{
-  _updateSyncNetworkBadge();
-}, { once:true });
-window.addEventListener('DOMContentLoaded', ()=>{
-  _checkDataVersion();
-}, { once:true });
-window.addEventListener('DOMContentLoaded', ()=>{
-  try{
-    if(window.MatchStore && typeof window.MatchStore.init==='function'){
-      window.MatchStore.init().then(()=>{
-        try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
-        try{ if(typeof render==='function') render(); }catch(e){}
-      });
-    }
-  }catch(e){}
-}, { once:true });
-async function save(){
-  localSave();
-  try{ await (window._lastMatchStoreSavePromise || Promise.resolve(true)); }catch(e){}
-  try{
-    const nextSig = _buildMatchSyncSignature();
-    const uploadedSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.uploaded) || '';
-    const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || '';
-    _lastObservedMatchSyncSig = nextSig;
-    if(uploadedSig && uploadedSig === nextSig){
-      if(pendingSig === nextSig){
-        try{ localStorage.removeItem(_MATCH_SYNC_SIG_KEYS.pending); }catch(e){}
-      }
-      _clearPendingRemoteSave();
-      _setCloudStatusMsg('💾 로컬 저장됨 (원격 반영할 변경 없음)', '#16a34a');
-      return;
-    }
-    localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
-  }catch(e){}
-  const scheduled = (()=>{ try{ return _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save'); }catch(e){ return false; } })();
-  if(!scheduled){
-    try{
-      if((typeof isLoggedIn !== 'undefined' && isLoggedIn) && !localStorage.getItem('su_gh_token')){
-        _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
-      }else{
-        _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
-      }
-    }catch(e){
-      _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
-    }
-  }
-}
-
-let curTab='total', editName='', reMode='', reIdx=-1;
-let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0, ind:0, gj:0, procomp:0}; // 대전기록 탭 페이지 상태
-let playerHistPage=0; // 스트리머 상세 페이지 상태
-const HIST_PAGE_SIZE=20;
-const HIST_PAGE_SIZE_MOBILE=10;
-function getHistPageSize(){return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:HIST_PAGE_SIZE;}
-const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때 페이지네이션
-let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=localStorage.getItem('su_cal_view')||'month';
-let calTypeFilter='all';
-let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
-let fUniv='전체', fTier='전체';
-// (버그픽스) 티어 순위표 탭에서 대학/티어 필터 버튼이 sf()를 호출하는데,
-// sf가 특정 모듈(vote.js)에만 정의되어 있으면 로딩 순서에 따라 ReferenceError가 발생할 수 있음.
-// → 공용으로 window.sf를 제공 (기존 정의가 있으면 유지)
-try{
-  if(typeof window.sf !== 'function'){
-    window.sf = function(u, t){
-      try{ fUniv = u; }catch(e){ window.fUniv = u; }
-      try{ fTier = t; }catch(e){ window.fTier = t; }
-      try{ if(typeof render==='function') render(); }catch(e){}
-    };
-  }
-}catch(e){}
-var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
-var miniType='mini'; // 'mini' | 'civil'
-var histUniv='';
-var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
-var vsNameA='', vsNameB=''; // 1:1 상대전적 조회
-
-// 공통 연도/월 필터 상태
-let yearOptions=[]; // 하위호환용 — buildYearMonthFilter는 getYearOptions()로 동적 계산
-let filterYear='전체';
-let filterMonth='전체'; // '전체' 또는 '01'~'12'
-
-// 🆕 시즌 관리: [{id, name, from, to}] — from/to: 'YYYY-MM-DD'
-let seasons = J('su_seasons') || [];
-let filterSeason = '전체'; // '전체' 또는 시즌 id
-
-// 🆕 캘린더 예정 경기 (Firebase 동기화)
-let calScheduled = J('su_cal_sched') || [];
-window.addEventListener('DOMContentLoaded', ()=>{
-  try{ _primeMatchSyncSignature(true); }catch(e){}
-}, { once:true });
-
-// 🆕 랭킹 변동 스냅샷 (points 기준 순위)
-// { playerName: rank } 형태로 저장
-let _rankSnapshot = J('su_rank_snap') || {};
-let _rankSnapDate = localStorage.getItem('su_rank_snap_date') || '';
-
-// 랭킹 스냅샷 업데이트 (하루 1회)
-function updateRankSnapshot() {
-  const today = new Date().toISOString().slice(0,10);
-  if(_rankSnapDate === today) return; // 오늘 이미 업데이트됨
-  // 현재 순위 계산 (points 기준)
-  const ranked = [...players]
-    .filter(p => !p.retired)
-    .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
-  const snap = {};
-  ranked.forEach((p,i) => { snap[p.name] = i+1; });
-  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
-  localStorage.setItem('su_rank_snap_date', today);
-  _rankSnapshot = snap;
-  _rankSnapDate = today;
-}
-
-// 랭킹 변동 HTML 반환 (▲3 / ▼2 / NEW / -)
-function getRankChangeBadge(playerName, currentRank) {
-  const prev = _rankSnapshot[playerName];
-  if(!prev) return '<span style="font-size:9px;color:#7c3aed;font-weight:700;padding:1px 4px;background:#ede9fe;border-radius:3px">NEW</span>';
-  const diff = prev - currentRank; // 양수 = 상승
-  if(diff === 0) return '<span style="font-size:9px;color:var(--gray-l)">-</span>';
-  if(diff > 0)  return `<span style="font-size:9px;color:#16a34a;font-weight:800">▲${diff}</span>`;
-  return `<span style="font-size:9px;color:#dc2626;font-weight:800">▼${Math.abs(diff)}</span>`;
-}
-
-function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
-function _normHexColor(v,fallback){
-  const s=String(v||'').trim();
-  if(/^#[0-9a-fA-F]{6}$/.test(s)) return s;
-  return fallback||'#6b7280';
-}
-function getFixedSideColors(kind){
-  const k=String(kind||'').trim();
-  const defaults = {
-    ck: { a:'#2563eb', b:'#6366f1' },
-    pro:{ a:'#0f766e', b:'#4f46e5' },
-    tt: { a:'#2563eb', b:'#dc2626' }
-  };
-  const base = defaults[k] || defaults.ck;
-  try{
-    return {
-      a:_normHexColor(localStorage.getItem(`su_team_color_${k}_a`), base.a),
-      b:_normHexColor(localStorage.getItem(`su_team_color_${k}_b`), base.b)
-    };
-  }catch(e){
-    return { a:base.a, b:base.b };
-  }
-}
-function getFixedSideColor(kind, side, fallback){
-  const colors = getFixedSideColors(kind);
-  if(String(side||'').toUpperCase()==='B') return _normHexColor(colors.b, fallback||colors.b);
-  return _normHexColor(colors.a, fallback||colors.a);
-}
-// Get univ color with alpha hex suffix for row tinting
-function gcHex8(n,alpha){
-  const c=gc(n);
-  const a=Math.round((alpha||0.06)*255).toString(16).padStart(2,'0');
-  return c+a;
-}
-function gcHex8Hover(n,alpha){
-  const c=gc(n);
-  const a=Math.round((alpha||0.12)*255).toString(16).padStart(2,'0');
-  return c+a;
-}
-// ⚠️ 대학 아이콘(로고)은 코드에 하드코딩하지 않습니다.
-// - 저작권/출처 이슈가 발생할 수 있어, 로고 URL은 data.json(univCfg.icon / univCfg.img)로만 관리합니다.
-const UNIV_ICONS = {};
-// 기본 대학 아이콘 SVG (아이콘이 없는 대학에 사용)
-const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="flex-shrink:0;opacity:0.75;vertical-align:middle"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
-// 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
-function gUI(n,size='1em'){
-  const url=(univCfg.find(x=>x.name===n)||{}).icon || (univCfg.find(x=>x.name===n)||{}).img || '';
-  if(url)return `<img src="${toHttpsUrl(url)}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
-  // 기본 아이콘 SVG
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
-}
-// 대학명 + 아이콘 HTML 반환 (아이콘이 좌측에 위치)
-function univNameWithIcon(n,fontSize){const icon=gUI(n,fontSize||'1em');return icon+n;}
-// DOM 요소 내 ubadge에 대학 아이콘 주입 (항상 좌측에, 기본 아이콘 포함)
-function injectUnivIcons(container){
-  if(!container)return;
-  container.querySelectorAll('.ubadge').forEach(el=>{
-    if(el.querySelector('[data-univ-icon]')||el.getAttribute('data-icon-done'))return;
-    let name='';
-    el.childNodes.forEach(node=>{if(node.nodeType===3)name+=node.textContent;});
-    name=name.trim().replace(/\s+/g,' ');
-    if(!name)return;
-    el.setAttribute('data-icon-done','1');
-    // inline-flex 레이아웃으로 정렬
-    if(!el.style.display||el.style.display==='inline-block')el.style.display='inline-flex';
-    el.style.alignItems='center';
-    el.style.gap='3px';
-    const url=(univCfg.find(x=>x.name===name)||{}).icon || (univCfg.find(x=>x.name===name)||{}).img || '';
-    if(url){
-      const img=document.createElement('img');
-      img.src=url; img.setAttribute('data-univ-icon','1');
-      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0';
-      img.onerror=function(){this.style.display='none';};
-      el.insertBefore(img,el.firstChild);
-    } else {
-      // 기본 아이콘 SVG 삽입
-      const svgWrap=document.createElement('span');
-      svgWrap.setAttribute('data-univ-icon','1');
-      svgWrap.style.cssText='display:inline-flex;align-items:center;flex-shrink:0';
-      svgWrap.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;opacity:0.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
-      el.insertBefore(svgWrap,el.firstChild);
-    }
+  arr.sort((a,b)=>{
+    const da=_nd(a.d||''), db=_nd(b.d||'');
+    if(da&&db&&da!==db) return db.localeCompare(da);
+    return 0;
   });
 }
-function pC(n){return n>0?'pt-p':n<0?'pt-n':'pt-z';}
-function pS(n){return (n>0?'+':'')+n;}
-function getAllUnivs(){
-  const r=[...univCfg];const s=new Set(univCfg.map(u=>u.name));
-  players.forEach(p=>{if(!s.has(p.univ)){r.push({name:p.univ,color:'#6b7280'});s.add(p.univ);}});
-  const seen=new Set();
-  return r.filter(u=>{if(seen.has(u.name))return false;seen.add(u.name);return true;});
-}
 
-// 현황판 boardOrder → univCfg 순서 동기화 (현황판에서 이동하면 스트리머 목록도 같이 이동)
-function syncBoardOrderToUnivCfg(){
-  if(!boardOrder||!boardOrder.length) return;
-  const newCfg=[];
-  boardOrder.forEach(name=>{const u=univCfg.find(x=>x.name===name);if(u)newCfg.push(u);});
-  univCfg.forEach(u=>{if(!boardOrder.includes(u.name))newCfg.push(u);});
-  if(newCfg.length===univCfg.length){univCfg=newCfg;save();}
-}
-function getMembers(univ){return players.filter(p=>p.univ===univ);}
-
-/* ELO 상수 */
-const ELO_DEFAULT=1200;
-const ELO_K=32;
-
-function calcElo(winnerElo, loserElo){
-  const exp=1/(1+Math.pow(10,(loserElo-winnerElo)/400));
-  return Math.round(ELO_K*(1-exp));
-}
-
-// ─────────────────────────────────────────────
-// 스트리머 이름 정규화/별명(메모) 매칭
-// - 예: 김재현 memo에 "샤이니"가 있으면, 입력에 "샤이니"를 넣어도 "김재현"으로 저장되게
-// - 별명/메모가 애매하거나 부분일치만 되면 후보 리스트를 반환
-// ─────────────────────────────────────────────
-function _cleanPlayerInputName(name){
-  const raw = (name||'').trim();
-  // 종족 접미사 제거: "김명운Z", "샤이니T"
-  return raw.replace(/\s*[TZPN]$/i,'').trim();
-}
-function resolvePlayerName(rawName){
-  const raw = (rawName||'').trim();
-  const cleaned = _cleanPlayerInputName(raw);
-  if(!cleaned) return {name:'', player:null, match:'empty', candidates:[]};
-
-  // 1) 정확한 이름
-  let p = (players||[]).find(x=>x && x.name===cleaned) || (players||[]).find(x=>x && x.name===raw);
-  if(p) return {name:p.name, player:p, match:'name', candidates:[p]};
-
-  // 2) 메모(별명) 정확 일치
-  const low = cleaned.toLowerCase();
-  const memoExact = (players||[]).filter(x=>x && x.memo && String(x.memo).split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-  if(memoExact.length===1) return {name:memoExact[0].name, player:memoExact[0], match:'memo', candidates:memoExact};
-
-  // 3) 공백 제거 후 이름 일치
-  const ns = cleaned.replace(/\s+/g,'');
-  const nsMatches = (players||[]).filter(x=>x && x.name && x.name.replace(/\s+/g,'')===ns);
-  if(nsMatches.length===1) return {name:nsMatches[0].name, player:nsMatches[0], match:'space', candidates:nsMatches};
-
-  // 4) 후보 추천(부분 일치)
-  const cand = [];
-  const push = (pp, why)=>{
-    if(!pp || !pp.name) return;
-    if(cand.some(x=>x.p.name===pp.name)) return;
-    cand.push({p:pp, why});
-  };
-  (players||[]).forEach(pp=>{
-    if(!pp || !pp.name) return;
-    const n = String(pp.name);
-    if(n.includes(cleaned) || n.replace(/\s+/g,'').includes(ns)) push(pp,'name');
-    else if(pp.memo){
-      const toks = String(pp.memo).split(/[\s,，\n]+/).map(x=>x.trim()).filter(Boolean);
-      if(toks.some(t=>t.toLowerCase().includes(low))) push(pp,'memo');
-    }
-  });
-  cand.sort((a,b)=>(a.why===b.why? a.p.name.localeCompare(b.p.name) : (a.why==='name'?-1:1)));
-  const candidates = cand.slice(0,8).map(x=>x.p);
-  return {name: raw, player:null, match:'none', candidates};
-}
-// 전역 노출(모달/인라인 onclick에서 사용)
-try{ window.resolvePlayerName = resolvePlayerName; }catch(e){}
-
-function _normalizeStoredMode(mode){
-  const raw = String(mode||'').trim();
-  if(!raw) return '';
-  const low = raw.toLowerCase();
-  if(raw === '중장전') return '끝장전';
-  if(raw === 'CK' || raw === '대학 ck' || raw === '대학 CK' || low === '대학ck') return '대학CK';
-  if(raw === '일반' || raw === '프로리그 일반') return '프로리그';
-  if(raw === '티어대회 일반' || raw === '티어 일반') return '티어대회';
-  return raw;
-}
-
-// 날짜 문자열을 YYYY-MM-DD로 최대한 정규화한다.
-// - 통계/정렬/월별 집계를 위해 "YYYY-MM" prefix가 안정적으로 나오게 하는 목적
-// - 파싱 불가한 값은 원본(trim) 반환
-function _toIsoDateStr(input){
-  const s = String(input ?? '').trim();
-  if(!s) return new Date().toISOString().slice(0,10);
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if(!m) m = s.match(/^(\d{4})[./](\d{1,2})[./](\d{1,2})$/);
-  if(!m) m = s.match(/^(\d{4})\s*(?:년)?\s*(\d{1,2})\s*(?:월)?\s*(\d{1,2})\s*(?:일)?$/);
-  if(m){
-    const yy = Number(m[1]), mm = Number(m[2]), dd = Number(m[3]);
-    if(yy>=1990 && mm>=1 && mm<=12 && dd>=1 && dd<=31){
-      return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
-    }
-  }
-  // 최후: Date 파서 시도 (예: "2026-4-1", "2026/4/1 00:00" 등)
-  try{
-    const d = new Date(s);
-    if(!isNaN(d.getTime())){
-      const yy = d.getFullYear();
-      const mm = d.getMonth()+1;
-      const dd = d.getDate();
-      if(yy>=1990 && mm>=1 && mm<=12 && dd>=1 && dd<=31){
-        return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
-      }
-    }
-  }catch(e){}
-  return s;
-}
-try{ window._toIsoDateStr = _toIsoDateStr; }catch(e){}
-function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
-  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
-  function _findPlayer(name){
-    // 종족 접미사 제거: "김명운Z", "샤이니T" 같이 이름 뒤에 종족이 붙은 입력도 허용
-    // (붙여넣기/자동인식에서 자주 등장)
-    const raw = (name||'').trim();
-    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    // cleanedRace 우선으로도 재시도
-    if (cleanedRace && cleanedRace !== name) {
-      p = players.find(x => x.name === cleanedRace);
-      if (p) return p;
-    }
-    const low=cleanedRace.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=cleanedRace.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
-  }
-  const w=_findPlayer(winName);
-  const l=_findPlayer(loseName);
-  if(!w||!l||w===l)return;
-  if(!w.history)w.history=[];
-  if(!l.history)l.history=[];
-  // 중복 체크
-  // - matchId가 있으면 matchId가 곧 고유키(게임 단위)라고 가정하고 matchId만으로 중복 판단
-  //   (티어대회/대학CK 등에서 같은 날짜/같은 맵/같은 상대가 여러 번 나올 수 있어 date+map+opp로 막으면 누락됨)
-  // - matchId가 없을 때만 date+map+opp로 중복 방지
-  const d=_toIsoDateStr(date||'');
-  const m=map||'-';
-  // matchId 기반 체크
-  const wDupMatch = matchId ? (w.history||[]).find(h=>h.matchId===matchId) : null;
-  const lDupMatch = matchId ? (l.history||[]).find(h=>h.matchId===matchId) : null;
-  if(wDupMatch||lDupMatch) return;
-  // matchId가 없을 때만 fallback 사용
-  if(!matchId){
-    const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-    const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
-    if(wDupFallback||lDupFallback) return;
-  }
-  w.win++;l.loss++;w.points+=3;l.points-=3;
-  // ELO 계산
-  const wElo=w.elo||ELO_DEFAULT;
-  const lElo=l.elo||ELO_DEFAULT;
-  const delta=calcElo(wElo,lElo);
-  w.elo=wElo+delta;
-  l.elo=lElo-delta;
-  const t=Date.now();
-  // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
-  const wu=univW||w.univ||'';
-  const lu=univL||l.univ||'';
-  const modeNorm = _normalizeStoredMode(mode);
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm});
-}
-
-// (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
-// - 승/패/포인트/ELO에는 영향 없음
-// - 스트리머 상세(최근 경기 기록) 및 대전기록 탭에서 확인 가능
-// - matchId는 충돌 방지를 위해 호출부에서 기존 matchId에 "_tie" 같은 suffix를 붙이는 것을 권장
-function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, scoreA, scoreB){
-  function _findPlayer(name){
-    const raw = (name||'').trim();
-    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    if (cleanedRace && cleanedRace !== name) {
-      p = players.find(x => x.name === cleanedRace);
-      if (p) return p;
-    }
-    const low=cleanedRace.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=cleanedRace.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
-  }
-  const a=_findPlayer(nameA);
-  const b=_findPlayer(nameB);
-  if(!a||!b||a===b) return;
-  if(!a.history)a.history=[];
-  if(!b.history)b.history=[];
-  const d=_toIsoDateStr(date||'');
-  const m=map||'-';
-  // 중복 체크: matchId가 있으면 matchId만으로 판단(게임 단위 중복 허용 방지)
-  const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;
-  const bDup = matchId ? (b.history||[]).find(h=>h.matchId===matchId) : null;
-  if(aDup||bDup) return;
-  // matchId 없을 때만 fallback
-  if(!matchId){
-    const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
-    const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
-    if(aDupFallback||bDupFallback) return;
-  }
-  const t=Date.now();
-  const au=univA||a.univ||'';
-  const bu=univB||b.univ||'';
-  const scoreStr = (scoreA!=null && scoreB!=null) ? `${scoreA}:${scoreB}` : '';
-  // eloDelta는 null로 두어 UI에서 "-" 처리되게 함
-  const modeNorm = _normalizeStoredMode(mode);
-  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:modeNorm,score:scoreStr});
-  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:modeNorm,score:scoreStr});
-}
-
-function _rebuildAllPlayerHistoryCore() {
-  // 1. 모든 선수의 history, win, loss, points, elo 초기화
-  players.forEach(p => {
-    p.history = [];
-    p.win = 0;
-    p.loss = 0;
-    p.points = 0;
-    p.elo = ELO_DEFAULT;
-  });
-
-  let count = 0;
-
-  // 2. miniM에서 복구
-  (miniM || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        // (요청/수정) 시빌워(내전)는 팀 라벨(A/B)과 무관하게 "선수 실제 소속 대학"을 기록
-        // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
-        const isCivil = (m.type === 'civil') || (m.a === 'A팀' && m.b === 'B팀');
-        const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
-        const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, m.type === 'civil' ? '시빌워' : '미니대전', { sideUnivA: m.a, sideUnivB: m.b });
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 3. univM에서 복구
-  (univM || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const univW = g.winner === 'A' ? m.a : m.b;
-        const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학대전', { sideUnivA: m.a, sideUnivB: m.b });
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 4. ckM에서 복구
-  (ckM || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '대학CK');
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 5. proM에서 복구
-  (proM || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '프로리그');
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 6. ttM에서 복구
-  (ttM || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '티어대회');
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 7. indM에서 복구
-  (indM || []).forEach(m => {
-    if(!m.wName || !m.lName) return;
-    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
-    count++;
-  });
-
-  // 8. gjM에서 복구
-  (gjM || []).forEach(m => {
-    if(!m.wName || !m.lName) return;
-    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
-    count++;
-  });
-
-  // 9. comps에서 복구
-  (comps || []).forEach(m => {
-    if(!m._id) return;
-    (m.sets || []).forEach((set, setIdx) => {
-      (set.games || []).forEach((g, gameIdx) => {
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner === 'A' ? g.playerA : g.playerB;
-        const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const univW = g.winner === 'A' ? m.a : m.b;
-        const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대회', { sideUnivA: m.a, sideUnivB: m.b });
-        } else {
-          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
-        }
-        count++;
-      });
-    });
-  });
-
-  // 10. tourneys에서 복구
-  if (typeof tourneys !== 'undefined') {
-    tourneys.forEach(tn => {
-      const isTier = tn.type === 'tier';
-      (tn.groups || []).forEach(grp => {
-        (grp.matches || []).forEach(m => {
-          if (!m._id) return;
-          (m.sets || []).forEach((set, setIdx) => {
-            (set.games || []).forEach((g, gameIdx) => {
-              if (!g.playerA || !g.playerB || !g.winner) return;
-              const wName = g.winner === 'A' ? g.playerA : g.playerB;
-              const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-              if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-                applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '조별리그', { sideUnivA: m.a, sideUnivB: m.b });
-              } else {
-                applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
-              }
-              count++;
-            });
-          });
-        });
-      });
-      Object.values((tn.bracket || {}).matchDetails || {}).forEach(m => {
-        if (!m._id) return;
-        (m.sets || []).forEach((set, setIdx) => {
-          (set.games || []).forEach((g, gameIdx) => {
-            if (!g.playerA || !g.playerB || !g.winner) return;
-            const wName = g.winner === 'A' ? g.playerA : g.playerB;
-            const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
-            } else {
-              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
-            }
-            count++;
-          });
-        });
-      });
-      ((tn.bracket || {}).manualMatches || []).forEach(m => {
-        if (!m._id) return;
-        (m.sets || []).forEach((set, setIdx) => {
-          (set.games || []).forEach((g, gameIdx) => {
-            if (!g.playerA || !g.playerB || !g.winner) return;
-            const wName = g.winner === 'A' ? g.playerA : g.playerB;
-            const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
-            } else {
-              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
-            }
-            count++;
-          });
-        });
-      });
-    });
-  }
-
-  // 11. proTourneys에서 복구
-  if (typeof proTourneys !== 'undefined') {
-    proTourneys.forEach(tn => {
-      (tn.groups || []).forEach(grp => {
-        (grp.matches || []).forEach((m, matchIdx) => {
-          if (!m._id) return;
-          (m.sets || []).forEach((set, setIdx) => {
-            (set.games || []).forEach((g, gameIdx) => {
-              if (!g.playerA || !g.playerB || !g.winner) return;
-              const wName = g.winner === 'A' ? g.playerA : g.playerB;
-              const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
-              count++;
-            });
-          });
-        });
-      });
-      (tn.bracket || []).forEach((rnd, rndIdx) => {
-        rnd.forEach((m, matchIdx) => {
-          if (!m || !m._id) return;
-          (m.sets || []).forEach((set, setIdx) => {
-            (set.games || []).forEach((g, gameIdx) => {
-              if (!g.playerA || !g.playerB || !g.winner) return;
-              const wName = g.winner === 'A' ? g.playerA : g.playerB;
-              const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
-              count++;
-            });
-          });
-        });
-      });
-      if (tn.thirdPlace && tn.thirdPlace._id) {
-        const tp = tn.thirdPlace;
-        (tp.sets || []).forEach((set, setIdx) => {
-          (set.games || []).forEach((g, gameIdx) => {
-            if (!g.playerA || !g.playerB || !g.winner) return;
-            const wName = g.winner === 'A' ? g.playerA : g.playerB;
-            const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
-            applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
-            count++;
-          });
-        });
-      }
-      (tn.teamMatches || []).forEach((tm, tmIdx) => {
-        (tm.games || []).forEach((g, gameIdx) => {
-          if (!g.wName || !g.lName) return;
-          const gameId = tm._id ? `${tm._id}_g${gameIdx}` : genId();
-          applyGameResult(g.wName, g.lName, tm.d || '', g.map || '', gameId, '', '', '프로리그대회');
-          count++;
-        });
-      });
-    });
-  }
-
-  return count;
-}
-function rebuildAllPlayerHistory() {
-  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
-  const count = _rebuildAllPlayerHistoryCore();
-  save();
-  alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
-  render();
-}
-
-function deduplicatePlayerHistory(){
-  if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
-
-  let totalRemoved=0;
-  players.forEach(p=>{
-    if(!p.history||!p.history.length)return;
-    const seen=new Set();
-    const before=p.history.length;
-    p.history=p.history.filter(h=>{
-      const mid=h.matchId||'';
-      // 게임 단위 고유 ID(_sN_gN 포함)면 matchId 자체가 고유 키
-      const isGameId=mid.includes('_s')&&mid.includes('_g');
-      let key;
-      if(isGameId){
-        key=mid;
-      } else if(h.time){
-        // time이 있으면 포함하여 진짜 중복만 제거 (합법적 재매치와 구분)
-        key=`${mid}|${h.opp||''}|${h.result||''}|${h.map||'-'}|${h.time}`;
-      } else {
-        // time도 없고 bare matchId면 건드리지 않음 (합법적 재매치와 구분 불가)
-        return true;
-      }
-      if(seen.has(key))return false;
-      seen.add(key);
-      return true;
-    });
-    totalRemoved+=before-p.history.length;
-  });
-
-  // 승패/포인트/ELO 재계산 (날짜 오름차순으로 delta 누적)
-  players.forEach(p=>{
-    p.win=0;p.loss=0;p.points=0;p.elo=ELO_DEFAULT;
-    const sorted=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-    sorted.forEach(h=>{
-      if(h.result==='승'){p.win++;p.points+=3;}
-      else if(h.result==='패'){p.loss++;p.points-=3;}
-      if(h.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)+h.eloDelta;
-    });
-  });
-
-  if(typeof fixPoints==='function')fixPoints();
-  save();
-  alert(`🧹 중복 제거 완료: ${totalRemoved}개 항목 삭제`);
-  render();
-}
-
-// game 객체에서 playerA, playerB, winner 정보를 추출해서
-// applyGameResult를 호출한다.
-function updatePlayerHistoryFromGame(game, date, mode){
-  if(!game.playerA || !game.playerB || !game.winner) return;
-
-  const winName = game.winner === 'A' ? game.playerA : 
-                  game.winner === 'B' ? game.playerB : game.winner;
-  const loseName = game.winner === 'A' ? game.playerB : 
-                   game.winner === 'B' ? game.playerA : '';
-
-  if(!winName || !loseName) return;
-
-  // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
-  applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
-                  game.univA||'', game.univB||'', mode);
-}
-
-/* ══════════════════════════════════════
-   탭 버튼 색상 커스텀 시스템
-   - localStorage: su_tab_colors_v1
-   - ctx별 탭 활성(on) 색상 커스텀
-══════════════════════════════════════ */
-const _TAB_COLOR_KEY = 'su_tab_colors_v1';
-const _TAB_COLOR_ENABLED_KEY = 'su_tab_color_enabled';
-const _TAB_COLOR_MODE_KEY = 'su_tab_color_mode';
-const _TAB_COLOR_LENGTH_KEY = 'su_tab_color_length';
-const _TAB_COLOR_TAIL_KEY = 'su_tab_color_tail';
-const _TAB_COLOR_DEFAULTS = {
-  mergedComp: {
-    comp:     { from:'#0f172a', to:'#1d4ed8', label:'일반 대회' },
-    tiertour: { from:'#4c1d95', to:'#7c3aed', label:'티어대회' }
-  },
-  mergedUniv: {
-    civil:  { from:'#7f1d1d', to:'#b91c1c', label:'시빌워' },
-    mini:   { from:'#0f172a', to:'#1d4ed8', label:'미니대전' },
-    univm:  { from:'#064e3b', to:'#059669', label:'대학대전' },
-    univck: { from:'#78350f', to:'#d97706', label:'대학CK' }
-  },
-  mergedInd: {
-    ind: { from:'#0f172a', to:'#1d4ed8', label:'개인전' },
-    gj:  { from:'#7f1d1d', to:'#dc2626', label:'끝장전' }
-  },
-  mergedPro: {
-    pro:  { from:'#14532d', to:'#16a34a', label:'프로리그 일반' },
-    gj:   { from:'#7f1d1d', to:'#dc2626', label:'프로 끝장전' },
-    comp: { from:'#0f172a', to:'#1d4ed8', label:'프로리그 대회' }
-  }
-};
-function getTabColorStyle(ctx, id){
-  try{
-    if(localStorage.getItem(_TAB_COLOR_ENABLED_KEY)==='0') return '';
-  }catch(e){}
-  let mode = 'fill';
-  try{
-    const raw = String(localStorage.getItem(_TAB_COLOR_MODE_KEY)||'fill').trim();
-    if(['fill','soft','outline','solid'].includes(raw)) mode = raw;
-  }catch(e){}
-  let len = 48;
-  let tail = 22;
-  try{ len = Math.max(20, Math.min(90, parseInt(localStorage.getItem(_TAB_COLOR_LENGTH_KEY)||'48',10) || 48)); }catch(e){}
-  try{ tail = Math.max(0, Math.min(60, parseInt(localStorage.getItem(_TAB_COLOR_TAIL_KEY)||'22',10) || 22)); }catch(e){}
-  let from = '';
-  let to = '';
-  try{
-    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
-    const c = (saved[ctx]||{})[id];
-    if(c && c.from && c.to){ from = c.from; to = c.to; }
-    else if(c && c.from){ from = c.from; to = c.from; }
-  }catch(e){}
-  try{
-    const def = (_TAB_COLOR_DEFAULTS[ctx]||{})[id];
-    if(!from && def){
-      from = def.from || '';
-      to = def.to || def.from || '';
-    }
-  }catch(e){}
-  if(!from && !to) return '';
-  const main = to || from;
-  const stop1 = Math.max(8, Math.min(78, len));
-  const stop2 = Math.max(stop1 + 8, Math.min(96, stop1 + 20));
-  const darkA = Math.max(0, Math.min(0.28, tail/100 * 0.32)).toFixed(3);
-  const darkB = Math.max(0, Math.min(0.18, tail/100 * 0.18)).toFixed(3);
-  const fullBg = `linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 42%, rgba(15,23,42,${darkB}) 84%, rgba(15,23,42,${darkA}) 100%), linear-gradient(135deg, ${from} 0%, ${to} ${stop1}%, ${to} ${stop2}%, ${main} 100%)`;
-  const softBg = `linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 46%, rgba(15,23,42,${(tail/100*0.11).toFixed(3)}) 88%, rgba(15,23,42,${(tail/100*0.17).toFixed(3)}) 100%), linear-gradient(135deg, ${from}22 0%, ${to}14 ${stop1}%, ${to}0A ${stop2}%, ${main}10 100%)`;
-  if(mode==='soft'){
-    return `background:${softBg} !important;border-color:${main}44 !important;color:${main} !important;box-shadow:0 8px 18px ${main}18 !important,inset 0 0 0 1px ${main}16 !important;`;
-  }
-  if(mode==='outline'){
-    return `background:linear-gradient(180deg,#ffffff,#f8fafc) !important;border:1.5px solid ${main}55 !important;color:${main} !important;box-shadow:0 6px 16px ${main}16 !important,inset 0 0 0 1px ${from}14 !important;`;
-  }
-  if(mode==='solid'){
-    return `background:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 52%, rgba(15,23,42,${darkB}) 86%, rgba(15,23,42,${darkA}) 100%), ${main} !important;border-color:${main}66 !important;color:#fff !important;box-shadow:0 12px 24px ${main}30 !important;`;
-  }
-  return `background:${fullBg} !important;border-color:${main}55 !important;color:#fff !important;box-shadow:0 12px 24px ${main}26 !important;`;
-}
-function setTabColor(ctx, id, from, to){
-  try{
-    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
-    if(!saved[ctx]) saved[ctx]={};
-    saved[ctx][id] = { from: String(from||''), to: String(to||'') };
-    localStorage.setItem(_TAB_COLOR_KEY, JSON.stringify(saved));
-  }catch(e){}
-}
-function resetTabColor(ctx, id){
-  try{
-    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
-    if(saved[ctx]) delete saved[ctx][id];
-    localStorage.setItem(_TAB_COLOR_KEY, JSON.stringify(saved));
-  }catch(e){}
-}
-function resetAllTabColors(){
-  try{ localStorage.removeItem(_TAB_COLOR_KEY); }catch(e){}
-}
-try{
-  window.getTabColorStyle = getTabColorStyle;
-  window.setTabColor = setTabColor;
-  window.resetTabColor = resetTabColor;
-  window.resetAllTabColors = resetAllTabColors;
-  window._TAB_COLOR_DEFAULTS = _TAB_COLOR_DEFAULTS;
-  window._TAB_COLOR_KEY = _TAB_COLOR_KEY;
-  window._TAB_COLOR_ENABLED_KEY = _TAB_COLOR_ENABLED_KEY;
-  window._TAB_COLOR_MODE_KEY = _TAB_COLOR_MODE_KEY;
-  window._TAB_COLOR_LENGTH_KEY = _TAB_COLOR_LENGTH_KEY;
-  window._TAB_COLOR_TAIL_KEY = _TAB_COLOR_TAIL_KEY;
-}catch(e){}
+// ══════════════════════════════════════════════════════════
+// 아래 코드는 분리된 파일로 이동됨:
+//   constants-save.js     — localSave / saveCfg / savePhotos / 클라우드 저장
+//   constants-game.js     — ELO / 게임결과 / 대학유틸 / 이름정규화 / histPage 등
+//   constants-tab-colors.js — 탭 버튼 색상 커스텀 시스템
+// ══════════════════════════════════════════════════════════

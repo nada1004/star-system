@@ -103,10 +103,13 @@ async function fbCloudSave(opts) {
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
       soopList: localStorage.getItem('su_soop_list') || '',
+      // 펨코스타일 설정 (su_ 접두사 없어서 ls에 미포함 → 별도 명시)
+      femcoSettings: localStorage.getItem('b2_femco_settings_v1') || null,
+      femcoUniv: localStorage.getItem('cfg_femco_univ') || null,
       ls: _syncLs
     };
   }
-  // 페이로드 크기 검사
+  // 페이로드 크기 검사 (압축 후 실제 전송 크기 기준)
   let _fbPayloadSize = 0;
   try {
     _fbPayloadSize = JSON.stringify(dataObj).length;
@@ -114,10 +117,19 @@ async function fbCloudSave(opts) {
     const splitInfo = (typeof window.__suEstimateSplitStore === 'function')
       ? window.__suEstimateSplitStore(dataObj)
       : null;
-    const warnBytes = splitInfo && splitInfo.maxBytes ? splitInfo.maxBytes : _fbPayloadSize;
-    const warnLabel = splitInfo && splitInfo.maxBytes
-      ? `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`
-      : `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB`;
+    // (버그픽스) 경고 기준을 압축 후 크기로 변경 — LZString 압축 시 평균 40~60% 절감되므로
+    // 원본 크기로 비교하면 불필요한 "저장 실패 가능" 경고가 표시됨
+    let warnBytes;
+    let warnLabel;
+    if(splitInfo && splitInfo.maxBytes){
+      warnBytes = splitInfo.maxBytes;
+      warnLabel = `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`;
+    } else {
+      // 압축률 추정: LZString은 보통 원본의 45~55% 수준
+      const compressedEstimate = Math.round(_fbPayloadSize * 0.5);
+      warnBytes = compressedEstimate;
+      warnLabel = `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB (압축 후 약 ${(compressedEstimate/1024/1024).toFixed(1)}MB)`;
+    }
     if (warnBytes > 3 * 1024 * 1024) {
       if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ ${warnLabel} — 저장 실패 가능`; }
       console.warn('[fbCloudSave] 크기 위험:', (warnBytes/1024).toFixed(0)+'KB');
@@ -179,7 +191,7 @@ async function fbCloudSave(opts) {
       const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
       statusEl.style.color='#dc2626';
       statusEl.innerHTML = '❌ GitHub 저장 실패: ' + display + hint
-        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
+        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:var(--fs-caption);cursor:pointer;padding:1px 6px">닫기</button>';
     }
     throw e;
   } finally {
@@ -247,82 +259,95 @@ async function githubDataSave(dataObj) {
 
 try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
-// ── GitHub JSON 불러오기 ───────────────────────────────────
+// ── GitHub JSON 가져오기 (네트워크 요청 + 파싱만, 적용은 호출자가 결정) ──
+// cloudLoad(수동)와 _autoSyncApply(자동) 양쪽에서 공유하는 fetch 로직.
+async function _fetchGithubData(){
+  if(typeof window.__suFetchGithubMergedData === 'function'){
+    return await window.__suFetchGithubMergedData();
+  }
+  const baseUrl=GITHUB_JSON_URL;
+  const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+  const urls=[
+    baseUrl+'?nocache='+Date.now(),
+    'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
+    ghApiUrl,
+    'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
+  ];
+
+  // 각 URL을 파싱까지 완료한 데이터 객체로 변환하는 함수
+  const tryUrl = async (url) => {
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),12000);
+    try{
+      const res=await fetch(url,{cache:'no-store',mode:'cors',signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const text=(await res.text()).replace(/^\uFEFF/,'').trim();
+      if(text.startsWith('<')) throw new Error('HTML 응답');
+      const raw=JSON.parse(text);
+      if(raw&&raw.content&&raw.encoding==='base64'){
+        const bin=atob(raw.content.replace(/\s/g,''));
+        const bytes=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+        return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      }
+      return raw;
+    }catch(e){ clearTimeout(timer); throw e; }
+  };
+
+  // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용 (Promise.any)
+  try{
+    return await Promise.any(urls.map(tryUrl));
+  }catch(aggErr){
+    const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
+    throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+  }
+}
+
+// 가져온 데이터를 전역 상태에 적용 + 탭/캐시 초기화 + init() 재실행까지 공통 처리
+function _applyFetchedCloudData(d){
+  _applyCloudData(d);
+  console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
+
+  localSave();
+  fixPoints();
+  window._compListCache={}; // 대회 목록 캐시 초기화
+  window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
+  window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
+  curTab='total'; // 탭 초기화 (렌더링 오류 방지)
+  statsSub='overview';
+  histSub='mini';
+  compSub='league';
+  // yearOptions를 불러온 데이터에서 자동 추출
+  (function(){
+    const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
+    mergeValidYearsIntoOptions(yearOptions, allD);
+  })();
+  filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
+  filterMonth='전체';
+  init();
+
+  const compCount=(d.comps||[]).length;
+  const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
+  const miniCount=(d.miniM||[]).length;
+  return { compCount, tourCount, miniCount };
+}
+
+// ── GitHub JSON 불러오기 (수동 — 사용자가 버튼을 눌렀을 때) ───────
 window.cloudLoad = async function(){
   try{
     gsSetStatus('📥 불러오는 중...', 'var(--blue)');
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
-    let d=null;
-    if(typeof window.__suFetchGithubMergedData === 'function'){
-      d = await window.__suFetchGithubMergedData();
-    }else{
-    const baseUrl=GITHUB_JSON_URL;
-    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
-    const urls=[
-      baseUrl+'?nocache='+Date.now(),
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
-      ghApiUrl,
-      'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
-    ];
 
-    // 각 URL을 파싱까지 완료한 데이터 객체로 변환하는 함수
-    const tryUrl = async (url) => {
-      const ctrl=new AbortController();
-      const timer=setTimeout(()=>ctrl.abort(),12000);
-      try{
-        const res=await fetch(url,{cache:'no-store',mode:'cors',signal:ctrl.signal});
-        clearTimeout(timer);
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const text=(await res.text()).replace(/^\uFEFF/,'').trim();
-        if(text.startsWith('<')) throw new Error('HTML 응답');
-        const raw=JSON.parse(text);
-        if(raw&&raw.content&&raw.encoding==='base64'){
-          const bin=atob(raw.content.replace(/\s/g,''));
-          const bytes=new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-          return JSON.parse(new TextDecoder('utf-8').decode(bytes));
-        }
-        return raw;
-      }catch(e){ clearTimeout(timer); throw e; }
-    };
-
-    // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용 (Promise.any)
-    try{
-      d=await Promise.any(urls.map(tryUrl));
-    }catch(aggErr){
-      const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
-      throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+    const d = await _fetchGithubData();
+    if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) {
+      if(loadBtn){loadBtn.disabled=false;loadBtn.innerHTML='<span>☁️</span> 데이터 불러오기';}
+      return;
     }
-    }
-    if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
-    // 필드명 별칭 지원 (파싱 유연성)
-    _applyCloudData(d);
-    console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
-
-    localSave();
-    fixPoints();
-    window._compListCache={}; // 대회 목록 캐시 초기화
-    window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
-    window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
-    curTab='total'; // 탭 초기화 (렌더링 오류 방지)
-    statsSub='overview';
-    histSub='mini';
-    compSub='league';
-    // yearOptions를 불러온 데이터에서 자동 추출
-    (function(){
-      const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
-      mergeValidYearsIntoOptions(yearOptions, allD);
-    })();
-    filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
-    filterMonth='전체';
-    init();
-
-    const compCount=(d.comps||[]).length;
-    const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
-    const miniCount=(d.miniM||[]).length;
+    const { compCount, tourCount, miniCount } = _applyFetchedCloudData(d);
     const _lb=document.getElementById('btnCloudLoad');if(_lb){_lb.disabled=false;_lb.innerHTML='<span>☁️</span> 데이터 불러오기';}
     gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()}) — 미니 ${miniCount}건·대회 ${compCount+tourCount}건`, 'var(--green)');
   } catch(e){
@@ -334,6 +359,14 @@ window.cloudLoad = async function(){
     const shortMsg=errMsg.split('\n').slice(0,3).join('\n');
     setTimeout(()=>alert('⚠️ 데이터 불러오기 실패\n\n'+shortMsg), 100);
   }
+};
+
+// ── GitHub JSON 자동 동기화 (백그라운드 — confirm 없이 조용히) ─────
+// 수동 cloudLoad와 달리 confirm 다이얼로그를 띄우지 않는다.
+// 호출 시점 가드(모달 열림/입력 중 여부 등)는 _autoSyncCheck에서 처리한다.
+window._autoSyncApply = async function(){
+  const d = await _fetchGithubData();
+  return _applyFetchedCloudData(d);
 };
 
 
@@ -383,11 +416,25 @@ function saveBoardChipPhotoSettings(){
   localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
   localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
   localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   // 스트리머 프로필 이미지 공통 CSS 변수 동기화
   try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
+
+function _findBrdCardByUniv(univName, root){
+  try{
+    const base = root || document.getElementById('board-wrap') || document;
+    const cards = base && base.querySelectorAll ? base.querySelectorAll('.brd-card') : [];
+    for(const c of cards){
+      if(c && c.dataset && c.dataset.univ === univName) return c;
+    }
+    return null;
+  }catch(e){
+    return null;
+  }
+}
 
 function _getBoardUnivs(){
   const univs = getAllUnivs();
@@ -408,7 +455,7 @@ function toggleBoardUniv(name){
 }
 function _brdCollapseToggle(univName) {
   if (boardCollapsed.has(univName)) boardCollapsed.delete(univName); else boardCollapsed.add(univName);
-  const card = document.querySelector(`.brd-card[data-univ="${univName}"]`);
+  const card = _findBrdCardByUniv(univName);
   if (!card) return;
   const body = card.querySelector('.brd-card-body');
   if (body) body.style.display = boardCollapsed.has(univName) ? 'none' : '';
@@ -716,6 +763,22 @@ function rBoard(C,T){
   const _canManage=_boardCanManage();
   const visUnivs=(_canManage?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
   if(!univs.length){C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">등록된 선수가 없습니다.</div>';return;}
+  const _hexToRgba = (h,a)=>{
+    try{
+      const c=String(h||'#64748b').replace('#','');
+      const r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), b=parseInt(c.slice(4,6),16);
+      return `rgba(${r},${g},${b},${a})`;
+    }catch(e){ return `rgba(100,116,139,${a||0.2})`; }
+  };
+  const _contrastText = (hex)=>{
+    try{
+      const c=String(hex||'').replace('#','').trim();
+      const r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), b=parseInt(c.slice(4,6),16);
+      const f=(v)=>{ v/=255; return v<=0.03928? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+      const L=0.2126*f(r)+0.7152*f(g)+0.0722*f(b);
+      return ((1.0+0.05)/(L+0.05) >= (L+0.05)/(0.02+0.05)) ? '#ffffff' : '#0f172a';
+    }catch(e){ return '#ffffff'; }
+  };
   // 칩 이미지 크기에 따라 행 레이아웃도 함께 스케일 (이미지만 커지고 레이아웃은 고정되는 현상 방지)
   const _bcpScale = Math.max(0.7, Math.min(1.8, (boardChipLayoutScale||100) / 100));
   const _bcpGap = Math.round(7 * _bcpScale);
@@ -727,14 +790,40 @@ function rBoard(C,T){
   const _brdAllVis = visUnivs.flatMap(u => _getBoardPlayers(u.name));
   const _brdTierCts = {}; _brdAllVis.forEach(p=>{ const t=p.tier||'?'; _brdTierCts[t]=(_brdTierCts[t]||0)+1; });
   const _brdAllCollapsed = visUnivs.length > 0 && visUnivs.every(u=>boardCollapsed.has(u.name));
-  const _brdStatsHtml = `<div style="display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);flex-wrap:wrap;flex-shrink:0">
-    <span style="font-size:11px;font-weight:800;color:var(--text2)">👥 ${_brdAllVis.length}명</span>
-    <span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>
-    <span style="font-size:11px;font-weight:800;color:var(--text2)">🏫 ${visUnivs.length}개 대학</span>
-    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
+  const _heroCol = boardSelUniv!=='전체' ? (gc(boardSelUniv)||'#2563eb') : '#2563eb';
+  const _heroTc = _contrastText(_heroCol);
+  const _currentUnivLabel = boardSelUniv!=='전체' ? boardSelUniv : '전체 대학';
+  const _tierBadges = TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('');
+  const _brdStatsHtml = `<div class="brd-mini-stats">
+    <div class="brd-mini-stat"><div class="brd-mini-stat-label">표시 스트리머</div><div class="brd-mini-stat-value">${_brdAllVis.length}</div><div class="brd-mini-stat-sub">구현황판 기준 인원</div></div>
+    <div class="brd-mini-stat"><div class="brd-mini-stat-label">활성 대학</div><div class="brd-mini-stat-value">${visUnivs.length}</div><div class="brd-mini-stat-sub">숨김/해체 제외</div></div>
+    <div class="brd-mini-stat"><div class="brd-mini-stat-label">현재 보기</div><div class="brd-mini-stat-value" style="font-size:var(--fs-lg)">${_currentUnivLabel}</div><div class="brd-mini-stat-sub">${boardSelUniv!=='전체'?'선택 대학 중심':'전체 흐름 보기'}</div></div>
+    <div class="brd-mini-stat"><div class="brd-mini-stat-label">티어 분포</div><div class="brd-mini-stat-tier">${_tierBadges||'<span style="font-size:var(--fs-caption);color:var(--text3);font-weight:700">집계 없음</span>'}</div></div>
   </div>`;
   let h=`
   <style>
+    .brd-shell{display:flex;flex-direction:column;gap:14px}
+    .brd-hero{position:relative;overflow:hidden;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 34px rgba(15,23,42,.06)}
+    .brd-hero::after{content:'';position:absolute;right:-70px;top:-70px;width:220px;height:220px;border-radius:999px;background:${_hexToRgba(_heroCol,.16)};filter:blur(2px);pointer-events:none}
+    .brd-hero-copy,.brd-hero-side{position:relative;z-index:1}
+    .brd-hero-copy{display:flex;flex-direction:column;gap:7px;min-width:0}
+    .brd-hero-kicker{font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:${_heroCol}}
+    .brd-hero-title{font-size:25px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.14}
+    .brd-hero-desc{font-size:var(--fs-base);line-height:1.6;color:var(--text3);max-width:720px}
+    .brd-hero-badges{display:flex;flex-wrap:wrap;gap:8px}
+    .brd-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:${_hexToRgba(_heroCol,.1)};border:1px solid ${_hexToRgba(_heroCol,.18)};font-size:var(--fs-sm);font-weight:800;color:${_heroCol};box-shadow:0 10px 18px rgba(15,23,42,.05)}
+    .brd-hero-side{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+    .brd-toolbar-card{padding:14px 16px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 34px rgba(15,23,42,.06)}
+    .brd-toolbar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .brd-toolbar-controls{display:flex;flex-direction:column;gap:10px;min-width:min(100%,720px)}
+    .brd-toolbar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .brd-toolbar-note{font-size:var(--fs-caption);color:var(--text3);font-weight:700}
+    .brd-mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;min-width:min(100%,520px)}
+    .brd-mini-stat{padding:12px 13px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))}
+    .brd-mini-stat-label{font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
+    .brd-mini-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}
+    .brd-mini-stat-sub{margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}
+    .brd-mini-stat-tier{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
     .brd-card{background:var(--brd-col,#dbeafe);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px var(--brd-shd,rgba(37,99,235,.15)),0 1px 6px rgba(0,0,0,.07);position:relative;transition:transform .18s,box-shadow .18s;align-self:start;border:1px solid rgba(0,0,0,.06);}
     .brd-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px var(--brd-shd,rgba(37,99,235,.22)),0 3px 10px rgba(0,0,0,.1);}
     .brd-card.drag-over{outline:3px solid rgba(0,0,0,.2);opacity:.85;}
@@ -746,8 +835,8 @@ function rBoard(C,T){
     .brd-row{display:flex;align-items:center;gap:${_bcpGap}px;padding:${_bcpPadY}px ${_bcpPadX}px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
     .brd-row-btn{cursor:pointer;flex:1;display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;font-family:'Noto Sans KR',sans-serif;min-width:0;}
-    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
-    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
+    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
+    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
     .brd-race{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px;}
     .brd-name{font-weight:700;font-size:${_bcpNameFs}px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
     .brd-role-main{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
@@ -761,7 +850,7 @@ function rBoard(C,T){
     .brd-row-drag{cursor:grab;}.brd-row-drag:active{cursor:grabbing;}
     .brd-tier-lbl{font-size:9px;font-weight:700;color:rgba(0,0,0,.45);letter-spacing:.8px;text-transform:uppercase;padding:0 2px;margin:6px 0 2px;}
     .brd-tier-lbl:first-child{margin-top:0;}
-    .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
+    .brd-univ-name-btn{font-weight:900;font-size:var(--fs-lg);color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
     .brd-side-panel{float:right;width:230px;margin:0 0 6px 10px;}
@@ -769,24 +858,51 @@ function rBoard(C,T){
     @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
     .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
-    .brd-move-popup-title{font-size:11px;font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
-    .brd-move-popup-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:600;color:var(--text);transition:background .1s;text-align:left;}
+    .brd-move-popup-title{font-size:var(--fs-caption);font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+    .brd-move-popup-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-sm);font-weight:600;color:var(--text);transition:background .1s;text-align:left;}
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
     .brd-move-popup-btn:disabled{opacity:.35;cursor:default;background:none;}
     .brd-move-popup-sep{height:1px;background:var(--border);margin:4px 0;}
-    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;padding-bottom:6px;}
+    .brd-toolbar{position:sticky;top:0;z-index:100;background:transparent!important;padding-bottom:6px;}
+    body.dark .brd-hero,body.dark .brd-toolbar-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28)}
+    body.dark .brd-hero-title{color:#f8fafc}
+    body.dark .brd-hero-desc,body.dark .brd-toolbar-note{color:#94a3b8}
+    body.dark .brd-hero-badge{background:${_hexToRgba(_heroCol,.2)};border-color:${_hexToRgba(_heroCol,.28)};color:${_heroTc}}
+    body.dark .brd-mini-stat{background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(30,41,59,.88));border-color:#334155}
+    body.dark .brd-mini-stat-value{color:#e2e8f0}
+    body.dark .brd-mini-stat-label,body.dark .brd-mini-stat-sub{color:#94a3b8}
+    @media(max-width:900px){.brd-hero{flex-direction:column;padding:18px;border-radius:22px}.brd-hero-side{justify-content:flex-start}.brd-toolbar-top{flex-direction:column}.brd-toolbar-controls,.brd-mini-stats{min-width:100%}}
     @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
   </style>
-  <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+  <div class="brd-shell">
+  <section class="brd-hero no-export">
+    <div class="brd-hero-copy">
+      <div class="brd-hero-kicker">Classic Board</div>
+      <div class="brd-hero-title">📊 구현황판</div>
+      <div class="brd-hero-desc">${boardSelUniv!=='전체' ? `${boardSelUniv} 중심으로 기존 현황판 레이아웃을 더 깔끔한 카드형 UI로 정리했습니다.` : '기존 현황판 흐름은 유지하면서 상단 탐색과 통계 영역을 더 보기 좋고 직관적으로 다듬었습니다.'}</div>
+      <div class="brd-hero-badges">
+        <span class="brd-hero-badge">현재 보기 · ${_currentUnivLabel}</span>
+        <span class="brd-hero-badge">표시 스트리머 ${_brdAllVis.length}명</span>
+        <span class="brd-hero-badge">대학 ${visUnivs.length}곳</span>
+        <span class="brd-hero-badge">${boardCardView?'포토카드':'기본 카드'} · ${boardGridCols===2?'2열':'1열'}</span>
+      </div>
+    </div>
+    <div class="brd-hero-side">
+      <span class="brd-hero-badge" style="background:linear-gradient(135deg,${_heroCol},${_hexToRgba(_heroCol,.82)});border-color:${_heroCol};color:${_heroTc};box-shadow:0 16px 28px ${_hexToRgba(_heroCol,.22)}">${_currentUnivLabel}</span>
+    </div>
+  </section>
+  <div class="brd-toolbar-card no-export">
+  <div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px">
     <button class="pill ${boardGridCols===2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
     <button class="pill ${boardCardView?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
     <button class="pill ${boardCompactMode?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
     <button class="pill ${_brdAllCollapsed?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
   </div>
-  <div class="no-export brd-toolbar fbar" style="gap:8px;flex-wrap:wrap;margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <div class="brd-toolbar brd-toolbar-top">
+    <div class="brd-toolbar-controls">
+      <div class="brd-toolbar-row">
       <div style="position:relative">
-        <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
+        <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:var(--fs-sm);font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
           <option value="전체">🏫 전체 보기</option>
           ${visUnivs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}${_canManage&&u.hidden?' (숨김)':''}</option>`).join('')}
         </select>
@@ -797,22 +913,25 @@ function rBoard(C,T){
       </button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
-        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
+        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
         <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()">
-        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
+        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap;margin-left:4px">라벨</span>
-        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
+        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
         <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()">
-        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
+        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
       </div>
+      </div>
+      <div class="brd-toolbar-note">${_canManage?`🖱️ 헤더 드래그·◀▶ = 대학순서 | 스트리머 드래그/클릭 = 순서·대학이동 <button onclick="openCfgHome()" style="margin-left:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;font-size:var(--fs-caption);cursor:pointer;color:var(--text2);font-weight:700">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</div>
     </div>
     ${_brdStatsHtml}
-    <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${_canManage?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="openCfgHome()" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
+  </div>
   </div>
   <div id="board-wrap" style="display:grid;grid-template-columns:${boardGridCols===2?'repeat(2,1fr)':'1fr'};gap:14px;align-items:start">`;
   const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
   targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
   h+=`</div>
+</div>
 `;
   C.innerHTML=h;
   injectUnivIcons(C);
@@ -831,15 +950,18 @@ function rBoard(C,T){
 
 function buildUnivBoardCard(u, forExport){
   if(!u)return'';
+  const uNameJs = (typeof escJS==='function')
+    ? escJS(u.name)
+    : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   const col=gc(u.name);
   const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const sorted=_getBoardPlayers(u.name);
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
-    return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
+    return `<div class="brd-card" data-univ="${escAttr(u.name)}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
       ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
-      <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
-      <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
+      <span style="font-weight:900;font-size:var(--fs-md);color:${col}">${u.name}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
   }
   const cnt=sorted.length;
@@ -873,6 +995,11 @@ function buildUnivBoardCard(u, forExport){
     if(tierMap['기타']&&!TIERS.includes('기타'))tierOrder.push('기타');
 
     const buildPlayerChip=(p, chipIdx)=>{
+      const pNameJs = (typeof escJS==='function')
+        ? escJS(p && p.name)
+        : String(p && p.name || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+      const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.name) : String(p && p.name || '');
+      const pRoleHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.role) : String(p && p.role || '');
       const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
       const isMain=p.role&&MAIN_ROLES.includes(p.role);
       const rCol=ROLE_COLORS[p.role]||'';
@@ -895,25 +1022,24 @@ function buildUnivBoardCard(u, forExport){
           + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
           + `</div>`;
         const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.82));border-radius:0 0 10px 10px;padding:22px 6px 7px;text-align:center">`
-          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
-          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
+          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${pRoleHtml}</div>`:'')
+          + `<div style="font-weight:800;font-size:var(--fs-caption);color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${pNameHtml}</div>`
           + (p.channelUrl
             ? (forExport
                 ? `<div style="margin-top:4px;font-size:9px;font-weight:700;color:${col};background:rgba(255,255,255,.9);border-radius:4px;padding:1px 6px;display:inline-block">▶ 방송</div>`
                 : `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="margin-top:4px;display:inline-block;font-size:9px;font-weight:700;color:${col};background:rgba(255,255,255,.9);border-radius:4px;padding:1px 6px;text-decoration:none">▶ 방송</a>`)
             : '')
           + `</div>`;
-        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:110px;padding-top:0':'aspect-ratio:3/4'};overflow:hidden;border-radius:10px">${imgInner}${topBadges}${overlay}</div>`;
+        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:110px;padding-top:0':'aspect-ratio:3/4'};overflow:hidden;border-radius:var(--r)">${imgInner}${topBadges}${overlay}</div>`;
         if (forExport) {
-          return `<div style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)}">${cardInner}</div>`;
+          return `<div style="border-radius:var(--r);overflow:hidden;border:2px solid ${hexToRgba(col,.5)}">${cardInner}</div>`;
         }
-        const pNameSafeCard=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const totalInUnivCard=sorted.length;
         const clickFnCard=_boardCanManage()
-          ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
+          ? `openBrdPlayerPopupFromChip(event,'${pNameJs}','${uNameJs}',${chipIdx??0},${totalInUnivCard})`
           : `openRandomPlayerModal()`;
-        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
+        return `<div class="brd-chip" data-player="${escAttr(p.name)}" data-univ="${escAttr(u.name)}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
+          + ` style="border-radius:var(--r);overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
           + ` onmouseover="this.style.boxShadow='0 6px 20px ${hexToRgba(col,.5)}';this.style.transform='translateY(-3px)'"`
           + ` onmouseout="this.style.boxShadow='';this.style.transform=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
@@ -930,26 +1056,25 @@ function buildUnivBoardCard(u, forExport){
         const chipTierText2 = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         // 전역 프로필 이미지 모양 설정(원/네모) 반영
         const imgRadius = 'var(--su_profile_radius,50%)';
-        return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
+        return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:var(--r2);padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
             ?`<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}" onload="_applyBoardBgAutoSizing(this)">`
             :`<span style="width:64px;height:64px;border-radius:${imgRadius};background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:3px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
           <span style="display:inline-flex;flex-direction:column;gap:3px;min-width:0">
-            ${isMain?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
+            ${isMain?`<span style="font-size:var(--fs-caption);font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
             <span style="font-weight:900;color:#111;font-size:16px;line-height:1.3;white-space:nowrap">${p.name}</span>
             <span style="display:inline-flex;align-items:center;gap:5px;line-height:1.2">
-              <span style="font-size:12px;font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:2px 8px">${rTxt}</span>
-              ${p.tier?`<span style="font-size:11px;font-weight:800;background:${chipTierCol2};color:${chipTierText2};border-radius:6px;padding:2px 8px">${p.tier}</span>`:''}
+              <span style="font-size:var(--fs-sm);font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:2px 8px">${rTxt}</span>
+              ${p.tier?`<span style="font-size:var(--fs-caption);font-weight:800;background:${chipTierCol2};color:${chipTierText2};border-radius:6px;padding:2px 8px">${p.tier}</span>`:''}
             </span>
           </span>
         </span>`;
       }
       const compact=boardCompactMode;
-      const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const totalInUniv=sorted.length;
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
       const clickFn=_boardCanManage()
-        ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
+        ? `openBrdPlayerPopupFromChip(event,'${pNameJs}','${uNameJs}',${chipIdx??0},${totalInUniv})`
         : `openRandomPlayerModal()`;
 
       // 티어 고정 색상 (칩)
@@ -972,11 +1097,11 @@ function buildUnivBoardCard(u, forExport){
       const _photoEl = photoSrcChip
         ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onload="_applyBoardBgAutoSizing(this)" onerror="this.style.display='none'"></span>`
         : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
-      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${_boardCanManage()?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
+      return `<span class="brd-chip" data-player="${escAttr(p.name)}" data-univ="${escAttr(u.name)}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:var(--r2);padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${_boardCanManage()?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
-          ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
-          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}${(()=>{if(!p.transferDate||!p.prevUniv)return'';const diff=(new Date()-new Date(p.transferDate))/(864e5);return diff<=30?`<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:800;margin-left:3px;border:1px solid #fcd34d" title="${p.prevUniv}에서 이적 (${p.transferDate})">🔄 이적</span>`:'';})()}</span>
+          ${isMain&&!compact?`<span style="font-size:var(--fs-caption);font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
+          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${pNameHtml}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}${(()=>{if(!p.transferDate||!p.prevUniv)return'';const diff=(new Date()-new Date(p.transferDate))/(864e5);return diff<=30?`<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:800;margin-left:3px;border:1px solid #fcd34d" title="${escAttr(p.prevUniv)}에서 이적 (${escAttr(p.transferDate)})">🔄 이적</span>`:'';})()}</span>
           <span style="display:inline-flex;align-items:center;gap:${compact?'3px':'5px'};line-height:1.2">
             <span style="font-size:${badgeFs};font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${rTxt}</span>
             ${p.tier?`<span style="font-size:${tierBadgeFs};font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${p.tier}</span>`:''}
@@ -998,7 +1123,7 @@ function buildUnivBoardCard(u, forExport){
           const role = group[0].role;
           const rIcon = ROLE_ICONS[role] || '';
           const rCol = ROLE_COLORS[role] || col;
-          return `<div style="margin-bottom:6px;padding:6px 8px 8px;border-radius:10px;background:${hexToRgba(col,.1)};border:1.5px solid ${hexToRgba(col,.25)}">
+          return `<div style="margin-bottom:6px;padding:6px 8px 8px;border-radius:var(--r);background:${hexToRgba(col,.1)};border:1.5px solid ${hexToRgba(col,.25)}">
             <div style="font-size:10px;font-weight:900;color:#fff;padding:2px 9px;margin-bottom:4px;background:${rCol};border-radius:5px;display:inline-block;line-height:1.6">${rIcon}${role}</div>
             <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${group.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
           </div>`;
@@ -1042,52 +1167,51 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'auto';
-    const _uNameSafe=(u.name||'').replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
-      return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${_uNameSafe}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
+      return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${uNameJs}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
     })():'';
-    return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+    return `<div class="brd-card" data-univ="${escAttr(u.name)}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${_boardCanManage()&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
+          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${uNameJs}')"` } title="대학 상세 보기">
             ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
-              <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${(u.name||'').replace(/'/g,"\\'")}')"`)}>
+              <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:var(--fs-lg);display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${uNameJs}')"`)}>
                 ${(u.name||'')}${(!forExport&&(boardSelUniv||'')===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
-              ${(u.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(u.championships||0)}</span>`:''}
-              ${_boardCanManage()&&!forExport?`<input type="text" placeholder="📌 메모..." value="${(u.memo2||'').replace(/"/g,'&quot;')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)" onblur="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${u.memo2}</span>`:'')}
+              ${(u.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:var(--fs-md)">⭐</span>'.repeat(u.championships||0)}</span>`:''}
+              ${_boardCanManage()&&!forExport?`<input type="text" placeholder="📌 메모..." value="${escAttr(u.memo2||'')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:var(--fs-sm);color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${uNameJs}',this.value)" onblur="setBoardMemo2('${uNameJs}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:var(--fs-sm);color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${(typeof window.escHTML==='function')?window.escHTML(u.memo2):u.memo2}</span>`:'')}
             </div>
-            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명 <button class="brd-collapse-btn no-export" onclick="event.stopPropagation();_brdCollapseToggle('${(u.name||'').replace(/'/g,"\\'")}')"
-              style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:4px;color:#fff;font-size:10px;padding:0 5px;height:16px;cursor:pointer;line-height:1;font-weight:700">${boardCollapsed.has(u.name)?'▶':'▼'}</button>${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${_boardCanManage()&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
+            <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명 <button class="brd-collapse-btn no-export" onclick="event.stopPropagation();_brdCollapseToggle('${uNameJs}')"
+              style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:4px;color:#fff;font-size:10px;padding:0 5px;height:16px;cursor:pointer;line-height:1;font-weight:700">${boardCollapsed.has(u.name)?'▶':'▼'}</button>${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:var(--r);color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${_boardCanManage()&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:var(--r)">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
             ${_boardCanManage()?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end">
 {{ ... }
-              <button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="왼쪽 이동">◀</button>
-              <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="오른쪽 이동">▶</button>
-              <button onclick="event.stopPropagation();toggleBoardHide('${u.name}')" style="background:${u.hidden?'rgba(239,68,68,.55)':'rgba(255,255,255,.18)'};border:1px solid ${u.hidden?'rgba(239,68,68,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:12px;padding:0 7px;height:22px;cursor:pointer" title="${u.hidden?'숨김':'표시'}">${u.hidden?'🚫':'👁️'}</button>
-              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:12px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;position:relative;overflow:hidden" onclick="event.stopPropagation()" title="색상">🎨<input type="color" value="${col}" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;top:0;left:0" onchange="event.stopPropagation();changeBoardUnivColor('${u.name}',this.value)"></label>
-              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 추가">⭐+</button>
-              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 제거">⭐-</button>
-              ${(()=>{const _ci=univCfg.findIndex(x=>x.name===u.name);if(_ci<0)return'';return u.dissolved?`<button onclick="event.stopPropagation();univCfg[${_ci}].dissolved=false;univCfg[${_ci}].hidden=false;delete univCfg[${_ci}].dissolvedDate;save();render()" style="background:rgba(34,197,94,.35);border:1px solid rgba(134,239,172,.8);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="해체 복구">🔄 복구</button>`:`<button onclick="event.stopPropagation();(function(){const _i=${_ci};if(typeof openDissolveModal==='function'){openDissolveModal(_i);}else{if(!confirm('${u.name.replace(/'/g,"\\'")} 대학을 해체하시겠습니까?'))return;univCfg[_i].dissolved=true;univCfg[_i].hidden=true;univCfg[_i].dissolvedDate=new Date().toISOString().slice(0,10);save();render();}})()" style="background:rgba(234,88,12,.35);border:1px solid rgba(253,186,116,.8);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="대학 해체">🏚️ 해체</button>`;})()}
-              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지 파일 업로드">🖼️<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uNameSafe}')"></label>
-              <button onclick="event.stopPropagation();promptBoardBgImgUrl('${_uNameSafe}')" style="background:${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(99,102,241,.45)':'rgba(255,255,255,.18)'};border:1px solid ${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(165,180,252,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 이미지 URL 링크">🔗</button>
-              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${_uNameSafe}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
-              <button onclick="event.stopPropagation();setBoardBgImgSize('${_uNameSafe}','${_bgSize==='cover'?'contain':(_bgSize==='contain'?'auto':'cover')}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':(_bgSize==='contain'?'자동(auto)':'채우기(cover)')}">${_bgSize==='cover'?'↔맞추기':(_bgSize==='contain'?'🪄자동':'⬛채우기')}</button>
+              <button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="왼쪽 이동">◀</button>
+              <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="오른쪽 이동">▶</button>
+              <button onclick="event.stopPropagation();toggleBoardHide('${u.name}')" style="background:${u.hidden?'rgba(239,68,68,.55)':'rgba(255,255,255,.18)'};border:1px solid ${u.hidden?'rgba(239,68,68,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:var(--fs-sm);padding:0 7px;height:22px;cursor:pointer" title="${u.hidden?'숨김':'표시'}">${u.hidden?'🚫':'👁️'}</button>
+              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-sm);padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;position:relative;overflow:hidden" onclick="event.stopPropagation()" title="색상">🎨<input type="color" value="${col}" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;top:0;left:0" onchange="event.stopPropagation();changeBoardUnivColor('${u.name}',this.value)"></label>
+              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="우승 추가">⭐+</button>
+              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="우승 제거">⭐-</button>
+              ${(()=>{const _ci=univCfg.findIndex(x=>x.name===u.name);if(_ci<0)return'';return u.dissolved?`<button onclick="event.stopPropagation();univCfg[${_ci}].dissolved=false;univCfg[${_ci}].hidden=false;delete univCfg[${_ci}].dissolvedDate;save();render()" style="background:rgba(34,197,94,.35);border:1px solid rgba(134,239,172,.8);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="해체 복구">🔄 복구</button>`:`<button onclick="event.stopPropagation();(function(){const _i=${_ci};if(typeof openDissolveModal==='function'){openDissolveModal(_i);}else{if(!confirm('${u.name.replace(/'/g,"\\'")} 대학을 해체하시겠습니까?'))return;univCfg[_i].dissolved=true;univCfg[_i].hidden=true;univCfg[_i].dissolvedDate=new Date().toISOString().slice(0,10);save();render();}})()" style="background:rgba(234,88,12,.35);border:1px solid rgba(253,186,116,.8);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="대학 해체">🏚️ 해체</button>`;})()}
+              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지 파일 업로드">🖼️<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${uNameJs}')"></label>
+              <button onclick="event.stopPropagation();promptBoardBgImgUrl('${uNameJs}')" style="background:${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(99,102,241,.45)':'rgba(255,255,255,.18)'};border:1px solid ${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(165,180,252,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="배경 이미지 URL 링크">🔗</button>
+              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${uNameJs}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:var(--fs-caption);padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
+              <button onclick="event.stopPropagation();setBoardBgImgSize('${uNameJs}','${_bgSize==='cover'?'contain':(_bgSize==='contain'?'auto':'cover')}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':(_bgSize==='contain'?'자동(auto)':'채우기(cover)')}">${_bgSize==='cover'?'↔맞추기':(_bgSize==='contain'?'🪄자동':'⬛채우기')}</button>
               ${_bgPosGrid}`:''}
             </div>`:''}
           </div>`:''}
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${u.bgImg?'transparent':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${u.bgImg?`<div class="brd-bg-layer" data-bg-src="${String(u.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${u.bgImg}') ${u.bgImgPos||'center center'}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:0.35;pointer-events:none;z-index:0"></div>`:''}<div style="position:relative;z-index:1;background:${u.bgImg?'rgba(255,255,255,0.75)':'transparent'};min-height:100%">${(()=>{
+      <div class="brd-card-body brd-body" style="background:${u.bgImg?'transparent':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${u.bgImg?`<div class="brd-bg-layer" data-bg-src="${String(u.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${String(u.bgImg).replace(/'/g,'%27')}') ${u.bgImgPos||'center center'}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:0.35;pointer-events:none;z-index:0"></div>`:''}<div style="position:relative;z-index:1;background:${u.bgImg?'rgba(255,255,255,0.75)':'transparent'};min-height:100%">${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const panelStyle=`border-radius:10px;padding:8px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
+        const panelStyle=`border-radius:var(--r);padding:8px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
         // 사이드 패널 (PC only, .brd-side-panel 클래스로 모바일 숨김)
         let sidePanelHtml='';
         if(_boardCanManage()&&!forExport){
@@ -1097,7 +1221,7 @@ function buildUnivBoardCard(u, forExport){
           </div>`).join('');
           sidePanelHtml=`<div class="brd-side-panel no-export" style="${panelStyle}">
             ${imgList}
-            <textarea placeholder="📝 사이드 메모..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:11px;background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222;margin-top:${_imgs.length?'2px':'0'}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo('${_uname}',this.value)" onblur="setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
+            <textarea placeholder="📝 사이드 메모..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:var(--fs-caption);background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222;margin-top:${_imgs.length?'2px':'0'}" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo('${_uname}',this.value)" onblur="setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
             <div style="display:flex;gap:4px;margin-top:4px">
               <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px" onclick="event.stopPropagation()" title="파일 업로드">🖼️ 업로드<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
               <button onclick="event.stopPropagation();promptBoardMemoImgUrl('${_uname}')" style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px" title="이미지 URL 링크">🔗 링크</button>
@@ -1105,7 +1229,7 @@ function buildUnivBoardCard(u, forExport){
           </div>`;
         } else if(!forExport&&(_memo||_imgs.length)){
           const imgList=_imgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
-          sidePanelHtml=`<div class="brd-side-panel no-export" style="${panelStyle}">${imgList}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_imgs.length?'4px':'0'}">${_memo}</div>`:''}</div>`;
+          sidePanelHtml=`<div class="brd-side-panel no-export" style="${panelStyle}">${imgList}${_memo?`<div style="font-size:var(--fs-caption);color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_imgs.length?'4px':'0'}">${_memo}</div>`:''}</div>`;
         }
         // 하단 메모 (bMemo + bMemoImgs 배열)
         const _bnote=u.bMemo||'';
@@ -1118,15 +1242,15 @@ function buildUnivBoardCard(u, forExport){
           </div>`).join('');
           bottomHtml=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:5px">
             ${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px">${imgList}</div>`:''}
-            <textarea placeholder="📋 하단 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.12);border-radius:7px;padding:5px 8px;font-size:11px;background:rgba(255,255,255,.55);resize:none;outline:none;font-family:inherit;color:#222" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardNote('${_uname}',this.value)" onblur="setBoardNote('${_uname}',this.value)">${_bnote}</textarea>
+            <textarea placeholder="📋 하단 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.12);border-radius:7px;padding:5px 8px;font-size:var(--fs-caption);background:rgba(255,255,255,.55);resize:none;outline:none;font-family:inherit;color:#222" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardNote('${_uname}',this.value)" onblur="setBoardNote('${_uname}',this.value)">${_bnote}</textarea>
             <div style="display:flex;gap:5px;align-items:center">
-              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" onclick="event.stopPropagation()" title="파일 업로드">🖼️ 업로드<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardNoteImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
-              <button onclick="event.stopPropagation();promptBoardNoteImgUrl('${_uname}')" style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" title="이미지 URL 링크">🔗 링크</button>
+              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:var(--fs-caption);font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" onclick="event.stopPropagation()" title="파일 업로드">🖼️ 업로드<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardNoteImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
+              <button onclick="event.stopPropagation();promptBoardNoteImgUrl('${_uname}')" style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:var(--fs-caption);font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" title="이미지 URL 링크">🔗 링크</button>
             </div>
           </div>`;
         } else if(_bnote||_bimgs.length){
           const imgList=_bimgs.map(src=>`<img src="${src}" class="brd-bottom-section-img" style="max-width:130px;max-height:110px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">`).join('');
-          bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${_bnote?'6px':'0'}">${imgList}</div>`:''}${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
+          bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${_bnote?'6px':'0'}">${imgList}</div>`:''}${_bnote?`<div style="font-size:var(--fs-sm);color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
         }
         const mainLayout=`<div style="overflow:hidden">${sidePanelHtml}${roleSection}${tierRows}</div>`;
         return `<div style="position:relative;z-index:1">${mainLayout}${bottomHtml}</div>`;
@@ -1144,7 +1268,7 @@ function _brdToast(msg, duration=2800){
   const el = document.createElement('div');
   el.id = 'brd-toast';
   el.textContent = msg;
-  el.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;font-family:\'Noto Sans KR\',sans-serif;';
+  el.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:var(--r);font-size:var(--fs-base);font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;font-family:\'Noto Sans KR\',sans-serif;';
   document.body.appendChild(el);
   requestAnimationFrame(()=>{
     el.style.opacity='1'; el.style.transform='translateX(-50%) translateY(0)';
@@ -1195,63 +1319,68 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const _pnSafeChip = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
-  const pNameSafe = playerName.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const pNameJs = (typeof escJS==='function')
+    ? escJS(playerName)
+    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const uNameJs = (typeof escJS==='function')
+    ? escJS(univName)
+    : String(univName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
+  const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
   const _tierIdxChip = TIERS.indexOf(p.tier||'미정');
   const _prevTierChip = _tierIdxChip > 0 ? TIERS[_tierIdxChip-1] : null;
   const _nextTierChip = _tierIdxChip < TIERS.length-1 ? TIERS[_tierIdxChip+1] : null;
 
   popup.innerHTML = `
-    <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
+    <div class="brd-move-popup-title">👤 ${pNameHtml} <span style="font-size:10px;font-weight:400">(${uNameHtml})</span></div>
     <div style="padding:5px 6px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘 <span style="margin-left:4px">${getStatusIconHTML(playerName)||''}</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;max-height:90px;overflow-y:auto" id="brd-icon-grid-${_pnSafeChip}">
-        ${(()=>{const _ci=getStatusIcon(playerName);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_ci)||(d.emoji&&_ci===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'15px'):d.emoji):'<span style="font-size:9px">없음</span>';return `<button type="button" title="${d.label.replace(/"/g,'&quot;')}" onclick="setBrdStatusIcon(this,'${pNameSafe}','${id}')" data-icon-id="${id}" style="padding:2px 5px;border-radius:4px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'9px':'12px'};min-width:26px;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('');})()}
+        ${(()=>{const _ci=getStatusIcon(playerName);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_ci)||(d.emoji&&_ci===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'15px'):d.emoji):'<span style="font-size:9px">없음</span>';return `<button type="button" title="${d.label.replace(/"/g,'&quot;')}" onclick="setBrdStatusIcon(this,'${pNameJs}','${id}')" data-icon-id="${id}" style="padding:2px 5px;border-radius:4px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'9px':'12px'};min-width:26px;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('');})()}
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
+    <div style="padding:4px 6px 6px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;padding:0 6px 4px">
-      ${['이사장','동아리 회장','총장','부총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px">${r}</button>`).join('')}
-      <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;color:#dc2626">해제</button>
+      ${['이사장','동아리 회장','총장','부총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${pNameJs}','${r}')" style="font-size:10px">${r}</button>`).join('')}
+      <button class="btn btn-xs btn-w" onclick="setBrdRole('${pNameJs}','')" style="font-size:10px;color:#dc2626">해제</button>
     </div>
     <div style="display:flex;gap:4px;padding:0 6px 4px;align-items:center">
-      <input id="brd-role-chip-${_pnSafeChip}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
+      <input id="brd-role-chip-${_pnSafeChip}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-caption)">
+      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${pNameJs}',inp.value.trim())})()">설정</button>
     </div>
-    ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
+    ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${pNameJs}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${pNameJs}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
     <div class="brd-move-popup-sep"></div>
-    <div style="padding:4px 6px 2px;font-size:11px;font-weight:700;color:var(--text3)">⭐ 티어</div>
+    <div style="padding:4px 6px 2px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">⭐ 티어</div>
     <div style="display:flex;align-items:center;gap:5px;padding:3px 6px 8px">
-      <button onclick="${_prevTierChip?`setBrdTier('${playerName}','${_prevTierChip}')`:'void 0'}" ${!_prevTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTierChip?'.3':'1'}">▲</button>
-      <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
-      <button onclick="${_nextTierChip?`setBrdTier('${playerName}','${_nextTierChip}')`:'void 0'}" ${!_nextTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTierChip?'.3':'1'}">▼</button>
+      <button onclick="${_prevTierChip?`setBrdTier('${pNameJs}','${_prevTierChip}')`:'void 0'}" ${!_prevTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:700;cursor:pointer;opacity:${!_prevTierChip?'.3':'1'}">▲</button>
+      <span style="flex:1;text-align:center;font-size:var(--fs-base);font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
+      <button onclick="${_nextTierChip?`setBrdTier('${pNameJs}','${_nextTierChip}')`:'void 0'}" ${!_nextTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:700;cursor:pointer;opacity:${!_nextTierChip?'.3':'1'}">▼</button>
     </div>
     <div class="brd-move-popup-sep"></div>
-    <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
+    <div style="padding:4px 6px 6px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
     <div style="display:flex;gap:6px;padding:0 6px 6px">
-      <select id="brd-chip-univ-target" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
-      <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
+      <select id="brd-chip-univ-target" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
+      <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${pNameJs}','${uNameJs}')">이동</button>
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
       <div style="display:flex;gap:4px">
-        <input id="brd-photo-chip-${_pnSafeChip}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-chip-${_pnSafeChip}').value)">저장</button>
+        <input id="brd-photo-chip-${_pnSafeChip}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-caption)">
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${pNameJs}',document.getElementById('brd-photo-chip-${_pnSafeChip}').value)">저장</button>
       </div>
-      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+      ${p.photo?`<button onclick="setBrdPhoto('${pNameJs}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
       <div style="display:flex;gap:4px">
-        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
-        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
-    <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
-    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${pNameJs}')">👤 스트리머 상세 보기</button>
   `;
 
   document.body.appendChild(popup);
@@ -1316,77 +1445,85 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
 
   const _pnSafe = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
+  const pNameJs = (typeof escJS==='function')
+    ? escJS(playerName)
+    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const uNameJs = (typeof escJS==='function')
+    ? escJS(univName)
+    : String(univName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
+  const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
   const _curIcon = getStatusIcon(playerName);
   const _tierIdx = TIERS.indexOf(p.tier||'미정');
   const _prevTier = _tierIdx > 0 ? TIERS[_tierIdx-1] : null;
   const _nextTier = _tierIdx < TIERS.length-1 ? TIERS[_tierIdx+1] : null;
   popup.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
-      <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${playerName} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${univName})</span></div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">👤 ${pNameHtml} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${uNameHtml})</span></div>
       <button onclick="_brdClose()" style="background:none;border:none;color:var(--gray-l);font-size:14px;cursor:pointer;padding:0 2px;line-height:1">✕</button>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border)">
-      <button onclick="boardMovePlayer('${playerName}','${univName}','top')" title="맨 위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">⬆️</button>
-      <button onclick="boardMovePlayer('${playerName}','${univName}','up')" title="위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">🔼</button>
-      <button onclick="boardMovePlayer('${playerName}','${univName}','down')" title="아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">🔽</button>
-      <button onclick="boardMovePlayer('${playerName}','${univName}','bottom')" title="맨 아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">⬇️</button>
+      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','top')" title="맨 위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">⬆️</button>
+      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','up')" title="위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">🔼</button>
+      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','down')" title="아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">🔽</button>
+      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','bottom')" title="맨 아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">⬇️</button>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏷️ 직책</div>
       <div style="display:flex;gap:3px;flex-wrap:wrap">
-        ${['이사장','동아리 회장','총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
-        <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;padding:2px 7px;color:#dc2626">해제</button>
+        ${['이사장','동아리 회장','총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${pNameJs}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
+        <button class="btn btn-xs btn-w" onclick="setBrdRole('${pNameJs}','')" style="font-size:10px;padding:2px 7px;color:#dc2626">해제</button>
       </div>
       <div style="display:flex;gap:4px;margin-top:4px">
-        <input id="brd-role-custom-${_pnSafe}" type="text" placeholder="직접 입력..." style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()" style="font-size:11px">설정</button>
+        <input id="brd-role-custom-${_pnSafe}" type="text" placeholder="직접 입력..." style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-caption)">
+        <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${pNameJs}',inp.value.trim())})()" style="font-size:var(--fs-caption)">설정</button>
       </div>
-      ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
+      ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${pNameJs}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${pNameJs}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">⭐ 티어</div>
       <div style="display:flex;align-items:center;gap:5px">
-        <button onclick="${_prevTier?`setBrdTier('${playerName}','${_prevTier}')`:'void 0'}" ${!_prevTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTier?'.3':'1'}">▲</button>
-        <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
-        <button onclick="${_nextTier?`setBrdTier('${playerName}','${_nextTier}')`:'void 0'}" ${!_nextTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTier?'.3':'1'}">▼</button>
+        <button onclick="${_prevTier?`setBrdTier('${pNameJs}','${_prevTier}')`:'void 0'}" ${!_prevTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:700;cursor:pointer;opacity:${!_prevTier?'.3':'1'}">▲</button>
+        <span style="flex:1;text-align:center;font-size:var(--fs-base);font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
+        <button onclick="${_nextTier?`setBrdTier('${pNameJs}','${_nextTier}')`:'void 0'}" ${!_nextTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:700;cursor:pointer;opacity:${!_nextTier?'.3':'1'}">▼</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:3px" id="brd-icon-grid-${_pnSafe}">
-        ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('')}
+        ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${pNameJs}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('')}
       </div>
       <div style="display:flex;gap:3px;margin-top:5px;align-items:center">
-        <input id="brd-si-url-${_pnSafe}" type="text" placeholder="🔗 이미지 URL 입력" style="flex:1;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);font-size:11px" oninput="_brdSiPreview('${_pnSafe}',this.value)">
+        <input id="brd-si-url-${_pnSafe}" type="text" placeholder="🔗 이미지 URL 입력" style="flex:1;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);font-size:var(--fs-caption)" oninput="_brdSiPreview('${_pnSafe}',this.value)">
         <span id="brd-si-prev-${_pnSafe}" style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:5px;background:var(--white);font-size:14px;flex-shrink:0"></span>
-        <button class="btn btn-b btn-xs" onclick="_brdAddCustomIcon('${_pnSafe}','${playerName}')">추가</button>
+        <button class="btn btn-b btn-xs" onclick="_brdAddCustomIcon('${_pnSafe}','${pNameJs}')">추가</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
       <div style="display:flex;gap:4px">
-        <input id="brd-photo-${_pnSafe}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-${_pnSafe}').value)">저장</button>
+        <input id="brd-photo-${_pnSafe}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-caption)">
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${pNameJs}',document.getElementById('brd-photo-${_pnSafe}').value)">저장</button>
       </div>
-      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+      ${p.photo?`<button onclick="setBrdPhoto('${pNameJs}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏫 대학 이동</div>
       <div style="display:flex;gap:4px">
-        <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
-        <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${playerName}','${univName}')">이동</button>
+        <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
+        <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${pNameJs}','${uNameJs}')">이동</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
       <div style="display:flex;gap:4px">
-        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
-        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px">
-      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${univName}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
-      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();openPlayerModal('${playerName}')">📋 상세</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:var(--fs-caption);font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${uNameJs}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:var(--fs-caption);font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();openPlayerModal('${pNameJs}')">📋 상세</button>
     </div>
   `;
 
@@ -1459,6 +1596,9 @@ function _brdSiPreview(pnSafe, v){
 function _brdAddCustomIcon(pnSafe, playerName){
   const urlEl = document.getElementById('brd-si-url-'+pnSafe);
   if(!urlEl || !urlEl.value.trim()) return;
+  const pnJs = (typeof escJS==='function')
+    ? escJS(playerName)
+    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   addCustomStatusIcon('커스텀', urlEl.value.trim());
   urlEl.value = '';
   const prev = document.getElementById('brd-si-prev-'+pnSafe);
@@ -1470,7 +1610,7 @@ function _brdAddCustomIcon(pnSafe, playerName){
   grid.innerHTML = Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{
     const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);
     const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';
-    return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;
+    return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${pnJs}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;
   }).join('');
 }
 function setBrdStatusIcon(btn, playerName, iconId){
@@ -1556,7 +1696,7 @@ function _refreshBoardCard(univName){
   const wrap = document.getElementById('board-wrap');
   if(!wrap){ render(); return; }
   const u = getAllUnivs().find(x=>x.name===univName);
-  const existing = wrap.querySelector(`.brd-card[data-univ="${univName}"]`);
+  const existing = _findBrdCardByUniv(univName, wrap);
   // 해당 대학에 선수가 없으면 카드 제거
   if(!u || !players.some(p=>p.univ===univName)){
     if(existing) existing.remove();
@@ -2076,12 +2216,12 @@ async function _dlCanvasBoard(canvas, filename) {
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;';
       const safeName = String(pngName||'image.png').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       ov.innerHTML = `
-        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
+        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
           <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;background:rgba(15,23,42,.92);color:#fff">
-            <div style="font-weight:900;font-size:13px">이미지 저장</div>
-            <div style="font-size:12px;opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
-            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-weight:900;font-size:12px">다운로드</a>
-            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:6px 10px;font-weight:900;cursor:pointer;font-size:12px">닫기</button>
+            <div style="font-weight:900;font-size:var(--fs-base)">이미지 저장</div>
+            <div style="font-size:var(--fs-sm);opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
+            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:6px 10px;font-weight:900;font-size:var(--fs-sm)">다운로드</a>
+            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:var(--r);padding:6px 10px;font-weight:900;cursor:pointer;font-size:var(--fs-sm)">닫기</button>
           </div>
           <div style="padding:12px;overflow:auto;background:#111">
             <img src="${src}" style="max-width:100%;display:block;margin:0 auto;border-radius:12px;background:#111">
@@ -2118,7 +2258,7 @@ async function _dlCanvasBoard(canvas, filename) {
       preWin.document.open();
       preWin.document.write('<html><head><meta charset="utf-8"><title>이미지 저장</title></head>'
         + '<body style="margin:0;background:#111;color:#fff;font-family:sans-serif">'
-        + '<div style="padding:12px;font-size:13px">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
+        + '<div style="padding:12px;font-size:var(--fs-base)">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
         + '<img src="' + src + '" style="max-width:100%;display:block;margin:0 auto">'
         + '</body></html>');
       preWin.document.close();
@@ -2412,34 +2552,40 @@ function buildBoardRankViewHTML(univs){
   if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">스트리머 없음</div>`;
   const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'⭐','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
   let h=`<div style="background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden">
-    <div style="padding:14px 18px;font-weight:900;font-size:15px;color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
+    <div style="padding:14px 18px;font-weight:900;font-size:var(--fs-md);color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
     <table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:var(--bg2)">
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">순위</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">선수</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">대학</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">티어</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">승</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">패</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">포인트</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">순위</th>
+        <th style="padding:8px 12px;text-align:left;font-size:var(--fs-sm);color:var(--text3)">선수</th>
+        <th style="padding:8px 12px;text-align:left;font-size:var(--fs-sm);color:var(--text3)">대학</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">티어</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">승</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">패</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">포인트</th>
       </tr></thead><tbody>`;
   allPlayers.forEach((p,i)=>{
     const tierIcon=TIER_ICONS[p.tier]||'';
     const rnk=i===0?`<span class="rk1">1</span>`:i===1?`<span class="rk2">2</span>`:i===2?`<span class="rk3">3</span>`:`<span style="font-weight:700">${i+1}</span>`;
     const pts=p.points||0;
     const ptsCol=pts>0?'#16a34a':pts<0?'#dc2626':'#64748b';
+    const pNameJs = (typeof escJS==='function')
+      ? escJS(p.name)
+      : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+    const univNameJs = (typeof escJS==='function')
+      ? escJS(p._univ)
+      : String(p._univ||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     h+=`<tr style="border-top:1px solid var(--border)">
       <td style="padding:7px 12px;text-align:center">${rnk}</td>
       <td style="padding:7px 12px;text-align:left">
-        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${pNameJs}')">
           ${getPlayerPhotoHTML(p.name,'24px')}
-          <span style="font-weight:700;font-size:13px">${p.name||''}</span>
+          <span style="font-weight:700;font-size:var(--fs-base)">${p.name||''}</span>
         </div>
       </td>
       <td style="padding:7px 12px">
-        <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${(p._univ||'').replace(/'/g,"\\'")}')">${p._univ||''}</span>
+        <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${univNameJs}')">${p._univ||''}</span>
       </td>
-      <td style="padding:7px 12px;text-align:center;font-size:12px">${tierIcon}${p.tier||''}</td>
+      <td style="padding:7px 12px;text-align:center;font-size:var(--fs-sm)">${tierIcon}${p.tier||''}</td>
       <td style="padding:7px 12px;text-align:center;color:#16a34a;font-weight:700">${p.win||0}</td>
       <td style="padding:7px 12px;text-align:center;color:#dc2626;font-weight:700">${p.loss||0}</td>
       <td style="padding:7px 12px;text-align:center;font-weight:900;font-size:14px;color:${ptsCol}">${pts>0?'+':''}${pts}</td>
@@ -2460,7 +2606,7 @@ async function downloadBoardSel(){
     if(!u){alert('해당 대학을 찾을 수 없습니다.');return;}
     const boardWrap=document.getElementById('board-wrap');
     if(boardWrap){
-      const card=boardWrap.querySelector(`.brd-card[data-univ="${boardSelUniv}"]`);
+      const card=_findBrdCardByUniv(boardSelUniv, boardWrap);
       if(card){
         const domOrder=[...card.querySelectorAll('[data-player]')].map(el=>el.dataset.player).filter(Boolean);
         if(domOrder.length>0) boardPlayerOrder[boardSelUniv]=domOrder;
@@ -2511,6 +2657,25 @@ async function _checkRemoteSavedAt() {
   return 0;
 }
 
+// 모달이 열려있거나(사용자가 상세 화면을 보는 중) 텍스트를 입력하는 중이면
+// 자동 동기화로 화면을 통째로 다시 그리는 것은 다음 주기로 미룬다.
+// (전체 재렌더가 프로필 이미지 DOM을 새로 만들어 깜빡임/작업 중단을 유발하므로)
+function _autoSyncShouldDefer() {
+  try {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+      return true;
+    }
+    const openModal = Array.from(document.querySelectorAll('.modal,[id$="Modal"],[id$="modal"]'))
+      .find(el => {
+        const st = window.getComputedStyle(el);
+        return st.display !== 'none' && st.visibility !== 'hidden';
+      });
+    if (openModal) return true;
+  } catch (e) {}
+  return false;
+}
+
 // 자동 동기화 실행
 async function _autoSyncCheck() {
   if (!_boardCanManage()) return; // 로그인/권한 체크
@@ -2531,14 +2696,17 @@ async function _autoSyncCheck() {
     
     // 원격에 더 새로운 데이터가 있으면 자동으로 불러오기
     if (remoteAt > localSavedAt + 3000) { // 3초 여유
+      if (_autoSyncShouldDefer()) {
+        console.log('[autoSync] 모달/입력 중 - 이번 주기는 보류 (다음 30초에 재시도)');
+        return;
+      }
       console.log('[autoSync] 원격에 새 데이터 감지 - 자동 동기화 시작');
       
-      // 자동으로 데이터 불러오기
-      if (typeof window.cloudLoad === 'function') {
+      // 자동으로 데이터 불러오기 (confirm 없이 조용히)
+      if (typeof window._autoSyncApply === 'function') {
         try {
-          await window.cloudLoad();
+          await window._autoSyncApply();
           console.log('[autoSync] 자동 동기화 완료');
-          
           // 알림 토스트
           if (typeof showToast === 'function') {
             showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);
@@ -2550,7 +2718,7 @@ async function _autoSyncCheck() {
           const statusEl = document.getElementById('cloudStatus');
           if (statusEl) {
             statusEl.style.color = '#2563eb';
-            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
+            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:var(--fs-caption);cursor:pointer">불러오기</button>`;
           }
         }
       }
@@ -2560,11 +2728,18 @@ async function _autoSyncCheck() {
   }
 }
 
-// 자동 동기화 시작 (2분마다 체크 - 빠른 동기화를 위해 감소)
+// 탭 복귀/포커스 시 즉시 동기화 체크
+(function(){
+  const _onVisible = ()=>{ try{ if(typeof _autoSyncCheck==='function') _autoSyncCheck(); }catch(e){} };
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') _onVisible(); });
+  window.addEventListener('focus', _onVisible);
+})();
+
+// 자동 동기화 시작 (30초마다 체크)
 function startAutoSync() {
   if (_autoSyncTimer) clearInterval(_autoSyncTimer);
-  _autoSyncTimer = setInterval(_autoSyncCheck, 2 * 60 * 1000); // 2분
-  console.log('[autoSync] 자동 동기화 시작 (2분 간격)');
+  _autoSyncTimer = setInterval(_autoSyncCheck, 30 * 1000); // 30초
+  console.log('[autoSync] 자동 동기화 시작 (30초 간격)');
 }
 
 // 자동 동기화 중지
@@ -2576,35 +2751,24 @@ function stopAutoSync() {
   }
 }
 
-// 페이지 로드 후 자동 시작 (로그인 상태일 때)
+// 페이지 로드 후 자동 시작 + 저장 완료 후 재시작 (통합)
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
       startAutoSync();
-      // 첫 체크는 10초 후
-      setTimeout(_autoSyncCheck, 10000);
+      setTimeout(_autoSyncCheck, 5000);
+    }
+    // 저장 완료 후 30초 뒤 동기화 체크 (GitHub 반영 대기)
+    const _origSave = window.fbCloudSave;
+    if (_origSave) {
+      window.fbCloudSave = async function(...args) {
+        const result = await _origSave.apply(this, args);
+        setTimeout(_autoSyncCheck, 30000);
+        return result;
+      };
     }
   }, 2000);
 }, { once: true });
 
-// 저장 완료 후 자동 동기화 재시작
-window.addEventListener('DOMContentLoaded', () => {
-  const originalFbCloudSave = window.fbCloudSave;
-  if (originalFbCloudSave) {
-    window.fbCloudSave = async function(...args) {
-      const result = await originalFbCloudSave.apply(this, args);
-      // 저장 후 30초 뒤에 동기화 체크 (GitHub 반영 대기)
-      setTimeout(_autoSyncCheck, 30000);
-      return result;
-    };
-  }
-}, { once: true });
-
-// 즉시 실행으로 함수 전역 노출 보장
 (function() {
-  if (typeof window.saveCurrentView === 'function') {
-    console.log('[cloud-board.js] saveCurrentView 함수가 전역에 노출됨');
-  } else {
-    console.error('[cloud-board.js] saveCurrentView 함수가 전역에 노출되지 않음');
-  }
 })();

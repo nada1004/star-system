@@ -45,14 +45,14 @@ function _ensureAppErrorBanner(){
     if(_appErrorBannerEl && document.body.contains(_appErrorBannerEl)) return _appErrorBannerEl;
     const el = document.createElement('div');
     el.id = 'app-error-banner';
-    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;align-items:center;gap:10px';
+    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:var(--fs-base);line-height:1.45;align-items:center;gap:10px';
     const msg = document.createElement('div');
     msg.id = 'app-error-banner-msg';
     msg.style.cssText = 'font-weight:700;letter-spacing:-.2px';
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = '닫기';
-    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;flex-shrink:0';
     btn.onclick = ()=>{ try{ el.style.display='none'; }catch(e){} };
     el.appendChild(msg);
     el.appendChild(btn);
@@ -93,7 +93,10 @@ window._showGlobalAppError = function(message, opts){
 };
 window.addEventListener('error', (event)=>{
   try{
-    const message = (event && event.message) ? `오류가 발생했습니다: ${event.message}` : '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+    const msg = (event && event.message) ? String(event.message) : '';
+    // "Script error."는 cross-origin 스크립트의 CORS 보안 메시지 — 실제 오류 내용이 없으므로 무시
+    if(!msg || msg === 'Script error.' || msg === 'Script error') return;
+    const message = `오류가 발생했습니다: ${msg}`;
     window._showGlobalAppError(message);
   }catch(e){}
 });
@@ -106,6 +109,45 @@ window.addEventListener('unhandledrejection', (event)=>{
     window._showGlobalAppError(`오류가 발생했습니다: ${detail}`);
   }catch(e){}
 });
+
+// 설정 변경을 다른 기기에 자동 반영하기 위한 로컬스토리지 변경 감지(동기화 enabled + 관리자+토큰이면 자동 push)
+try{
+  if(!window._suLsSyncHooked){
+    window._suLsSyncHooked = true;
+    const _origSet = localStorage.setItem ? localStorage.setItem.bind(localStorage) : null;
+    const _origRem = localStorage.removeItem ? localStorage.removeItem.bind(localStorage) : null;
+    let _lsGuard = false;
+    const _isSyncKey = (k)=>{
+      if(!k || typeof k!=='string') return false;
+      if(k === 'su_sync_prefs_updated_at') return false;
+      if(k === 'su_sync_last_pull' || k === 'su_sync_last_push' || k === 'su_sync_last_error') return false;
+      if(k === 'al_github_token' || k === 'su_gh_token' || k === 'su_fb_pw' || k === 'su_admin_hash' || k === 'su_admin_hashes') return false;
+      return k.startsWith('su_') || k.startsWith('cfg_') || k.startsWith('al_');
+    };
+    const _touch = ()=>{
+      if(_lsGuard) return;
+      _lsGuard = true;
+      try{
+        if(window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function'){
+          window.SettingsStore.markPrefsChanged();
+        }
+      }catch(e){}
+      _lsGuard = false;
+    };
+    if(_origSet){
+      localStorage.setItem = function(k,v){
+        _origSet(String(k), String(v));
+        try{ if(_isSyncKey(k)) _touch(); }catch(e){}
+      };
+    }
+    if(_origRem){
+      localStorage.removeItem = function(k){
+        _origRem(String(k));
+        try{ if(_isSyncKey(k)) _touch(); }catch(e){}
+      };
+    }
+  }
+}catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 가로 "드래그 메뉴" 지원
@@ -222,6 +264,55 @@ async function _seedTierTtM(){
 try{ window._seedTierTtM = _seedTierTtM; }catch(e){}
 
 let _ttGeneralRestoreLoading = false;
+function _ttGeneralRestoreKey(m){
+  try{
+    const c = String(m?.compName||m?.n||m?.t||'').trim();
+    const stage = String(m?.stage||'general').trim() || 'general';
+    return [
+      String(m?.d||'').trim(),
+      String(m?.a||'').trim(),
+      String(m?.b||'').trim(),
+      c,
+      stage
+    ].join('|');
+  }catch(e){
+    return '';
+  }
+}
+function _getTierGeneralRestoreDeletedState(){
+  try{
+    const raw = JSON.parse(localStorage.getItem('su_tt_general_restore_deleted')||'{}') || {};
+    return {
+      ids: new Set(Array.isArray(raw.ids) ? raw.ids.map(v=>String(v||'').trim()).filter(Boolean) : []),
+      keys: new Set(Array.isArray(raw.keys) ? raw.keys.map(v=>String(v||'').trim()).filter(Boolean) : [])
+    };
+  }catch(e){
+    return { ids:new Set(), keys:new Set() };
+  }
+}
+function _rememberDeletedTierGeneralRestoreMatch(m){
+  try{
+    if(!m || typeof m!=='object') return false;
+    const stage = String(m.stage||'general').trim() || 'general';
+    if(stage !== 'general') return false;
+    const state = _getTierGeneralRestoreDeletedState();
+    const id = String(m._id||'').trim();
+    const key = _ttGeneralRestoreKey(m);
+    if(id) state.ids.add(id);
+    if(key) state.keys.add(key);
+    localStorage.setItem('su_tt_general_restore_deleted', JSON.stringify({
+      ids: [...state.ids].slice(-400),
+      keys: [...state.keys].slice(-400)
+    }));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+try{
+  window._ttGeneralRestoreKey = _ttGeneralRestoreKey;
+  window._rememberDeletedTierGeneralRestoreMatch = _rememberDeletedTierGeneralRestoreMatch;
+}catch(e){}
 async function _mergeTierGeneralRestore(){
   try{
     if(_ttGeneralRestoreLoading) return;
@@ -231,22 +322,19 @@ async function _mergeTierGeneralRestore(){
     const arr = await res.json();
     if(!Array.isArray(arr) || !arr.length){ _ttGeneralRestoreLoading = false; return; }
     if(typeof ttM==='undefined' || !Array.isArray(ttM)) window.ttM = [];
+    const suppressed = _getTierGeneralRestoreDeletedState();
     const existingIds = new Set((ttM||[]).map(m=>String(m&&m._id||'').trim()).filter(Boolean));
     const existingKeys = new Set((ttM||[]).map(m=>{
-      const d=String(m&&m.d||'').trim();
-      const a=String(m&&m.a||'').trim();
-      const b=String(m&&m.b||'').trim();
-      const c=String(m&&m.compName||m&&m.n||m&&m.t||'').trim();
-      const st=String(m&&m.stage||'general').trim();
-      return [d,a,b,c,st].join('|');
+      return _ttGeneralRestoreKey(m);
     }));
     let added = 0;
     arr.forEach(m=>{
       if(!m || typeof m!=='object') return;
       if(!m.stage) m.stage='general';
-      const c = String(m.compName||m.n||m.t||'').trim();
       const id = String(m._id||'').trim();
-      const key = [String(m.d||'').trim(), String(m.a||'').trim(), String(m.b||'').trim(), c, String(m.stage||'general').trim()].join('|');
+      const c = String(m.compName||m.n||m.t||'').trim();
+      const key = _ttGeneralRestoreKey(m);
+      if((id && suppressed.ids.has(id)) || suppressed.keys.has(key)) return;
       if((id && existingIds.has(id)) || existingKeys.has(key)) return;
       if(!m.compName && c) m.compName = c;
       if(!m.n && c) m.n = c;
@@ -276,11 +364,26 @@ async function init(){
     if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
     if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
   }catch(e){}
+  // (요청사항) 설정탭이 막혀있는 기기에서도 "링크 1회 방문"으로 동기화 페어링 가능
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const gid = String(params.get('gist')||params.get('gid')||'').trim();
+    if(gid && window.SettingsStore && typeof window.SettingsStore.setCfg==='function'){
+      window.SettingsStore.setCfg({ gistId: gid, enabled: true });
+      try{ await window.SettingsStore.pull({ silent:true, force:true }); }catch(e){}
+    }
+  }catch(e){}
   // (요청사항) 다른 기기에서 저장된 "설정(Gist)"이 있으면 시작 시 반영
   // - 새 신호가 있을 때만 pull 됨
+  // ⚡ 첫 화면 표시를 막지 않도록 백그라운드로 실행 (네트워크 왕복 대기 없이 로컬 데이터로 먼저 렌더),
+  //   변경 신호가 있으면 pull 완료 후 재렌더 (주기적 자동 갱신과 동일한 패턴)
   try{
     if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
-      await window.SettingsStore.pullOnSignal({ silent:true });
+      window.SettingsStore.pullOnSignal({ silent:true, returnInfo:true }).then(info=>{
+        try{
+          if(info && info.ok && !info.skipped && typeof render==='function') render();
+        }catch(e){}
+      }).catch(()=>{});
     }
   }catch(e){}
   fixPoints();
@@ -324,6 +427,10 @@ async function init(){
         await window.refreshSessionAuthority(true);
       }
     })();
+    // 비동기 인증 완료 후 로그인 상태 재적용 (계정 검증 결과 UI 반영)
+    window._authInitPromise.then(()=>{
+      try{ applyLoginState(); }catch(e){}
+    }).catch(()=>{});
   }catch(e){ try{ initLoginHash(); }catch(_){} }
   applyLoginState();
   try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
@@ -349,8 +456,8 @@ async function init(){
     const loadExtras = ()=>{
       try{
         if(typeof window._loadScriptOnce!=='function') return;
-        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
-        window._loadScriptOnce('js/soop-multiview.js?v=20260504-02').catch(()=>{});
+        window._loadScriptOnce('js/yt-bgm.js?v=20260717-ds01').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260717-ds01').catch(()=>{});
       }catch(e){}
     };
     if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
@@ -871,12 +978,15 @@ function _applyRecCardTheme(){
   const bgKey='su_rc_bg_alpha';
   const hdKey='su_rc_hd_alpha';
   const iconKey='su_rc_uicon';
+  const iconScopeOffKey='su_rc_uicon_scope_off';
+  const iconScopeSizeKey='su_rc_uicon_scope_size';
   const univFontKey='su_rc_univ_font_pct';
   const ymScaleKey='su_ym_scale_pct';
   const memoKey='su_rc_memo_on';
   const vsKey='su_rc_vs_align';
   const scKey='su_rc_score_scale';
   let on=true, accent='none', bg=12, hd=14, uicon=24;
+  let uiconScopeOff=false, uiconScopeSize=24;
   let univFontPct=110, ymScalePct=100;
   let memoOn=false, vsAlign='center', scScale=108;
   // (요청사항) 배경 효과 완전 OFF 감지(승리 배경 + 양끝 효과 모두 OFF)
@@ -888,6 +998,8 @@ function _applyRecCardTheme(){
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
     const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
+    const iso=localStorage.getItem(iconScopeOffKey); if(iso!=null) uiconScopeOff = iso==='1';
+    const iss=parseInt(localStorage.getItem(iconScopeSizeKey)||'',10); if(!isNaN(iss)) uiconScopeSize=iss; else uiconScopeSize=uicon;
     const uf=parseInt(localStorage.getItem(univFontKey)||'',10); if(!isNaN(uf)) univFontPct=uf;
     const ys=parseInt(localStorage.getItem(ymScaleKey)||'',10); if(!isNaN(ys)) ymScalePct=ys;
     const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
@@ -897,6 +1009,7 @@ function _applyRecCardTheme(){
   bg=Math.max(0,Math.min(30,bg));
   hd=Math.max(0,Math.min(30,hd));
   uicon=Math.max(12,Math.min(34,uicon));
+  uiconScopeSize=Math.max(12,Math.min(34,uiconScopeSize||uicon));
   univFontPct=Math.max(90,Math.min(150,univFontPct||100));
   ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
@@ -913,10 +1026,12 @@ function _applyRecCardTheme(){
       document.body.classList.toggle('rc-accent-gradient', !!on && accent==='gradient');
       // 배경 효과(모드 컬러/헤더 틴트 포함) 완전 OFF 시, 잔색 제거용 클래스
       document.body.classList.toggle('rc-bgfx-off', (!on && !sideFxOn));
+      document.body.classList.toggle('rc-uicon-scope-off', !!uiconScopeOff);
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
     document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
+    document.documentElement.style.setProperty('--rc-uicon-scope', uiconScopeSize+'px');
     document.documentElement.style.setProperty('--rc-univ-font-scale', String(univFontPct/100));
     document.documentElement.style.setProperty('--ym-scale', String(ymScalePct/100));
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
@@ -926,6 +1041,53 @@ function _applyRecCardTheme(){
 }
 window._applyRecCardTheme=_applyRecCardTheme;
 _applyRecCardTheme();
+
+// 대회탭 스코어 크기 초기 적용
+(function(){
+  try{
+    var isMb = window.innerWidth <= 768;
+    var pcV = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+    var mbV = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+    var val = isMb ? Math.max(50,Math.min(150,mbV)) : Math.max(50,Math.min(150,pcV));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+    // 기록탭 스코어도 초기 적용
+    var rcSc = parseInt(localStorage.getItem('su_rc_score_scale')||'88',10);
+    document.documentElement.style.setProperty('--rc-score-scale', String(rcSc/100));
+  }catch(e){}
+})();
+
+// 창 크기 변경 시 tc-score-scale 재적용
+(function(){
+  try{
+    window.addEventListener('resize', function(){
+      try{
+        var isMb2 = window.innerWidth <= 768;
+        var pcV2 = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+        var mbV2 = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+        var val2 = isMb2 ? Math.max(50,Math.min(150,mbV2)) : Math.max(50,Math.min(150,pcV2));
+        document.documentElement.style.setProperty('--tc-score-scale', String(val2/100));
+      }catch(e){}
+    }, {passive:true});
+  }catch(e){}
+})();
+
+// 팀 버튼 스타일 초기 적용
+(function(){
+  try{
+    var TEAM_BTN_STYLES=['solid','pill','badge','gradient','chip-xl','neon','outline','flat'];
+    var v=localStorage.getItem('su_rc_team_btn_style')||'solid';
+    if(v&&v!=='solid'&&TEAM_BTN_STYLES.indexOf(v)!==-1) document.body.classList.add('team-btn--'+v);
+  }catch(e){}
+})();
+
+// 버튼 모양 테마 초기 적용
+(function(){
+  try{
+    var BTN_THEMES=['default','flat','outline','pill','soft','glass','retro','neon','brutal'];
+    var v=localStorage.getItem('su_btn_theme')||'default';
+    if(v&&v!=='default'&&BTN_THEMES.indexOf(v)!==-1) document.body.classList.add('btn-theme--'+v);
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 대회탭 카드(조별리그 일정 등) 테마/디자인 모드
@@ -985,6 +1147,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
       if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
     }catch(e){}
+    let _forceAutoLoad = false;
+    try{ _forceAutoLoad = (localStorage.getItem('su_force_autoload') === '1'); }catch(e){}
+    try{ _forceAutoLoad = _forceAutoLoad || (sessionStorage.getItem('su_force_autoload') === '1'); }catch(e){}
+    if(_forceAutoLoad){
+      try{ localStorage.removeItem('su_force_autoload'); }catch(e){}
+      try{ sessionStorage.removeItem('su_force_autoload'); }catch(e){}
+      try{ if(window.MatchStore && typeof window.MatchStore.clear==='function') await window.MatchStore.clear(); }catch(e){}
+      try{ if(window.PlayerStore && typeof window.PlayerStore.clear==='function') await window.PlayerStore.clear(); }catch(e){}
+    }
     // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
     const hasAnyRecordPayload = (payload)=>{
@@ -1025,8 +1196,10 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const hasRuntimePlayers = Array.isArray(players) && players.length>0;
     const hasRuntimeRecords = [miniM,univM,comps,ckM,proM,tourneys,ttM,indM,gjM].some(v=>Array.isArray(v)&&v.length>0);
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
-    if(hasRuntimePlayers || hasRuntimeRecords) return;
-    if(hasRecordKeys && hasPlayerIdbData) return;
+    if(!_forceAutoLoad){
+      if(hasRuntimePlayers || hasRuntimeRecords) return;
+      if(hasRecordKeys && hasPlayerIdbData) return;
+    }
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _fetchAutoJson = async (url)=>{
@@ -1413,6 +1586,16 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       }
       if(d.notices && d.notices.length) notices = d.notices;
       if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
+      try{
+        if(typeof _rebuildAllPlayerHistoryCore === 'function'){
+          _rebuildAllPlayerHistoryCore();
+          try{ window.__stats_hist_ready = true; }catch(e){}
+        }else{
+          try{ window.__stats_hist_ready = false; }catch(e){}
+        }
+      }catch(e){
+        try{ window.__stats_hist_ready = false; }catch(e){}
+      }
       const allD=[...miniM,...univM,...comps,...ckM,...proM];
       mergeValidYearsIntoOptions(yearOptions, allD);
       fixPoints();

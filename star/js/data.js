@@ -8,10 +8,26 @@
      3) syncIndHistory: 개인전/끝장전 → 최근 기록(history) 동기화
 ───────────────────────────────────────── */
 
-/* global players, tourneys, ttM, indM, gjM, ELO_DEFAULT, save, render, applyGameResult */
+/* global players, tourneys, ttM, indM, gjM, ELO_DEFAULT, save, render, applyGameResult, applyTeamGameResult */
 
 function _safeArr(x){ return Array.isArray(x) ? x : []; }
 function _safeStr(x){ return (x==null) ? '' : String(x); }
+function _syncTeamNames(side){
+  if(Array.isArray(side)){
+    return side.map(x => {
+      if(x && typeof x === 'object') return String(x.name || '').trim();
+      return String(x || '').trim();
+    }).filter(Boolean);
+  }
+  return String(side || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+}
+function _syncGameSides(g){
+  if(!g || !g.winner) return null;
+  const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _syncTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _syncTeamNames(g.playerA));
+  const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _syncTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _syncTeamNames(g.playerB));
+  if(!aList.length || !bList.length) return null;
+  return g.winner==='A' ? { w:aList, l:bList } : { w:bList, l:aList };
+}
 
 // ─────────────────────────────────────────
 // 1) 경기 삭제 롤백
@@ -54,44 +70,34 @@ function revertMatchRecord(matchObj){
     // 세트/게임이 있는 경우: gameMatchId → mid 순으로 제거
     (matchObj.sets||[]).forEach((set, si)=>{
       (set.games||[]).forEach((g, gi)=>{
-        if(!g || !g.playerA || !g.playerB || !g.winner) return;
-        const wName = g.winner==='A' ? g.playerA : g.playerB;
-        const lName = g.winner==='A' ? g.playerB : g.playerA;
+        const sides = _syncGameSides(g);
+        if(!sides) return;
         const gameMatchId = mid ? `${mid}_s${si}_g${gi}` : null;
-
-        const w = _safeArr(players).find(p=>p && p.name===wName);
-        const l = _safeArr(players).find(p=>p && p.name===lName);
-
-        if(w){
-          if(!Array.isArray(w.history)) w.history=[];
-          let idx=-1;
-          if(gameMatchId) idx=w.history.findIndex(h=>h && h.matchId===gameMatchId && h.result==='승' && h.opp===lName);
-          if(idx<0 && mid) idx=w.history.findIndex(h=>h && h.matchId===mid && h.result==='승' && h.opp===lName);
-          if(idx<0) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName && h.date===mdate);
-          if(idx<0) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName);
-          if(idx>=0){
-            const hr=w.history[idx]||{};
-            w.win=Math.max(0,(w.win||0)-1);
-            w.points=(w.points||0)-3;
-            if(hr.eloDelta!=null) w.elo=(w.elo||ELO_DEFAULT)-hr.eloDelta;
-            w.history.splice(idx,1);
+        const _rollbackOne = (name, expectedResult) => {
+          const p = _safeArr(players).find(x=>x && x.name===name);
+          if(!p){
+            return;
           }
-        }
-        if(l){
-          if(!Array.isArray(l.history)) l.history=[];
-          let idx=-1;
-          if(gameMatchId) idx=l.history.findIndex(h=>h && h.matchId===gameMatchId && h.result==='패' && h.opp===wName);
-          if(idx<0 && mid) idx=l.history.findIndex(h=>h && h.matchId===mid && h.result==='패' && h.opp===wName);
-          if(idx<0) idx=l.history.findIndex(h=>h && h.result==='패' && h.opp===wName && h.date===mdate);
-          if(idx<0) idx=l.history.findIndex(h=>h && h.result==='패' && h.opp===wName);
+          if(!Array.isArray(p.history)) p.history = [];
+          let idx = -1;
+          if(gameMatchId) idx = p.history.findIndex(h=>h && h.matchId===gameMatchId && h.result===expectedResult);
+          if(idx<0 && mid) idx = p.history.findIndex(h=>h && h.matchId===mid && h.result===expectedResult);
+          if(idx<0 && mdate) idx = p.history.findIndex(h=>h && h.result===expectedResult && h.date===mdate);
           if(idx>=0){
-            const hr=l.history[idx]||{};
-            l.loss=Math.max(0,(l.loss||0)-1);
-            l.points=(l.points||0)+3;
-            if(hr.eloDelta!=null) l.elo=(l.elo||ELO_DEFAULT)-hr.eloDelta;
-            l.history.splice(idx,1);
+            const hr = p.history[idx] || {};
+            if(expectedResult==='승'){
+              p.win=Math.max(0,(p.win||0)-1);
+              p.points=(p.points||0)-3;
+            }else if(expectedResult==='패'){
+              p.loss=Math.max(0,(p.loss||0)-1);
+              p.points=(p.points||0)+3;
+            }
+            if(hr.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hr.eloDelta;
+            p.history.splice(idx,1);
           }
-        }
+        };
+        sides.w.forEach(name => _rollbackOne(name, '승'));
+        sides.l.forEach(name => _rollbackOne(name, '패'));
       });
     });
   }catch(e){
@@ -113,14 +119,15 @@ function syncTourneyHistory(){
     const mid = m._id || null;
     (m.sets||[]).forEach((set, si)=>{
       (set.games||[]).forEach((g, gi)=>{
-        if(!g || !g.playerA || !g.playerB || !g.winner) return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        const univW=g.winner==='A'?(m.a||''):(m.b||'');
-        const univL=g.winner==='A'?(m.b||''):(m.a||'');
+        const sides = _syncGameSides(g);
+        if(!sides) return;
         const gameMatchId = mid ? `${mid}_s${si}_g${gi}` : null;
         if(gameMatchId && existingIds.has(gameMatchId)) return;
-        applyGameResult(wn, ln, m.d||'', g.map||'', gameMatchId, univW, univL, modeLabel);
+        if(sides.w.length >= 2 && sides.l.length >= 2 && typeof applyTeamGameResult === 'function'){
+          applyTeamGameResult(sides.w, sides.l, 'A', m.d||'', g.map||'', gameMatchId, modeLabel, { sideUnivA:m.a||'', sideUnivB:m.b||'' });
+        }else{
+          applyGameResult(sides.w[0], sides.l[0], m.d||'', g.map||'', gameMatchId, m.a||'', m.b||'', modeLabel);
+        }
         if(gameMatchId) existingIds.add(gameMatchId);
         added++;
       });
@@ -160,12 +167,15 @@ function syncTierTtMHistory(){
     const mid=m._id;
     (m.sets||[]).forEach((set, si)=>{
       (set.games||[]).forEach((g, gi)=>{
-        if(!g || !g.playerA || !g.playerB || !g.winner) return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const sides = _syncGameSides(g);
+        if(!sides) return;
         const gameId = g._id || `${mid}_s${si}_g${gi}`;
         if(existingIds.has(gameId)) return;
-        applyGameResult(wn, ln, m.d, g.map||'', gameId, '', '', '티어대회');
+        if(sides.w.length >= 2 && sides.l.length >= 2 && typeof applyTeamGameResult === 'function'){
+          applyTeamGameResult(sides.w, sides.l, 'A', m.d, g.map||'', gameId, '티어대회');
+        }else{
+          applyGameResult(sides.w[0], sides.l[0], m.d, g.map||'', gameId, '', '', '티어대회');
+        }
         existingIds.add(gameId);
         added++;
       });

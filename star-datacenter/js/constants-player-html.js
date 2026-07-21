@@ -117,7 +117,13 @@ function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   const _prio = opts.lazy ? 'auto' : (opts.priority || 'high');
   const _prioAttr = ' fetchpriority="' + _prio + '"';
   const _origAttr = ' data-orig="'+String(origSrc).replace(/"/g,'&quot;')+'"';
-  return '<img '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
+  const _imgHtml = '<img '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
+  if (p && p.secondProfileFile && typeof _phSwap2ndHTML === 'function') {
+    const _2ndImgHtml = _phSwap2ndHTML(p.secondProfileFile, { style: 'border-radius:inherit;'+(fit?('object-fit:'+fit+';'):'') });
+    const _innerImg = _imgHtml.replace('style="'+base, 'style="position:absolute;inset:0;'+base);
+    return '<span class="ph-swap" style="position:relative;display:inline-block;width:'+sz+';height:'+sz+';vertical-align:middle;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden">'+_innerImg+_2ndImgHtml+'</span>';
+  }
+  return _imgHtml;
 }
 
 const _prewarmedImageUrls = new Set();

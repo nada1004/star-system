@@ -273,15 +273,15 @@ function _renderCfgImgSettings(playerName) {
   if (primaryDiv) {
     primaryDiv.innerHTML = hasPrimary ? `
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
         <input type="range" min="50" max="220" value="${primarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','scale',this.value);document.getElementById('cfg-p-scale').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
         <input type="range" min="20" max="180" value="${primarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','brightness',this.value);document.getElementById('cfg-p-bright').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">배치</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs ${primarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
           <button class="btn btn-xs ${primarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
@@ -289,7 +289,7 @@ function _renderCfgImgSettings(playerName) {
         </div>
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">위치 이동</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,-12)">↑</button>
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,12)">↓</button>
@@ -301,20 +301,20 @@ function _renderCfgImgSettings(playerName) {
       <div>
         <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','primary');_renderCfgImgSettings('${safeName}')">초기화</button>
       </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+    ` : '<div style="color:var(--gray-l);font-size:var(--fs-sm)">등록된 이미지 없음</div>';
   }
   if (secondaryDiv) {
     secondaryDiv.innerHTML = hasSecondary ? `
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
         <input type="range" min="50" max="220" value="${secondarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','scale',this.value);document.getElementById('cfg-s-scale').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
         <input type="range" min="20" max="180" value="${secondarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','brightness',this.value);document.getElementById('cfg-s-bright').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">배치</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs ${secondarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
           <button class="btn btn-xs ${secondarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
@@ -322,7 +322,7 @@ function _renderCfgImgSettings(playerName) {
         </div>
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">위치 이동</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,-12)">↑</button>
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,12)">↓</button>
@@ -334,7 +334,7 @@ function _renderCfgImgSettings(playerName) {
       <div>
         <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','secondary');_renderCfgImgSettings('${safeName}')">초기화</button>
       </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+    ` : '<div style="color:var(--gray-l);font-size:var(--fs-sm)">등록된 이미지 없음</div>';
   }
 }
 function _b2ClearSwapTimer(mainBox) {
@@ -342,22 +342,131 @@ function _b2ClearSwapTimer(mainBox) {
     clearTimeout(mainBox._swapTimer);
     mainBox._swapTimer = null;
   }
+  if (mainBox) mainBox._swapIdx = 0;
 }
 function _b2ScheduleImageSwap(playerName) {
   const mainBox = document.getElementById('b2-players-main-box');
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
-  const img1 = document.getElementById('b2-main-img-1');
-  const img2 = document.getElementById('b2-main-img-2');
-  if (img1) img1.style.opacity = '1';
-  if (img2) img2.style.opacity = '0';
-  if (!img2) return;
-  mainBox._swapTimer = setTimeout(() => {
-    const curImg1 = document.getElementById('b2-main-img-1');
-    const curImg2 = document.getElementById('b2-main-img-2');
-    if (curImg1) curImg1.style.opacity = '0';
-    if (curImg2) curImg2.style.opacity = '1';
-  }, 1000);
+  mainBox._swapGen = (mainBox._swapGen || 0) + 1;
+  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
+  const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
+  const imgList = p ? [
+    {slot:1, url:p.photo},
+    {slot:2, url:p.secondProfileFile},
+    {slot:3, url:p.profileFile3},
+    {slot:4, url:p.profileFile4},
+    {slot:5, url:p.profileFile5}
+  ].filter(x=>x && _hasMediaUrl(x.url)) : [];
+  const clampSec = (v, d)=>{
+    const n = parseFloat(v);
+    if(isNaN(n)) return d;
+    return Math.max(0.2, Math.min(60, n));
+  };
+  const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
+  const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
+  // 비디오 슬롯이 화면에 보일 때 재생 시작(음소거 자동재생) — 전환 타이밍 자체는
+  // 항상 아래 delayMs()로 설정한 "전환 시간(초)"을 따르며, 영상 길이와는 무관함.
+  const applyMediaForSlot = (slot)=>{
+    try{
+      const el = getEl(slot);
+      if(!isVideo(el)) return;
+      try{ el.loop = false; }catch(e){}
+      try{ el.muted = true; }catch(e){}
+      try{ el.playsInline = true; }catch(e){}
+      try{ el.currentTime = 0; }catch(e){}
+      try{
+        const pr = el.play && el.play();
+        if(pr && typeof pr.catch === 'function') pr.catch(()=>{});
+      }catch(e){}
+    }catch(e){}
+  };
+  const delayMs = (fromSlot, toSlot)=>{
+    try{
+      if(!p) return 1000;
+      if(toSlot===1){
+        if(fromSlot===2) return Math.round(clampSec(p.photoDelay21 ?? p.photoDelay51 ?? 4, 4) * 1000);
+        if(fromSlot===3) return Math.round(clampSec(p.photoDelay31 ?? p.photoDelay51 ?? 4, 4) * 1000);
+        if(fromSlot===4) return Math.round(clampSec(p.photoDelay41 ?? p.photoDelay51 ?? 4, 4) * 1000);
+        if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
+        return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
+      }
+      if(fromSlot===1) return Math.round(clampSec(p.photoDelay12 ?? 4, 4) * 1000);
+      if(fromSlot===2) return Math.round(clampSec(p.photoDelay23 ?? 4, 4) * 1000);
+      if(fromSlot===3) return Math.round(clampSec(p.photoDelay34 ?? 4, 4) * 1000);
+      if(fromSlot===4) return Math.round(clampSec(p.photoDelay45 ?? 4, 4) * 1000);
+      if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
+    }catch(e){}
+    return 1000;
+  };
+  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
+  if (imgList.length < 2) {
+    const showSlot = (imgList[0] && imgList[0].slot) ? imgList[0].slot : 1;
+    // 먼저 showSlot을 즉시 보이게 한 뒤 나머지를 숨김
+    const _showEl = document.getElementById('b2-main-img-' + showSlot);
+    if (_showEl) _showEl.style.opacity = '1';
+    for (let slot = 1; slot <= 5; slot++) {
+      if (slot === showSlot) continue;
+      const el = document.getElementById('b2-main-img-' + slot);
+      if (el) el.style.opacity = '0';
+    }
+    applyMediaForSlot(showSlot);
+    return;
+  }
+  // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
+  const firstSlot = imgList[0].slot;
+  for (let slot = 1; slot <= 5; slot++) {
+    const el = document.getElementById('b2-main-img-' + slot);
+    if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
+  }
+  try{
+    const badge = document.getElementById('b2-cur-img-slot');
+    if(badge) badge.textContent = '🖼️ 이미지 ' + firstSlot;
+  }catch(e){}
+  // 순환 인덱스 (0 = img1)
+  mainBox._swapIdx = 0;
+  const totalImgs = imgList.length;
+  // 첫 이미지가 비디오면 즉시 재생
+  applyMediaForSlot(firstSlot);
+  function doSwap() {
+    const prev = mainBox._swapIdx;
+    mainBox._swapIdx = (prev + 1) % totalImgs;
+    const cur = mainBox._swapIdx;
+    const curSlot = imgList[cur] ? imgList[cur].slot : 1;
+    mainBox._swapCurSlot = curSlot;
+    for (let slot = 1; slot <= 5; slot++) {
+      const el = document.getElementById('b2-main-img-' + slot);
+      if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
+    }
+    try{
+      const badge = document.getElementById('b2-cur-img-slot');
+      if(badge) badge.textContent = '🖼️ 이미지 ' + curSlot;
+    }catch(e){}
+    // 숨긴 비디오는 정지(재생 중이면 클릭 막힘/리소스 사용 방지)
+    try{
+      for(let i=0;i<totalImgs;i++){
+        const s = imgList[i] ? imgList[i].slot : 1;
+        const el = getEl(s);
+        if(isVideo(el) && s !== curSlot){
+          try{ el.pause && el.pause(); }catch(e){}
+        }
+      }
+    }catch(e){}
+
+    // 새로 보이는 슬롯이 비디오면 재생 시작
+    applyMediaForSlot(curSlot);
+
+    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름
+    if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+    const next = (cur + 1) % totalImgs;
+    const fromSlot = curSlot;
+    const toSlot = imgList[next] ? imgList[next].slot : 1;
+    mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
+  }
+  const firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
+  mainBox._swapCurSlot = firstSlot;
+  mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
 window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);

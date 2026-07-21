@@ -26,30 +26,31 @@
     lastError: 'su_sync_last_error',
     lastRemoteMode: 'su_sync_last_remote_mode', // new|legacy|none
     lastMigrated: 'su_sync_last_migrated', // 1/0
+    lastRemoteUpdatedAt: 'su_sync_last_settings_remote_updated_at',
+    lastSignalSeenAt: 'su_sync_last_settings_signal_at',
+    lastSignalPushedAt: 'su_sync_last_settings_signal_push_at',
 
     // AI(프록시/API키) 설정
     aiCfg: 'su_ai_cfg',
+
+    // (추가) 기기별 설정(로컬 설정) 동기화
+    prefsUpdatedAt: 'su_sync_prefs_updated_at',
+    prefsAutoPush: 'su_sync_prefs_auto_push', // 1/0
   };
+  const SETTINGS_SIGNAL_DB_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
+  const SETTINGS_SIGNAL_PATH = 'syncSignals/star-datacenter-settings';
+  const SETTINGS_SIGNAL_DEFAULT_PW = 'haram1019!@';
 
   function cfg(){
     return {
       enabled: localStorage.getItem(LS.enabled) === '1',
-      token: (typeof suGetSecret==='function' ? suGetSecret(LS.token) : (localStorage.getItem(LS.token) || '').trim()),
+      token: (localStorage.getItem(LS.token) || '').trim(),
       gistId: (localStorage.getItem(LS.gistId) || '').trim(),
     };
   }
   function setCfg(p){
     if ('enabled' in p) localStorage.setItem(LS.enabled, p.enabled ? '1' : '0');
-    if ('token' in p) {
-      const tok = (p.token||'').trim();
-      if(tok){
-        if(typeof suSetSecret==='function') suSetSecret(LS.token, tok);
-        else localStorage.setItem(LS.token, tok);
-      }else{
-        if(typeof suClearSecret==='function') suClearSecret(LS.token);
-        else localStorage.removeItem(LS.token);
-      }
-    }
+    if ('token' in p) localStorage.setItem(LS.token, (p.token||'').trim());
     if ('gistId' in p) localStorage.setItem(LS.gistId, (p.gistId||'').trim());
   }
   function isAdmin(){
@@ -61,134 +62,39 @@
     }catch(e){}
     return false;
   }
-
-  async function _request(method, url, token, body){
-    const opt = { method, headers: { 'Accept': 'application/vnd.github+json' } };
-    if (token) opt.headers['Authorization'] = 'token ' + token;
-    if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-    const res = await fetch(url, opt);
-    const txt = await res.text();
-    let json = null;
-    try{ json = txt ? JSON.parse(txt) : null; }catch(e){}
-    if (!res.ok) {
-      const msg = (json && (json.message||json.error)) ? (json.message||json.error) : (txt || ('HTTP '+res.status));
-      throw new Error(msg);
-    }
-    return json;
-  }
-
-  // ── 상태 직렬화/역직렬화 ──
-  function _loadLocalState(){
-    // memo (기존 al_memo 객체 우선)
-    let memo = { last: '', updatedAt: null };
-    try{
-      const o = JSON.parse(localStorage.getItem(LS.memoObj) || '{}');
-      memo.last = o.last || '';
-      memo.updatedAt = o.updatedAt || null;
-    }catch(e){}
-
-    // ui.fab
-    const ui = {
-      fab: {
-        hideMobile: localStorage.getItem(LS.fabHideMobile) === '1',
-        hidePC: localStorage.getItem(LS.fabHidePC) === '1',
-        updatedAt: null,
-      }
-    };
-    // ai (proxy url, apiKey)
-    let ai = { proxyUrl: '', apiKey: '', updatedAt: null };
-    try{
-      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
-      ai.proxyUrl = String(a.proxyUrl || '');
-      ai.apiKey = ''; // 민감값은 원격 동기화에 포함하지 않음
-      ai.updatedAt = a.updatedAt || null;
-    }catch(e){}
-    return { memo, ui, ai };
-  }
-
-  function _applyLocalState(state){
-    if (!state || typeof state !== 'object') return;
-    // memo
-    if (state.memo) {
-      const memo = {
-        last: String(state.memo.last || ''),
-        updatedAt: state.memo.updatedAt || null,
-      };
-      try{ localStorage.setItem(LS.memoObj, JSON.stringify(memo)); }catch(e){}
-    }
-    // ui.fab
-    try{
-      const fab = state.ui && state.ui.fab ? state.ui.fab : null;
-      if (fab) {
-        localStorage.setItem(LS.fabHideMobile, fab.hideMobile ? '1' : '0');
-        localStorage.setItem(LS.fabHidePC, fab.hidePC ? '1' : '0');
-      }
-    }catch(e){}
-
-    // ai
-    try{
-      if(state.ai && typeof state.ai === 'object'){
-        const cur = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
-        const ai = {
-          proxyUrl: String(state.ai.proxyUrl || ''),
-          apiKey: String(cur.apiKey || ''),
-          updatedAt: state.ai.updatedAt || null,
-        };
-        localStorage.setItem(LS.aiCfg, JSON.stringify(ai));
-      }
-    }catch(e){}
-  }
-
-  function _mergeByUpdatedAt(localState, remoteState){
-    // 섹션별 updatedAt 비교로 병합
-    const out = JSON.parse(JSON.stringify(localState || {}));
-    const lMemoT = new Date((localState && localState.memo && localState.memo.updatedAt) || 0).getTime();
-    const rMemoT = new Date((remoteState && remoteState.memo && remoteState.memo.updatedAt) || 0).getTime();
-    if (rMemoT >= lMemoT && remoteState && remoteState.memo) out.memo = remoteState.memo;
-
-    const lFabT = new Date((localState && localState.ui && localState.ui.fab && localState.ui.fab.updatedAt) || 0).getTime();
-    const rFabT = new Date((remoteState && remoteState.ui && remoteState.ui.fab && remoteState.ui.fab.updatedAt) || 0).getTime();
-    if (rFabT >= lFabT && remoteState && remoteState.ui && remoteState.ui.fab) {
-      out.ui = out.ui || {};
-      out.ui.fab = remoteState.ui.fab;
-    }
-
-    const lAiT = new Date((localState && localState.ai && localState.ai.updatedAt) || 0).getTime();
-    const rAiT = new Date((remoteState && remoteState.ai && remoteState.ai.updatedAt) || 0).getTime();
-    if (rAiT >= lAiT && remoteState && remoteState.ai) out.ai = remoteState.ai;
-    return out;
-  }
-
-  // ── AI 설정 API ────────────────────────────────────────────────
-  function getAiCfg(){
-    try{
-      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
-      const rawApiKey = String(a.apiKey || '');
-      if(rawApiKey && typeof suEncryptSecretValue==='function' && !rawApiKey.startsWith('__suenc_v1__:')){
-        a.apiKey = suEncryptSecretValue(rawApiKey);
-        try{ localStorage.setItem(LS.aiCfg, JSON.stringify(a)); }catch(_){}
-      }
-      return {
-        proxyUrl: String(a.proxyUrl || ''),
-        apiKey: (typeof suDecryptSecretValue==='function' ? suDecryptSecretValue(a.apiKey || rawApiKey) : rawApiKey),
-        updatedAt: a.updatedAt || null
-      };
-    }catch(e){
-      return { proxyUrl:'', apiKey:'', updatedAt:null };
-    }
-  }
-  function setAiCfg(p){
-    const cur = getAiCfg();
-    const next = {
-      proxyUrl: ('proxyUrl' in p) ? String(p.proxyUrl||'') : cur.proxyUrl,
-      apiKey: ('apiKey' in p)
-        ? (String(p.apiKey||'') ? (typeof suEncryptSecretValue==='function' ? suEncryptSecretValue(String(p.apiKey||'')) : String(p.apiKey||'')) : '')
-        : (()=>{ try{ const raw = JSON.parse(localStorage.getItem(LS.aiCfg)||'{}'); return String(raw.apiKey||''); }catch(e){ return ''; } })(),
-      updatedAt: new Date().toISOString(),
-    };
-    try{ localStorage.setItem(LS.aiCfg, JSON.stringify(next)); }catch(e){}
-    return next;
-  }
+  const _mergeMod = window.__createSettingsStoreMerge ? window.__createSettingsStoreMerge({ LS }) : {};
+  const {
+    _loadLocalState,
+    _applyLocalState,
+    _mergeByUpdatedAt,
+    getAiCfg,
+    setAiCfg,
+    getMemo,
+    setMemo,
+    getFab,
+    setFab,
+    _isSyncablePrefKey
+  } = _mergeMod;
+  const _gistMod = window.__createSettingsStoreGist ? window.__createSettingsStoreGist({ FILE, LEGACY, LS, cfg, setCfg, isAdmin, _loadLocalState }) : {};
+  const {
+    _request,
+    _coerceIso,
+    _rememberRemoteUpdatedAt,
+    ensureGist,
+    _getGist,
+    _readFileFromGist,
+    _getRemoteStateWithMigrationDecision,
+    _patchGistFile
+  } = _gistMod;
+  const _signalMod = window.__createSettingsStoreSignal ? window.__createSettingsStoreSignal({ LS, SETTINGS_SIGNAL_DB_URL, SETTINGS_SIGNAL_PATH, SETTINGS_SIGNAL_DEFAULT_PW, cfg }) : {};
+  const {
+    _settingsSignalUrl,
+    _settingsSignalTs,
+    _rememberSettingsSignal,
+    _fetchSettingsSignal,
+    _pushSettingsSignal,
+    createPullOnSignal
+  } = _signalMod;
 
   function _markSync(ok, mode, migrated){
     try{
@@ -220,113 +126,6 @@
     };
   }
 
-  // ── Gist 파일 IO ──
-  async function ensureGist(){
-    const c = cfg();
-    if (c.gistId) return c.gistId;
-    if (!isAdmin()) throw new Error('관리자만 Gist를 생성할 수 있습니다.');
-    if (!c.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
-    // public gist: 읽기는 누구나 가능하게(다른 기기 반영)
-    const initState = _loadLocalState();
-    // 최초 생성 시에도 updatedAt 채우기
-    if (!initState.memo.updatedAt) initState.memo.updatedAt = new Date().toISOString();
-    if (!initState.ui.fab.updatedAt) initState.ui.fab.updatedAt = new Date().toISOString();
-    const payload = {
-      description: 'Star Datacenter settings sync',
-      public: true,
-      files: {
-        [FILE]: { content: JSON.stringify(initState, null, 2) }
-      }
-    };
-    const created = await _request('POST', 'https://api.github.com/gists', c.token, payload);
-    const id = created && created.id ? String(created.id) : '';
-    if (!id) throw new Error('Gist 생성에 실패했습니다.');
-    setCfg({ gistId: id });
-    return id;
-  }
-
-  async function _getGist(){
-    const c = cfg();
-    if (!c.gistId) return null;
-    return await _request('GET', `https://api.github.com/gists/${c.gistId}`, c.token || null);
-  }
-
-  async function _readFileFromGist(gist, filename){
-    if(!gist || !gist.files) return null;
-    const f = gist.files[filename];
-    if(!f) return null;
-    let content = f.content;
-    if ((!content || f.truncated) && f.raw_url) {
-      const r = await fetch(f.raw_url);
-      content = await r.text();
-    }
-    return content || null;
-  }
-
-  function _coerceIso(v){
-    try{
-      if(!v) return null;
-      const t = new Date(v);
-      if(isNaN(t.getTime())) return null;
-      return t.toISOString();
-    }catch(e){ return null; }
-  }
-
-  async function _getRemoteStateWithMigrationDecision(){
-    const gist = await _getGist();
-    if(!gist) return { state:null, mode:'none', gist:null, hasNew:false, hasLegacy:false };
-
-    // 1) new 통합 파일 우선
-    const txtNew = await _readFileFromGist(gist, FILE);
-    if (txtNew) {
-      try{
-        const st = JSON.parse(txtNew);
-        return { state: st, mode:'new', gist, hasNew:true, hasLegacy:false };
-      }catch(e){
-        // 파싱 실패면 legacy fallback
-      }
-    }
-
-    // 2) legacy 파일들로부터 조립
-    let hasLegacy = false;
-    let memo = null, uiFab = null;
-    const txtMemo = await _readFileFromGist(gist, LEGACY.memo);
-    if (txtMemo) {
-      hasLegacy = true;
-      try{ memo = JSON.parse(txtMemo); }catch(e){ memo = null; }
-    }
-    const txtFab = await _readFileFromGist(gist, LEGACY.fab);
-    if (txtFab) {
-      hasLegacy = true;
-      try{ uiFab = JSON.parse(txtFab); }catch(e){ uiFab = null; }
-    }
-    if (!hasLegacy) return { state:null, mode:'none', gist, hasNew:false, hasLegacy:false };
-
-    const out = { memo: { last:'', updatedAt:null }, ui: { fab: { hideMobile:false, hidePC:false, updatedAt:null } } };
-    if (memo) {
-      out.memo.last = String(memo.last || '');
-      out.memo.updatedAt = _coerceIso(memo.updatedAt) || null;
-    }
-    if (uiFab) {
-      // 기존 su_ui_settings.json 포맷: {su_fabHideMobile:'0'|'1', su_fabHidePC:'0'|'1', updatedAt:...}
-      if (typeof uiFab.su_fabHideMobile !== 'undefined') out.ui.fab.hideMobile = String(uiFab.su_fabHideMobile) === '1';
-      if (typeof uiFab.su_fabHidePC !== 'undefined') out.ui.fab.hidePC = String(uiFab.su_fabHidePC) === '1';
-      out.ui.fab.updatedAt = _coerceIso(uiFab.updatedAt) || null;
-    }
-    // legacy에 timestamp가 없으면 현재로 채움(병합 비교가 가능하도록)
-    const nowIso = new Date().toISOString();
-    if (!out.memo.updatedAt) out.memo.updatedAt = nowIso;
-    if (!out.ui.fab.updatedAt) out.ui.fab.updatedAt = nowIso;
-
-    return { state: out, mode:'legacy', gist, hasNew:false, hasLegacy:true };
-  }
-
-  async function _patchGistFile(gistId, token, filename, content){
-    const payload = { files: { [filename]: { content } } };
-    await _request('PATCH', `https://api.github.com/gists/${gistId}`, token, payload);
-    return true;
-  }
-
   async function pull(opts){
     opts = opts || {};
     const c = cfg();
@@ -336,6 +135,13 @@
       const remoteInfo = await _getRemoteStateWithMigrationDecision();
       const remote = remoteInfo.state;
       if (!remote) { _markSync(null, 'none', false); return false; }
+      const remoteUpdatedAt = _coerceIso(remoteInfo.remoteUpdatedAt) || null;
+      const lastSeenRemote = _coerceIso(localStorage.getItem(LS.lastRemoteUpdatedAt) || null);
+      if(!opts.force && remoteUpdatedAt && lastSeenRemote && (new Date(remoteUpdatedAt).getTime() <= new Date(lastSeenRemote).getTime())){
+        _markSync(null, remoteInfo.mode, false);
+        if (opts.returnInfo) return { ok:true, mode:remoteInfo.mode, migrated:false, skipped:true };
+        return true;
+      }
 
       const local = _loadLocalState();
       const merged = _mergeByUpdatedAt(local, remote);
@@ -357,6 +163,7 @@
       }
 
       try{ if (typeof updateFabVisibility === 'function') updateFabVisibility(); }catch(e){}
+      _rememberRemoteUpdatedAt(remoteUpdatedAt);
       _markSync('pull', remoteInfo.mode, migrated);
       if (opts.returnInfo) return { ok:true, mode:remoteInfo.mode, migrated };
       return true;
@@ -367,9 +174,10 @@
       return false;
     }
   }
+  const pullOnSignal = createPullOnSignal ? createPullOnSignal({ pull }) : async function(){ return false; };
 
   async function push(section){
-    // section: 'memo' | 'ui.fab' | undefined(전체)
+    // section: 'memo' | 'ui.fab' | 'ai' | 'prefs' | undefined(전체)
     if (!isAdmin()) throw new Error('관리자만 저장할 수 있습니다.');
     const c = cfg();
     if (!c.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
@@ -380,10 +188,19 @@
     if (section === 'memo') local.memo.updatedAt = new Date().toISOString();
     if (section === 'ui.fab') { local.ui.fab.updatedAt = new Date().toISOString(); }
     if (section === 'ai') { local.ai = local.ai || {}; local.ai.updatedAt = new Date().toISOString(); }
+    if (section === 'prefs') {
+      local.prefs = local.prefs || {};
+      local.prefs.updatedAt = new Date().toISOString();
+      try{ localStorage.setItem(LS.prefsUpdatedAt, String(local.prefs.updatedAt)); }catch(e){}
+    }
     if (!section) {
       local.memo.updatedAt = local.memo.updatedAt || new Date().toISOString();
       local.ui.fab.updatedAt = local.ui.fab.updatedAt || new Date().toISOString();
       if (local.ai) local.ai.updatedAt = local.ai.updatedAt || new Date().toISOString();
+      if (local.prefs) {
+        local.prefs.updatedAt = local.prefs.updatedAt || new Date().toISOString();
+        try{ localStorage.setItem(LS.prefsUpdatedAt, String(local.prefs.updatedAt)); }catch(e){}
+      }
     }
     let remoteState = null;
     let mode = 'none';
@@ -395,6 +212,13 @@
     const merged = _mergeByUpdatedAt(remoteState || {}, local);
 
     await _patchGistFile(id, c.token, FILE, JSON.stringify(merged, null, 2));
+    _rememberRemoteUpdatedAt(new Date().toISOString());
+    try{
+      const sig = await _pushSettingsSignal({ section: section || 'all', updatedAt: Date.now() });
+      _rememberSettingsSignal(sig);
+    }catch(e){
+      try{ localStorage.setItem(LS.lastError, '설정 변경 신호 전송 실패: ' + (e.message || e)); }catch(_){}
+    }
     _markSync('push', mode, false);
     if (section && section.indexOf('.') !== -1) {
       // no-op
@@ -402,38 +226,63 @@
     return true;
   }
 
-  // ── 편의 API ──
-  function getMemo(){
+  // (요청사항) 설정 변경 시 자동 원격 저장(디바운스)
+  function _prefsAutoEnabled(){
+    // 기본값 true: 명시적으로 '0'으로 꺼야만 비활성화
     try{
-      const o = JSON.parse(localStorage.getItem(LS.memoObj) || '{}');
-      return { last: o.last || '', updatedAt: o.updatedAt || null };
-    }catch(e){ return { last:'', updatedAt:null }; }
+      const v = localStorage.getItem(LS.prefsAutoPush);
+      return v === null ? true : v === '1';
+    }catch(e){ return true; }
   }
-  function setMemo(text){
-    const memo = { last: String(text || ''), updatedAt: new Date().toISOString() };
-    try{ localStorage.setItem(LS.memoObj, JSON.stringify(memo)); }catch(e){}
-    return memo;
+  function setPrefsAutoPush(on){
+    try{ localStorage.setItem(LS.prefsAutoPush, on ? '1' : '0'); }catch(e){}
   }
-  function getFab(){
-    return {
-      hideMobile: localStorage.getItem(LS.fabHideMobile) === '1',
-      hidePC: localStorage.getItem(LS.fabHidePC) === '1',
-    };
+  function getPrefsAutoPush(){
+    return _prefsAutoEnabled();
   }
-  function setFab(hideMobile, hidePC){
-    localStorage.setItem(LS.fabHideMobile, hideMobile ? '1' : '0');
-    localStorage.setItem(LS.fabHidePC, hidePC ? '1' : '0');
-    try{ if (typeof updateFabVisibility === 'function') updateFabVisibility(); }catch(e){}
+  function markPrefsChanged(){
+    try{ localStorage.setItem(LS.prefsUpdatedAt, new Date().toISOString()); }catch(e){}
+    try{ maybeAutoPushPrefs(); }catch(e){}
+  }
+  function maybeAutoPushPrefs(){
+    try{
+      if(!window.SettingsStore) return;
+      const c = cfg();
+      if(!c.enabled) return;         // 동기화 OFF면 자동 저장 안 함
+      if(!_prefsAutoEnabled()) return;
+      if(!isAdmin()) return;
+      if(!c.token) return;           // 토큰 없으면 자동 저장 불가
+      clearTimeout(window._prefsAutoPushT);
+      window._prefsAutoPushT = setTimeout(async ()=>{
+        try{ await push('prefs'); }catch(e){}
+      }, 1200);
+    }catch(e){}
   }
 
   window.SettingsStore = {
     cfg, setCfg, isAdmin,
-    ensureGist, pull, push,
+    ensureGist, pull, pullOnSignal, push,
+    emitSignal: async function(section){
+      try{
+        const sig = await _pushSettingsSignal({ section: section || 'all', updatedAt: Date.now() });
+        _rememberSettingsSignal(sig);
+        return true;
+      }catch(e){
+        try{ localStorage.setItem(LS.lastError, '설정 변경 신호 전송 실패: ' + (e.message || e)); }catch(_){}
+        return false;
+      }
+    },
     getSyncStatus,
     getMemo, setMemo,
     getFab, setFab,
     // ai
     getAiCfg, setAiCfg,
+    // prefs
+    markPrefsChanged,
+    maybeAutoPushPrefs,
+    setPrefsAutoPush,
+    getPrefsAutoPush,
+    _isSyncablePrefKey,
     FILE
   };
 })();

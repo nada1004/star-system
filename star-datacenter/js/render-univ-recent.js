@@ -133,8 +133,9 @@ function buildUnivAceCardsHTML(opts){
     if(!ap) return '';
     const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
     const safeName=escJS(ap.name);
+    const _2ndAce = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(ap.secondProfileFile, {style:`border-radius:var(--su_profile_radius,50%)`}) : '';
     const photoEl=ap.photo
-      ?`<img src="${toHttpsUrl(ap.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}55;box-shadow:0 4px 10px rgba(0,0,0,.14)" onerror="this.style.display='none'">`
+      ?`<span class="${_2ndAce?'ph-swap':''}" style="position:relative;display:inline-flex;width:38px;height:38px;flex-shrink:0"><img src="${toHttpsUrl(ap.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}55;box-shadow:0 4px 10px rgba(0,0,0,.14)" onerror="this.style.display='none'">${_2ndAce}</span>`
       :`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:linear-gradient(135deg,${col},${col}88);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);font-weight:1000;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.12)">${ap.name[0]}</div>`;
     return `<div class="ud-ace-card" style="flex:1;min-width:140px;background:linear-gradient(145deg,${col}14,${col}08);border:1.5px solid ${col}38;border-radius:18px;padding:13px 14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,23,42,.05),0 2px 6px ${col}14;transition:box-shadow .15s,transform .15s" data-ur-action="open-player" data-ur-player="${safeName}">
       <div style="font-size:9px;font-weight:900;color:${col};margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase">${label}</div>

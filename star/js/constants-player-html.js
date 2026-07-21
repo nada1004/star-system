@@ -1,13 +1,32 @@
 /* ══════════════════════════════════════
    Common Player HTML Utilities
 ══════════════════════════════════════ */
-function getPlayerPhotoHTML(playerName, size, extraStyle){
+// ── render-cycle localStorage 캐시 (동일 rAF 내 반복 읽기 방지) ──
+let _pphCache = null;
+function _getPPHCache() {
+  if (_pphCache) return _pphCache;
+  try {
+    const scale = Math.max(0.7, Math.min(1.6, parseFloat(localStorage.getItem('su_avatar_scale')||'1')||1));
+    const fit = (localStorage.getItem('su_avatar_fit')||'contain').trim();
+    const recFit = (localStorage.getItem('su_rec_avatar_fit')||fit).trim();
+    _pphCache = {
+      scale: isNaN(scale) ? 1 : scale,
+      fit: ['contain','cover'].includes(fit) ? fit : 'contain',
+      recFit: ['contain','cover'].includes(recFit) ? recFit : 'contain'
+    };
+  } catch(e) { _pphCache = { scale:1, fit:'contain', recFit:'contain' }; }
+  // 次の render() 呼び出し時にキャッシュをクリア
+  requestAnimationFrame(() => { _pphCache = null; });
+  return _pphCache;
+}
+
+function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   size=size||'32px'; extraStyle=extraStyle||'';
-  let _scale=1;
-  try{
-    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
-    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
-  }catch(e){}
+  opts = opts || {};
+  // opts.lazy === true → 리스트/순위표 컨텍스트. 뷰포트 바깥 이미지는 지연 로드.
+  //                    → 한꺼번에 high priority로 폭주하는 것 방지.
+  const _pph = _getPPHCache();
+  let _scale = _pph.scale;
   try{
     const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
     if(m && _scale!==1){
@@ -28,13 +47,26 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     }
   }catch(e){}
   const arr = Array.isArray(window.players) ? window.players : [];
-  const basePlayer = arr.find(x=>String(x&&x.name||'').trim()===String(playerName||'').trim()) || null;
+  if(!window._playerByNameCache) window._playerByNameCache = { ref:null, len:-1, map:null };
+  const _cache = window._playerByNameCache;
+  if(_cache.ref !== arr || _cache.len !== arr.length || !_cache.map){
+    const m = new Map();
+    arr.forEach(x=>{
+      const nm = String(x&&x.name||'').trim();
+      if(nm) m.set(nm, x);
+    });
+    _cache.ref = arr;
+    _cache.len = arr.length;
+    _cache.map = m;
+  }
+  const _key = String(playerName||'').trim();
+  const basePlayer = (_key && _cache.map && _cache.map.get) ? (_cache.map.get(_key) || null) : null;
   const photoMap = (window.playerPhotos && typeof window.playerPhotos==='object') ? window.playerPhotos : {};
   const p = basePlayer ? ({...basePlayer, ...((!basePlayer.photo && photoMap[basePlayer.name]) ? {photo:photoMap[basePlayer.name]} : {})}) : null;
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
   const sz = 'calc('+size+' * var(--su_profile_scale,1))';
-  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="event.stopPropagation();openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
@@ -44,7 +76,11 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const txt=p?.race||'?';
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  const src = toHttpsUrl(p.photo);
+  const origSrc = toHttpsUrl(p.photo);
+  let _sizeNum = 64;
+  try{ const m = String(size).match(/(\d+(?:\.\d+)?)/); if(m) _sizeNum = parseFloat(m[1]); }catch(e){}
+  // var(--su_profile_scale) 런타임 배율 대응 여유값 포함
+  const src = (typeof toThumbUrl==='function') ? toThumbUrl(p.photo, Math.round(_sizeNum*1.4)) : origSrc;
   let fit = 'contain';
   let pos = null;
   try{
@@ -54,10 +90,9 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       if(ctx==='compModal' || ctx==='histModal'){
         fit = getMatchDetailAvatarSetting('fit');
       } else if(ctx==='recCard'){
-        fit = (localStorage.getItem('su_rec_avatar_fit') || localStorage.getItem('su_avatar_fit') || 'contain').trim();
-        if(!['contain','cover'].includes(fit)) fit='contain';
+        fit = _pph.recFit;
       } else {
-        fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
+        fit = _pph.fit;
       }
       if(!['contain','cover'].includes(fit)) fit='contain';
     } else {
@@ -77,14 +112,30 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       }
     }
   }catch(e){}
-  return '<img '+clickAttr+' src="'+src+'" decoding="async" fetchpriority="high" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
+  const _lazyAttr = opts.lazy ? ' loading="lazy"' : '';
+  // lazy 컨텍스트는 priority를 'auto'로 강제 → high-priority 폭주 방지
+  const _prio = opts.lazy ? 'auto' : (opts.priority || 'high');
+  const _prioAttr = ' fetchpriority="' + _prio + '"';
+  const _origAttr = ' data-orig="'+String(origSrc).replace(/"/g,'&quot;')+'"';
+  const _imgHtml = '<img '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
+  if (p && p.secondProfileFile && typeof _phSwap2ndHTML === 'function') {
+    const _2ndImgHtml = _phSwap2ndHTML(p.secondProfileFile, { style: 'border-radius:inherit;'+(fit?('object-fit:'+fit+';'):'') });
+    const _innerImg = _imgHtml.replace('style="'+base, 'style="position:absolute;inset:0;'+base);
+    return '<span class="ph-swap" style="position:relative;display:inline-block;width:'+sz+';height:'+sz+';vertical-align:middle;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden">'+_innerImg+_2ndImgHtml+'</span>';
+  }
+  return _imgHtml;
 }
 
 const _prewarmedImageUrls = new Set();
-function prewarmImageUrls(urls, limit){
+function prewarmImageUrls(urls, limit, px, mode){
   try{
+    const useScaled = mode === 'scaled';
     const arr = (Array.isArray(urls) ? urls : [urls])
-      .map(v=>toHttpsUrl(v||''))
+      .map(v=>{
+        if(useScaled && typeof toScaledUrl==='function') return toScaledUrl(v||'', px||480);
+        if(typeof toThumbUrl==='function') return toThumbUrl(v||'', px||96);
+        return toHttpsUrl(v||'');
+      })
       .filter(Boolean);
     const max = Math.max(1, parseInt(limit, 10) || 12);
     arr.slice(0, max).forEach(src=>{
@@ -103,11 +154,11 @@ function getStatusIconHTML(name){
   const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
   const lbl=def?def.label:ic;
   if(_siIsImg(ic)) return `<span style="margin-left:3px;flex-shrink:0;display:inline-flex;align-items:center" title="${lbl}">${_siRender(ic,'18px')}</span>`;
-  return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
+  return `<span style="font-size:var(--fs-base);margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
 }
 
 function genderIcon(gender){
-  if(gender==='M')return `<span class="male-icon">♂</span>`;
+  // 남자 이모지(♂) 표시 제거 - 요청에 따라 항상 빈 문자열 반환
   return '';
 }
 

@@ -1,6 +1,10 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  window._touchPrefs = window._touchPrefs || function(){
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  };
+
   function escMaybe(v){
     if(typeof window.esc === 'function') return window.esc(v);
     return String(v ?? '').replace(/[&<>"']/g, m => ({
@@ -180,10 +184,14 @@
       }catch(e){}
     };
 
+    // 디자인/탭/효과 설정 변경 후 원격 동기화 트리거 헬퍼
+    function _touchPrefs(){ try{ window._touchPrefs(); }catch(e){} }
+
     window.cfgSetDesignV2 = function(on){
       try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Preset = function(v){
       try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
@@ -197,6 +205,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Bright = function(v){
       try{
@@ -205,6 +214,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Dark = function(v){
       try{
@@ -213,6 +223,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgApplyDesignV2TonePreset = function(key){
       const k = String(key||'base');
@@ -228,6 +239,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Color = function(varName, value){
       try{
@@ -239,6 +251,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgResetDesignV2Colors = function(){
       try{
@@ -249,6 +262,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Effect = function(effectName, value){
       try{
@@ -260,6 +274,211 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+
+    window.cfgSetTabColorEnabled = function(on){
+      try{ localStorage.setItem('su_tab_color_enabled', on ? '1' : '0'); }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetTabColorMode = function(mode){
+      var v = String(mode||'fill');
+      if(['fill','soft','outline','solid'].indexOf(v) === -1) v = 'fill';
+      try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetTabColorLength = function(v){
+      try{
+        var n = Math.max(20, Math.min(90, parseInt(v||'48', 10) || 48));
+        localStorage.setItem('su_tab_color_length', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetTabColorTail = function(v){
+      try{
+        var n = Math.max(0, Math.min(60, parseInt(v||'22', 10) || 22));
+        localStorage.setItem('su_tab_color_tail', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxEnabled = function(on){
+      try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
+      try{ render(); }catch(e){}
+      try{ _updateSideFxPreview(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxMode = function(mode){
+      var v = String(mode||'soft');
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(v) === -1) v = 'soft';
+      try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
+      try{ _updateSideFxPreview(); }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxIntensity = function(v){
+      try{
+        var n = Math.max(0, Math.min(140, parseInt(v||'68', 10) || 68));
+        localStorage.setItem('su_rec_side_fx_intensity', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxLength = function(v){
+      try{
+        var n = Math.max(4, Math.min(80, parseInt(v||'25', 10) || 25));
+        localStorage.setItem('su_rec_side_fx_length', String(n));
+        window.applyRecSideFxLengthVar && window.applyRecSideFxLengthVar(n);
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxTail = function(v){
+      try{
+        var n = Math.max(0, Math.min(140, parseInt(v||'28', 10) || 28));
+        localStorage.setItem('su_rec_side_fx_tail', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxSoftness = function(v){
+      try{
+        var n = Math.max(0, Math.min(100, parseInt(v||'52', 10) || 52));
+        localStorage.setItem('su_rec_side_fx_softness', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window.cfgSetRecSideFxEdge = function(v){
+      try{
+        var n = Math.max(2, Math.min(24, parseInt(v||'8', 10) || 8));
+        localStorage.setItem('su_rec_side_fx_edge', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    window._updateSideFxPreview = function(){
+      try{
+        var prev = document.getElementById('cfg-sidefx-preview');
+        if(!prev) return;
+        var mode = localStorage.getItem('su_rec_side_fx_mode')||'soft';
+        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'];
+        allModes.forEach(function(m){ prev.classList.remove('grp-sidefx--'+m); });
+        prev.classList.add('grp-sidefx--'+mode);
+        if(typeof _recSideFxVarStyle==='function'){
+          var vars = _recSideFxVarStyle('#2563eb','#a855f7', typeof _getRecSideFxCfg==='function'?_getRecSideFxCfg():{});
+          var existing = prev.getAttribute('style')||'';
+          // CSS 변수만 업데이트
+          var baseStyle = existing.replace(/--rec-[^;]+;/g,'');
+          prev.setAttribute('style', baseStyle + vars);
+        }
+      }catch(e){}
+    };
+    // ── 팀 버튼 스타일 ──
+    var _TEAM_BTN_STYLES = ['solid','pill','badge','gradient','chip-xl','neon','outline','flat'];
+    window.cfgSetTeamBtnStyle = function(style){
+      var v = _TEAM_BTN_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'solid';
+      try{ localStorage.setItem('su_rc_team_btn_style', v); }catch(e){}
+      _TEAM_BTN_STYLES.forEach(function(s){ document.body.classList.remove('team-btn--'+s); });
+      if(v !== 'solid') document.body.classList.add('team-btn--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 저장된 팀 버튼 스타일 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_rc_team_btn_style') || 'solid';
+        if(v && v !== 'solid') document.body.classList.add('team-btn--'+v);
+      }catch(e){}
+    })();
+
+    // ── 상단 탭 스타일 테마 ──
+    var _TAB_STYLES = ['default','pill','flat','ghost','underline','glass','neon','retro','bold'];
+    window.cfgSetTabStyle = function(style){
+      var v = _TAB_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'default';
+      try{ localStorage.setItem('su_tab_style', v); }catch(e){}
+      _TAB_STYLES.forEach(function(s){ document.body.classList.remove('tab-style--'+s); });
+      if(v !== 'default') document.body.classList.add('tab-style--'+v);
+      _touchPrefs();
+    };
+    (function(){
+      try{
+        var v = localStorage.getItem('su_tab_style') || 'default';
+        if(v && v !== 'default') document.body.classList.add('tab-style--'+v);
+      }catch(e){}
+    })();
+
+    // ── 하위메뉴 버튼(.pill/.sort-btn) 스타일 테마 ──
+    var _SUBMENU_BTN_STYLES = ['default','pill','square','tag','neon','ghost','bold','badge'];
+    window.cfgSetSubmenuBtnStyle = function(style){
+      var v = _SUBMENU_BTN_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'default';
+      try{ localStorage.setItem('su_submenu_btn_style', v); }catch(e){}
+      _SUBMENU_BTN_STYLES.forEach(function(s){ document.body.classList.remove('submenu-btn--'+s); });
+      if(v !== 'default') document.body.classList.add('submenu-btn--'+v);
+      _touchPrefs();
+    };
+    (function(){
+      try{
+        var v = localStorage.getItem('su_submenu_btn_style') || 'default';
+        if(v && v !== 'default') document.body.classList.add('submenu-btn--'+v);
+      }catch(e){}
+    })();
+
+    // ── 팀 칩 모양 (경기 기록 카드) ──
+    var _TEAM_CHIP_SHAPES = ['default','pill','square','sharp','diamond','tag','hex','arch','ribbon','badge','round-left','slash','gem','bubble','double','wave'];
+    window.cfgSetTeamChipShape = function(shape){
+      var v = _TEAM_CHIP_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
+      try{ localStorage.setItem('su_rc_team_chip_shape', v); }catch(e){}
+      _TEAM_CHIP_SHAPES.forEach(function(s){ document.body.classList.remove('team-chip--'+s); });
+      if(v !== 'default') document.body.classList.add('team-chip--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 팀 칩 모양 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_rc_team_chip_shape') || 'default';
+        if(v && v !== 'default') document.body.classList.add('team-chip--'+v);
+      }catch(e){}
+    })();
+
+    // ── 버튼 모양 테마 ──
+    var _BTN_THEMES = ['default','flat','outline','pill','soft','glass','retro','neon','brutal'];
+    window.cfgSetBtnTheme = function(theme){
+      var v = _BTN_THEMES.indexOf(String(theme)) !== -1 ? String(theme) : 'default';
+      try{ localStorage.setItem('su_btn_theme', v); }catch(e){}
+      _BTN_THEMES.forEach(function(t){ document.body.classList.remove('btn-theme--'+t); });
+      if(v !== 'default') document.body.classList.add('btn-theme--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 저장된 버튼 테마 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_btn_theme') || 'default';
+        if(v && v !== 'default') document.body.classList.add('btn-theme--'+v);
+      }catch(e){}
+    })();
+
+    window.applyRecSideFxLengthVar = function(n){
+      try{
+        var len = Math.max(4, Math.min(80, parseInt(n||'25',10)||25));
+        var softness = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
+        var len2 = Math.max(2, Math.min(96, Math.round(len * (0.24 + (softness/100) * 0.42))));
+        var len3 = Math.max(len2 + 1, Math.min(98, Math.round(len * (0.55 + (softness/100) * 0.25))));
+        var lenR = 100 - len;
+        var len2R = 100 - len2;
+        var len3R = 100 - len3;
+        document.documentElement.style.setProperty('--rec-fx-len', len + '%');
+        document.documentElement.style.setProperty('--rec-fx-len2', len2 + '%');
+        document.documentElement.style.setProperty('--rec-fx-len3', len3 + '%');
+        document.documentElement.style.setProperty('--rec-fx-len-r', lenR + '%');
+        document.documentElement.style.setProperty('--rec-fx-len2-r', len2R + '%');
+        document.documentElement.style.setProperty('--rec-fx-len3-r', len3R + '%');
+      }catch(e){}
     };
   }
 
@@ -280,8 +499,8 @@
         <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">테마 프리셋</div>
         <select id="cfg-designv2-preset" onchange="cfgSetDesignV2Preset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
           <option value="base" ${preset==='base'?'selected':''}>기본</option>
-          <option value="nada" ${preset==='nada'?'selected':''}>🌑 Nada Dark</option>
-          <option value="nadalight" ${preset==='nadalight'?'selected':''}>🌤️ Nada Light</option>
+          <option value="nada" ${preset==='nada'?'selected':''}>🌑 나다 다크</option>
+          <option value="nadalight" ${preset==='nadalight'?'selected':''}>🌤️ 나다 라이트</option>
           <option value="spring" ${preset==='spring'?'selected':''}>🌸 봄</option>
           <option value="summer" ${preset==='summer'?'selected':''}>🏖️ 여름</option>
           <option value="autumn" ${preset==='autumn'?'selected':''}>🍁 가을</option>
@@ -408,4 +627,261 @@
   window.renderCfgDesignV2Section = renderDesignV2Section;
   window.renderCfgDesignV2ColorsSection = renderDesignV2ColorsSection;
   window.SettingsModules.design = { init, renderDesignV2Section, renderDesignV2ColorsSection };
+
+  /* ── 탭 버튼 색상 커스텀 섹션 ── */
+  function renderTabColorSection(_scfgD){
+    var defs = (typeof window._TAB_COLOR_DEFAULTS==='object') ? window._TAB_COLOR_DEFAULTS : {};
+    var colorKey = (typeof window._TAB_COLOR_KEY==='string') ? window._TAB_COLOR_KEY : 'su_tab_colors_v1';
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem(colorKey)||'{}'); }catch(e){}
+    var tabColorOn = (localStorage.getItem('su_tab_color_enabled') || '1') !== '0';
+    var tabColorMode = String(localStorage.getItem('su_tab_color_mode') || 'fill');
+    if(['fill','soft','outline','solid'].indexOf(tabColorMode) === -1) tabColorMode = 'fill';
+    var tabColorLength = Math.max(20, Math.min(90, parseInt(localStorage.getItem('su_tab_color_length') || '48', 10) || 48));
+    var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
+    var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
+    var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
+    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    var recSideFxIntensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
+    var recSideFxLength = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
+    var recSideFxTail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
+    var recSideFxSoftness = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness') || '52', 10) || 52));
+    var recSideFxEdge = Math.max(2, Math.min(24, parseInt(localStorage.getItem('su_rec_side_fx_edge') || '8', 10) || 8));
+    var _previewCfg = { mode:recSideFxMode, intensity:recSideFxIntensity, length:recSideFxLength, tail:recSideFxTail, softness:recSideFxSoftness, edge:recSideFxEdge };
+    var _previewVars = (typeof _recSideFxVarStyle==='function')
+      ? _recSideFxVarStyle('#2563eb', '#7c3aed', _previewCfg)
+      : '';
+
+    var groups = [
+      { ctx:'mergedUniv', title:'🏟️ 대학대전 탭' },
+      { ctx:'mergedInd',  title:'🎮 개인전/끝장전 탭' },
+      { ctx:'mergedComp', title:'🏆 대회 탭' },
+      { ctx:'mergedPro',  title:'🏅 프로리그 탭' }
+    ];
+
+    function makeRow(ctx, id, defEntry) {
+      var cur = (saved[ctx]||{})[id] || {};
+      var fromVal = cur.from || defEntry.from || '#0f172a';
+      var toVal   = cur.to   || defEntry.to   || '#1d4ed8';
+      var label   = defEntry.label || id;
+      var fromId  = 'tc-from-' + ctx + '-' + id;
+      var toId    = 'tc-to-'   + ctx + '-' + id;
+      // onchange: 직접 JS 코드 — esc 없이 작성, 따옴표만 주의
+      var onchg = "var f=document.getElementById('" + fromId + "'),t=document.getElementById('" + toId + "');if(f&&t&&typeof setTabColor=='function'){setTabColor('" + ctx + "','" + id + "',f.value,t.value);}try{if(typeof render=='function')render();}catch(ex){}";
+      var resetFn = "if(typeof resetTabColor=='function'){resetTabColor('" + ctx + "','" + id + "');}try{if(typeof render=='function')render();}catch(ex){}";
+      return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="min-width:110px;font-size:12px;font-weight:900;color:var(--text2)">' + label + '</div>'
+        + '<div style="display:flex;align-items:center;gap:6px">'
+        + '<span style="font-size:10px;color:var(--gray-l)">시작</span>'
+        + '<input type="color" id="' + fromId + '" value="' + fromVal + '" onchange="' + onchg + '" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+        + '<span style="font-size:10px;color:var(--gray-l)">끝</span>'
+        + '<input type="color" id="' + toId + '" value="' + toVal + '" onchange="' + onchg + '" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+        + '</div>'
+        + '<div style="width:64px;height:24px;border-radius:8px;background:linear-gradient(135deg,' + fromVal + ',' + toVal + ');flex-shrink:0;border:1px solid rgba(0,0,0,.08)"></div>'
+        + '<button class="btn btn-w btn-xs" onclick="' + resetFn + '">초기화</button>'
+        + '</div>';
+    }
+
+    var groupsHTML = '';
+    for(var gi=0; gi<groups.length; gi++){
+      var g = groups[gi];
+      var ctxDefs = defs[g.ctx] || {};
+      var ids = Object.keys(ctxDefs);
+      if(!ids.length) continue;
+      var rowsHTML = '';
+      for(var ri=0; ri<ids.length; ri++){
+        rowsHTML += makeRow(g.ctx, ids[ri], ctxDefs[ids[ri]]);
+      }
+      groupsHTML += '<div style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:10px">'
+        + '<div style="font-weight:900;color:var(--text2);font-size:13px;margin-bottom:8px">' + g.title + '</div>'
+        + rowsHTML
+        + '</div>';
+    }
+
+    return _scfgD('tabcolors','🎨 탭 버튼 색상 커스텀')
+      + '<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">'
+      + '미니대전/시빌워/대학대전/대회탭/프로리그 등 탭 버튼의 활성(선택) 색상을 개별 지정합니다.<br>'
+      + '<b>시작색</b>과 <b>끝색</b>으로 그라데이션을 만들며, 같은 색을 지정하면 단색이 됩니다.'
+      + '</div>'
+      + '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:12px;display:flex;flex-direction:column;gap:10px">'
+      + '  <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:var(--text2);cursor:pointer">'
+      + '    <input type="checkbox" style="width:15px;height:15px" ' + (tabColorOn?'checked':'') + ' onchange="cfgSetTabColorEnabled(this.checked)">'
+      + '    탭 컬러 사용'
+      + '  </label>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">적용 모드</div>'
+      + '    <select onchange="cfgSetTabColorMode(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="fill"' + (tabColorMode==='fill'?' selected':'') + '>풀 컬러</option>'
+      + '      <option value="soft"' + (tabColorMode==='soft'?' selected':'') + '>소프트</option>'
+      + '      <option value="outline"' + (tabColorMode==='outline'?' selected':'') + '>아웃라인</option>'
+      + '      <option value="solid"' + (tabColorMode==='solid'?' selected':'') + '>단색</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이</div>'
+      + '    <input type="range" min="20" max="90" step="5" value="' + tabColorLength + '" oninput="document.getElementById(\'cfg-tabcolor-len-v\').textContent=this.value+\'%\'; cfgSetTabColorLength(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-tabcolor-len-v">' + tabColorLength + '%</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">하단 끝 진해짐</div>'
+      + '    <input type="range" min="0" max="60" step="5" value="' + tabColorTail + '" oninput="document.getElementById(\'cfg-tabcolor-tail-v\').textContent=this.value+\'%\'; cfgSetTabColorTail(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-tabcolor-tail-v">' + tabColorTail + '%</span></div>'
+      + '  </div>'
+      + '  <div style="border-radius:10px;border:1px solid var(--border2);padding:10px 12px;background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 42%, rgba(15,23,42,' + Math.max(0, Math.min(0.18, tabColorTail/100*0.18)).toFixed(3) + ') 84%, rgba(15,23,42,' + Math.max(0, Math.min(0.28, tabColorTail/100*0.32)).toFixed(3) + ') 100%), linear-gradient(135deg, #0f172a 0%, #2563eb ' + tabColorLength + '%, #2563eb ' + Math.min(96, tabColorLength+18) + '%, #1d4ed8 100%);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center">'
+      + '    탭 컬러 미리보기'
+      + '  </div>'
+      + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">탭 컬러를 완전히 끄거나, 진한 스타일 / 연한 스타일 / 테두리 중심 스타일로 바꿀 수 있습니다.</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+      + '<button class="btn btn-w btn-sm" onclick="if(confirm(\'탭 버튼 색상을 모두 초기화할까요?\')){if(typeof resetAllTabColors==\'function\')resetAllTabColors();try{if(typeof render==\'function\')render();}catch(e){}}">🔄 전체 초기화</button>'
+      + '</div>'
+      + groupsHTML
+      + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🪄 기록 카드 양끝 대학 색상 효과</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">이 설정은 <b>기록 카드(기록탭) 스타일</b>에 포함되어 있습니다.</div>'
+      + '  <div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '    <button class="btn btn-w btn-sm" onclick="try{cfgGo(\'reccard\');}catch(e){}">🧾 기록 카드 설정 열기</button>'
+      + '  </div>'
+      + '</div>'
+      + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🎓 스트리머탭 대학 헤더 설정</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">스트리머탭 대학 헤더의 그라데이션, 배경 이미지, 커스텀 텍스트를 설정합니다.</div>'
+      + '  <div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '    <button class="btn btn-w btn-sm" onclick="try{cfgGo(\'streamerheader\');}catch(e){}">🎓 스트리머탭 대학 헤더 설정 열기</button>'
+      + '  </div>'
+      + '</div>'
+      + '</details>';
+  }
+  window.renderCfgTabColorSection = renderTabColorSection;
+
+  /* ── 스트리머탭 대학 헤더 설정 섹션 ── */
+  function renderStreamerHeaderSection(_scfgD){
+    return _scfgD('streamerheader','🎓 스트리머탭 대학 헤더')
+      + '<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">'
+      + '스트리머탭의 대학 헤더 배경 그라데이션, 배경 이미지, 커스텀 텍스트를 설정합니다.<br>'
+      + '<b>참고:</b> 대학별 개별 설정은 대학 상세 팝업의 "수정" 버튼에서 가능합니다.'
+      + '</div>'
+      + '<div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🎨 기본 그라데이션 스타일</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">대학 헤더의 기본 배경 그라데이션 스타일을 설정합니다.</div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">그라데이션</div>'
+      + '    <select onchange="cfgSetUnivHeaderGradient(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="solid"' + ((localStorage.getItem('su_univ_header_gradient')||'left-to-right')==='solid'?' selected':'') + '>단색</option>'
+      + '      <option value="left-to-right"' + ((localStorage.getItem('su_univ_header_gradient')||'left-to-right')==='left-to-right'?' selected':'') + '>왼쪽→오른쪽</option>'
+      + '      <option value="left-to-both"' + ((localStorage.getItem('su_univ_header_gradient')||'left-to-right')==='left-to-both'?' selected':'') + '>왼쪽→양쪽</option>'
+      + '      <option value="top-to-bottom"' + ((localStorage.getItem('su_univ_header_gradient')||'left-to-right')==='top-to-bottom'?' selected':'') + '>상단→하단</option>'
+      + '      <option value="both-to-center"' + ((localStorage.getItem('su_univ_header_gradient')||'left-to-right')==='both-to-center'?' selected':'') + '>양쪽→중앙</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이</div>'
+      + '    <input type="range" min="20" max="100" step="5" value="' + (localStorage.getItem('su_univ_header_gradient_length')||'70') + '" oninput="document.getElementById(\'cfg-univ-gradient-len-v\').textContent=this.value+\'%\'; cfgSetUnivHeaderGradientLength(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-univ-gradient-len-v">' + (localStorage.getItem('su_univ_header_gradient_length')||'70') + '%</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 색상</div>'
+      + '    <input type="color" id="cfg-univ-gradient-color" value="' + (localStorage.getItem('su_univ_header_gradient_color')||'#ffffff') + '" onchange="cfgSetUnivHeaderGradientColor(this.value)" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+      + '    <span style="font-size:11px;color:var(--gray-l)">(대학 색상 대신 사용할 그라데이션 색상, 흰색=대학 색상 사용)</span>'
+      + '  </div>'
+      + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">• 단색: 대학 색상으로 단일 배경<br>• 왼쪽→오른쪽: 왼쪽은 진하게, 오른쪽으로 갈수록 투명하게<br>• 왼쪽→양쪽: 왼쪽은 진하게, 양쪽 끝으로 갈수록 투명하게<br>• 상단→하단: 상단은 진하게, 하단으로 갈수록 투명하게<br>• 양쪽→중앙: 양쪽 끝은 투명하게, 중앙은 진하게</div>'
+      + '</div>'
+      + '<div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🖼️ 기본 배경 이미지</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">모든 대학 헤더에 적용될 기본 반투명 배경 이미지를 설정합니다.<br>(대학별 개별 설정이 있으면 개별 설정이 우선 적용됩니다)</div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">이미지 URL</div>'
+      + '    <input type="text" id="cfg-univ-bg-image" placeholder="https://..." value="' + (localStorage.getItem('su_univ_header_bg_image')||'') + '" onchange="cfgSetUnivHeaderBgImage(this.value)" style="flex:1;min-width:200px;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">크기</div>'
+      + '    <select onchange="cfgSetUnivHeaderBgSize(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="cover"' + ((localStorage.getItem('su_univ_header_bg_size')||'cover')==='cover'?' selected':'') + '>꽉 차게 (cover)</option>'
+      + '      <option value="contain"' + ((localStorage.getItem('su_univ_header_bg_size')||'cover')==='contain'?' selected':'') + '>맞추기 (contain)</option>'
+      + '      <option value="auto"' + ((localStorage.getItem('su_univ_header_bg_size')||'cover')==='auto'?' selected':'') + '>자동 (auto)</option>'
+      + '      <option value="100% 100%"' + ((localStorage.getItem('su_univ_header_bg_size')||'cover')==='100% 100%'?' selected':'') + '>100% 100%</option>'
+      + '      <option value="50% 50%"' + ((localStorage.getItem('su_univ_header_bg_size')||'cover')==='50% 50%'?' selected':'') + '>50% 50%</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">위치</div>'
+      + '    <select onchange="cfgSetUnivHeaderBgPosition(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="center center"' + ((localStorage.getItem('su_univ_header_bg_position')||'center center')==='center center'?' selected':'') + '>중앙</option>'
+      + '      <option value="top center"' + ((localStorage.getItem('su_univ_header_bg_position')||'center center')==='top center'?' selected':'') + '>상단 중앙</option>'
+      + '      <option value="bottom center"' + ((localStorage.getItem('su_univ_header_bg_position')||'center center')==='bottom center'?' selected':'') + '>하단 중앙</option>'
+      + '      <option value="left center"' + ((localStorage.getItem('su_univ_header_bg_position')||'center center')==='left center'?' selected':'') + '>왼쪽 중앙</option>'
+      + '      <option value="right center"' + ((localStorage.getItem('su_univ_header_bg_position')||'center center')==='right center'?' selected':'') + '>오른쪽 중앙</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">투명도</div>'
+      + '    <input type="range" min="0" max="100" step="5" value="' + (localStorage.getItem('su_univ_header_bg_opacity')||'0') + '" oninput="document.getElementById(\'cfg-univ-bg-opacity-v\').textContent=this.value+\'%\'; cfgSetUnivHeaderBgOpacity(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-univ-bg-opacity-v">' + (localStorage.getItem('su_univ_header_bg_opacity')||'0') + '%</span></div>'
+      + '  </div>'
+      + '</div>'
+      + '<div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">✏️ 기본 커스텀 텍스트</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">모든 대학 헤더에 적용될 기본 커스텀 텍스트를 설정합니다.<br>(대학별 개별 설정이 있으면 개별 설정이 우선 적용됩니다)</div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">텍스트</div>'
+      + '    <input type="text" id="cfg-univ-text" placeholder="추가할 텍스트" value="' + (localStorage.getItem('su_univ_header_text')||'') + '" onchange="cfgSetUnivHeaderText(this.value)" style="flex:1;min-width:200px;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">글자 크기</div>'
+      + '    <input type="range" min="8" max="32" step="1" value="' + (localStorage.getItem('su_univ_header_text_size')||'12') + '" oninput="document.getElementById(\'cfg-univ-text-size-v\').textContent=this.value+\'px\'; cfgSetUnivHeaderTextSize(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-univ-text-size-v">' + (localStorage.getItem('su_univ_header_text_size')||'12') + 'px</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">글자 색상</div>'
+      + '    <input type="color" id="cfg-univ-text-color" value="' + ((localStorage.getItem('su_univ_header_text_color')||'rgba(255,255,255,0.8)').replace('rgba(', '').replace(')', '').split(',').slice(0,3).join(',')||'#ffffff') + '" onchange="cfgSetUnivHeaderTextColor(this.value)" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">가로 위치</div>'
+      + '    <select onchange="cfgSetUnivHeaderTextPos(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="left"' + ((localStorage.getItem('su_univ_header_text_pos')||'right')==='left'?' selected':'') + '>좌측 (대학 이름 옆)</option>'
+      + '      <option value="center"' + ((localStorage.getItem('su_univ_header_text_pos')||'right')==='center'?' selected':'') + '>중앙</option>'
+      + '      <option value="right"' + ((localStorage.getItem('su_univ_header_text_pos')||'right')==='right'?' selected':'') + '>우측 (기본)</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">오른쪽 간격</div>'
+      + '    <input type="range" min="0" max="50" step="1" value="' + (parseInt(localStorage.getItem('su_univ_header_text_right')||'10px')||10) + '" oninput="document.getElementById(\'cfg-univ-text-right-v\').textContent=this.value+\'px\'; cfgSetUnivHeaderTextRight(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-univ-text-right-v">' + (parseInt(localStorage.getItem('su_univ_header_text_right')||'10px')||10) + 'px</span></div>'
+      + '  </div>'
+      + '</div>'
+      + '</details>';
+  }
+  window.renderCfgStreamerHeaderSection = renderStreamerHeaderSection;
+
+  // ── 기록 카드 모양(shape) ──
+  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg','soft-round','bevel','cut-corner','double','deep','underline','inset','paper','topline','split-bg','comic','terminal','notch','wave','tag','ribbon','badge','hex','slant','stamp','scallop','tab','bracket','shield','bookmark','hourglass','zigzag','burst','cloud','versus-card','thunder-card','esports-card','arena-card','crown-card','championship','knockout','blitz','rivalry','champion-frame','playoff','matchup'];
+  window.cfgSetRecCardShape = function(shape){
+    var v = _RC_CARD_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
+    try{ localStorage.setItem('su_rc_card_shape', v); }catch(e){}
+    _RC_CARD_SHAPES.forEach(function(s){ document.body.classList.remove('rc-shape--'+s); });
+    if(v !== 'default') document.body.classList.add('rc-shape--'+v);
+    _touchPrefs();
+  };
+  // 페이지 로드 시 저장된 카드 모양 즉시 적용
+  (function(){
+    try{
+      var v = localStorage.getItem('su_rc_card_shape') || 'default';
+      if(v && v !== 'default') document.body.classList.add('rc-shape--'+v);
+    }catch(e){}
+  })();
+
+  // 페이지 로드 시 기록 카드 양끝 효과 길이 CSS variable 초기 적용
+  try{
+    var _initLen = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+    if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(_initLen);
+    else {
+      // 함수가 아직 안 정의된 경우 DOMContentLoaded 후 적용
+      document.addEventListener('DOMContentLoaded', function(){
+        try{
+          var n = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+          if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(n);
+        }catch(e){}
+      });
+    }
+  }catch(e){}
 })();

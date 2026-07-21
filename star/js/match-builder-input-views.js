@@ -12,13 +12,19 @@ function indInputHTML(){
   if(pA&&pB){
     const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
     const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
-    if(!BLD['ind']||!BLD['ind'].membersA||!BLD['ind'].membersB||BLD['ind'].membersA[0]?.name!==pA||BLD['ind'].membersB[0]?.name!==pB){
+    // _editCtx가 있으면 수정 모드 — 이미 BLD에 올바른 데이터가 세팅되어 있으므로 리셋하지 않음
+    const _hasEditCtx = !!(BLD['ind'] && BLD['ind']._editCtx);
+    if(!_hasEditCtx && (!BLD['ind']||!BLD['ind'].membersA||!BLD['ind'].membersB||BLD['ind'].membersA[0]?.name!==pA||BLD['ind'].membersB[0]?.name!==pB)){
       BLD['ind']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[]};
-    } else {
+    } else if(!_hasEditCtx) {
       if(gi.date&&BLD['ind'].date!==gi.date)BLD['ind'].date=gi.date;
       if(!gi.date&&!BLD['ind'].date)BLD['ind'].date=today;
+    } else {
+      // 수정 모드: 날짜만 동기화
+      if(gi.date&&BLD['ind']&&BLD['ind'].date!==gi.date)BLD['ind'].date=gi.date;
     }
-  } else {
+  } else if(!(BLD['ind'] && BLD['ind']._editCtx)) {
+    // 수정 모드가 아닌 경우에만 null 처리
     BLD['ind']=null;
   }
   const actionBar = _mbActionBar([
@@ -27,24 +33,24 @@ function indInputHTML(){
   ], '');
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:700">날짜</label>
-        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
+        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
       </div>
       <div class="mb-split">
         <div>
-          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_indInput.playerB='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerB='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
       </div>
@@ -100,10 +106,28 @@ function gjInputHTML(){
   if(pA&&pB){
     const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
     const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
-    if(!BLD['gj'] || !BLD['gj'].membersA || !BLD['gj'].membersB || BLD['gj'].membersA[0]?.name!==pA || BLD['gj'].membersB[0]?.name!==pB){
-      BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:!!_gjProMode};
+    // ✅ 수정: _proLabel은 _gjProMode가 아닌 curTab 기준으로 결정
+    // _gjProMode는 rGJ 호출 순서/타이밍에 따라 오염될 수 있어 신뢰하지 않음
+    const _curIsProMode = (typeof curTab!=='undefined') ? curTab==='pro' : !!_gjProMode;
+    // ✅ 수정: 아래 조건 중 하나라도 해당하면 BLD['gj']를 새로 생성
+    //   1) BLD['gj']가 없거나 선수가 다른 경우 (기존)
+    //   2) _editCtx가 남아있는 경우 — openGJSessionEdit 후 탭 이동 시 오염된 수정 컨텍스트 제거
+    //   3) _proLabel이 현재 탭 모드와 다른 경우 — 프로탭→개인전탭 이동 시 잔류 proLabel 제거
+    const _bldGj = BLD['gj'];
+    // ✅ 수정: _editCtx가 있으면 수정 모드 — BLD를 절대 리셋하지 않음
+    //   - openGJSessionEdit로 설정된 수정 컨텍스트(_editCtx)가 있을 때 리셋하면 수정 데이터가 날아가는 버그
+    //   - _editCtx가 있으면 이미 올바른 데이터가 세팅된 상태이므로 리셋하지 않음
+    //   - _proLabel 불일치 조건도 _editCtx가 있을 때는 무시해야 함
+    const _hasEditCtxGj = !!(_bldGj && _bldGj._editCtx);
+    const _needsReset = !_hasEditCtxGj && (
+      !_bldGj
+      || !_bldGj.membersA || !_bldGj.membersB
+      || _bldGj.membersA[0]?.name !== pA || _bldGj.membersB[0]?.name !== pB
+      || !!_bldGj._proLabel !== _curIsProMode // proLabel 불일치 시 새로 생성 (수정 모드 아닐 때만)
+    );
+    if(_needsReset){
+      BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:_curIsProMode};
     } else {
-      if(BLD['gj']._proLabel!==!!_gjProMode) BLD['gj']._proLabel=!!_gjProMode;
       if(gi.date && BLD['gj'].date!==gi.date) BLD['gj'].date=gi.date;
       if(!gi.date && !BLD['gj'].date) BLD['gj'].date=today;
     }
@@ -116,27 +140,27 @@ function gjInputHTML(){
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-size:12px;font-weight:700">날짜</label>
-          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
+          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
         </div>
       </div>
       <div class="mb-split">
         <div>
-          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_gjInput.playerB='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerB='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
       </div>
@@ -157,10 +181,11 @@ function gjDirectSave(){
   try{
     if(typeof curTab!=='undefined'){
       if(curTab==='pro'){
-        // 프로리그 탭 > 프로 끝장전 하위탭
-        if(typeof _mergedProSub==='undefined' || _mergedProSub==='gj') _proMode = true;
+        // 프로리그 탭이면 항상 프로 끝장전으로 저장
+        // (_mergedProSub 값에 관계없이 프로탭에서 입력한 끝장전은 프로 끝장전임)
+        _proMode = true;
       }else if(curTab==='ind' || curTab==='gj'){
-        // 개인전/끝장전 탭
+        // 개인전/끝장전 탭이면 항상 일반 끝장전으로 저장
         _proMode = false;
       }
     }
@@ -185,13 +210,8 @@ function gjDirectSave(){
   _gjInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
   save();
   gjSub='records';
-  if(_proMode){
-    try{ curTab='pro'; }catch(e){}
-    try{ _mergedProSub='gj'; }catch(e){}
-  }else{
-    try{ curTab='ind'; }catch(e){}
-    try{ _mergedIndSub='gj'; }catch(e){}
-  }
+  // ✅ 수정: 저장 후 탭 이동 제거 - 현재 탭(개인전/프로리그) 그대로 유지
+  // saveMatch('gj')와 달리 gjDirectSave는 간이 입력 경로로, 현재 위치를 바꾸지 않음
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   render();
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}

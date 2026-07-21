@@ -126,8 +126,9 @@
         <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
       </div>
       <div class="share-player-top" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
-        <div class="share-player-photo-wrap" style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <div class="share-player-photo-wrap ${(photoUrl && p.secondProfileFile)?'ph-swap':''}" style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
           ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${photoPos?`object-position:${photoPos};`:''}" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
+          ${(photoUrl && p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : ''}
         </div>
         <div class="share-player-main" style="min-width:0">
           <div class="share-player-name" style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.08;white-space:normal;word-break:keep-all;text-shadow:0 2px 8px rgba(0,0,0,.35)">${p.name}${getStatusIconHTML(p.name)}</div>

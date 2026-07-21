@@ -76,11 +76,36 @@
   function _inferScoreMode(matchObj, sets){
     const sm = String(matchObj?.scoreMode || '').trim();
     if(sm==='set' || sm==='game') return sm;
-    let setWins = 0;
+
+    // (수정) scoreMode가 저장되지 않은 과거 기록은, 경기 기록 상세 팝업이
+    // 그대로 보여주는 "원본 sa/sb"를 기준으로 방식을 역산한다.
+    // - 세트별 winner 필드는 저장 시 동점 세트를 'A'로 강제 처리하는 경우가 있어
+    //   신뢰할 수 없으므로 사용하지 않는다.
+    // - 대신 원본 sa+sb 합이 "전체 게임수 합"과 "승부가 갈린 세트수" 중
+    //   어느 쪽에 더 가까운지로 판단한다.
+    const origSa = Number(matchObj?.sa);
+    const origSb = Number(matchObj?.sb);
+    const hasOrig = !isNaN(origSa) && !isNaN(origSb) && (origSa + origSb) > 0;
+
+    let gameTotal = 0, decidedSetTotal = 0;
     (sets||[]).forEach(s=>{
-      if(s && (s.winner==='A' || s.winner==='B')) setWins += 1;
+      if(!s) return;
+      const games = Array.isArray(s.games) ? s.games : [];
+      const gA = (s.scoreA!=null) ? (Number(s.scoreA)||0) : games.filter(g=>g && g.winner==='A').length;
+      const gB = (s.scoreB!=null) ? (Number(s.scoreB)||0) : games.filter(g=>g && g.winner==='B').length;
+      gameTotal += gA + gB;
+      if(gA !== gB) decidedSetTotal += 1;
     });
-    return setWins >= 2 ? 'set' : 'game';
+
+    if(hasOrig){
+      const origTotal = origSa + origSb;
+      const gameDiff = Math.abs(origTotal - gameTotal);
+      const setDiff = Math.abs(origTotal - decidedSetTotal);
+      if(gameDiff !== setDiff) return gameDiff < setDiff ? 'game' : 'set';
+    }
+
+    // 원본 점수 정보가 없을 때만 기존 방식(승부가 갈린 세트 2개 이상이면 세트제)으로 추정
+    return decidedSetTotal >= 2 ? 'set' : 'game';
   }
 
   function _calcScoreFromSets(sets, scoreMode){
@@ -88,8 +113,12 @@
     (sets||[]).forEach(s=>{
       if(!s) return;
       if(scoreMode==='set'){
-        if(s.winner==='A') sa += 1;
-        else if(s.winner==='B') sb += 1;
+        const games = Array.isArray(s.games) ? s.games : [];
+        const gA = (s.scoreA!=null) ? (Number(s.scoreA)||0) : games.filter(g=>g && g.winner==='A').length;
+        const gB = (s.scoreB!=null) ? (Number(s.scoreB)||0) : games.filter(g=>g && g.winner==='B').length;
+        if(gA>gB) sa += 1;
+        else if(gB>gA) sb += 1;
+        // 동점 세트는 승패 계산에서 제외 (무승부 세트)
       }else{
         sa += Number(s.scoreA)||0;
         sb += Number(s.scoreB)||0;
