@@ -54,7 +54,9 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-toggle-pill.on{border-color:rgba(37,99,235,.24);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8;box-shadow:0 12px 22px rgba(37,99,235,.10)}',
     '.tier-toggle-pill.on::after{content:"ON";background:rgba(37,99,235,.14);color:#1d4ed8}',
     '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
-    '.tier-view-btn{padding:6px 9px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:var(--fs-base);cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.tier-view-btn{padding:6px 9px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:var(--fs-base);cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}',
+    '.tier-view-btn-icon{line-height:1}',
+    '.tier-view-btn-label{font-size:11px;font-weight:800;letter-spacing:-.01em}',
     '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
     '.tier-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;color:#fff;font-weight:900;letter-spacing:-.01em;box-shadow:0 10px 18px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.28)}',
     '.tier-univ-badge img{box-shadow:0 4px 10px rgba(15,23,42,.16);background:rgba(255,255,255,.82);padding:1px}',
@@ -75,11 +77,6 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-rank-chip.gold{background:linear-gradient(180deg,#fef3c7,#fbbf24);border-color:#f59e0b;color:#78350f}',
     '.tier-rank-chip.silver{background:linear-gradient(180deg,#f8fafc,#cbd5e1);border-color:#94a3b8;color:#334155}',
     '.tier-rank-chip.bronze{background:linear-gradient(180deg,#fed7aa,#fb923c);border-color:#ea580c;color:#7c2d12}',
-    '.tier-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--su-tier-card-gap,26px);padding:10px 2px}',
-    '.tier-card-group{margin-bottom:20px}',
-    '.tier-card-group-head{display:flex;align-items:center;gap:8px;padding:8px 4px 10px}',
-    '.tier-card-group-range{font-size:var(--fs-sm);font-weight:950;color:var(--text2);letter-spacing:-.01em}',
-    '.tier-card-group-count{font-size:10px;font-weight:800;color:var(--text3);background:rgba(148,163,184,.14);padding:2px 8px;border-radius:999px}',
     '.tier-rank-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1.5px solid rgba(148,163,184,.18);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;transition:box-shadow .15s,transform .15s;position:relative;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
     '.tier-rank-card:hover{box-shadow:0 18px 30px rgba(15,23,42,.08);transform:translateY(-2px)}',
     '.tier-rank-card.top1,.tier-rank-card.top2,.tier-rank-card.top3{box-shadow:0 16px 30px rgba(15,23,42,.07);border-color:rgba(148,163,184,.22)}',
@@ -182,8 +179,43 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-group-name{font-weight:900;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-group-pills{display:flex;gap:3px;flex-wrap:wrap;align-items:center}',
     '.tier-group-wr{font-size:10px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4)}',
-    'body.dark .tier-card-group-range{color:#e2e8f0}',
-    'body.dark .tier-card-group-count{color:#94a3b8;background:rgba(148,163,184,.12)}',
+    /* ── 매거진/룩북 모드 ── */
+    '.tier-mag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;padding:10px 2px}',
+    '.tier-mag-card{position:relative;aspect-ratio:.72;border-radius:22px;overflow:hidden;cursor:pointer;background:#0b1120;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 30px rgba(15,23,42,.12);isolation:isolate;transition:box-shadow .2s ease}',
+    '.tier-mag-card:hover{box-shadow:0 20px 40px rgba(15,23,42,.2)}',
+    '.tier-mag-card.is-selected{outline:2px solid rgba(255,255,255,.3);outline-offset:2px}',
+    '.tier-mag-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}',
+    '.tier-mag-card:hover .tier-mag-photo{transform:scale(1.045)}',
+    '.tier-mag-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#fff;z-index:0}',
+    '.tier-mag-rank{position:absolute;top:10px;left:10px;z-index:3;font-size:10px;font-weight:900;color:#fff;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);padding:3px 9px;border-radius:999px;letter-spacing:-.01em}',
+    '.tier-mag-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(6,10,24,.68) 58%,rgba(3,6,18,.92) 100%)}',
+    '.tier-mag-panel{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.2,.8,.2,1);padding:0 14px}',
+    '.tier-mag-card:hover .tier-mag-panel{max-height:170px;padding:10px 14px 2px}',
+    '.tier-mag-panel-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;color:rgba(255,255,255,.92);padding:3px 0}',
+    '.tier-mag-panel-label{color:rgba(255,255,255,.6);font-weight:700}',
+    '.tier-mag-baseline{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 13px}',
+    '.tier-mag-name{font-size:15px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}',
+    '.tier-mag-baseline-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
+    '.tier-mag-tier-chip{font-size:9px;font-weight:900;padding:2px 7px;border-radius:999px;color:#fff;white-space:nowrap}',
+    '.tier-mag-wr-chip{font-size:11px;font-weight:900;color:#fff;background:rgba(15,23,42,.42);backdrop-filter:blur(4px);padding:3px 8px;border-radius:999px;white-space:nowrap}',
+    /* ── 트레이딩카드 모드 ── */
+    '.tier-tc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px;padding:10px 2px}',
+    '.tier-tc-card{position:relative;display:flex;flex-direction:column;border-radius:18px;overflow:hidden;cursor:pointer;background:#0b1120;box-shadow:0 14px 28px rgba(15,23,42,.12);transition:transform .2s ease,box-shadow .2s ease}',
+    '.tier-tc-card:hover{transform:translateY(-3px);box-shadow:0 20px 36px rgba(15,23,42,.18)}',
+    '.tier-tc-card.is-selected{outline:2px solid rgba(255,255,255,.3);outline-offset:2px}',
+    '.tier-tc-photo-wrap{position:relative;aspect-ratio:.82;overflow:hidden;flex-shrink:0}',
+    '.tier-tc-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
+    '.tier-tc-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#fff}',
+    '.tier-tc-rank{position:absolute;top:7px;left:7px;z-index:2;font-size:10px;font-weight:900;color:#fff;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);padding:2px 8px;border-radius:999px}',
+    '.tier-tc-tierbadge{position:absolute;top:7px;right:7px;z-index:2;font-size:10px;font-weight:950;padding:3px 9px;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.25)}',
+    '.tier-tc-photo-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 60%,rgba(3,6,18,.55) 100%);pointer-events:none}',
+    '.tier-tc-namebar{position:relative;padding:8px 10px;display:flex;align-items:center;gap:6px;min-width:0}',
+    '.tier-tc-name{font-size:13px;font-weight:900;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}',
+    '.tier-tc-stats{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:1px}',
+    '.tier-tc-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;background:rgba(255,255,255,.03)}',
+    '.tier-tc-stat-icon{font-size:13px;line-height:1}',
+    '.tier-tc-stat-value{font-size:12px;font-weight:900;color:#fff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-tc-stat-label{font-size:8px;font-weight:800;color:rgba(255,255,255,.5);letter-spacing:.03em;text-transform:uppercase}',
     'body.dark .tier-hero{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-hero-title{color:#f8fafc}',
@@ -244,9 +276,11 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
     'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
     'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
-    '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{display:none}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--su-tier-card-gap,18px);padding:8px 0}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}}',
+    'body.dark .tier-mag-card,body.dark .tier-tc-card{box-shadow:0 16px 32px rgba(0,0,0,.3)}',
+    'body.dark .tier-mag-card.is-selected,body.dark .tier-tc-card.is-selected{outline-color:rgba(148,163,184,.4)}',
+    '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{display:none}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-view-btn-label{display:none}.tier-view-btn{padding:7px}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.tier-tc-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}}',
     /* 초소형 폰(400px 이하) 추가 대응: 카드/그룹 그리드 여백을 더 좁혀 2열이 빠듯하게라도 들어가도록 */
-    '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}}',
+    '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}.tier-tc-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px}}',
     /* 포디움 모드 모바일: 1등을 가운데(은-금-동 순)로 배치, 한 줄(3열)에 나란히, 박스 크기를 모바일 브라우저에 맞게 축소 */
     '@media (max-width:768px){',
       '.tier-podium-stage{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px !important;max-width:100% !important;width:100%;align-items:end !important;padding:0 2px}',
@@ -509,32 +543,33 @@ function rTier(C,T){
     window._tierHideNoRecord, window._tierExcludeMale,
     _hasTypeFilter
   ].filter(Boolean).length;
-  const _viewModeLabels={table:'테이블',card:'카드',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹'};
+  const _viewModeLabels={table:'테이블',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹',magazine:'매거진',tradingcard:'트레이딩카드'};
   if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
   const _viewLabel=_viewModeLabels[window._tierViewMode||'table']||'테이블';
 
-  // ── 1행: 필터(좌측) + 보기 모드 + (우측) 티어표 ──
+  // ── 1행: 보기 모드(좌측) + 필터/정렬 pills(우측) ──
   let fh=`<div class="tier-toolbar-card"><div class="tier-filter-shell"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+  // ── 뷰 전환 버튼 (좌측) ──
+  const _viewModes=[
+    {id:'table',      icon:'📋', title:'테이블'},
+    {id:'magazine',   icon:'📷', title:'매거진/룩북'},
+    {id:'podium',     icon:'🏆', title:'포디움'},
+    {id:'compact',    icon:'📝', title:'컴팩트'},
+    {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
+    {id:'tradingcard',icon:'🎴', title:'트레이딩카드'},
+  ];
+  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
+  fh+=`<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap">`;
+  _viewModes.forEach(vm=>{
+    const on=window._tierViewMode===vm.id;
+    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
+  });
+  fh+=`</div>`;
   fh+=`<div class="fbar" style="flex:1 1 420px;min-width:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
-  });
-  fh+=`</div>`;
-  // ── 뷰 전환 버튼 (우측) ──
-  const _viewModes=[
-    {id:'table',      icon:'📋', title:'테이블'},
-    {id:'card',       icon:'🃏', title:'카드그리드'},
-    {id:'podium',     icon:'🏆', title:'포디움'},
-    {id:'compact',    icon:'📝', title:'컴팩트'},
-    {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
-  ];
-  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
-  fh+=`<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">`;
-  _viewModes.forEach(vm=>{
-    const on=window._tierViewMode===vm.id;
-    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()">${vm.icon}</button>`;
   });
   fh+=`</div>`;
   fh+=`</div>`;
@@ -1206,74 +1241,7 @@ function rTier(C,T){
   }
 
   // ════════════════════════════════════════════
-  // 뷰2: CARD GRID (카드 그리드)
-  // ════════════════════════════════════════════
-  else if(_vm==='card'){
-  const _cardGroupSize=12;
-  h=`<div class="tier-content-card">`;
-  for(let _cgStart=0; _cgStart<list.length; _cgStart+=_cardGroupSize){
-    const _cgList=list.slice(_cgStart,_cgStart+_cardGroupSize);
-    const _cgFrom=_cgStart+1, _cgTo=_cgStart+_cgList.length;
-    h+=`<div class="tier-card-group">
-      <div class="tier-card-group-head"><span class="tier-card-group-range">${_cgFrom}–${_cgTo}위</span><span class="tier-card-group-count">${_cgList.length}명</span></div>
-      <div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'190px')},1fr));gap:var(--su-tier-card-gap,${_isNarrow?'10px':(_isMb?'18px':'26px')})">`;
-  _cgList.forEach((p,_cgi)=>{
-    const i=_cgStart+_cgi;
-    const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
-    const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-    const univIconHTML=_getUnivIconHTML(p);
-    const extraVal=_getExtraVal(p);
-    const metricLabel=_typeSum!==null?'유형 합계':(modeHeaders[tierRankMode]||'포인트');
-    const elo=(p.elo||ELO_DEFAULT);
-    const photoMap=(window.playerPhotos&&typeof window.playerPhotos==='object')?window.playerPhotos:{};
-    const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():String(photoMap[p.name]||'').trim();
-    const _posUse=(p.photoPosUse!==false);
-    const _posX=Number(p.photoPosX), _posY=Number(p.photoPosY);
-    const photoPos=(_posUse && Number.isFinite(_posX) && Number.isFinite(_posY)) ? `${_posX}% ${_posY}%` : 'top center';
-    h+=`<div class="streamer-gallery-card ${i===0?'top1':i===1?'top2':i===2?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''} ${_isTpPlayerSelected(p.name)?'is-selected':''} ${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim())?'ph-swap':''}" data-tp-action="open-player" data-tp-player="${_pAttr}"
-      style="--card-accent:${col};--selected-accent:${col};background:#0b1120;border-color:rgba(255,255,255,.14);backdrop-filter:blur(1px)"
-      onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
-      ${photoSrcRaw
-        ? `<img loading="lazy" src="${toScaledUrl(photoSrcRaw,280)}" data-orig="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'}">`
-        : ''}
-      ${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim()&&typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile,{style:`object-position:${photoPos}`}) : ''}
-      <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${col};background:linear-gradient(160deg,${col}2a 0%,${col}0e 100%)">${p.race||'?'}</div>
-      ${photoSrcRaw ? '' : '<div class="streamer-gallery-overlay"></div>'}
-      <div class="streamer-gallery-bottom streamer-gallery-bottom--compact">
-        <div class="streamer-gallery-topline">
-          <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
-          ${getStatusIconHTML(p.name)}
-        </div>
-        <div class="streamer-gallery-brief">
-          ${p.role ? `<span class="sg-pill">${p.role}</span>` : ''}
-          <span class="sg-pill">${p.tier||'?'}티어</span>
-          <span class="sg-pill">${p.race||'?'}</span>
-          <span class="sg-pill">${p.univ || '무소속'}</span>
-          ${p.inactive?'<span class="sg-pill" style="background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.26)">휴학</span>':''}
-          ${p.retired?'<span class="sg-pill" style="background:rgba(148,163,184,.18);border-color:rgba(148,163,184,.26)">은퇴</span>':''}
-        </div>
-        <div class="streamer-gallery-metrics">
-          <span class="sg-metric">전적 ${tot ? `${rec.w}-${rec.l}` : '-'}</span>
-          <span class="sg-dot">·</span>
-          <span class="sg-metric">${metricLabel} ${extraVal || '-'}</span>
-          <span class="sg-dot">·</span>
-          <span class="sg-metric">ELO ${elo}</span>
-          <span class="sg-dot">·</span>
-          <span class="sg-metric" style="color:${tot===0?'rgba(255,255,255,.82)':wr>=50?'#86efac':'#fecaca'}">${tot?wr+'%':'-'}</span>
-        </div>
-      </div>
-    </div>`;
-  });
-  h+=`</div></div>`;
-  }
-  h+=`</div>`;
-  }
-
-  // ════════════════════════════════════════════
-  // 뷰3: PODIUM (포디움 + 나머지 리스트)
+  // 뷰2: PODIUM (포디움 + 나머지 리스트)
   // ════════════════════════════════════════════
   else if(_vm==='podium'){
   const top1=list[0]||null, top2=list[1]||null, top3=list[2]||null;
@@ -1383,7 +1351,7 @@ function rTier(C,T){
   }
 
   // ════════════════════════════════════════════
-  // 뷰4: COMPACT (초밀도 리스트)
+  // 뷰3: COMPACT (초밀도 리스트)
   // ════════════════════════════════════════════
   else if(_vm==='compact'){
   h=`<div class="tier-content-card"><div class="tier-compact-list">
@@ -1438,7 +1406,7 @@ function rTier(C,T){
   }
 
   // ════════════════════════════════════════════
-  // 뷰5: TIER-GROUP (티어별 그룹)
+  // 뷰4: TIER-GROUP (티어별 그룹)
   // ════════════════════════════════════════════
   else if(_vm==='tier-group'){
   const _tierGroups={};
@@ -1486,6 +1454,88 @@ function rTier(C,T){
     });
     h+=`</div></div>`;
   });
+  }
+
+  // ════════════════════════════════════════════
+  // 뷰5: MAGAZINE (매거진/룩북 스타일)
+  // ════════════════════════════════════════════
+  else if(_vm==='magazine'){
+  h=`<div class="tier-content-card"><div class="tier-mag-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'220px')},1fr));gap:${_isNarrow?'8px':(_isMb?'12px':'20px')}">`;
+  list.forEach((p,i)=>{
+    const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
+    const _pAttr=(typeof escAttr==='function')
+      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
+      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
+    const _photoUrl = _photoRaw ? (typeof toScaledUrl==='function'?toScaledUrl(_photoRaw,320):_photoRaw) : '';
+    const _initial = String(p.name||'-').trim().slice(0,1);
+    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
+    const _hasPhoto = !!_photoUrl;
+    const extraVal=_getExtraVal(p);
+    h+=`<div class="tier-mag-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
+      ${_hasPhoto?`<img class="tier-mag-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+      ${_2ndImg}
+      <div class="tier-mag-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
+      <span class="tier-mag-rank">${i+1}위</span>
+      <div class="tier-mag-bottom">
+        <div class="tier-mag-panel">
+          <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">대학</span><span>${p.univ||'무소속'}</span></div>
+          <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">전적</span><span>${tot?`${rec.w}W ${rec.l}L`:'기록 없음'}</span></div>
+          <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">${extraHeader}</span><span>${extraVal||'-'}</span></div>
+        </div>
+        <div class="tier-mag-baseline">
+          <span class="tier-mag-name">${p.name}${genderIcon(p.gender)}</span>
+          <span class="tier-mag-baseline-right">
+            <span class="tier-mag-tier-chip" style="background:${col}">${p.tier||'?'}</span>
+            <span class="tier-mag-wr-chip">${tot?wr+'%':'-'}</span>
+          </span>
+        </div>
+      </div>
+    </div>`;
+  });
+  h+=`</div></div>`;
+  }
+
+  // ════════════════════════════════════════════
+  // 뷰6: TRADING CARD (트레이딩카드/게임카드 스타일)
+  // ════════════════════════════════════════════
+  else if(_vm==='tradingcard'){
+  h=`<div class="tier-content-card"><div class="tier-tc-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'118px':(_isMb?'140px':'176px')},1fr));gap:${_isNarrow?'7px':(_isMb?'10px':'16px')}">`;
+  list.forEach((p,i)=>{
+    const rec=_tierWL(p); const univCol=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
+    const tierCol=(typeof getTierBtnColor==='function'?(getTierBtnColor(p.tier)||'#64748b'):'#64748b');
+    const tierTxt=(typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(p.tier)||'#fff'):'#fff');
+    const _pAttr=(typeof escAttr==='function')
+      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
+      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
+    const _photoUrl = _photoRaw ? (typeof toScaledUrl==='function'?toScaledUrl(_photoRaw,260):_photoRaw) : '';
+    const _initial = String(p.name||'-').trim().slice(0,1);
+    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
+    const _hasPhoto = !!_photoUrl;
+    const elo=(p.elo||ELO_DEFAULT);
+    h+=`<div class="tier-tc-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${univCol};border:3px solid ${univCol};background:linear-gradient(180deg,${univCol}26,#0b1120 60%)">
+      <div class="tier-tc-photo-wrap">
+        ${_hasPhoto?`<img class="tier-tc-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+        ${_2ndImg}
+        <div class="tier-tc-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${univCol}">${_initial}</div>
+        <div class="tier-tc-photo-scrim"></div>
+        <span class="tier-tc-rank">${i+1}위</span>
+        <span class="tier-tc-tierbadge" style="background:${tierCol};color:${tierTxt}">${p.tier||'?'}</span>
+      </div>
+      <div class="tier-tc-namebar">
+        <span class="rbadge r${p.race}" style="font-size:9px;flex-shrink:0">${p.race||'?'}</span>
+        <span class="tier-tc-name">${p.name}${genderIcon(p.gender)}</span>
+      </div>
+      <div class="tier-tc-stats">
+        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">⚔️</span><span class="tier-tc-stat-value">${rec.w}-${rec.l}</span><span class="tier-tc-stat-label">전적</span></div>
+        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">📊</span><span class="tier-tc-stat-value" style="color:${tot===0?'rgba(255,255,255,.6)':wr>=50?'#86efac':'#fecaca'}">${tot?wr+'%':'-'}</span><span class="tier-tc-stat-label">승률</span></div>
+        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">⚡</span><span class="tier-tc-stat-value">${elo}</span><span class="tier-tc-stat-label">ELO</span></div>
+        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">🎓</span><span class="tier-tc-stat-value" style="font-size:10px">${p.univ||'무소속'}</span><span class="tier-tc-stat-label">대학</span></div>
+      </div>
+    </div>`;
+  });
+  h+=`</div></div>`;
   }
 
   C.innerHTML=`<div class="tier-shell">
