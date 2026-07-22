@@ -215,20 +215,20 @@ window._cfgB2RenderSwapDelay = function(playerName){
       { slot:2, url:String(p.secondProfileFile||'').trim() },
       { slot:3, url:String(p.profileFile3||'').trim() },
       { slot:4, url:String(p.profileFile4||'').trim() },
-      { slot:5, url:String(p.profileFile5||'').trim() }
+      { slot:5, url:String(p.profileFile5||'').trim() },
+      { slot:6, url:String(p.profileFile6||'').trim() },
+      { slot:7, url:String(p.profileFile7||'').trim() },
+      { slot:8, url:String(p.profileFile8||'').trim() },
+      { slot:9, url:String(p.profileFile9||'').trim() },
+      { slot:10, url:String(p.profileFile10||'').trim() }
     ].filter(item=>!!item.url);
+    const _delayKeyLegacy = {
+      '1_2':'photoDelay12','2_1':'photoDelay21','2_3':'photoDelay23','3_1':'photoDelay31',
+      '3_4':'photoDelay34','4_1':'photoDelay41','4_5':'photoDelay45','5_1':'photoDelay51'
+    };
     const delayKey = (from, to)=>{
-      if(to === 1){
-        if(from === 2) return 'photoDelay21';
-        if(from === 3) return 'photoDelay31';
-        if(from === 4) return 'photoDelay41';
-        return 'photoDelay51';
-      }
-      if(from === 1) return 'photoDelay12';
-      if(from === 2) return 'photoDelay23';
-      if(from === 3) return 'photoDelay34';
-      if(from === 4) return 'photoDelay45';
-      return '';
+      const k = `${from}_${to}`;
+      return _delayKeyLegacy[k] || `photoDelay${k}`;
     };
     const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const inputsHtml = slotOrder.length < 2

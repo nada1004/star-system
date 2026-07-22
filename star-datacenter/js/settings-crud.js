@@ -90,28 +90,46 @@ window.openEP=function(name){
   const _p3X = _pct(p.photo3PosX, 50),        _p3Y = _pct(p.photo3PosY, 50),        _p3Use = _use(p.photo3PosUse);
   const _p4X = _pct(p.photo4PosX, 50),        _p4Y = _pct(p.photo4PosY, 50),        _p4Use = _use(p.photo4PosUse);
   const _p5X = _pct(p.photo5PosX, 50),        _p5Y = _pct(p.photo5PosY, 50),        _p5Use = _use(p.photo5PosUse);
+  const _p6X = _pct(p.photo6PosX, 50),        _p6Y = _pct(p.photo6PosY, 50),        _p6Use = _use(p.photo6PosUse);
+  const _p7X = _pct(p.photo7PosX, 50),        _p7Y = _pct(p.photo7PosY, 50),        _p7Use = _use(p.photo7PosUse);
+  const _p8X = _pct(p.photo8PosX, 50),        _p8Y = _pct(p.photo8PosY, 50),        _p8Use = _use(p.photo8PosUse);
+  const _p9X = _pct(p.photo9PosX, 50),        _p9Y = _pct(p.photo9PosY, 50),        _p9Use = _use(p.photo9PosUse);
+  const _p10X = _pct(p.photo10PosX, 50),      _p10Y = _pct(p.photo10PosY, 50),      _p10Use = _use(p.photo10PosUse);
   const _scX = _pct(p.shareCardPhotoPosX, 50), _scY = _pct(p.shareCardPhotoPosY, 22), _scUse = _use(p.shareCardPhotoPosUse);
   const _d12 = _dly(p.photoDelay12), _d21 = _dly(p.photoDelay21 ?? p.photoDelay51), _d23 = _dly(p.photoDelay23), _d31 = _dly(p.photoDelay31 ?? p.photoDelay51), _d34 = _dly(p.photoDelay34), _d41 = _dly(p.photoDelay41 ?? p.photoDelay51), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
+  // 프로필 사진 2~10 위치 보정값 묶음 (탭 렌더링용)
+  const _photoPosData = [
+    { n:2,  url:String(p.secondProfileFile||'').trim(), x:_p2X,  y:_p2Y,  use:_p2Use  },
+    { n:3,  url:String(p.profileFile3||'').trim(),      x:_p3X,  y:_p3Y,  use:_p3Use  },
+    { n:4,  url:String(p.profileFile4||'').trim(),      x:_p4X,  y:_p4Y,  use:_p4Use  },
+    { n:5,  url:String(p.profileFile5||'').trim(),      x:_p5X,  y:_p5Y,  use:_p5Use  },
+    { n:6,  url:String(p.profileFile6||'').trim(),      x:_p6X,  y:_p6Y,  use:_p6Use  },
+    { n:7,  url:String(p.profileFile7||'').trim(),      x:_p7X,  y:_p7Y,  use:_p7Use  },
+    { n:8,  url:String(p.profileFile8||'').trim(),      x:_p8X,  y:_p8Y,  use:_p8Use  },
+    { n:9,  url:String(p.profileFile9||'').trim(),      x:_p9X,  y:_p9Y,  use:_p9Use  },
+    { n:10, url:String(p.profileFile10||'').trim(),     x:_p10X, y:_p10Y, use:_p10Use }
+  ];
   const _slotOrder = [
     { slot:1, url:String(p.photo||'').trim() },
     { slot:2, url:String(p.secondProfileFile||'').trim() },
     { slot:3, url:String(p.profileFile3||'').trim() },
     { slot:4, url:String(p.profileFile4||'').trim() },
-    { slot:5, url:String(p.profileFile5||'').trim() }
+    { slot:5, url:String(p.profileFile5||'').trim() },
+    { slot:6, url:String(p.profileFile6||'').trim() },
+    { slot:7, url:String(p.profileFile7||'').trim() },
+    { slot:8, url:String(p.profileFile8||'').trim() },
+    { slot:9, url:String(p.profileFile9||'').trim() },
+    { slot:10, url:String(p.profileFile10||'').trim() }
   ].filter(item=>!!item.url);
-  const _delayKey = (from, to)=>{
-    if(to === 1){
-      if(from === 2) return 'photoDelay21';
-      if(from === 3) return 'photoDelay31';
-      if(from === 4) return 'photoDelay41';
-      return 'photoDelay51';
-    }
-    if(from === 1) return 'photoDelay12';
-    if(from === 2) return 'photoDelay23';
-    if(from === 3) return 'photoDelay34';
-    if(from === 4) return 'photoDelay45';
-    return '';
+  const _delayKeyLegacy = {
+    '1_2':'photoDelay12','2_1':'photoDelay21','2_3':'photoDelay23','3_1':'photoDelay31',
+    '3_4':'photoDelay34','4_1':'photoDelay41','4_5':'photoDelay45','5_1':'photoDelay51'
   };
+  const _delayKey = (from, to)=>{
+    const k = `${from}_${to}`;
+    return _delayKeyLegacy[k] || `photoDelay${k}`;
+  };
+  const _photo6to10AnyFilled = _photoPosData.slice(4).some(item=>!!item.url);
   const _delayValue = (key)=>{
     const n = parseFloat(p?.[key] ?? 1);
     if(isNaN(n)) return 1;
@@ -136,8 +154,7 @@ window.openEP=function(name){
     }catch(e){ return def; }
   };
   const _epCycleCollapsed = _epCollapsed('cycle', true);
-  const _epP2Collapsed = _epCollapsed('p2', true);
-  const _epP345Collapsed = _epCollapsed('p345', true);
+  const _epPosTabCollapsed = _epCollapsed('postab', true);
   const _epHeaderCollapsed = _epCollapsed('header', true);
   const _epCardCollapsed = _epCollapsed('card', true);
   const _epShareBgCollapsed = _epCollapsed('sharebg', true);
@@ -229,7 +246,7 @@ window.openEP=function(name){
     <div id="ep-cycle-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2)">순환 이미지 (최대 5장)</div>
+          <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2)">순환 이미지 (최대 10장)</div>
           <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-top:4px">이미지별 탭에서 순서대로 전환됩니다. (전환 시간은 아래에서 설정)</div>
         </div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="cycle" onclick="toggleEditPlayerSection('cycle', this)">${_epCycleCollapsed?'펼치기':'접기'}</button>
@@ -272,6 +289,19 @@ window.openEP=function(name){
             <img id="ed-photo5-preview" src="${p.profileFile5&&!p.profileFile5.startsWith('data:')?toHttpsUrl(p.profileFile5).replace(/\"/g,'&quot;'):''}" style="width:48px;height:48px;object-fit:cover;display:block" onerror="this.style.display='none'">
           </span>
         </div>
+        <div id="ed-photo6to10-more" style="display:${_photo6to10AnyFilled?'flex':'none'};flex-direction:column;gap:6px">
+        ${[6,7,8,9,10].map(n=>{
+          const val = p[n===6?'profileFile6':`profileFile${n}`]||'';
+          return `<div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);min-width:36px">이미지 ${n}</span>
+          <input type="text" id="ed-photo${n}" value="${val}" placeholder="https://... (선택)" style="flex:1" oninput="syncEditPlayerThumbPreview('ed-photo${n}','ed-photo${n}-preview-wrap','ed-photo${n}-preview');edP${n}PosSyncFromInputs(true)">
+          <span id="ed-photo${n}-preview-wrap" title="이미지 ${n} 미리보기" style="position:relative;width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${val&&!val.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="ed-photo${n}-preview" src="${val&&!val.startsWith('data:')?toHttpsUrl(val).replace(/\"/g,'&quot;'):''}" style="width:48px;height:48px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          </span>
+        </div>`;
+        }).join('')}
+        </div>
+        <button type="button" id="ed-photo6to10-toggle" class="btn btn-w btn-xs" style="align-self:flex-start;margin-top:2px" onclick="(function(btn){const box=document.getElementById('ed-photo6to10-more');const show=box.style.display==='none';box.style.display=show?'flex':'none';btn.textContent=show?'사진 6~10 숨기기':'사진 6~10 추가 +';})(this)">${_photo6to10AnyFilled?'사진 6~10 숨기기':'사진 6~10 추가 +'}</button>
       </div>
       <div style="margin-top:10px;padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:var(--r)">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:8px">전환 시간(초)</div>
@@ -281,134 +311,48 @@ window.openEP=function(name){
       </div>
     </div>
 
-    <div id="ep-p2-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+    <div id="ep-p2to10-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2)">프로필 사진 2 — 얼굴 위치 보정</div>
-          <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-top:4px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
+          <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2)">프로필 사진 2~10 — 얼굴 위치 보정</div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-top:4px">아래 번호를 눌러 필요한 사진만 위치를 조정하세요. (초록 점 = URL 등록됨)</div>
         </div>
-        <button type="button" class="btn btn-w btn-xs" data-ep-toggle="p2" onclick="toggleEditPlayerSection('p2', this)">${_epP2Collapsed?'펼치기':'접기'}</button>
+        <button type="button" class="btn btn-w btn-xs" data-ep-toggle="postab" onclick="toggleEditPlayerSection('postab', this)">${_epPosTabCollapsed?'펼치기':'접기'}</button>
       </div>
-      <div id="ep-sec-body-p2" style="display:${_epP2Collapsed?'none':'block'};margin-top:${_epP2Collapsed?'0':'10px'}">
-      <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
-        <input type="checkbox" id="ed-p2pos-use" ${_p2Use?'checked':''} onchange="document.getElementById('ed-p2pos-prev').style.opacity=this.checked?1:.55">
-        이 보정 적용(체크 해제 시 기존 설정 사용)
-      </label>
-      <input type="hidden" id="ed-p2pos-del" value="0">
-      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p2Use?1:.55}">
-        ${p.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(p.secondProfileFile).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p2X}% ${_p2Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
-        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
-        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
-        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
-        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+      <div id="ep-sec-body-postab" style="display:${_epPosTabCollapsed?'none':'block'};margin-top:${_epPosTabCollapsed?'0':'10px'}">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${_photoPosData.map((item,idx)=>`<button type="button" class="btn btn-xs ${idx===0?'btn-b':'btn-w'}" data-pos-tab-btn="${item.n}" onclick="edPosTabSelect(${item.n})" style="position:relative;min-width:34px">${item.n}${item.url?`<span style="position:absolute;top:-3px;right:-3px;width:6px;height:6px;border-radius:999px;background:#22c55e"></span>`:''}</button>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
-        <input type="range" id="ed-p2pos-x" min="0" max="100" step="1" value="${_p2X}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p2X}%</div>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
-        <input type="range" id="ed-p2pos-y" min="0" max="100" step="1" value="${_p2Y}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p2Y}%</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
-        <button type="button" class="btn btn-w btn-xs" onclick="edP2PosCenter()">센터(50/50)</button>
-        <button type="button" class="btn btn-w btn-xs" onclick="edP2PosDelete()">삭제(기본)</button>
-      </div>
-      </div>
-    </div>
-
-    <div id="ep-p345-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2)">프로필 사진 3/4/5 — 얼굴 위치 보정</div>
-          <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-top:4px">프로필 3~5도 필요하면 위치를 저장할 수 있습니다.</div>
-        </div>
-        <button type="button" class="btn btn-w btn-xs" data-ep-toggle="p345" onclick="toggleEditPlayerSection('p345', this)">${_epP345Collapsed?'펼치기':'접기'}</button>
-      </div>
-      <div id="ep-sec-body-p345" style="display:${_epP345Collapsed?'none':'block'};margin-top:${_epP345Collapsed?'0':'10px'}">
-
-      <div style="padding:12px;background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:var(--r)">
-        <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">이미지 3</div>
+      ${_photoPosData.map((item,idx)=>`
+      <div id="ep-postab-body-${item.n}" data-pos-tab-body="${item.n}" style="display:${idx===0?'block':'none'};padding:12px;background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:var(--r)">
+        <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">이미지 ${item.n}</div>
         <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
-          <input type="checkbox" id="ed-p3pos-use" ${_p3Use?'checked':''} onchange="document.getElementById('ed-p3pos-prev').style.opacity=this.checked?1:.55">
-          이 보정 적용
+          <input type="checkbox" id="ed-p${item.n}pos-use" ${item.use?'checked':''} onchange="document.getElementById('ed-p${item.n}pos-prev').style.opacity=this.checked?1:.55">
+          이 보정 적용(체크 해제 시 기존 설정 사용)
         </label>
-        <input type="hidden" id="ed-p3pos-del" value="0">
-        <div id="ed-p3pos-prev" style="position:relative;height:140px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p3Use?1:.55}">
-          ${p.profileFile3?`<img id="ed-p3pos-img" src="${toHttpsUrl(p.profileFile3).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p3X}% ${_p3Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
+        <input type="hidden" id="ed-p${item.n}pos-del" value="0">
+        <div id="ed-p${item.n}pos-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${item.use?1:.55}">
+          ${item.url?`<img id="ed-p${item.n}pos-img" src="${toHttpsUrl(item.url).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${item.x}% ${item.y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
           <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
+          <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+          <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
         </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
-          <input type="range" id="ed-p3pos-x" min="0" max="100" step="1" value="${_p3X}" oninput="edP3PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p3pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p3X}%</div>
+          <input type="range" id="ed-p${item.n}pos-x" min="0" max="100" step="1" value="${item.x}" oninput="edP${item.n}PosSyncFromInputs()" style="width:100%">
+          <div id="ed-p${item.n}pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${item.x}%</div>
         </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
-          <input type="range" id="ed-p3pos-y" min="0" max="100" step="1" value="${_p3Y}" oninput="edP3PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p3pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p3Y}%</div>
+          <input type="range" id="ed-p${item.n}pos-y" min="0" max="100" step="1" value="${item.y}" oninput="edP${item.n}PosSyncFromInputs()" style="width:100%">
+          <div id="ed-p${item.n}pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${item.y}%</div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
-          <button type="button" class="btn btn-w btn-xs" onclick="edP3PosCenter()">센터(50/50)</button>
-          <button type="button" class="btn btn-w btn-xs" onclick="edP3PosDelete()">삭제(기본)</button>
+          <button type="button" class="btn btn-w btn-xs" onclick="edP${item.n}PosCenter()">센터(50/50)</button>
+          <button type="button" class="btn btn-w btn-xs" onclick="edP${item.n}PosDelete()">삭제(기본)</button>
         </div>
-      </div>
-
-      <div style="margin-top:10px;padding:12px;background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:var(--r)">
-        <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">이미지 4</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
-          <input type="checkbox" id="ed-p4pos-use" ${_p4Use?'checked':''} onchange="document.getElementById('ed-p4pos-prev').style.opacity=this.checked?1:.55">
-          이 보정 적용
-        </label>
-        <input type="hidden" id="ed-p4pos-del" value="0">
-        <div id="ed-p4pos-prev" style="position:relative;height:140px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p4Use?1:.55}">
-          ${p.profileFile4?`<img id="ed-p4pos-img" src="${toHttpsUrl(p.profileFile4).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p4X}% ${_p4Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
-          <input type="range" id="ed-p4pos-x" min="0" max="100" step="1" value="${_p4X}" oninput="edP4PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p4pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p4X}%</div>
-        </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
-          <input type="range" id="ed-p4pos-y" min="0" max="100" step="1" value="${_p4Y}" oninput="edP4PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p4pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p4Y}%</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
-          <button type="button" class="btn btn-w btn-xs" onclick="edP4PosCenter()">센터(50/50)</button>
-          <button type="button" class="btn btn-w btn-xs" onclick="edP4PosDelete()">삭제(기본)</button>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;padding:12px;background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:var(--r)">
-        <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">이미지 5</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
-          <input type="checkbox" id="ed-p5pos-use" ${_p5Use?'checked':''} onchange="document.getElementById('ed-p5pos-prev').style.opacity=this.checked?1:.55">
-          이 보정 적용
-        </label>
-        <input type="hidden" id="ed-p5pos-del" value="0">
-        <div id="ed-p5pos-prev" style="position:relative;height:140px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p5Use?1:.55}">
-          ${p.profileFile5?`<img id="ed-p5pos-img" src="${toHttpsUrl(p.profileFile5).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p5X}% ${_p5Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
-          <input type="range" id="ed-p5pos-x" min="0" max="100" step="1" value="${_p5X}" oninput="edP5PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p5pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p5X}%</div>
-        </div>
-        <div style="display:grid;grid-template-columns:76px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
-          <input type="range" id="ed-p5pos-y" min="0" max="100" step="1" value="${_p5Y}" oninput="edP5PosSyncFromInputs()" style="width:100%">
-          <div id="ed-p5pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p5Y}%</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
-          <button type="button" class="btn btn-w btn-xs" onclick="edP5PosCenter()">센터(50/50)</button>
-          <button type="button" class="btn btn-w btn-xs" onclick="edP5PosDelete()">삭제(기본)</button>
-        </div>
-      </div>
+      </div>`).join('')}
       </div>
     </div>
     <div id="ep-header-sec" class="ep-adv-section" style="margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -682,6 +626,11 @@ window.openEP=function(name){
     if(typeof edBindP3PosDrag==='function') edBindP3PosDrag();
     if(typeof edBindP4PosDrag==='function') edBindP4PosDrag();
     if(typeof edBindP5PosDrag==='function') edBindP5PosDrag();
+    if(typeof edBindP6PosDrag==='function') edBindP6PosDrag();
+    if(typeof edBindP7PosDrag==='function') edBindP7PosDrag();
+    if(typeof edBindP8PosDrag==='function') edBindP8PosDrag();
+    if(typeof edBindP9PosDrag==='function') edBindP9PosDrag();
+    if(typeof edBindP10PosDrag==='function') edBindP10PosDrag();
     if(typeof edBindCardPosDrag==='function') edBindCardPosDrag();
     if(typeof edPhbgSyncFromInputs==='function') edPhbgSyncFromInputs();
     if(typeof edBindPhbgDrag==='function') edBindPhbgDrag();
@@ -691,6 +640,11 @@ window.openEP=function(name){
       syncEditPlayerThumbPreview('ed-photo3','ed-photo3-preview-wrap','ed-photo3-preview');
       syncEditPlayerThumbPreview('ed-photo4','ed-photo4-preview-wrap','ed-photo4-preview');
       syncEditPlayerThumbPreview('ed-photo5','ed-photo5-preview-wrap','ed-photo5-preview');
+      syncEditPlayerThumbPreview('ed-photo6','ed-photo6-preview-wrap','ed-photo6-preview');
+      syncEditPlayerThumbPreview('ed-photo7','ed-photo7-preview-wrap','ed-photo7-preview');
+      syncEditPlayerThumbPreview('ed-photo8','ed-photo8-preview-wrap','ed-photo8-preview');
+      syncEditPlayerThumbPreview('ed-photo9','ed-photo9-preview-wrap','ed-photo9-preview');
+      syncEditPlayerThumbPreview('ed-photo10','ed-photo10-preview-wrap','ed-photo10-preview');
     }
     if(typeof bindEditPlayerModalShortcut==='function') bindEditPlayerModalShortcut();
     if(typeof epRenderAliasesList==='function') epRenderAliasesList(name);
@@ -1029,6 +983,11 @@ function savePlayer(){
   p.profileFile3      = _strVal('ed-photo3');
   p.profileFile4      = _strVal('ed-photo4');
   p.profileFile5      = _strVal('ed-photo5');
+  p.profileFile6      = _strVal('ed-photo6');
+  p.profileFile7      = _strVal('ed-photo7');
+  p.profileFile8      = _strVal('ed-photo8');
+  p.profileFile9      = _strVal('ed-photo9');
+  p.profileFile10     = _strVal('ed-photo10');
   p.shareCardPhoto    = _strVal('ed-card-photo');
 
   // 헤더 배경 설정
@@ -1068,6 +1027,11 @@ function savePlayer(){
   _savePhotoPos(p, 'p3pos', 'profileFile3',      'photo3PosX', 'photo3PosY', 'photo3PosUse', 50, 50);
   _savePhotoPos(p, 'p4pos', 'profileFile4',      'photo4PosX', 'photo4PosY', 'photo4PosUse', 50, 50);
   _savePhotoPos(p, 'p5pos', 'profileFile5',      'photo5PosX', 'photo5PosY', 'photo5PosUse', 50, 50);
+  _savePhotoPos(p, 'p6pos', 'profileFile6',      'photo6PosX', 'photo6PosY', 'photo6PosUse', 50, 50);
+  _savePhotoPos(p, 'p7pos', 'profileFile7',      'photo7PosX', 'photo7PosY', 'photo7PosUse', 50, 50);
+  _savePhotoPos(p, 'p8pos', 'profileFile8',      'photo8PosX', 'photo8PosY', 'photo8PosUse', 50, 50);
+  _savePhotoPos(p, 'p9pos', 'profileFile9',      'photo9PosX', 'photo9PosY', 'photo9PosUse', 50, 50);
+  _savePhotoPos(p, 'p10pos', 'profileFile10',    'photo10PosX', 'photo10PosY', 'photo10PosUse', 50, 50);
   p.detailHeaderBgImg=_phbg||undefined;
   p.detailHeaderBgFit=_phbgFit||undefined;
   p.detailHeaderBgScale=_phbg ? _phbgScale : undefined;
@@ -1182,9 +1146,25 @@ function _edResolveUrlInputId(prefix){
   if(prefix==='p3pos') return 'ed-photo3';
   if(prefix==='p4pos') return 'ed-photo4';
   if(prefix==='p5pos') return 'ed-photo5';
+  if(prefix==='p6pos') return 'ed-photo6';
+  if(prefix==='p7pos') return 'ed-photo7';
+  if(prefix==='p8pos') return 'ed-photo8';
+  if(prefix==='p9pos') return 'ed-photo9';
+  if(prefix==='p10pos') return 'ed-photo10';
   if(prefix==='cardpos') return 'ed-card-photo';
   return '';
 }
+// 프로필 사진 2~10 위치보정 탭 전환 (하나만 보여주고 나머지는 숨김)
+window.edPosTabSelect = function(n){
+  try{
+    document.querySelectorAll('[data-pos-tab-body]').forEach(el=>{
+      el.style.display = (String(el.getAttribute('data-pos-tab-body'))===String(n)) ? 'block' : 'none';
+    });
+    document.querySelectorAll('[data-pos-tab-btn]').forEach(btn=>{
+      btn.className = 'btn btn-xs ' + ((String(btn.getAttribute('data-pos-tab-btn'))===String(n)) ? 'btn-b' : 'btn-w');
+    });
+  }catch(e){}
+};
 function _edEnsurePosImg(prefix, url){
   try{
     const prev = document.getElementById(`ed-${prefix}-prev`);
@@ -1284,6 +1264,31 @@ window.edP5PosSyncFromInputs = function(refresh){ _edPosSync('p5pos', 50, 50, !!
 window.edP5PosCenter = function(){ _edPosCenter('p5pos', 50, 50); };
 window.edP5PosDelete = function(){ _edPosDelete('p5pos', '프로필 사진 5 위치 보정값을 삭제합니다. (기본 center)'); };
 window.edBindP5PosDrag = function(){ _edBindPosDrag('p5pos', 50, 50); };
+
+window.edP6PosSyncFromInputs = function(refresh){ _edPosSync('p6pos', 50, 50, !!refresh); };
+window.edP6PosCenter = function(){ _edPosCenter('p6pos', 50, 50); };
+window.edP6PosDelete = function(){ _edPosDelete('p6pos', '프로필 사진 6 위치 보정값을 삭제합니다. (기본 center)'); };
+window.edBindP6PosDrag = function(){ _edBindPosDrag('p6pos', 50, 50); };
+
+window.edP7PosSyncFromInputs = function(refresh){ _edPosSync('p7pos', 50, 50, !!refresh); };
+window.edP7PosCenter = function(){ _edPosCenter('p7pos', 50, 50); };
+window.edP7PosDelete = function(){ _edPosDelete('p7pos', '프로필 사진 7 위치 보정값을 삭제합니다. (기본 center)'); };
+window.edBindP7PosDrag = function(){ _edBindPosDrag('p7pos', 50, 50); };
+
+window.edP8PosSyncFromInputs = function(refresh){ _edPosSync('p8pos', 50, 50, !!refresh); };
+window.edP8PosCenter = function(){ _edPosCenter('p8pos', 50, 50); };
+window.edP8PosDelete = function(){ _edPosDelete('p8pos', '프로필 사진 8 위치 보정값을 삭제합니다. (기본 center)'); };
+window.edBindP8PosDrag = function(){ _edBindPosDrag('p8pos', 50, 50); };
+
+window.edP9PosSyncFromInputs = function(refresh){ _edPosSync('p9pos', 50, 50, !!refresh); };
+window.edP9PosCenter = function(){ _edPosCenter('p9pos', 50, 50); };
+window.edP9PosDelete = function(){ _edPosDelete('p9pos', '프로필 사진 9 위치 보정값을 삭제합니다. (기본 center)'); };
+window.edBindP9PosDrag = function(){ _edBindPosDrag('p9pos', 50, 50); };
+
+window.edP10PosSyncFromInputs = function(refresh){ _edPosSync('p10pos', 50, 50, !!refresh); };
+window.edP10PosCenter = function(){ _edPosCenter('p10pos', 50, 50); };
+window.edP10PosDelete = function(){ _edPosDelete('p10pos', '프로필 사진 10 위치 보정값을 삭제합니다. (기본 center)'); };
+window.edBindP10PosDrag = function(){ _edBindPosDrag('p10pos', 50, 50); };
 
 window.edCardPosSyncFromInputs = function(refresh){ _edPosSync('cardpos', 50, 22, !!refresh); };
 window.edCardPosCenter = function(){ _edPosCenter('cardpos', 50, 22); };

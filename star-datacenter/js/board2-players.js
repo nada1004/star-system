@@ -641,6 +641,11 @@ function _b2PlayersView() {
   const _p3pos = _b2PosPct(_b2SelectedPlayer.photo3PosUse, _b2SelectedPlayer.photo3PosX, _b2SelectedPlayer.photo3PosY);
   const _p4pos = _b2PosPct(_b2SelectedPlayer.photo4PosUse, _b2SelectedPlayer.photo4PosX, _b2SelectedPlayer.photo4PosY);
   const _p5pos = _b2PosPct(_b2SelectedPlayer.photo5PosUse, _b2SelectedPlayer.photo5PosX, _b2SelectedPlayer.photo5PosY);
+  const _p6pos = _b2PosPct(_b2SelectedPlayer.photo6PosUse, _b2SelectedPlayer.photo6PosX, _b2SelectedPlayer.photo6PosY);
+  const _p7pos = _b2PosPct(_b2SelectedPlayer.photo7PosUse, _b2SelectedPlayer.photo7PosX, _b2SelectedPlayer.photo7PosY);
+  const _p8pos = _b2PosPct(_b2SelectedPlayer.photo8PosUse, _b2SelectedPlayer.photo8PosX, _b2SelectedPlayer.photo8PosY);
+  const _p9pos = _b2PosPct(_b2SelectedPlayer.photo9PosUse, _b2SelectedPlayer.photo9PosX, _b2SelectedPlayer.photo9PosY);
+  const _p10pos = _b2PosPct(_b2SelectedPlayer.photo10PosUse, _b2SelectedPlayer.photo10PosX, _b2SelectedPlayer.photo10PosY);
   try{
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls([
@@ -698,6 +703,21 @@ function _b2PlayersView() {
   const _slot5 = _hasMediaUrl(_b2SelectedPlayer.profileFile5)
     ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
+  const _slot6 = _hasMediaUrl(_b2SelectedPlayer.profileFile6)
+    ? _b2MainMediaHTML(6, _b2SelectedPlayer.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot7 = _hasMediaUrl(_b2SelectedPlayer.profileFile7)
+    ? _b2MainMediaHTML(7, _b2SelectedPlayer.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot8 = _hasMediaUrl(_b2SelectedPlayer.profileFile8)
+    ? _b2MainMediaHTML(8, _b2SelectedPlayer.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot9 = _hasMediaUrl(_b2SelectedPlayer.profileFile9)
+    ? _b2MainMediaHTML(9, _b2SelectedPlayer.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot10 = _hasMediaUrl(_b2SelectedPlayer.profileFile10)
+    ? _b2MainMediaHTML(10, _b2SelectedPlayer.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
+    : '';
   const _selUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
     return uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
@@ -711,6 +731,11 @@ function _b2PlayersView() {
         ${_slot3}
         ${_slot4}
         ${_slot5}
+        ${_slot6}
+        ${_slot7}
+        ${_slot8}
+        ${_slot9}
+        ${_slot10}
         
         <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
         ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
@@ -858,6 +883,11 @@ function _b2UpdateMainDisplay(playerName) {
   const _p3pos = _b2PosPct(player.photo3PosUse, player.photo3PosX, player.photo3PosY);
   const _p4pos = _b2PosPct(player.photo4PosUse, player.photo4PosX, player.photo4PosY);
   const _p5pos = _b2PosPct(player.photo5PosUse, player.photo5PosX, player.photo5PosY);
+  const _p6pos = _b2PosPct(player.photo6PosUse, player.photo6PosX, player.photo6PosY);
+  const _p7pos = _b2PosPct(player.photo7PosUse, player.photo7PosX, player.photo7PosY);
+  const _p8pos = _b2PosPct(player.photo8PosUse, player.photo8PosX, player.photo8PosY);
+  const _p9pos = _b2PosPct(player.photo9PosUse, player.photo9PosX, player.photo9PosY);
+  const _p10pos = _b2PosPct(player.photo10PosUse, player.photo10PosX, player.photo10PosY);
   const _b2IsVideoUrl = (u)=>{
     const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
     return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
@@ -896,6 +926,21 @@ function _b2UpdateMainDisplay(playerName) {
   const _slot5 = _hasMediaUrl2(player.profileFile5)
     ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
+  const _slot6 = _hasMediaUrl2(player.profileFile6)
+    ? _b2MainMediaHTML(6, player.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot7 = _hasMediaUrl2(player.profileFile7)
+    ? _b2MainMediaHTML(7, player.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot8 = _hasMediaUrl2(player.profileFile8)
+    ? _b2MainMediaHTML(8, player.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot9 = _hasMediaUrl2(player.profileFile9)
+    ? _b2MainMediaHTML(9, player.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot10 = _hasMediaUrl2(player.profileFile10)
+    ? _b2MainMediaHTML(10, player.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
+    : '';
   const _updUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === player.univ) || {};
     return uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
@@ -918,6 +963,11 @@ function _b2UpdateMainDisplay(playerName) {
       ${_slot3}
       ${_slot4}
       ${_slot5}
+      ${_slot6}
+      ${_slot7}
+      ${_slot8}
+      ${_slot9}
+      ${_slot10}
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
@@ -976,25 +1026,32 @@ function openB2ProfileEditModal(playerName) {
   const _media3 = _trimMedia(player.profileFile3);
   const _media4 = _trimMedia(player.profileFile4);
   const _media5 = _trimMedia(player.profileFile5);
+  const _media6 = _trimMedia(player.profileFile6);
+  const _media7 = _trimMedia(player.profileFile7);
+  const _media8 = _trimMedia(player.profileFile8);
+  const _media9 = _trimMedia(player.profileFile9);
+  const _media10 = _trimMedia(player.profileFile10);
   const _slotOrder = [
     { slot:1, url:_media1 },
     { slot:2, url:_media2 },
     { slot:3, url:_media3 },
     { slot:4, url:_media4 },
-    { slot:5, url:_media5 }
+    { slot:5, url:_media5 },
+    { slot:6, url:_media6 },
+    { slot:7, url:_media7 },
+    { slot:8, url:_media8 },
+    { slot:9, url:_media9 },
+    { slot:10, url:_media10 }
   ].filter(item => !!item.url);
+  // [FIX] 1~5번까지만 지원하던 하드코딩 테이블 대신, 실제 순환 로직(board2-image-utils.js의
+  // _delayKeyLegacy + `photoDelay${from}_${to}` 패턴)과 동일한 규칙을 그대로 사용해
+  // 6~10번 슬롯 간 전환에도 올바른 키가 매칭되도록 함.
+  const _swapDelayKeyLegacy = {
+    '1_2':'photoDelay12', '2_1':'photoDelay21', '2_3':'photoDelay23', '3_1':'photoDelay31',
+    '3_4':'photoDelay34', '4_1':'photoDelay41', '4_5':'photoDelay45', '5_1':'photoDelay51'
+  };
   const _swapDelayKey = (from, to)=>{
-    if(to === 1){
-      if(from === 2) return 'photoDelay21';
-      if(from === 3) return 'photoDelay31';
-      if(from === 4) return 'photoDelay41';
-      return 'photoDelay51';
-    }
-    if(from === 1) return 'photoDelay12';
-    if(from === 2) return 'photoDelay23';
-    if(from === 3) return 'photoDelay34';
-    if(from === 4) return 'photoDelay45';
-    return '';
+    return _swapDelayKeyLegacy[`${from}_${to}`] || `photoDelay${from}_${to}`;
   };
   const _swapDelayVal = (key)=>{
     const n = parseFloat(player?.[key] ?? 4);
@@ -1082,8 +1139,21 @@ function openB2ProfileEditModal(playerName) {
             <video id="b2-ed-photo5-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">이미지별 탭에서 2→3→4→5(→1) 순서로 전환됩니다.</div>
       </div>
+      ${[6,7,8,9,10].map(_n=>{
+        const _v = { 6:_media6, 7:_media7, 8:_media8, 9:_media9, 10:_media10 }[_n];
+        return `<div style="margin-bottom:16px">
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 ${_n} (순환용)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo${_n}" value="${_v}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
+          <span id="b2-ed-photo${_n}-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_v&&!_v.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo${_n}-preview" src="${_v&&!_v.startsWith('data:')?toHttpsUrl(_v).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo${_n}-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
+      </div>`;
+      }).join('')}
+      <div style="font-size:10px;color:var(--gray-l);margin:-8px 0 16px">이미지별 탭에서 2→3→...→10(→1) 순서로, 등록된 이미지만 순환합니다.</div>
       <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:var(--r)">
         <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
         ${_swapDelayInputs}
@@ -1168,14 +1238,19 @@ function openB2ProfileEditModal(playerName) {
       }
     });
   }
-  ['b2-ed-second-profile','b2-ed-photo3','b2-ed-photo4','b2-ed-photo5'].forEach((id, idx)=>{
+  ['b2-ed-second-profile','b2-ed-photo3','b2-ed-photo4','b2-ed-photo5','b2-ed-photo6','b2-ed-photo7','b2-ed-photo8','b2-ed-photo9','b2-ed-photo10'].forEach((id, idx)=>{
     const el = document.getElementById(id);
     if(!el) return;
     const map = [
       ['b2-ed-photo2-preview-wrap','b2-ed-photo2-preview','b2-ed-photo2-preview-vid'],
       ['b2-ed-photo3-preview-wrap','b2-ed-photo3-preview','b2-ed-photo3-preview-vid'],
       ['b2-ed-photo4-preview-wrap','b2-ed-photo4-preview','b2-ed-photo4-preview-vid'],
-      ['b2-ed-photo5-preview-wrap','b2-ed-photo5-preview','b2-ed-photo5-preview-vid']
+      ['b2-ed-photo5-preview-wrap','b2-ed-photo5-preview','b2-ed-photo5-preview-vid'],
+      ['b2-ed-photo6-preview-wrap','b2-ed-photo6-preview','b2-ed-photo6-preview-vid'],
+      ['b2-ed-photo7-preview-wrap','b2-ed-photo7-preview','b2-ed-photo7-preview-vid'],
+      ['b2-ed-photo8-preview-wrap','b2-ed-photo8-preview','b2-ed-photo8-preview-vid'],
+      ['b2-ed-photo9-preview-wrap','b2-ed-photo9-preview','b2-ed-photo9-preview-vid'],
+      ['b2-ed-photo10-preview-wrap','b2-ed-photo10-preview','b2-ed-photo10-preview-vid']
     ][idx] || null;
     if(!map) return;
     el.addEventListener('input', ()=>_b2SyncSmallPreview(id, map[0], map[1], map[2]));
@@ -1192,13 +1267,18 @@ function saveB2Profile(playerName) {
   const thirdProfileUrl = (document.getElementById('b2-ed-photo3')?.value || '').trim();
   const fourthProfileUrl = (document.getElementById('b2-ed-photo4')?.value || '').trim();
   const fifthProfileUrl = (document.getElementById('b2-ed-photo5')?.value || '').trim();
+  const sixthProfileUrl = (document.getElementById('b2-ed-photo6')?.value || '').trim();
+  const seventhProfileUrl = (document.getElementById('b2-ed-photo7')?.value || '').trim();
+  const eighthProfileUrl = (document.getElementById('b2-ed-photo8')?.value || '').trim();
+  const ninthProfileUrl = (document.getElementById('b2-ed-photo9')?.value || '').trim();
+  const tenthProfileUrl = (document.getElementById('b2-ed-photo10')?.value || '').trim();
   const clampDelay = (v)=>{
     const n = parseFloat(v);
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
   
-  const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl].some(u=>u && u.startsWith('data:'));
+  const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl, sixthProfileUrl, seventhProfileUrl, eighthProfileUrl, ninthProfileUrl, tenthProfileUrl].some(u=>u && u.startsWith('data:'));
   if (anyBase64) {
     alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
     return;
@@ -1209,6 +1289,11 @@ function saveB2Profile(playerName) {
   player.profileFile3 = thirdProfileUrl || undefined;
   player.profileFile4 = fourthProfileUrl || undefined;
   player.profileFile5 = fifthProfileUrl || undefined;
+  player.profileFile6 = sixthProfileUrl || undefined;
+  player.profileFile7 = seventhProfileUrl || undefined;
+  player.profileFile8 = eighthProfileUrl || undefined;
+  player.profileFile9 = ninthProfileUrl || undefined;
+  player.profileFile10 = tenthProfileUrl || undefined;
   try{
     document.querySelectorAll('#b2-profile-edit-modal [data-b2-delay-key]').forEach(inp=>{
       const key = String(inp?.getAttribute('data-b2-delay-key') || '').trim();

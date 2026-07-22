@@ -358,7 +358,12 @@ function _b2ScheduleImageSwap(playerName) {
     {slot:2, url:p.secondProfileFile},
     {slot:3, url:p.profileFile3},
     {slot:4, url:p.profileFile4},
-    {slot:5, url:p.profileFile5}
+    {slot:5, url:p.profileFile5},
+    {slot:6, url:p.profileFile6},
+    {slot:7, url:p.profileFile7},
+    {slot:8, url:p.profileFile8},
+    {slot:9, url:p.profileFile9},
+    {slot:10, url:p.profileFile10}
   ].filter(x=>x && _hasMediaUrl(x.url)) : [];
   const clampSec = (v, d)=>{
     const n = parseFloat(v);
@@ -383,21 +388,17 @@ function _b2ScheduleImageSwap(playerName) {
       }catch(e){}
     }catch(e){}
   };
+  const _delayKeyLegacy = {
+    '1_2':'photoDelay12','2_1':'photoDelay21','2_3':'photoDelay23','3_1':'photoDelay31',
+    '3_4':'photoDelay34','4_1':'photoDelay41','4_5':'photoDelay45','5_1':'photoDelay51'
+  };
   const delayMs = (fromSlot, toSlot)=>{
     try{
       if(!p) return 1000;
-      if(toSlot===1){
-        if(fromSlot===2) return Math.round(clampSec(p.photoDelay21 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===3) return Math.round(clampSec(p.photoDelay31 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===4) return Math.round(clampSec(p.photoDelay41 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
-        return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
-      }
-      if(fromSlot===1) return Math.round(clampSec(p.photoDelay12 ?? 4, 4) * 1000);
-      if(fromSlot===2) return Math.round(clampSec(p.photoDelay23 ?? 4, 4) * 1000);
-      if(fromSlot===3) return Math.round(clampSec(p.photoDelay34 ?? 4, 4) * 1000);
-      if(fromSlot===4) return Math.round(clampSec(p.photoDelay45 ?? 4, 4) * 1000);
-      if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
+      const key = _delayKeyLegacy[`${fromSlot}_${toSlot}`] || `photoDelay${fromSlot}_${toSlot}`;
+      // 기존 데이터 호환: 1로 돌아가는 구간에 값이 없으면 photoDelay51을 기본값으로 사용
+      const fallback = (toSlot===1) ? (p.photoDelay51 ?? 4) : 4;
+      return Math.round(clampSec(p[key] ?? fallback, 4) * 1000);
     }catch(e){}
     return 1000;
   };
@@ -407,7 +408,7 @@ function _b2ScheduleImageSwap(playerName) {
     // 먼저 showSlot을 즉시 보이게 한 뒤 나머지를 숨김
     const _showEl = document.getElementById('b2-main-img-' + showSlot);
     if (_showEl) _showEl.style.opacity = '1';
-    for (let slot = 1; slot <= 5; slot++) {
+    for (let slot = 1; slot <= 10; slot++) {
       if (slot === showSlot) continue;
       const el = document.getElementById('b2-main-img-' + slot);
       if (el) el.style.opacity = '0';
@@ -417,7 +418,7 @@ function _b2ScheduleImageSwap(playerName) {
   }
   // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
   const firstSlot = imgList[0].slot;
-  for (let slot = 1; slot <= 5; slot++) {
+  for (let slot = 1; slot <= 10; slot++) {
     const el = document.getElementById('b2-main-img-' + slot);
     if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
   }
@@ -437,7 +438,7 @@ function _b2ScheduleImageSwap(playerName) {
     const cur = mainBox._swapIdx;
     const curSlot = imgList[cur] ? imgList[cur].slot : 1;
     mainBox._swapCurSlot = curSlot;
-    for (let slot = 1; slot <= 5; slot++) {
+    for (let slot = 1; slot <= 10; slot++) {
       const el = document.getElementById('b2-main-img-' + slot);
       if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
     }

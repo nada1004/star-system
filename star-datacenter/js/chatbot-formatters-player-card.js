@@ -44,7 +44,7 @@ function _pcRaceInfo(race) {
 // 순수 CSS(체크박스 해크)로 펼치기/접기를 구현해 버튼이 많아져도 카드가 지저분해지지 않도록 함.
 function formatPlayerMoreOptions(player) {
   const uid = 'pcmore_' + Math.random().toString(36).slice(2, 9);
-  const _hasMoreImgs = !!(String(player.secondProfileFile||'').trim() || String(player.profileFile3||'').trim() || String(player.profileFile4||'').trim() || String(player.profileFile5||'').trim());
+  const _hasMoreImgs = !!(String(player.secondProfileFile||'').trim() || String(player.profileFile3||'').trim() || String(player.profileFile4||'').trim() || String(player.profileFile5||'').trim() || String(player.profileFile6||'').trim() || String(player.profileFile7||'').trim() || String(player.profileFile8||'').trim() || String(player.profileFile9||'').trim() || String(player.profileFile10||'').trim());
   const opts = [
     { label: '상대전적', q: `${player.name} 상대전적` },
     { label: '맵별승률', q: `${player.name} 맵별승률` },
@@ -129,7 +129,12 @@ function formatPlayerPhotoGallery(player) {
     { label: '이미지 2', url: player.secondProfileFile },
     { label: '이미지 3', url: player.profileFile3 },
     { label: '이미지 4', url: player.profileFile4 },
-    { label: '이미지 5', url: player.profileFile5 }
+    { label: '이미지 5', url: player.profileFile5 },
+    { label: '이미지 6', url: player.profileFile6 },
+    { label: '이미지 7', url: player.profileFile7 },
+    { label: '이미지 8', url: player.profileFile8 },
+    { label: '이미지 9', url: player.profileFile9 },
+    { label: '이미지 10', url: player.profileFile10 }
   ].filter(x => x.url && String(x.url).trim());
 
   const safeName = escapeHtml(player.name);
