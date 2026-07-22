@@ -1501,6 +1501,12 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-rank-chip.silver{background:linear-gradient(180deg,#f8fafc,#cbd5e1);border-color:#94a3b8;color:#334155}',
     '.tier-rank-chip.bronze{background:linear-gradient(180deg,#fed7aa,#fb923c);border-color:#ea580c;color:#7c2d12}',
     '.tier-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:4px 0}',
+    '.tier-card-group{margin-bottom:22px;padding-bottom:18px;border-bottom:1px dashed rgba(148,163,184,.22)}',
+    '.tier-card-group:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}',
+    '.tier-card-group-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}',
+    '.tier-card-group-label{font-size:var(--fs-sm);font-weight:900;color:var(--text3);letter-spacing:.02em;padding:3px 11px;border-radius:999px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.16)}',
+    'body.dark .tier-card-group{border-bottom-color:#334155}',
+    'body.dark .tier-card-group-label{background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.28);color:#dbeafe}',
     '.tier-rank-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1.5px solid rgba(148,163,184,.18);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;transition:box-shadow .15s,transform .15s;position:relative;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
     '.tier-rank-card:hover{box-shadow:0 18px 30px rgba(15,23,42,.08);transform:translateY(-2px)}',
     '.tier-rank-card.top1,.tier-rank-card.top2,.tier-rank-card.top3{box-shadow:0 16px 30px rgba(15,23,42,.07);border-color:rgba(148,163,184,.22)}',
@@ -1512,40 +1518,49 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-podium-wrap{display:flex;flex-direction:column;gap:18px}',
     '.tier-podium-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,1.22fr) minmax(0,1fr);gap:14px;align-items:stretch}',
     '.tier-podium-lane{display:flex;align-items:stretch}',
-    '.tier-podium-card{display:flex;flex-direction:column;gap:12px;cursor:pointer;padding:18px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 18px 34px rgba(15,23,42,.06)}',
-    '.tier-podium-card.place-1{min-height:100%;padding:22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(255,247,237,.95));border-color:rgba(245,158,11,.24);box-shadow:0 24px 42px rgba(245,158,11,.12)}',
-    '.tier-podium-card.place-2{justify-content:flex-end;background:linear-gradient(180deg,rgba(248,250,252,.99),rgba(241,245,249,.95))}',
-    '.tier-podium-card.place-3{justify-content:flex-end;background:linear-gradient(180deg,rgba(255,247,237,.99),rgba(255,237,213,.94))}',
-    '.tier-podium-rankline{display:flex;align-items:center;justify-content:space-between;gap:10px}',
-    '.tier-podium-medal{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-base);font-weight:900;color:var(--text2)}',
-    '.tier-podium-ranknum{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:999px;background:rgba(15,23,42,.06);font-size:var(--fs-base);font-weight:900;color:var(--text2)}',
-    '.tier-podium-card.place-1 .tier-podium-ranknum{background:rgba(245,158,11,.14);color:#b45309}',
-    '.tier-podium-main{display:flex;align-items:center;gap:12px;min-width:0}',
-    '.tier-podium-main--hero{align-items:flex-start}',
+    '.tier-podium-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:12px;cursor:pointer;padding:18px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:2px solid color-mix(in srgb,var(--selected-accent,#94a3b8) 55%, transparent);box-shadow:0 18px 34px rgba(15,23,42,.06);min-height:280px}',
+    '.tier-podium-card.place-1{min-height:340px;padding:22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(255,247,237,.95));border-color:rgba(245,158,11,.24);box-shadow:0 24px 42px rgba(245,158,11,.12)}',
+    '.tier-podium-card.place-2{background:linear-gradient(180deg,rgba(248,250,252,.99),rgba(241,245,249,.95))}',
+    '.tier-podium-card.place-3{background:linear-gradient(180deg,rgba(255,247,237,.99),rgba(255,237,213,.94))}',
+    /* ── 1/2/3위 카드 배경을 프로필 사진으로 전체 채움 (마우스 우측 절반 호버 시 두번째 사진으로 스크럽) ── */
+    '.tier-podium-photo-bg,.tier-podium-photo-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 16%;z-index:0;transition:transform .35s ease}',
+    '.tier-podium-photo-fallback{display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;letter-spacing:-.04em}',
+    '.tier-podium-card:hover .tier-podium-photo-bg{transform:scale(1.045)}',
+    '.tier-podium-photo-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.06) 34%,rgba(15,23,42,.58) 74%,rgba(2,6,23,.86) 100%)}',
+    '.tier-podium-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;height:100%}',
+    '.tier-podium-topbadge{position:absolute;z-index:2;top:14px;left:14px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:var(--fs-sm);font-weight:900;color:#fff;background:rgba(15,23,42,.42);backdrop-filter:blur(6px);box-shadow:0 4px 12px rgba(0,0,0,.18)}',
+    '.tier-podium-card.place-1 .tier-podium-topbadge{background:rgba(180,83,9,.52);font-size:15px}',
     '.tier-podium-copy{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}',
-    '.tier-podium-name{font-size:19px;font-weight:950;letter-spacing:-.03em;color:var(--text1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-podium-name{font-size:19px;font-weight:950;letter-spacing:-.03em;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.45);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-podium-card.place-1 .tier-podium-name{font-size:24px}',
     '.tier-podium-sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}',
-    '.tier-podium-highlight{font-size:var(--fs-sm);line-height:1.6;color:var(--text3)}',
+    '.tier-podium-sub .rbadge,.tier-podium-rest-subline .rbadge{background:#fff !important;box-shadow:0 2px 6px rgba(0,0,0,.22)}',
+    '.tier-podium-sub .tbadge,.tier-podium-rest-subline .tbadge{box-shadow:0 2px 6px rgba(0,0,0,.35) !important}',
     '.tier-podium-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}',
     '.tier-podium-card.place-1 .tier-podium-stats{gap:10px}',
-    '.tier-podium-statbox{display:flex;flex-direction:column;gap:4px;padding:10px 11px;border-radius:var(--r2);background:rgba(255,255,255,.8);border:1px solid rgba(148,163,184,.14);min-width:0}',
-    '.tier-podium-statbox-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.04em;text-transform:uppercase}',
-    '.tier-podium-statbox-value{font-size:14px;font-weight:900;color:var(--text1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.tier-podium-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}',
-    '.tier-podium-stat{font-size:var(--fs-caption);font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.16)}',
+    '.tier-podium-statbox{display:flex;flex-direction:column;gap:4px;padding:10px 11px;border-radius:var(--r2);background:rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);min-width:0}',
+    '.tier-podium-statbox-label{font-size:10px;font-weight:800;color:rgba(255,255,255,.82);letter-spacing:.04em;text-transform:uppercase}',
+    '.tier-podium-statbox-value{font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-podium-foot{display:flex;align-items:center;justify-content:flex-start;gap:10px}',
+    '.tier-podium-stat{font-size:var(--fs-caption);font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);color:#fff}',
     '.tier-podium-rest{padding-top:2px}',
     '.tier-podium-rest-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}',
     '.tier-podium-rest-title{font-size:var(--fs-sm);font-weight:900;color:var(--text2);letter-spacing:-.02em}',
     '.tier-podium-rest-sub{font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
     '.tier-podium-rest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}',
-    '.tier-podium-rest-item{cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:12px 13px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-podium-rest-item{position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:10px;min-height:168px;padding:12px 13px;border-radius:18px;border:2px solid color-mix(in srgb,var(--selected-accent,#94a3b8) 50%, transparent);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-podium-rest-photo-bg,.tier-podium-rest-photo-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 16%;z-index:0;transition:transform .3s ease}',
+    '.tier-podium-rest-photo-fallback{display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:900;letter-spacing:-.04em}',
+    '.tier-podium-rest-item:hover .tier-podium-rest-photo-bg{transform:scale(1.05)}',
+    '.tier-podium-rest-photo-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.08) 28%,rgba(15,23,42,.56) 70%,rgba(2,6,23,.84) 100%)}',
+    '.tier-podium-rest-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;height:100%}',
     '.tier-podium-rest-top{display:flex;align-items:center;gap:10px;min-width:0}',
-    '.tier-podium-rest-rank{font-size:var(--fs-sm);font-weight:900;color:var(--text3);min-width:34px}',
+    '.tier-podium-rest-rank{font-size:var(--fs-sm);font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);min-width:26px}',
     '.tier-podium-rest-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}',
-    '.tier-podium-rest-name{font-size:var(--fs-base);font-weight:900;color:var(--text1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-podium-rest-name{font-size:var(--fs-base);font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-podium-rest-subline{display:flex;align-items:center;gap:5px;flex-wrap:wrap}',
     '.tier-podium-rest-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}',
+    '.tier-podium-rest-metrics .tier-podium-statbox{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.3)}',
     '.tier-podium-card,.tier-podium-rest-item,.tier-compact-item,.tier-group-card{position:relative;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,background .2s ease}',
     '.tier-podium-card:hover{animation:podiumCardHoverFloat .34s ease forwards;box-shadow:0 28px 48px rgba(15,23,42,.16)}',
     '.tier-podium-rest-item:hover,.tier-compact-item:hover,.tier-group-card:hover{transform:translateY(-1px)}',
@@ -1569,8 +1584,18 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-compact-extra{font-size:10px;padding:3px 8px;border-radius:999px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.16);font-weight:800;color:var(--text2)}',
     '.tier-group-sec{margin-bottom:16px}',
     '.tier-group-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--r2);margin-bottom:8px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.tier-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:0 4px}',
-    '.tier-group-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:0 4px}',
+    '.tier-group-card{position:relative;overflow:hidden;cursor:pointer;min-height:172px;border:2px solid color-mix(in srgb,var(--selected-accent,#94a3b8) 55%, transparent);border-radius:16px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-group-photo-bg,.tier-group-photo-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 16%;z-index:0;transition:transform .3s ease}',
+    '.tier-group-photo-fallback{display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900}',
+    '.tier-group-card:hover .tier-group-photo-bg{transform:scale(1.05)}',
+    '.tier-group-photo-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.10) 32%,rgba(15,23,42,.60) 74%,rgba(2,6,23,.88) 100%)}',
+    '.tier-group-rank{position:absolute;z-index:2;top:8px;left:8px;font-size:10px;font-weight:900;color:#fff;background:rgba(15,23,42,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:2px 8px;border-radius:999px}',
+    '.tier-group-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;padding:10px 8px}',
+    '.tier-group-name{font-weight:800;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-group-badges{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}',
+    '.tier-group-badges .rbadge{background:#fff !important;box-shadow:0 2px 6px rgba(0,0,0,.3)}',
+    '.tier-group-stat{font-size:10px;font-weight:800;text-align:center;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}',
     'body.dark .tier-hero{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-hero-title{color:#f8fafc}',
@@ -1606,7 +1631,8 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-univ-badge img{background:rgba(15,23,42,.72)}',
     'body.dark .tier-table thead th{background:linear-gradient(180deg,#172554,#1e3a8a);border-color:#1d4ed8;color:#dbeafe}',
     'body.dark .tier-table tbody tr.top1 td,body.dark .tier-table tbody tr.top2 td,body.dark .tier-table tbody tr.top3 td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-top-color:#334155;border-bottom-color:#334155}',
-    'body.dark .tier-table tbody td,body.dark .tier-rank-card,body.dark .tier-podium-rest-item,body.dark .tier-compact-item,body.dark .tier-group-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-table tbody td,body.dark .tier-rank-card,body.dark .tier-compact-item{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-podium-rest-item,body.dark .tier-group-card{color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .tier-rank-chip.gold{background:linear-gradient(180deg,#fbbf24,#f59e0b);border-color:#fcd34d;color:#451a03}',
     'body.dark .tier-rank-chip.silver{background:linear-gradient(180deg,#cbd5e1,#94a3b8);border-color:#e2e8f0;color:#0f172a}',
     'body.dark .tier-rank-chip.bronze{background:linear-gradient(180deg,#fb923c,#ea580c);border-color:#fdba74;color:#431407}',
@@ -1616,9 +1642,7 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-podium-card.place-2{background:linear-gradient(180deg,rgba(30,41,59,.98),rgba(15,23,42,.9))}',
     'body.dark .tier-podium-card.place-3{background:linear-gradient(180deg,rgba(67,20,7,.28),rgba(15,23,42,.92))}',
     'body.dark .tier-rank-stat,body.dark .tier-podium-stat,body.dark .tier-rank-extra,body.dark .tier-compact-extra{background:rgba(30,41,59,.78);border-color:#334155;color:#e2e8f0}',
-    'body.dark .tier-podium-name,body.dark .tier-podium-statbox-value,body.dark .tier-podium-rest-name{color:#f8fafc}',
-    'body.dark .tier-podium-medal,body.dark .tier-podium-ranknum,body.dark .tier-podium-highlight,body.dark .tier-podium-rest-title,body.dark .tier-podium-rest-sub,body.dark .tier-podium-rest-rank,body.dark .tier-podium-statbox-label{color:#cbd5e1}',
-    'body.dark .tier-podium-statbox{background:rgba(30,41,59,.72);border-color:#334155}',
+    'body.dark .tier-podium-rest-title,body.dark .tier-podium-rest-sub,body.dark .tier-podium-statbox-label{color:#cbd5e1}',
     'body.dark .tier-compact-head,body.dark .tier-compact-rank-label,body.dark .tier-compact-metric-label{color:#94a3b8}',
     'body.dark .tier-compact-name,body.dark .tier-compact-rank,body.dark .tier-compact-metric-value{color:#f8fafc}',
     'body.dark .tier-compact-metric{background:rgba(30,41,59,.78);border-color:#334155}',
@@ -1627,7 +1651,7 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
     'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
     'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
-    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tier-podium-stage{grid-template-columns:1fr;gap:10px}.tier-podium-card{padding:14px 14px 16px;border-radius:20px}.tier-podium-card.place-1{padding:18px}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}}'
+    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tier-podium-stage{grid-template-columns:1fr;gap:10px}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:220px}.tier-podium-card.place-1{padding:18px;min-height:260px}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -2431,6 +2455,20 @@ function rTier(C,T){
 
   const _vm = window._tierViewMode || 'table';
   let h='';
+  // 공용: 프로필 사진을 카드 전체 배경으로 채우는 레이어 (포디움/티어그룹 등에서 공유)
+  const _podiumPhotoLayer=(p, bgCls, fallbackCls, overlayCls, scalePx)=>{
+    const RMAP={T:{bg:'#1e3a5f',col:'#93c5fd'},Z:{bg:'#3b2a5e',col:'#ddd6fe'},P:{bg:'#5c4413',col:'#fde68a'}};
+    const rm=RMAP[p.race]||{bg:'#334155',col:'#cbd5e1'};
+    const origSrc = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+    const src = p.photo ? ((typeof toScaledUrl==='function') ? toScaledUrl(p.photo, scalePx) : origSrc) : '';
+    const bg = p.photo
+      ? `<img class="${bgCls}" src="${src}" data-orig="${String(origSrc).replace(/"/g,'&quot;')}" alt="" loading="lazy" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove();}">`
+      : `<div class="${fallbackCls}" style="background:${rm.bg};color:${rm.col}">${p.race||'?'}</div>`;
+    const second = (p.secondProfileFile && typeof _phSwap2ndHTML==='function')
+      ? _phSwap2ndHTML(p.secondProfileFile, {style:`object-fit:cover;object-position:center 16%`, px:scalePx})
+      : '';
+    return `${bg}${second}<div class="${overlayCls}"></div>`;
+  };
 
   // ════════════════════════════════════════════
   // 뷰1: TABLE (기존)
@@ -2505,8 +2543,15 @@ function rTier(C,T){
   // 뷰2: CARD GRID (카드 그리드)
   // ════════════════════════════════════════════
   else if(_vm==='card'){
-  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'150px':'190px'},1fr));gap:${_isMb?'10px':'12px'}">`;
-  list.forEach((p,i)=>{
+  h=`<div class="tier-content-card">`;
+  const _cardGroupSize=12;
+  for(let _gStart=0; _gStart<list.length; _gStart+=_cardGroupSize){
+    const _gEnd=Math.min(_gStart+_cardGroupSize, list.length);
+    h+=`<section class="tier-card-group">
+      <div class="tier-card-group-head"><span class="tier-card-group-label">${_gStart+1}–${_gEnd}위</span></div>
+      <div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'150px':'190px'},1fr));gap:${_isMb?'10px':'12px'}">`;
+  list.slice(_gStart,_gEnd).forEach((p,_ii)=>{
+    const i=_gStart+_ii;
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
@@ -2565,7 +2610,9 @@ function rTier(C,T){
       </div>
     </div>`;
   });
-  h+=`</div></div>`;
+  h+=`</div></section>`;
+  }
+  h+=`</div>`;
   }
 
   // ════════════════════════════════════════════
@@ -2583,14 +2630,10 @@ function rTier(C,T){
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
       : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
     const medal = place===1 ? '🥇' : (place===2 ? '🥈' : '🥉');
-    const headline = place===1 ? '현재 1위 시드' : (place===2 ? '추격 중인 상위권' : '포디움 마감권');
-    return `<article class="tier-podium-card place-${place} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
-      <div class="tier-podium-rankline">
-        <span class="tier-podium-medal">${medal} ${place}위</span>
-        <span class="tier-podium-ranknum">TOP ${place}</span>
-      </div>
-      <div class="tier-podium-main ${place===1?'tier-podium-main--hero':''}">
-        ${getPlayerPhotoHTML(p.name,place===1?(_isMb?'64px':'84px'):(_isMb?'48px':'58px'),'',{lazy:true})}
+    return `<article class="tier-podium-card ph-swap place-${place} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
+      ${_podiumPhotoLayer(p,'tier-podium-photo-bg','tier-podium-photo-fallback','tier-podium-photo-overlay',place===1?560:420)}
+      <div class="tier-podium-topbadge">${medal} ${place}위</div>
+      <div class="tier-podium-content">
         <div class="tier-podium-copy">
           <div class="tier-podium-name">${p.name}${genderIcon(p.gender)}</div>
           <div class="tier-podium-sub">
@@ -2598,26 +2641,24 @@ function rTier(C,T){
             <span class="rbadge r${p.race}" style="font-size:10px">${p.race||'?'}</span>
             <span class="tier-univ-badge" style="background:${col};font-size:10px;max-width:${place===1?140:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ||'무소속'}</span>
           </div>
-          <div class="tier-podium-highlight">${headline}</div>
         </div>
-      </div>
-      <div class="tier-podium-stats">
-        <div class="tier-podium-statbox">
-          <span class="tier-podium-statbox-label">전적</span>
-          <span class="tier-podium-statbox-value">${tot?`${rec.w}W ${rec.l}L`:'기록 없음'}</span>
+        <div class="tier-podium-stats">
+          <div class="tier-podium-statbox">
+            <span class="tier-podium-statbox-label">전적</span>
+            <span class="tier-podium-statbox-value">${tot?`${rec.w}W ${rec.l}L`:'기록 없음'}</span>
+          </div>
+          <div class="tier-podium-statbox">
+            <span class="tier-podium-statbox-label">승률</span>
+            <span class="tier-podium-statbox-value">${tot?wr+'%':'-'}</span>
+          </div>
+          <div class="tier-podium-statbox">
+            <span class="tier-podium-statbox-label">${extraHeader}</span>
+            <span class="tier-podium-statbox-value">${extraVal}</span>
+          </div>
         </div>
-        <div class="tier-podium-statbox">
-          <span class="tier-podium-statbox-label">승률</span>
-          <span class="tier-podium-statbox-value" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>
+        <div class="tier-podium-foot">
+          <span class="tier-podium-stat">${tot?`${tot}전 ${wr}%`:'공식전 없음'}</span>
         </div>
-        <div class="tier-podium-statbox">
-          <span class="tier-podium-statbox-label">${extraHeader}</span>
-          <span class="tier-podium-statbox-value">${extraVal}</span>
-        </div>
-      </div>
-      <div class="tier-podium-foot">
-        <span class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?`${tot}전 ${wr}%`:'공식전 없음'}</span>
-        <span class="tier-podium-ranknum">#${place}</span>
       </div>
     </article>`;
   };
@@ -2640,27 +2681,29 @@ function rTier(C,T){
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      h+=`<article class="tier-podium-rest-item ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border-top:3px solid ${col}">
-        <div class="tier-podium-rest-top">
-          <span class="tier-podium-rest-rank">${ri}위</span>
-          ${getPlayerPhotoHTML(p.name,'34px','',{lazy:true})}
-          <div class="tier-podium-rest-copy">
-            <div class="tier-podium-rest-name">${p.name}${genderIcon(p.gender)}</div>
-            <div class="tier-podium-rest-subline">
-              ${_getTierBadge(p.tier)}
-              <span class="rbadge r${p.race}" style="font-size:9px">${p.race||'?'}</span>
-              <span class="ubadge tier-univ-badge" style="background:${col};font-size:9px;padding:1px 6px;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ||'무소속'}</span>
+      h+=`<article class="tier-podium-rest-item ph-swap ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
+        ${_podiumPhotoLayer(p,'tier-podium-rest-photo-bg','tier-podium-rest-photo-fallback','tier-podium-rest-photo-overlay',260)}
+        <div class="tier-podium-rest-content">
+          <div class="tier-podium-rest-top">
+            <span class="tier-podium-rest-rank">${ri}위</span>
+            <div class="tier-podium-rest-copy">
+              <div class="tier-podium-rest-name">${p.name}${genderIcon(p.gender)}</div>
+              <div class="tier-podium-rest-subline">
+                ${_getTierBadge(p.tier)}
+                <span class="rbadge r${p.race}" style="font-size:9px">${p.race||'?'}</span>
+                <span class="ubadge tier-univ-badge" style="background:${col};font-size:9px;padding:1px 6px;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ||'무소속'}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="tier-podium-rest-metrics">
-          <div class="tier-podium-statbox">
-            <span class="tier-podium-statbox-label">전적</span>
-            <span class="tier-podium-statbox-value">${rec.w}W ${rec.l}L</span>
-          </div>
-          <div class="tier-podium-statbox">
-            <span class="tier-podium-statbox-label">승률</span>
-            <span class="tier-podium-statbox-value" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>
+          <div class="tier-podium-rest-metrics">
+            <div class="tier-podium-statbox">
+              <span class="tier-podium-statbox-label">전적</span>
+              <span class="tier-podium-statbox-value">${rec.w}W ${rec.l}L</span>
+            </div>
+            <div class="tier-podium-statbox">
+              <span class="tier-podium-statbox-label">승률</span>
+              <span class="tier-podium-statbox-value">${tot?wr+'%':'-'}</span>
+            </div>
           </div>
         </div>
       </article>`;
@@ -2751,13 +2794,17 @@ function rTier(C,T){
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      h+=`<div class="tier-group-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border-color:${col}33">
-        <span style="align-self:flex-start;font-size:10px;font-weight:900;color:var(--text3)">${i+1}위</span>
-        ${getPlayerPhotoHTML(p.name,_isMb?'40px':'46px','',{lazy:true})}
-        <span style="font-weight:800;font-size:${_isMb?11:12}px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
-        <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
-        <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
-        <div style="font-size:10px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} (${rec.w}W${rec.l}L)</div>
+      h+=`<div class="tier-group-card ph-swap ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
+        ${_podiumPhotoLayer(p,'tier-group-photo-bg','tier-group-photo-fallback','tier-group-photo-overlay',260)}
+        <span class="tier-group-rank">${i+1}위</span>
+        <div class="tier-group-content">
+          <span class="tier-group-name">${p.name}${genderIcon(p.gender)}</span>
+          <div class="tier-group-badges">
+            <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 6px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
+            <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
+          </div>
+          <div class="tier-group-stat">${tot?wr+'%':'-'} (${rec.w}W${rec.l}L)</div>
+        </div>
       </div>`;
     });
     h+=`</div></div>`;

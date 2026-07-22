@@ -72,7 +72,10 @@ function onGlobalSearch(val){
       onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
       ${p.photo
-        ?`<img src="${toHttpsUrl(p.photo)}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
+        ?(()=>{
+          const _2nd=(typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):'';
+          return `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:inline-flex;width:60px;height:60px;flex-shrink:0;border-radius:8px;overflow:hidden"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">${_2nd}</span>`;
+        })()
         :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
       }
       <div style="flex:1;min-width:0">

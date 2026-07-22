@@ -1567,10 +1567,14 @@ function _b2FreeView() {
   // 통과시켜서 이 선수들이 어느 현황판 화면에도 노출되지 않고 사라지는 문제가 있었습니다.
   // → 해체된 대학 소속(미이동) 선수도 무소속 목록에 포함되도록 조건을 넓혔습니다.
   const _freeDissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
+  const _fvGenderFilter = _b2GetFreeGenderFilter();
   const freeMembers = players.filter(p => {
     const pu = String(p?.univ||'').trim();
     const isFreeOrOrphaned = !pu || pu === '무소속' || _freeDissSet.has(pu);
-    return isFreeOrOrphaned && !p.hidden && !p.retired && !p.hideFromBoard;
+    if (!(isFreeOrOrphaned && !p.hidden && !p.retired && !p.hideFromBoard)) return false;
+    if (_fvGenderFilter === 'M' && p.gender !== 'M') return false;
+    if (_fvGenderFilter === 'F' && p.gender !== 'F') return false;
+    return true;
   });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
@@ -1618,6 +1622,8 @@ function _b2FreeView() {
   const _fvMode = _b2GetFreeViewMode();
   const _fvModeBtn = (mode, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeViewMode('${mode}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvMode===mode?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvMode===mode?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
+  const _fvGenderBtn = (g, label) => `
+    <button type="button" class="no-export" onclick="_b2SetFreeGenderFilter('${g}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvGenderFilter===g?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvGenderFilter===g?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
   let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
     <div style="background:linear-gradient(135deg,${defCol} 0%,#475569 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,0) 58%);pointer-events:none"></div>
@@ -1645,6 +1651,12 @@ function _b2FreeView() {
         ${_fvModeBtn('default','기본')}
         ${_fvModeBtn('stat','📊 통계카드')}
         ${_fvModeBtn('table','🗂️ 테이블')}
+        <div style="margin-left:auto;display:flex;align-items:center;gap:5px">
+          <span style="font-size:10px;font-weight:800;color:rgba(255,255,255,.65);margin-right:2px">⚥ 성별</span>
+          ${_fvGenderBtn('ALL','전체')}
+          ${_fvGenderBtn('M','남자만 보기')}
+          ${_fvGenderBtn('F','여자만 보기')}
+        </div>
       </div>
       </div>
     </div>
@@ -1686,6 +1698,21 @@ function _b2GetFreeViewMode() {
 function _b2SetFreeViewMode(mode) {
   const nextMode = ['default','stat','table'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_free_view', nextMode); }catch(e){}
+  if (typeof render === 'function') render();
+}
+
+function _b2GetFreeGenderFilter() {
+  try{
+    const raw = String(localStorage.getItem('su_b2_free_gender') || '').trim();
+    return ['ALL','M','F'].includes(raw) ? raw : 'ALL';
+  }catch(e){
+    return 'ALL';
+  }
+}
+
+function _b2SetFreeGenderFilter(g) {
+  const next = ['ALL','M','F'].includes(String(g||'')) ? String(g) : 'ALL';
+  try{ localStorage.setItem('su_b2_free_gender', next); }catch(e){}
   if (typeof render === 'function') render();
 }
 
@@ -1861,18 +1888,23 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
   const wrCol = wr==null ? '#94a3b8' : (wr>=50 ? '#16a34a' : '#dc2626');
+  // (버그픽스) 두번째 프로필 사진 호버 미리보기 지원
+  const _glassSecondRaw = String(p?.secondProfileFile||'').trim();
+  const _glassHasSecond = !!_glassSecondRaw;
+  const _glass2ndHtml = (_glassHasSecond && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center'}) : '';
   return `
     <div style="width:150px;max-width:100%;border-radius:22px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.6);box-shadow:0 10px 22px rgba(15,23,42,.12);border:1px solid ${accentCol}2e;transition:transform .18s,box-shadow .18s"
       onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 28px rgba(15,23,42,.2)'"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 22px rgba(15,23,42,.12)'">
-      <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}40,${accentCol}12)">
+      <div class="${_glassHasSecond?'ph-swap':''}" style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}40,${accentCol}12)">
         ${photo
           ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
-        ${(p.race&&p.race!=='N')?`<div style="position:absolute;top:7px;right:7px;padding:2px 8px;border-radius:999px;background:${raceCol}e6;color:#fff;font-size:10px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.22)">${p.race}</div>`:''}
-        ${badgeTxt?`<div style="position:absolute;top:7px;left:7px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:${badgeBg};font-weight:900;font-size:10px;box-shadow:0 2px 6px rgba(0,0,0,.12)">${badgeTxt}</div>`:''}
+        ${_glass2ndHtml}
+        ${(p.race&&p.race!=='N')?`<div style="position:absolute;top:7px;right:7px;padding:2px 8px;border-radius:999px;background:${raceCol}e6;color:#fff;font-size:10px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.22);z-index:6">${p.race}</div>`:''}
+        ${badgeTxt?`<div style="position:absolute;top:7px;left:7px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:${badgeBg};font-weight:900;font-size:10px;box-shadow:0 2px 6px rgba(0,0,0,.12);z-index:6">${badgeTxt}</div>`:''}
       </div>
       <div style="padding:9px 11px 10px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);border-top:1px solid ${accentCol}20">
         <div style="color:var(--text1);font-weight:950;font-size:var(--fs-base);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||''}</div>
@@ -2126,12 +2158,14 @@ function _b2LineupTableRow(p, col) {
   const wrCol = wr==null ? '#94a3b8' : (wr>=50 ? '#16a34a' : '#dc2626');
   const tierCol = (p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : col;
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
+  const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
   return `<tr onclick="openPlayerModal('${safeName}')">
     <td><div class="b2-lc4-namecell">
-      <div class="b2-lc4-avatar">
+      <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
           ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
           : `<div class="b2-lc4-fallback">${raceLetter}</div>`}
+        ${_2ndAvatar}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
     </div></td>

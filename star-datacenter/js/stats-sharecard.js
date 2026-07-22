@@ -328,7 +328,10 @@ function _statsPlayerSearchRowHTML(p){
     ? escJS(p.name)
     : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   return`<div class="stats-result-card" onclick="openPlayerModal('${safeName}')">
-    ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+    ${p.photo?(()=>{
+      const _2nd=(typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):'';
+      return `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:inline-flex;width:38px;height:38px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);overflow:hidden"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid var(--border)" onerror="this.style.display='none'">${_2nd}</span>`;
+    })():`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
     <div style="flex:1;min-width:0">
       <div style="font-weight:800;font-size:14px">${escHTML(p.name)}${getStatusIconHTML(p.name)}</div>
       <div style="font-size:11px;color:var(--text3);margin-top:1px">${escHTML(p.univ||'무소속')} · ${escHTML(p.race||'?')}</div>
