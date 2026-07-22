@@ -256,7 +256,14 @@ try{
                     const name = String(p?.name||'');
                     const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
                     const photo = String(p?.photo||'').trim();
-                    return `<button type="button" class="b2rt-av" onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}</button>`;
+                    const _avSecondRaw = String(p?.secondProfileFile||'').trim();
+                    const _avSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_avSecondRaw);
+                    const avSecondPhoto = (_avSecondRaw && !_avSecondIsVideo) ? _avSecondRaw : '';
+                    const avSecondHtml = avSecondPhoto
+                      ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+                      : '';
+                    const avHoverAttrs = avSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+                    return `<button type="button" class="b2rt-av" style="position:relative"${avHoverAttrs} onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
                   }).join('')}</div>
                 </div>`;
               }).join('')}</div>`;
@@ -275,12 +282,20 @@ try{
               const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
               const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2rt-fb" style="display:${photo?'none':'flex'}">${String(p?.race||'?')}</div>`;
-              return `<div class="b2rt-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+              // (버그픽스) 두번째 프로필 사진 호버 미리보기 — 다른 카드들과 동일하게 secondProfileFile 기반으로 표시
+              const _rtSecondRaw = String(p?.secondProfileFile||'').trim();
+              const _rtSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_rtSecondRaw);
+              const rtSecondPhoto = (_rtSecondRaw && !_rtSecondIsVideo) ? _rtSecondRaw : '';
+              const rtSecondHtml = rtSecondPhoto
+                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(rtSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+                : '';
+              const rtHoverAttrs = rtSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+              return `<div class="b2rt-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')"${rtHoverAttrs}>
                 <div class="b2rt-topbadges">
                   <span class="b2rt-pill">${tier}티어</span>
                   <span class="b2rt-pill" style="background:${uCol}55;border-color:${uCol}88">${String(p?.race||'?')}</span>
                 </div>
-                ${img}${fb}
+                ${img}${rtSecondHtml}${fb}
                 <div class="b2rt-bottom">
                   <div class="b2rt-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
                   <div class="b2rt-meta"><span>${tier}티어</span><span class="b2rt-ubadge" style="background:${uCol}22;border-color:${uCol}55;color:#fff">${uLogo}${univ}</span></div>
@@ -448,7 +463,14 @@ try{
                       const name = String(p?.name||'');
                       const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
                       const photo = String(p?.photo||'').trim();
-                      return `<button type="button" class="b2tu-av" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}</button>`;
+                      const _avSecondRaw = String(p?.secondProfileFile||'').trim();
+                      const _avSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_avSecondRaw);
+                      const avSecondPhoto = (_avSecondRaw && !_avSecondIsVideo) ? _avSecondRaw : '';
+                      const avSecondHtml = avSecondPhoto
+                        ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+                        : '';
+                      const avHoverAttrs = avSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+                      return `<button type="button" class="b2tu-av" style="position:relative"${avHoverAttrs} onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
                     }).join('')}</div>
                   </div>`;
                 }).join('')}</div>`
@@ -463,12 +485,20 @@ try{
               const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
               const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2tu-fb" style="display:${photo?'none':'flex'}">${race}</div>`;
-              return `<div class="b2tu-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+              // (버그픽스) 두번째 프로필 사진 호버 미리보기
+              const _tuSecondRaw = String(p?.secondProfileFile||'').trim();
+              const _tuSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_tuSecondRaw);
+              const tuSecondPhoto = (_tuSecondRaw && !_tuSecondIsVideo) ? _tuSecondRaw : '';
+              const tuSecondHtml = tuSecondPhoto
+                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(tuSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+                : '';
+              const tuHoverAttrs = tuSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+              return `<div class="b2tu-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')"${tuHoverAttrs}>
                 <div class="b2tu-topbadges">
                   <span class="b2tu-pill">${tt}티어</span>
                   <span class="b2tu-pill" style="background:${col}55;border-color:${col}88">${race}</span>
                 </div>
-                ${img}${fb}
+                ${img}${tuSecondHtml}${fb}
                 <div class="b2tu-bottom">
                   <div class="b2tu-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
                   <div class="b2tu-meta"><span>${race}</span><span class="b2tu-ubadge" style="background:${col}22;border-color:${col}55;color:#fff">${logo}${univName}</span></div>
