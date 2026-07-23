@@ -545,8 +545,12 @@ function rTier(C,T){
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
-    fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
+    fh+=`<button class="pill tier-sortmode-btn ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
+  // 모바일 전용: 위 5개 정렬기준 버튼을 드롭다운 트리거로 대체 (tier-sortmode-btn은 CSS로 숨김)
+  window._tierSortModeItems = modes.map(m=>({id:m.id, label:m.lbl, action:`tierRankMode='${m.id}';window._tierTypeSet=new Set();render()`, active:(tierRankMode===m.id&&_curModeNoFilter)}));
+  const _curSortMode = modes.find(m=>m.id===tierRankMode) || modes[0];
+  fh+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'정렬 기준',window._tierSortModeItems)">${_curSortMode.lbl} ▾</button>`;
   fh+=`<span class="fbar-divider"></span>`;
   fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없음 제외</button>`;
   fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
@@ -567,7 +571,15 @@ function rTier(C,T){
     const on=window._tierViewMode===vm.id;
     fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
   });
-  fh+=`</div></div>`;
+  fh+=`</div>`;
+  // 모바일 전용: 위 5개 보기방식 아이콘버튼을 드롭다운 트리거로 대체
+  window._tierViewModeItems = _viewModes.map(vm=>({id:vm.id, icon:vm.icon, label:vm.title, action:`window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()`, active:window._tierViewMode===vm.id}));
+  const _curTierVm = _viewModes.find(vm=>vm.id===window._tierViewMode) || _viewModes[0];
+  fh+=`<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._tierViewModeItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curTierVm.icon}</span><span class="mode-select-trigger-label">${_curTierVm.title}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
+  fh+=`</div>`;
   fh+=`</div>`;
 
   if(window._tierFilterOpen){

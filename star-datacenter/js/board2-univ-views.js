@@ -54,6 +54,12 @@ function _b2UnivView() {
   const _viewBtn = _viewModes.map(([mode,label,ico]) =>
     `<button type="button" class="b2-seg-btn${_viewMode===mode?' on':''}" onclick="_b2SetUnivProfileViewMode('${mode}')">${ico?ico+' ':''}${label}</button>`
   ).join('');
+  window._b2UnivModeItems = _viewModes.map(([mode,label,ico])=>({id:mode, label:(ico?ico+' ':'')+label, action:`_b2SetUnivProfileViewMode('${mode}')`, active:_viewMode===mode}));
+  const _curUnivVm = _viewModes.find(([mode])=>mode===_viewMode) || _viewModes[0];
+  const _univModeMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'대학별 표시 모드',window._b2UnivModeItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${(_curUnivVm[2]?_curUnivVm[2]+' ':'')+_curUnivVm[1]}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
   const statsBar = `<div style="margin-bottom:12px">
     <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
       <div class="b2-race-tier-row b2-stats-subrow">
@@ -65,10 +71,11 @@ function _b2UnivView() {
         <span class="b2-section-label">🏛️ 바로가기</span>
         ${_jumpChips}
       </div>
-      <div class="b2-mode-row b2-stats-subrow">
+      <div class="b2-mode-row b2-stats-subrow b2-univ-mode-desktop">
         <span class="b2-section-label">🖼️ 모드</span>
         <div class="b2-seg-track">${_viewBtn}</div>
       </div>
+      ${_univModeMobileTrigger}
     </div>
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';

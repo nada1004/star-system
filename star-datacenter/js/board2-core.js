@@ -417,7 +417,7 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
         <div style="display:flex;gap:4px">
           ${_lcModeBtn('default','🖼️ 기본')}
@@ -425,6 +425,12 @@ function rBoard2(C, T) {
           ${_lcModeBtn('table','🗂️ 테이블')}
         </div>
       </div>
+      ${(function(){
+        const _lcItems=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+        window._b2LineupModeItems = _lcItems.map(it=>({id:it.id, label:it.label, action:`_b2SetLineupCardMode('${it.id}')`, active:_b2LineupCardMode===it.id}));
+        const _curLc = _lcItems.find(it=>it.id===_b2LineupCardMode) || _lcItems[0];
+        return `<button type="button" class="pill mode-select-trigger" style="flex-shrink:0" onclick="_toggleModePopover(this,'라인업 모드',window._b2LineupModeItems)">${_curLc.label} ▾</button>`;
+      })()}
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -491,6 +497,28 @@ function rBoard2(C, T) {
   const radarBtn   = _b2TabBtn('radar',  '#a855f7', (typeof getTabLabel==='function'?getTabLabel('board2','radar',  '🕸️ 레이더'):'🕸️ 레이더'));
   const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
   const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
+  // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/레이더/요약/대학비교/구현황판)을
+  // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
+  const _b2TabDefs = [
+    {id:'weekly',  label:(typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')},
+    {id:'lineup',  label:(typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')},
+    {id:'univ',    label:(typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')},
+    {id:'femco',   label:(typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')},
+    {id:'free',    label:(typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속')},
+    {id:'players', label:(typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel)},
+    {id:'heatmap', label:(typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵')},
+    {id:'bubble',  label:(typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵')},
+    {id:'radar',   label:(typeof getTabLabel==='function'?getTabLabel('board2','radar','🕸️ 레이더'):'🕸️ 레이더')},
+    {id:'summary', label:(typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')},
+    {id:'compare', label:(typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교')},
+  ];
+  if(isLoggedIn) _b2TabDefs.push({id:'old', label:(typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')});
+  window._b2TabPopoverItems = _b2TabDefs.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
+  const _curB2TabItem = _b2TabDefs.find(it=>it.id===_b2View) || _b2TabDefs[0];
+  const _b2TabMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'현황판 화면 선택',window._b2TabPopoverItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${_curB2TabItem.label}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
   const _navTight = _b2View === 'players' ? '#b2-nav.b2-nav-new { padding-top: 0; }' : '';
@@ -662,6 +690,7 @@ function rBoard2(C, T) {
         ${compareBtn}
         ${oldBtn}
           </div>
+          ${_b2TabMobileTrigger}
           ${playerFilters}
           <div class="b2-toolbar-actions">${rightBtns}</div>
         </div>

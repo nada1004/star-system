@@ -325,9 +325,71 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '@media (max-width:980px){.streamer-topgrid{grid-template-columns:1fr}.streamer-quickrail{grid-template-columns:repeat(2,minmax(0,1fr))}}',
     '@media (max-width:768px){.streamer-shell{overflow-x:hidden;max-width:100%}.streamer-hero{display:none}.streamer-toolbar-card,.streamer-content-card{padding:10px;overflow-x:hidden}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--su-streamer-card-gap,9px);padding:16px}.streamer-search{max-width:none;flex:1 1 180px}.streamer-kpi-grid,.streamer-quickrail,.streamer-focus-statgrid,.streamer-focus-note-grid{grid-template-columns:1fr}.streamer-focus-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.streamer-focus-photo{width:100%;height:220px}.streamer-focus-main-hero{gap:18px;padding:18px}.streamer-focus-copy{min-width:0}.streamer-focus-hero-bg2{display:none}.streamer-shell[data-st-layout="showcase"] .streamer-hero-title{font-size:22px}.streamer-shell[data-st-layout="cozy"] .streamer-gallery-grid,.streamer-shell[data-st-layout="showcase"] .streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));padding:16px}}',
     '@media (max-width:400px){.streamer-hero{padding:12px}.streamer-toolbar-card,.streamer-content-card{padding:8px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;padding:10px}.streamer-focus-main-hero{padding:12px}.streamer-focus-photo{height:180px}}',
+    // ── 모바일 전용 "모드 선택" 드롭다운(팝오버) 공용 스타일 ──
+    // 스트리머탭/티어랭킹탭/현황판탭에서 뷰모드·정렬기준 버튼이 모바일 화면에 나열형으로
+    // 너무 많이 노출되는 문제를 개선하기 위해, 데스크톱은 기존 버튼 그룹을 그대로 두고
+    // 모바일(<=768px)에서만 버튼 그룹을 숨기고 이 드롭다운 트리거 1개로 대체한다.
+    '.mode-select-trigger{display:none}',
+    '@media (max-width:768px){.mode-select-trigger{display:inline-flex}}',
+    '.mode-select-trigger{align-items:center;gap:6px;cursor:pointer}',
+    '.mode-select-trigger--block{display:none}',
+    '@media (max-width:768px){.mode-select-trigger--block{display:flex;width:100%;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;border:1.5px solid rgba(148,163,184,.24);background:#f8fafc;color:var(--text2);font-size:var(--fs-sm);font-weight:800;margin-bottom:10px}}',
+    'body.dark .mode-select-trigger--block{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:#cbd5e1}',
+    '.mode-select-trigger-main{display:inline-flex;align-items:center;gap:7px;min-width:0;overflow:hidden}',
+    '.mode-select-trigger-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mode-select-trigger-caret{flex-shrink:0;font-size:10px;opacity:.6}',
+    '.mode-select-popover{z-index:var(--z-top,9999);min-width:200px;max-width:280px;max-height:360px;overflow-y:auto;padding:8px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.97));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.16);backdrop-filter:blur(12px)}',
+    'body.dark .mode-select-popover{background:linear-gradient(180deg,#0f172a,#0b1220);border-color:#334155}',
+    '.mode-select-popover-title{font-size:var(--fs-caption);font-weight:900;color:var(--text3);letter-spacing:.02em;margin-bottom:4px;padding:2px 6px}',
+    '.mode-select-popover-list{display:flex;flex-direction:column;gap:2px}',
+    '.mode-select-popover-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;border:none;background:transparent;color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;text-align:left;width:100%}',
+    '.mode-select-popover-item:hover{background:rgba(148,163,184,.12)}',
+    '.mode-select-popover-item.on{background:rgba(37,99,235,.12);color:#1d4ed8}',
+    'body.dark .mode-select-popover-item{color:#cbd5e1}',
+    'body.dark .mode-select-popover-item:hover{background:rgba(255,255,255,.08)}',
+    'body.dark .mode-select-popover-item.on{background:rgba(37,99,235,.24);color:#93c5fd}',
+    '.mode-select-popover-ico{font-size:15px;flex-shrink:0}',
+    '.mode-select-popover-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mode-select-popover-check{flex-shrink:0;font-weight:900;color:#2563eb}',
+    // 모바일에서 데스크톱 전용 버튼 그룹 숨김 (탭별 트리거로 대체)
+    '@media (max-width:768px){.streamer-viewmode-seg{display:none}.tier-sortmode-btn{display:none}.tier-view-row-btns{display:none}.tier-view-row-label{display:none}.brd-viewmode-toggle-btn{display:none}.b2-toolbar-main{display:none}.b2-lineup-mode-desktop{display:none}.b2-univ-mode-desktop{display:none}}',
   ].join('');
   document.head.appendChild(s);
 })();
+
+// ── 모바일 전용 "모드 선택" 드롭다운(팝오버) 공용 로직 ──
+// 스트리머/티어랭킹/현황판 탭에서 공통으로 사용하는 팝오버 렌더러.
+// items: [{id, icon, label, action(JS 코드 문자열), active(bool)}]
+function _closeModePopover(){
+  try{ const p=document.getElementById('mode-select-popover'); if(p) p.remove(); }catch(e){}
+  try{ document.removeEventListener('mousedown', _modePopoverOutsideClick, true); }catch(e){}
+}
+function _modePopoverOutsideClick(ev){
+  const pop = document.getElementById('mode-select-popover');
+  if(!pop) return;
+  if(pop.contains(ev.target)) return;
+  if(ev.target && ev.target.closest && ev.target.closest('.mode-select-trigger')) return;
+  _closeModePopover();
+}
+function _toggleModePopover(btn, title, items){
+  const existing = document.getElementById('mode-select-popover');
+  if(existing){ _closeModePopover(); return; }
+  try{
+    const pop = document.createElement('div');
+    pop.id = 'mode-select-popover';
+    pop.className = 'mode-select-popover';
+    pop.innerHTML = (title?`<div class="mode-select-popover-title">${title}</div>`:'') +
+      `<div class="mode-select-popover-list">${(items||[]).map(it=>`<button type="button" class="mode-select-popover-item ${it.active?'on':''}" onclick="_closeModePopover();${it.action}"><span class="mode-select-popover-ico">${it.icon||''}</span><span class="mode-select-popover-label">${it.label}</span>${it.active?'<span class="mode-select-popover-check">✓</span>':''}</button>`).join('')}</div>`;
+    document.body.appendChild(pop);
+    const rect = btn.getBoundingClientRect();
+    pop.style.position='fixed';
+    pop.style.top = (rect.bottom+6)+'px';
+    let left = rect.left;
+    pop.style.left = Math.min(Math.max(left,8), window.innerWidth-pop.offsetWidth-8)+'px';
+    setTimeout(()=>document.addEventListener('mousedown', _modePopoverOutsideClick, true), 0);
+  }catch(e){}
+}
+if(typeof window!=='undefined'){ window._toggleModePopover=_toggleModePopover; window._closeModePopover=_closeModePopover; }
 
 window.cfgSetStreamerTabVisual = function(type, value){
   try{

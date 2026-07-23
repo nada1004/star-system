@@ -899,11 +899,24 @@ function rBoard(C,T){
   </section>
   <div class="brd-toolbar-card no-export">
   <div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px">
-    <button class="pill ${boardGridCols===2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
-    <button class="pill ${boardCardView?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
-    <button class="pill ${boardCompactMode?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
+    <button class="pill brd-viewmode-toggle-btn ${boardGridCols===2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
+    <button class="pill brd-viewmode-toggle-btn ${boardCardView?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
+    <button class="pill brd-viewmode-toggle-btn ${boardCompactMode?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
     <button class="pill ${_brdAllCollapsed?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
   </div>
+  ${(function(){
+    // 모바일 전용: 위 3개 표시방식 토글을 드롭다운 트리거로 대체 (brd-viewmode-toggle-btn은 CSS로 숨김)
+    window._brdViewModeItems = [
+      {id:'cols', icon: boardGridCols===2?'▦':'⊞', label: boardGridCols===2?'1열로 보기 전환':'2열로 보기 전환', action:"boardGridCols=boardGridCols===2?1:2;render()", active:boardGridCols===2},
+      {id:'card', icon:'▦', label: boardCardView?'기본 카드로 전환':'포토카드로 전환', action:"boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()", active:boardCardView},
+      {id:'compact', icon: boardCompactMode?'⬛':'🔲', label: boardCompactMode?'크게 보기로 전환':'소형으로 전환', action:"boardCompactMode=!boardCompactMode;render()", active:boardCompactMode}
+    ];
+    const _brdSummary = `${boardGridCols===2?'2열':'1열'} · ${boardCardView?'포토카드':'기본카드'} · ${boardCompactMode?'소형':'대형'}`;
+    return `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'표시 방식',window._brdViewModeItems)">
+      <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">🖼️</span><span class="mode-select-trigger-label">${_brdSummary}</span></span>
+      <span class="mode-select-trigger-caret">▾</span>
+    </button>`;
+  })()}
   <div class="brd-toolbar brd-toolbar-top">
     <div class="brd-toolbar-controls">
       <div class="brd-toolbar-row">

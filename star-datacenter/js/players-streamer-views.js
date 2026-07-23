@@ -197,12 +197,26 @@ function rTotal(C,T){
     <button class="streamer-viewmode-btn ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기"><span class="streamer-viewmode-ico">☰</span><span class="streamer-viewmode-txt">리스트</span></button>
     <button class="streamer-viewmode-btn ${totalViewMode==='simple'?'on':''}" onclick="totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()" title="여백을 줄인 한 줄 미니멀 리스트"><span class="streamer-viewmode-ico">✨</span><span class="streamer-viewmode-txt">심플형</span></button>
   </div>`;
+  // 모바일 전용: 위 4개 버튼을 한 줄 드롭다운 트리거로 대체 (streamer-viewmode-seg는 CSS로 숨김)
+  const _streamerViewModeMeta = {
+    gallery:{icon:'🪪',label:'카드형',action:"totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()"},
+    focus:{icon:'🧾',label:'상세형',action:"if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()"},
+    table:{icon:'☰',label:'리스트',action:"totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()"},
+    simple:{icon:'✨',label:'심플형',action:"totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()"}
+  };
+  window._streamerViewModeItems = Object.keys(_streamerViewModeMeta).map(id=>({id, icon:_streamerViewModeMeta[id].icon, label:_streamerViewModeMeta[id].label, action:_streamerViewModeMeta[id].action, active:totalViewMode===id}));
+  const _curStreamerVm = _streamerViewModeMeta[totalViewMode] || _streamerViewModeMeta.table;
+  const _viewSegMobile = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._streamerViewModeItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curStreamerVm.icon}</span><span class="mode-select-trigger-label">${_curStreamerVm.label}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
   const _genderBtn=(g,label)=>`<button class="pill ${totalGenderFilter===g?'on':''}" onclick="totalGenderFilter='${g}';render()">${label}</button>`;
   const _univShortcutBtn=`<button type="button" class="pill streamer-univ-shortcut-btn ${totalUnivFilter?'on':''}" onclick="_toggleUnivShortcutPopover(this)" title="대학 바로가기">🏫${totalUnivFilter?`<span class="streamer-univ-shortcut-name">${totalUnivFilter}</span>`:' 대학 바로가기'}</button>`;
   let filterBar=`<div class="streamer-toolbar-card">
     ${_viewSeg}
+    ${_viewSegMobile}
     <div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" data-race="${r}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span class="fbar-divider"></span>
