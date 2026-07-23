@@ -541,6 +541,19 @@ try{
   document.head.appendChild(s);
 })();
 
+;(function _injectUnivPosterCardStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('b2-univ-poster-card-style')) return;
+  const s=document.createElement('style');
+  s.id='b2-univ-poster-card-style';
+  s.textContent=[
+    '.b2-univ-poster-card{transition:transform .18s ease,box-shadow .18s ease}',
+    '@media (hover: hover) and (pointer: fine){ .b2-univ-poster-card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 16px 28px rgba(15,23,42,.24)} }',
+    '@media (max-width:480px){ .b2-univ-poster-card{width:100px} }'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
   // 펨코현황 설정(단일 소스)
@@ -1973,9 +1986,7 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
   return `
-    <div style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease" onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateY(-4px) scale(1.03)';this.style.boxShadow='0 16px 28px rgba(15,23,42,.24)'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.12)'">
+    <div class="b2-univ-poster-card" style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer" onclick="openPlayerModal('${safeName}')">
       ${backdrop}
       ${photoHtml}
       ${p.race&&p.race!=='N'?`<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.26)">${p.race}</div>`:''}
