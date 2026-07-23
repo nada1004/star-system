@@ -65,7 +65,7 @@ function _b2UnivView() {
         <span class="b2-section-label">🏛️ 바로가기</span>
         ${_jumpChips}
       </div>
-      <div class="b2-mode-row b2-stats-subrow" style="justify-content:space-between">
+      <div class="b2-mode-row b2-stats-subrow">
         <span class="b2-section-label">🖼️ 모드</span>
         <div class="b2-seg-track">${_viewBtn}</div>
       </div>

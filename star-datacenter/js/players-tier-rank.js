@@ -55,6 +55,11 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-toggle-pill.on::after{content:"ON";background:rgba(37,99,235,.14);color:#1d4ed8}',
     '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
     '.tier-view-btn{padding:6px 9px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:var(--fs-base);cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}',
+    '.tier-view-row{display:flex;align-items:center;gap:10px;padding-top:11px;margin-top:1px;border-top:1px dashed rgba(148,163,184,.24);flex-wrap:wrap}',
+    '.tier-view-row-label{font-size:11px;font-weight:850;color:var(--text3);flex-shrink:0;display:flex;align-items:center;gap:4px;letter-spacing:-.01em}',
+    '.tier-view-row-btns{display:flex;gap:3px;flex-wrap:wrap;min-width:0}',
+    'body.dark .tier-view-row{border-top-color:rgba(148,163,184,.16)}',
+    'body.dark .tier-view-row-label{color:#94a3b8}',
     '.tier-view-btn-icon{line-height:1}',
     '.tier-view-btn-label{font-size:11px;font-weight:800;letter-spacing:-.01em}',
     '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
@@ -106,7 +111,6 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-podium-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 18%;z-index:0;transition:transform .32s ease}',
     '.tier-podium-card:hover .tier-podium-bg{transform:scale(1.045)}',
     '.tier-podium-bg-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;font-weight:900;color:#fff;z-index:0;letter-spacing:-.04em}',
-    '.tier-podium-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.05) 28%,rgba(15,23,42,.50) 66%,rgba(2,6,23,.88) 100%)}',
     '.tier-podium-rankline{position:relative;z-index:2}',
     '.tier-podium-medal{background:rgba(15,23,42,.34);color:#fff!important;padding:5px 10px;border-radius:999px;backdrop-filter:blur(6px)}',
     '.tier-podium-card.place-1 .tier-podium-medal,.tier-podium-card.place-2 .tier-podium-medal,.tier-podium-card.place-3 .tier-podium-medal{color:#fff!important}',
@@ -116,10 +120,10 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-podium-main--hero{align-items:flex-start;gap:14px}',
     '.tier-podium-copy{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}',
     '.tier-podium-card.place-1 .tier-podium-copy{padding-top:2px}',
-    '.tier-podium-name{font-size:19px;font-weight:950;letter-spacing:-.03em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-podium-name{font-size:19px;font-weight:950;letter-spacing:-.03em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.75),0 2px 12px rgba(0,0,0,.6);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-podium-card.place-1 .tier-podium-name{font-size:24px}',
     '.tier-podium-sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}',
-    '.tier-podium-highlight{font-size:var(--fs-sm);line-height:1.6;color:rgba(255,255,255,.82);text-shadow:0 1px 6px rgba(0,0,0,.4)}',
+    '.tier-podium-highlight{font-size:var(--fs-sm);line-height:1.6;color:rgba(255,255,255,.9);text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.5)}',
     '.tier-podium-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;position:relative;z-index:2}',
     '.tier-podium-card.place-1 .tier-podium-stats{gap:8px}',
     '.tier-podium-statbox{display:flex;flex-direction:column;gap:4px;padding:10px 11px;border-radius:var(--r2);background:rgba(255,255,255,.16);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,255,255,.22);min-width:0}',
@@ -136,13 +140,12 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-podium-rest-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .32s ease;z-index:0}',
     '.tier-podium-rest-item:hover .tier-podium-rest-photo{transform:scale(1.05)}',
     '.tier-podium-rest-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;z-index:0}',
-    '.tier-podium-rest-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.10) 32%,rgba(2,6,23,.86) 100%)}',
     '.tier-podium-rest-rankchip{position:absolute;top:8px;left:8px;z-index:2;min-width:26px;height:24px;padding:0 7px;border-radius:999px;background:rgba(15,23,42,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.25)}',
     '.tier-podium-rest-bottom{position:relative;z-index:2;width:100%;padding:10px 10px 11px;display:flex;flex-direction:column;gap:6px}',
     '.tier-podium-rest-top{display:flex;align-items:center;gap:10px;min-width:0}',
     '.tier-podium-rest-rank{font-size:var(--fs-sm);font-weight:900;color:var(--text3);min-width:34px}',
     '.tier-podium-rest-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}',
-    '.tier-podium-rest-name{font-size:var(--fs-base);font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-podium-rest-name{font-size:var(--fs-base);font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.75),0 2px 8px rgba(0,0,0,.55);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-podium-rest-subline{display:flex;align-items:center;gap:5px;flex-wrap:wrap}',
     '.tier-podium-rest-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}',
     '.tier-podium-card,.tier-podium-rest-item,.tier-compact-item,.tier-group-card{position:relative;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,background .2s ease}',
@@ -173,49 +176,38 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-group-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .3s ease;z-index:0}',
     '.tier-group-card:hover .tier-group-photo{transform:scale(1.06)}',
     '.tier-group-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;z-index:0}',
-    '.tier-group-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.08) 34%,rgba(2,6,23,.84) 100%)}',
     '.tier-group-rank{position:absolute;top:6px;left:6px;z-index:2;font-size:9px;font-weight:900;color:#fff;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:2px 7px;border-radius:999px}',
     '.tier-group-bottom{position:relative;z-index:2;width:100%;padding:8px 8px 9px;display:flex;flex-direction:column;gap:4px}',
-    '.tier-group-name{font-weight:900;font-size:12px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.tier-group-name{font-weight:900;font-size:12px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.75),0 2px 6px rgba(0,0,0,.5);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.tier-group-pills{display:flex;gap:3px;flex-wrap:wrap;align-items:center}',
-    '.tier-group-wr{font-size:10px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.4)}',
+    '.tier-group-wr{font-size:10px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.4)}',
     /* ── 매거진/룩북 모드 ── */
-    '.tier-mag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;padding:10px 2px}',
-    '.tier-mag-card{position:relative;aspect-ratio:.72;border-radius:22px;overflow:hidden;cursor:pointer;background:#0b1120;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 30px rgba(15,23,42,.12);isolation:isolate;transition:box-shadow .2s ease}',
-    '.tier-mag-card:hover{box-shadow:0 20px 40px rgba(15,23,42,.2)}',
+    '.tier-mag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;padding:10px 2px}',
+    '.tier-mag-card{position:relative;aspect-ratio:.72;border-radius:22px;overflow:hidden;cursor:pointer;background:#0b1120;isolation:isolate;transition:box-shadow .25s ease,transform .25s ease}',
+    '.tier-mag-card:hover{box-shadow:0 22px 44px rgba(15,23,42,.24);transform:translateY(-2px)}',
     '.tier-mag-card.is-selected{outline:2px solid rgba(255,255,255,.3);outline-offset:2px}',
-    '.tier-mag-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}',
-    '.tier-mag-card:hover .tier-mag-photo{transform:scale(1.045)}',
+    '.tier-mag-spine{position:absolute;top:0;left:0;right:0;height:4px;z-index:4;transition:height .25s ease,filter .25s ease}',
+    '.tier-mag-card:hover .tier-mag-spine{height:6px;filter:brightness(1.25)}',
+    '.tier-mag-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .45s ease}',
+    '.tier-mag-card:hover .tier-mag-photo{transform:scale(1.065);filter:brightness(.6) contrast(1.06) saturate(1.1)}',
     '.tier-mag-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#fff;z-index:0}',
-    '.tier-mag-rank{position:absolute;top:10px;left:10px;z-index:3;font-size:10px;font-weight:900;color:#fff;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);padding:3px 9px;border-radius:999px;letter-spacing:-.01em}',
-    '.tier-mag-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(6,10,24,.68) 58%,rgba(3,6,18,.92) 100%)}',
-    '.tier-mag-panel{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.2,.8,.2,1);padding:0 14px}',
-    '.tier-mag-card:hover .tier-mag-panel{max-height:170px;padding:10px 14px 2px}',
-    '.tier-mag-panel-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;color:rgba(255,255,255,.92);padding:3px 0}',
-    '.tier-mag-panel-label{color:rgba(255,255,255,.6);font-weight:700}',
-    '.tier-mag-baseline{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 13px}',
-    '.tier-mag-name{font-size:15px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}',
-    '.tier-mag-baseline-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
-    '.tier-mag-tier-chip{font-size:9px;font-weight:900;padding:2px 7px;border-radius:999px;color:#fff;white-space:nowrap}',
-    '.tier-mag-wr-chip{font-size:11px;font-weight:900;color:#fff;background:rgba(15,23,42,.42);backdrop-filter:blur(4px);padding:3px 8px;border-radius:999px;white-space:nowrap}',
-    /* ── 트레이딩카드 모드 ── */
-    '.tier-tc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px;padding:10px 2px}',
-    '.tier-tc-card{position:relative;display:flex;flex-direction:column;border-radius:18px;overflow:hidden;cursor:pointer;background:#0b1120;box-shadow:0 14px 28px rgba(15,23,42,.12);transition:transform .2s ease,box-shadow .2s ease}',
-    '.tier-tc-card:hover{transform:translateY(-3px);box-shadow:0 20px 36px rgba(15,23,42,.18)}',
-    '.tier-tc-card.is-selected{outline:2px solid rgba(255,255,255,.3);outline-offset:2px}',
-    '.tier-tc-photo-wrap{position:relative;aspect-ratio:.82;overflow:hidden;flex-shrink:0}',
-    '.tier-tc-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
-    '.tier-tc-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#fff}',
-    '.tier-tc-rank{position:absolute;top:7px;left:7px;z-index:2;font-size:10px;font-weight:900;color:#fff;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);padding:2px 8px;border-radius:999px}',
-    '.tier-tc-tierbadge{position:absolute;top:7px;right:7px;z-index:2;font-size:10px;font-weight:950;padding:3px 9px;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.25)}',
-    '.tier-tc-photo-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 60%,rgba(3,6,18,.55) 100%);pointer-events:none}',
-    '.tier-tc-namebar{position:relative;padding:8px 10px;display:flex;align-items:center;gap:6px;min-width:0}',
-    '.tier-tc-name{font-size:13px;font-weight:900;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}',
-    '.tier-tc-stats{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:1px}',
-    '.tier-tc-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;background:rgba(255,255,255,.03)}',
-    '.tier-tc-stat-icon{font-size:13px;line-height:1}',
-    '.tier-tc-stat-value{font-size:12px;font-weight:900;color:#fff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.tier-tc-stat-label{font-size:8px;font-weight:800;color:rgba(255,255,255,.5);letter-spacing:.03em;text-transform:uppercase}',
+    '.tier-mag-rank{position:absolute;top:12px;left:12px;z-index:3;font-size:11px;font-weight:950;color:#fff;padding:4px 10px;border-radius:8px;letter-spacing:-.01em;box-shadow:0 6px 14px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}',
+    '.tier-mag-card:hover .tier-mag-rank{transform:scale(1.1) rotate(-2deg)}',
+    '.tier-mag-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column}',
+    '.tier-mag-panel{max-height:0;overflow:hidden;transition:max-height .36s cubic-bezier(.2,.8,.2,1);padding:0 16px}',
+    '.tier-mag-card:hover .tier-mag-panel{max-height:180px;padding:14px 16px 2px}',
+    '.tier-mag-panel-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.95);padding:4px 0;opacity:0;transform:translateY(6px);transition:opacity .3s ease,transform .3s ease}',
+    '.tier-mag-card:hover .tier-mag-panel-row{opacity:1;transform:translateY(0)}',
+    '.tier-mag-card:hover .tier-mag-panel-row:nth-child(1){transition-delay:.04s}',
+    '.tier-mag-card:hover .tier-mag-panel-row:nth-child(2){transition-delay:.09s}',
+    '.tier-mag-card:hover .tier-mag-panel-row:nth-child(3){transition-delay:.14s}',
+    '.tier-mag-panel-label{color:rgba(255,255,255,.6);font-weight:750;font-size:10px;letter-spacing:.06em;text-transform:uppercase}',
+    '.tier-mag-baseline{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:12px 16px 16px}',
+    '.tier-mag-baseline-text{min-width:0;flex:1}',
+    '.tier-mag-eyebrow{font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:3px;text-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.tier-mag-name{font-size:19px;font-weight:950;letter-spacing:-.02em;line-height:1.08;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.65);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;transition:letter-spacing .3s ease}',
+    '.tier-mag-card:hover .tier-mag-name{letter-spacing:-.005em}',
+    '.tier-mag-wr-chip{font-size:12px;font-weight:950;color:#fff;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);padding:5px 11px;border-radius:999px;white-space:nowrap;border:1.5px solid rgba(255,255,255,.2);flex-shrink:0}',
     'body.dark .tier-hero{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-hero-title{color:#f8fafc}',
@@ -276,11 +268,11 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
     'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
     'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
-    'body.dark .tier-mag-card,body.dark .tier-tc-card{box-shadow:0 16px 32px rgba(0,0,0,.3)}',
-    'body.dark .tier-mag-card.is-selected,body.dark .tier-tc-card.is-selected{outline-color:rgba(148,163,184,.4)}',
-    '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{display:none}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-view-btn-label{display:none}.tier-view-btn{padding:7px}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.tier-tc-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}}',
+    'body.dark .tier-mag-card{box-shadow:0 16px 32px rgba(0,0,0,.3)}',
+    'body.dark .tier-mag-card.is-selected{outline-color:rgba(148,163,184,.4)}',
+    '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{display:none}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-view-btn-label{display:none}.tier-view-btn{padding:7px}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:var(--fs-lg)}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:var(--fs-caption);white-space:normal}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.tier-mag-name{font-size:15px}.tier-mag-eyebrow{font-size:9px}}',
     /* 초소형 폰(400px 이하) 추가 대응: 카드/그룹 그리드 여백을 더 좁혀 2열이 빠듯하게라도 들어가도록 */
-    '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}.tier-tc-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px}}',
+    '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}.tier-mag-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}.tier-mag-name{font-size:13px}.tier-mag-eyebrow{font-size:8px}}',
     /* 포디움 모드 모바일: 1등을 가운데(은-금-동 순)로 배치, 한 줄(3열)에 나란히, 박스 크기를 모바일 브라우저에 맞게 축소 */
     '@media (max-width:768px){',
       '.tier-podium-stage{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px !important;max-width:100% !important;width:100%;align-items:end !important;padding:0 2px}',
@@ -543,35 +535,39 @@ function rTier(C,T){
     window._tierHideNoRecord, window._tierExcludeMale,
     _hasTypeFilter
   ].filter(Boolean).length;
-  const _viewModeLabels={table:'테이블',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹',magazine:'매거진',tradingcard:'트레이딩카드'};
+  const _viewModeLabels={table:'테이블',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹',magazine:'매거진'};
   if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
   const _viewLabel=_viewModeLabels[window._tierViewMode||'table']||'테이블';
 
-  // ── 1행: 보기 모드(좌측) + 필터/정렬 pills(우측) ──
-  let fh=`<div class="tier-toolbar-card"><div class="tier-filter-shell"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
-  // ── 뷰 전환 버튼 (좌측) ──
-  const _viewModes=[
-    {id:'table',      icon:'📋', title:'테이블'},
-    {id:'magazine',   icon:'📷', title:'매거진/룩북'},
-    {id:'podium',     icon:'🏆', title:'포디움'},
-    {id:'compact',    icon:'📝', title:'컴팩트'},
-    {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
-    {id:'tradingcard',icon:'🎴', title:'트레이딩카드'},
-  ];
-  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
-  fh+=`<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap">`;
-  _viewModes.forEach(vm=>{
-    const on=window._tierViewMode===vm.id;
-    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
-  });
-  fh+=`</div>`;
-  fh+=`<div class="fbar" style="flex:1 1 420px;min-width:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
+  // ── 1행: 필터/정렬 pills ──   ── 2행: 보기 모드 버튼 ──
+  let fh=`<div class="tier-toolbar-card"><div class="tier-filter-shell">`;
+  fh+=`<div class="fbar" style="min-width:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
+  fh+=`<span class="fbar-divider"></span>`;
+  fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없음 제외</button>`;
+  fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
   fh+=`</div>`;
+  // ── 뷰 전환 버튼 (필터/정렬 아래 별도 행, 오른쪽 정렬) ──
+  const _viewModes=[
+    {id:'table',      icon:'📋', title:'테이블'},
+    {id:'magazine',   icon:'📷', title:'매거진/룩북'},
+    {id:'podium',     icon:'🏆', title:'포디움'},
+    {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
+    {id:'compact',    icon:'📝', title:'컴팩트'},
+  ];
+  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
+  fh+=`<div class="tier-view-row">`;
+  fh+=`<span class="tier-view-row-label">🎛️ 모드</span>`;
+  fh+=`<div class="tier-view-row-btns">`;
+  _viewModes.forEach(vm=>{
+    const on=window._tierViewMode===vm.id;
+    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
+  });
+  fh+=`</div></div>`;
   fh+=`</div>`;
 
   if(window._tierFilterOpen){
@@ -638,18 +634,13 @@ function rTier(C,T){
       fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${_fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
     });
     fh+=`</div>`;
-    // ── 4행: 종족 + 옵션 (flex-wrap) ──
+    // ── 4행: 종족 (flex-wrap) ──
     fh+=`<div class="tier-filter-sub">종족</div>`;
     fh+=`<div class="fbar" style="flex-wrap:wrap;gap:6px">`;
     ['전체','T','Z','P'].forEach(r=>{
       fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
-    fh+=`</div>`;
-    fh+=`<div class="tier-filter-sub">옵션</div>`;
-    fh+=`<div class="tier-filter-option-row">
-      <button class="tier-toggle-pill ${window._tierHideNoRecord?'on':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 스트리머 숨김</button>
-      <button class="tier-toggle-pill ${window._tierExcludeMale?'on':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>
-    </div></section>`;
+    fh+=`</div></section>`;
 
   // ── 3행: 유형별 필터 ──
   const _typeCount=window._tierTypeSet?window._tierTypeSet.size:0;
@@ -1265,7 +1256,6 @@ function rTier(C,T){
       ${_hasPhoto?`<img class="tier-podium-bg" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
       ${_2ndImg}
       <div class="tier-podium-bg-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
-      <div class="tier-podium-overlay"></div>
       <div class="tier-podium-rankline">
         <span class="tier-podium-medal">${medal} ${place}위</span>
       </div>
@@ -1323,7 +1313,6 @@ function rTier(C,T){
         ${_hasPhoto?`<img class="tier-podium-rest-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
         ${_2ndImg}
         <div class="tier-podium-rest-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
-        <div class="tier-podium-rest-overlay"></div>
         <span class="tier-podium-rest-rankchip">${ri}위</span>
         <div class="tier-podium-rest-bottom">
           <div class="tier-podium-rest-name">${p.name}${genderIcon(p.gender)}</div>
@@ -1440,7 +1429,6 @@ function rTier(C,T){
         ${_hasPhoto?`<img class="tier-group-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
         ${_2ndImg}
         <div class="tier-group-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
-        <div class="tier-group-overlay"></div>
         <span class="tier-group-rank">${i+1}위</span>
         <div class="tier-group-bottom">
           <span class="tier-group-name">${p.name}${genderIcon(p.gender)}</span>
@@ -1472,66 +1460,25 @@ function rTier(C,T){
     const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
     const _hasPhoto = !!_photoUrl;
     const extraVal=_getExtraVal(p);
-    h+=`<div class="tier-mag-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
+    h+=`<div class="tier-mag-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};box-shadow:0 0 0 2px ${col}45,0 14px 30px rgba(15,23,42,.16)">
       ${_hasPhoto?`<img class="tier-mag-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
       ${_2ndImg}
       <div class="tier-mag-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
-      <span class="tier-mag-rank">${i+1}위</span>
-      <div class="tier-mag-bottom">
+      <span class="tier-mag-spine" style="background:${col}"></span>
+      <span class="tier-mag-rank" style="background:${col}">${i+1}위</span>
+      <div class="tier-mag-bottom" style="background:linear-gradient(180deg,${col}00 0%,${col}2e 42%,rgba(6,10,24,.72) 66%,rgba(3,6,18,.94) 100%)">
         <div class="tier-mag-panel">
           <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">대학</span><span>${p.univ||'무소속'}</span></div>
           <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">전적</span><span>${tot?`${rec.w}W ${rec.l}L`:'기록 없음'}</span></div>
           <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">${extraHeader}</span><span>${extraVal||'-'}</span></div>
         </div>
         <div class="tier-mag-baseline">
-          <span class="tier-mag-name">${p.name}${genderIcon(p.gender)}</span>
-          <span class="tier-mag-baseline-right">
-            <span class="tier-mag-tier-chip" style="background:${col}">${p.tier||'?'}</span>
-            <span class="tier-mag-wr-chip">${tot?wr+'%':'-'}</span>
-          </span>
+          <div class="tier-mag-baseline-text">
+            <div class="tier-mag-eyebrow">${p.tier||'?'}티어 · ${p.race||'?'}</div>
+            <div class="tier-mag-name">${p.name}${genderIcon(p.gender)}</div>
+          </div>
+          <span class="tier-mag-wr-chip" style="border-color:${col}">${tot?wr+'%':'-'}</span>
         </div>
-      </div>
-    </div>`;
-  });
-  h+=`</div></div>`;
-  }
-
-  // ════════════════════════════════════════════
-  // 뷰6: TRADING CARD (트레이딩카드/게임카드 스타일)
-  // ════════════════════════════════════════════
-  else if(_vm==='tradingcard'){
-  h=`<div class="tier-content-card"><div class="tier-tc-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'118px':(_isMb?'140px':'176px')},1fr));gap:${_isNarrow?'7px':(_isMb?'10px':'16px')}">`;
-  list.forEach((p,i)=>{
-    const rec=_tierWL(p); const univCol=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
-    const tierCol=(typeof getTierBtnColor==='function'?(getTierBtnColor(p.tier)||'#64748b'):'#64748b');
-    const tierTxt=(typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(p.tier)||'#fff'):'#fff');
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
-    const _photoUrl = _photoRaw ? (typeof toScaledUrl==='function'?toScaledUrl(_photoRaw,260):_photoRaw) : '';
-    const _initial = String(p.name||'-').trim().slice(0,1);
-    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-    const _hasPhoto = !!_photoUrl;
-    const elo=(p.elo||ELO_DEFAULT);
-    h+=`<div class="tier-tc-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${univCol};border:3px solid ${univCol};background:linear-gradient(180deg,${univCol}26,#0b1120 60%)">
-      <div class="tier-tc-photo-wrap">
-        ${_hasPhoto?`<img class="tier-tc-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
-        ${_2ndImg}
-        <div class="tier-tc-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${univCol}">${_initial}</div>
-        <div class="tier-tc-photo-scrim"></div>
-        <span class="tier-tc-rank">${i+1}위</span>
-        <span class="tier-tc-tierbadge" style="background:${tierCol};color:${tierTxt}">${p.tier||'?'}</span>
-      </div>
-      <div class="tier-tc-namebar">
-        <span class="rbadge r${p.race}" style="font-size:9px;flex-shrink:0">${p.race||'?'}</span>
-        <span class="tier-tc-name">${p.name}${genderIcon(p.gender)}</span>
-      </div>
-      <div class="tier-tc-stats">
-        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">⚔️</span><span class="tier-tc-stat-value">${rec.w}-${rec.l}</span><span class="tier-tc-stat-label">전적</span></div>
-        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">📊</span><span class="tier-tc-stat-value" style="color:${tot===0?'rgba(255,255,255,.6)':wr>=50?'#86efac':'#fecaca'}">${tot?wr+'%':'-'}</span><span class="tier-tc-stat-label">승률</span></div>
-        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">⚡</span><span class="tier-tc-stat-value">${elo}</span><span class="tier-tc-stat-label">ELO</span></div>
-        <div class="tier-tc-stat"><span class="tier-tc-stat-icon">🎓</span><span class="tier-tc-stat-value" style="font-size:10px">${p.univ||'무소속'}</span><span class="tier-tc-stat-label">대학</span></div>
       </div>
     </div>`;
   });

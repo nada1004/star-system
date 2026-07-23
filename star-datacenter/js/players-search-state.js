@@ -4,6 +4,8 @@
 let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
 let totalSearch=''; // 스트리머 탭 이름 검색
 let totalHideNoRecord=false; // 전적 없는 선수 숨기기
+let totalGenderFilter='전체'; // 스트리머 탭 성별 필터: '전체' | 'M' | 'F'
+let totalUnivFilter=''; // 스트리머 탭 대학 바로가기로 선택된 대학명 (''=전체)
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
@@ -33,6 +35,19 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-toolbar-card .pill.warn-on{background:linear-gradient(135deg,#f59e0b,#f97316);border-color:#f59e0b;color:#fff;box-shadow:0 14px 26px rgba(245,158,11,.22)}',
     '.streamer-toolbar-card .pill.edit-on{background:linear-gradient(135deg,#2563eb,#60a5fa);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.22)}',
     '.streamer-search{padding:8px 12px;border:1px solid rgba(148,163,184,.18);border-radius:14px;font-size:var(--fs-sm);min-width:140px;max-width:240px;flex:0 1 210px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}',
+    '.streamer-univ-shortcut-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));color:var(--text2);font-weight:800;font-size:var(--fs-sm);cursor:pointer;box-shadow:0 8px 16px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s}',
+    '.streamer-univ-shortcut-btn:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.08)}',
+    '.streamer-univ-shortcut-btn.on{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.24)}',
+    '.streamer-univ-shortcut-name{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-univ-popover{z-index:var(--z-top,9999);min-width:200px;max-width:260px;max-height:320px;overflow-y:auto;padding:10px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.97));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.16);backdrop-filter:blur(12px)}',
+    '.streamer-univ-popover-title{font-size:var(--fs-caption);font-weight:900;color:var(--text3);letter-spacing:.02em;margin-bottom:6px;padding:0 2px}',
+    '.streamer-univ-popover-list{display:flex;flex-direction:column;gap:2px}',
+    '.streamer-univ-popover-item{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:10px;border:none;background:transparent;color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;text-align:left;width:100%}',
+    '.streamer-univ-popover-item:hover{background:rgba(148,163,184,.12)}',
+    '.streamer-univ-popover-item.on{background:rgba(37,99,235,.12);color:#1d4ed8}',
+    '.streamer-univ-popover-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}',
+    '.streamer-univ-popover-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-univ-popover-cnt{flex-shrink:0;font-size:var(--fs-caption);font-weight:800;color:var(--text3)}',
     '.streamer-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(248,250,252,.94);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-caption);font-weight:800;color:var(--text2)}',
     '.streamer-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}',
     '.streamer-kpi-card{padding:14px 15px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 14px 28px rgba(15,23,42,.05)}',
