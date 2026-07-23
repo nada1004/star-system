@@ -101,6 +101,7 @@ function _statsLatestActiveMonths(gender){
   s.id='stats-ui-style';
   s.textContent = [
     '.stats-shell{display:flex;flex-direction:column;gap:14px}',
+    '@media (max-width:768px){.stats-group-btn{display:none}.stats-subtab-btn{display:none}}',
     '.stats-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
     '.stats-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
     '.stats-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
@@ -342,8 +343,15 @@ function rStats(C,T){
   _viewFilteredGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
     const gLbl = (typeof getTabLabel==='function') ? getTabLabel('statsGroup', grp.label, grp.label) : grp.label;
-    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${gLbl}</button>`;
+    h+=`<button class="pill stats-group-btn ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${gLbl}</button>`;
   });
+  window._statsGroupItems = _viewFilteredGroups.map(grp=>({
+    id: grp.tabs[0].id,
+    label: (typeof getTabLabel==='function') ? getTabLabel('statsGroup', grp.label, grp.label) : grp.label,
+    action: `window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()`,
+    active: grp===_curGrp
+  }));
+  h+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'통계 카테고리',window._statsGroupItems)">${_curGrpLabel} ▾</button>`;
   // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;
   // 전역 필터 바
@@ -369,8 +377,15 @@ function rStats(C,T){
   // 하위 탭 pill 바
   h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
   _curGrp.tabs.forEach(o=>{
-    h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
+    h+=`<button class="pill stats-subtab-btn ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });
+  window._statsSubtabItems = _curGrp.tabs.map(o=>({
+    id: o.id,
+    label: o.lbl,
+    action: `window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()`,
+    active: (window.statsSub||'overview')===o.id
+  }));
+  h+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'세부 통계',window._statsSubtabItems)">${_curSubObj?.lbl||'통계'} ▾</button>`;
   h+=`</div>`;
 
   const _filterBadges = [
