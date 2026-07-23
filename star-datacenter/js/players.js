@@ -1975,7 +1975,8 @@ function rTier(C,T){
   fh+=`<div class="tier-type-preset-row">`;
   _typePresets.forEach(p=>{
     const _on = _isSameTypePreset(p.ids);
-    fh+=`<button class="pill ${_on?'on':''}" onclick="window._tierTypeSet=new Set(${JSON.stringify(p.ids)});window._tierTypeFilterOpen=true;render()">${p.title}</button>`;
+    const _idsLit = `[${p.ids.map(id=>`'${id}'`).join(',')}]`;
+    fh+=`<button class="pill ${_on?'on':''}" onclick="window._tierTypeSet=new Set(${_idsLit});window._tierTypeFilterOpen=true;render()">${p.title}</button>`;
   });
   fh+=`</div>`;
   if(_hasTypeFilter){
