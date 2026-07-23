@@ -68,7 +68,8 @@
           univ: String((src&&src.univ)||'').trim(),
           race: String((src&&src.race)||'').trim(),
           tier: String((src&&src.tier)||'').trim(),
-          photo: photo || ''
+          photo: photo || '',
+          secondProfileFile: (src && src.secondProfileFile) || ''
         };
       };
       const buildMembers = (side)=>{
@@ -227,7 +228,9 @@
         const size = Math.max(28, Math.min(60, parseInt(sz||46,10)||46));
         const logoSz = Math.max(16, Math.round(size * 0.52));
         if(p && p.photo){
-          icon = `<div style="position:relative;width:${size}px;height:${size}px"><img src="${toHttpsUrl(p.photo)}" style="width:${size}px;height:${size}px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:0 5px 16px rgba(0,0,0,.24)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,logoSz+'px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
+          const _2ndHtml = (p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:999px'}) : '';
+          const _swapCls = _2ndHtml ? ' ph-swap' : '';
+          icon = `<div class="${_swapCls.trim()}" style="position:relative;width:${size}px;height:${size}px"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:${size}px;height:${size}px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:0 5px 16px rgba(0,0,0,.24)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_2ndHtml}<div style="display:none;width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,logoSz+'px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }else{
           icon = `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18)">${univ ? univIconHTML(univ,logoSz+'px') : `<span style="color:#fff;font-weight:1000;font-size:${Math.max(12,Math.round(size*0.33))}px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }
@@ -267,8 +270,12 @@
         const remainCount = Math.max(0, memberNames.filter(n=>n!==repName).length);
         const repSummary = repName ? `${repName}${remainCount>0?` 외 ${remainCount}명`:''}` : (memberNames.length?`참가자 ${memberNames.length}명`:'');
         const showRepSummary = !['procomp-team','procomp-bkt'].includes(matchType);
+        const _posterImgStyle=`width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}`;
+        const _posterSecondHtml = (repPlayer?.photo && repPlayer?.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(repPlayer.secondProfileFile, {style:'object-fit:cover'}) : '';
         const media = repPlayer?.photo
-          ? `<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}">`
+          ? (_posterSecondHtml
+              ? `<span class="ph-swap" style="position:absolute;inset:0;display:block">${`<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="position:absolute;inset:0;${_posterImgStyle}">`}${_posterSecondHtml}</span>`
+              : `<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="${_posterImgStyle}">`)
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));"><span style="font-size:74px;font-weight:1000;color:#fff">${title.slice(0,1)}</span></div>`;
         const titleColor = hideTopUnivMeta ? (isWin ? '#ffffff' : 'rgba(226,232,240,.78)') : (isWin ? repUnivColor : 'rgba(203,213,225,.78)');
         const titleLong = title.length >= 7;
