@@ -196,19 +196,19 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-mag-spine{position:absolute;top:0;left:0;right:0;height:4px;z-index:4;transition:height .25s ease,filter .25s ease}',
     '.tier-mag-card:hover .tier-mag-spine{height:6px;filter:brightness(1.25)}',
     '.tier-mag-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .45s ease}',
-    '.tier-mag-card:hover .tier-mag-photo{transform:scale(1.065);filter:brightness(.6) contrast(1.06) saturate(1.1)}',
+    '.tier-mag-card:hover .tier-mag-photo{transform:scale(1.065)}',
     '.tier-mag-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#fff;z-index:0}',
     '.tier-mag-rank{position:absolute;top:12px;left:12px;z-index:3;font-size:11px;font-weight:950;color:#fff;padding:4px 10px;border-radius:8px;letter-spacing:-.01em;box-shadow:0 6px 14px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}',
     '.tier-mag-card:hover .tier-mag-rank{transform:scale(1.1) rotate(-2deg)}',
     '.tier-mag-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column}',
     '.tier-mag-panel{max-height:0;overflow:hidden;transition:max-height .36s cubic-bezier(.2,.8,.2,1);padding:0 16px}',
     '.tier-mag-card:hover .tier-mag-panel{max-height:180px;padding:14px 16px 2px}',
-    '.tier-mag-panel-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.95);padding:4px 0;opacity:0;transform:translateY(6px);transition:opacity .3s ease,transform .3s ease}',
+    '.tier-mag-panel-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.5);padding:4px 0;opacity:0;transform:translateY(6px);transition:opacity .3s ease,transform .3s ease}',
     '.tier-mag-card:hover .tier-mag-panel-row{opacity:1;transform:translateY(0)}',
     '.tier-mag-card:hover .tier-mag-panel-row:nth-child(1){transition-delay:.04s}',
     '.tier-mag-card:hover .tier-mag-panel-row:nth-child(2){transition-delay:.09s}',
     '.tier-mag-card:hover .tier-mag-panel-row:nth-child(3){transition-delay:.14s}',
-    '.tier-mag-panel-label{color:rgba(255,255,255,.6);font-weight:750;font-size:10px;letter-spacing:.06em;text-transform:uppercase}',
+    '.tier-mag-panel-label{color:rgba(255,255,255,.72);font-weight:750;font-size:10px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.45)}',
     '.tier-mag-baseline{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:12px 16px 16px}',
     '.tier-mag-baseline-text{min-width:0;flex:1}',
     '.tier-mag-eyebrow{font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:3px;text-shadow:0 1px 4px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
@@ -700,22 +700,23 @@ function rTier(C,T){
 
   // ── 3행: 유형별 필터 ──
   const _typeCount=window._tierTypeSet?window._tierTypeSet.size:0;
-  const _toggleBtnLabel=window._tierTypeFilterOpen?'▲ 접기':`▼ 선택${_typeCount>0?` (${_typeCount})`:''}`;
+  const _toggleBtnLabel=window._tierTypeFilterOpen?'▲ 세부 항목 접기':`🔧 세부 항목 직접 고르기${_typeCount>0?` (${_typeCount})`:''}`;
   const _toggleBtnStyle=_typeCount>0&&!window._tierTypeFilterOpen
     ?'padding:3px 10px;border-radius:12px;border:2px solid var(--blue);background:var(--blue);font-size:var(--fs-caption);cursor:pointer;color:#fff;font-weight:700'
     :'padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-caption);cursor:pointer;color:var(--text3)';
   fh+=`<section class="tier-filter-block">
     <div class="tier-filter-head">
       <div class="tier-filter-title">유형 필터</div>
-      <div class="tier-filter-desc">승/패 종류별 세부 선택</div>
+      <div class="tier-filter-desc">${_hasTypeFilter?`선택한 ${_typeCount}개 유형만 반영 중`:'전체 반영 중'}</div>
     </div>
+    <div style="font-size:var(--fs-caption);color:var(--text3);line-height:1.5;margin:-2px 0 2px">아래 버튼 하나만 눌러도 바로 적용돼요. 예) <b>개인전만</b> → 개인전 승/패만 계산해서 순위를 다시 매깁니다. 더 세밀하게 고르고 싶을 때만 '세부 항목 직접 고르기'를 열어보세요.</div>
     <div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center">
-    <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체</button>`;
+    <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체(기본값)</button>`;
   fh+=`<div class="tier-type-preset-row">`;
   _typePresets.forEach(p=>{
     const _on = _isSameTypePreset(p.ids);
     const _idsLit = `[${p.ids.map(id=>`'${id}'`).join(',')}]`;
-    fh+=`<button class="pill ${_on?'on':''}" onclick="window._tierTypeSet=new Set(${_idsLit});window._tierTypeFilterOpen=true;render()">${p.title}</button>`;
+    fh+=`<button class="pill ${_on?'on':''}" onclick="window._tierTypeSet=new Set(${_idsLit});window._tierTypeFilterOpen=false;render()">${p.title}</button>`;
   });
   fh+=`</div>`;
   if(_hasTypeFilter){
@@ -728,14 +729,20 @@ function rTier(C,T){
   }
   fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="${_toggleBtnStyle}">${_toggleBtnLabel}</button>`;
   if(window._tierTypeFilterOpen){
+    fh+=`<div style="font-size:var(--fs-caption);color:var(--text3);line-height:1.5;margin:2px 0">아래에서 그룹별 승/패를 하나하나 켜고 끌 수 있어요. 그룹 이름 옆 <b>전체선택/전체해제</b> 버튼으로 그룹 전체를 한 번에 고를 수도 있습니다.</div>`;
     fh+=`<div class="tier-type-grid">`;
     _typeGroups.forEach(g=>{
       const _items = g.ids.map(id=>modeSortBtns.find(m=>m.id===id)).filter(Boolean);
       const _selCount = _items.filter(m=>window._tierTypeSet&&window._tierTypeSet.has(m.id)).length;
+      const _groupIdsLit = `[${g.ids.map(id=>`'${id}'`).join(',')}]`;
+      const _groupAllOn = _items.length>0 && _selCount===_items.length;
       fh+=`<div class="tier-type-group">
         <div class="tier-type-group-head">
           <div class="tier-type-group-title">${g.title}</div>
-          <div class="tier-type-group-count">${_selCount}/${_items.length}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" class="tier-type-group-allbtn" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);cursor:pointer;white-space:nowrap" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();const _gids=${_groupIdsLit};const _allOn=_gids.every(id=>window._tierTypeSet.has(id));_gids.forEach(id=>_allOn?window._tierTypeSet.delete(id):window._tierTypeSet.add(id));render()">${_groupAllOn?'전체해제':'전체선택'}</button>
+            <div class="tier-type-group-count">${_selCount}/${_items.length}</div>
+          </div>
         </div>
         <div class="fbar" style="gap:5px;flex-wrap:wrap">`;
       _items.forEach(m=>{
@@ -1522,13 +1529,13 @@ function rTier(C,T){
     const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
     const _hasPhoto = !!_photoUrl;
     const extraVal=_getExtraVal(p);
-    h+=`<div class="tier-mag-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};box-shadow:0 0 0 2px ${col}45,0 14px 30px rgba(15,23,42,.16)">
+    h+=`<div class="tier-mag-card ${_hasPhoto?'ph-swap':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};box-shadow:0 0 0 2px ${col}45,0 14px 30px rgba(15,23,42,.16)">
       ${_hasPhoto?`<img class="tier-mag-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
       ${_2ndImg}
       <div class="tier-mag-fallback" style="${_hasPhoto?'display:none':'display:flex'};background:${col}">${_initial}</div>
       <span class="tier-mag-spine" style="background:${col}"></span>
       <span class="tier-mag-rank" style="background:${col}">${i+1}위</span>
-      <div class="tier-mag-bottom" style="background:linear-gradient(180deg,${col}00 0%,${col}2e 42%,rgba(6,10,24,.72) 66%,rgba(3,6,18,.94) 100%)">
+      <div class="tier-mag-bottom" style="background:linear-gradient(180deg,rgba(2,4,14,0) 0%,rgba(2,4,14,.06) 18%,rgba(2,4,14,.16) 34%,rgba(2,4,14,.32) 50%,rgba(2,4,14,.52) 65%,rgba(2,4,14,.74) 80%,rgba(2,4,14,.9) 92%,rgba(2,4,14,.95) 100%)">
         <div class="tier-mag-panel">
           <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">대학</span><span>${p.univ||'무소속'}</span></div>
           <div class="tier-mag-panel-row"><span class="tier-mag-panel-label">전적</span><span>${tot?`${rec.w}W ${rec.l}L`:'기록 없음'}</span></div>
