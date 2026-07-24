@@ -35,6 +35,7 @@ function _prSaveRecent(name){
 }
 
 /* ─── 스타일 주입 (1회) ─── */
+try{
 (function _prInjectCss(){
   if(document.getElementById('pr-report-style')) return;
   const s=document.createElement('style');
@@ -136,9 +137,18 @@ function _prSaveRecent(name){
     '.pr-img-preview-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:900;color:var(--text1)}',
     '.pr-img-preview-x{border:none;background:transparent;font-size:15px;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:8px}',
     '.pr-img-preview-x:hover{background:var(--surface);color:var(--text1)}',
-    '.pr-img-preview-body{overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center}',
-    '.pr-img-preview-body img{max-width:100%;height:auto;border-radius:10px;box-shadow:var(--sh2);display:block}',
+    '.pr-img-preview-body{overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;position:relative}',
+    '.pr-img-preview-body img{max-width:100%;height:auto;border-radius:10px;box-shadow:var(--sh2);display:block;transition:opacity .15s}',
     '.pr-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}',
+    '.pr-bgstyle-row{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);justify-content:center}',
+    '.pr-bgstyle-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;transition:.15s;white-space:nowrap}',
+    '.pr-bgstyle-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}',
+    '.pr-bgstyle-dot--none{background:#fff;border:1.5px solid var(--border2)}',
+    '.pr-bgstyle-btn:hover{border-color:var(--blue);color:var(--blue)}',
+    '.pr-bgstyle-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}',
+    '@media (max-width:480px){.pr-bgstyle-row{gap:5px;padding:8px 10px}.pr-bgstyle-btn{padding:6px 9px;font-size:10.5px}}',
+    '.pr-bg-loading .pr-img-preview-body img{opacity:.35}',
+    '.pr-bg-loading .pr-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2)}',
     /* ── 다크모드 보정: var()로 자동 대응되지 않는 하드코딩 파스텔톤 요소 ── */
     'body.dark .pr-hero{background:linear-gradient(135deg,rgba(30,41,59,.96),rgba(22,32,50,.92));border-color:rgba(148,163,184,.16)}',
     'body.dark .pr-ai-box{background:linear-gradient(135deg,#1e3a5f,#241b47);border-color:#2d3f55;border-left-color:#3b82f6}',
@@ -228,6 +238,7 @@ function _prSaveRecent(name){
   ].join('\n');
   document.head.appendChild(s);
 })();
+}catch(e){ console.error('[리포트 스타일 주입 오류]', e); }
 
 /* ─── 기간 필터 ─── */
 function _prPeriodRange(period){
@@ -1155,31 +1166,280 @@ function _prScrollToSection(id){
   window.scrollTo({ top:y, behavior:'smooth' });
 }
 
+/* ─── 리포트 이미지 배경 스타일 (3종: 기본 + 대학 + 보고서) ─── */
+var PR_BG_STYLES = [
+  ['none','⚪ 기본'],
+  ['univ','🏫 대학'],
+  ['report','📄 보고서']
+];
+function _prHexToRgba(hex, a){
+  try{
+    let h = String(hex||'').replace('#','');
+    if(h.length===3) h = h.split('').map(c=>c+c).join('');
+    const r=parseInt(h.substring(0,2),16), g=parseInt(h.substring(2,4),16), b=parseInt(h.substring(4,6),16);
+    if([r,g,b].some(isNaN)) throw 0;
+    return `rgba(${r},${g},${b},${a})`;
+  }catch(e){ return `rgba(37,99,235,${a})`; }
+}
+function _prStyleFrameColor(style, p){
+  if(style==='univ') return (p && p.univ && typeof gc==='function') ? (gc(p.univ)||'#6366f1') : '#6366f1';
+  if(style==='report') return '#0f172a';
+  return null; // 기본(효과 없음)
+}
+/* 리포트 캡처 자체를 스타일별 옅은 색으로 채워서 캡처.
+   카드(.ssec 등)는 자체 흰 배경이 있어 그대로 흰색으로 남고, 카드 사이 여백에는
+   html2canvas의 backgroundColor 옵션이 그대로 비쳐 보여서 "카드 밖 배경"이 실제로 톤이 바뀜.
+   (DOM을 미리 바꿔서 캡처하는 onclone 방식은 클론 레이아웃 재측정 타이밍 이슈로 반영 안 되는 경우가 있어 폐기) */
+async function _prCaptureBaseForStyle(style, p){
+  const frameColor = (style==='univ') ? _prStyleFrameColor(style, p) : null;
+  const bgFill = frameColor ? _prHexToRgba(frameColor, 0.16) : (style==='report' ? '#ffffff' : _prPageBgColor());
+  const el = document.getElementById('pr-report-capture');
+  if(!el) throw new Error('캡처할 리포트가 없습니다.');
+  try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+  if(typeof _imgToDataUrls==='function') await _imgToDataUrls(el);
+  try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
+  try{ if(typeof _sanitizeUnsupportedCssFunctions==='function') _sanitizeUnsupportedCssFunctions(el); }catch(e){}
+  return await html2canvas(el,{
+    backgroundColor: bgFill, scale:2, useCORS:true, allowTaint:false, logging:false, imageTimeout:15000,
+    onclone:(clonedDoc)=>{
+      try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
+      if(style==='report'){
+        try{
+          const cloneEl = clonedDoc.getElementById('pr-report-capture');
+          if(cloneEl) cloneEl.classList.add('pr-report-mode');
+          const styleTag = clonedDoc.createElement('style');
+          styleTag.textContent = PR_REPORT_MODE_CSS;
+          clonedDoc.head.appendChild(styleTag);
+        }catch(e){}
+      }
+    }
+  });
+}
+/* '기본' 스타일용 배경색: 실제 화면(카드 밖 여백)에 쓰이는 페이지 배경색(--bg)을 그대로 읽어와 사용.
+   라이트/다크 모드 등 실제 테마와 항상 일치하도록 하드코딩 대신 computed style에서 가져온다. */
+function _prPageBgColor(){
+  try{
+    const el = document.getElementById('pr-report-capture');
+    const src = (el && el.parentElement) || document.body;
+    const cs = getComputedStyle(src);
+    const varBg = cs.getPropertyValue('--bg');
+    if(varBg && varBg.trim()) return varBg.trim();
+    const bgColor = cs.backgroundColor;
+    if(bgColor && bgColor!=='rgba(0, 0, 0, 0)' && bgColor!=='transparent') return bgColor;
+  }catch(e){}
+  return '#f1f5f9';
+}
+/* '보고서' 스타일 전용: 캡처되는 실제 카드 UI 자체를 문서 느낌으로 변형.
+   화려한 그림자/그라디언트/큰 라운드 대신 얇은 테두리·직각에 가까운 모서리·
+   섹션 번호 매김(01, 02 …)을 적용해 컬러풀한 대시보드가 아닌 정식 보고서처럼 보이게 함.
+   (승/패, 종족 등 의미를 가진 색상은 정보 손실을 막기 위해 유지) */
+var PR_REPORT_MODE_CSS = [
+  '#pr-report-capture.pr-report-mode{counter-reset:pr-sec}',
+  '.pr-report-mode, .pr-report-mode *{box-shadow:none!important}',
+  '.pr-report-mode .pr-hero{background:#fff!important;border:1px solid #cbd5e1!important;border-bottom:3px solid #0f172a!important;border-radius:2px!important}',
+  '.pr-report-mode .pr-hero-photo{border-radius:6px!important}',
+  '.pr-report-mode .pr-recent-wrap,.pr-report-mode .pr-period-bar{display:none!important}',
+  '.pr-report-mode .ssec{background:#fff!important;border:1px solid #e2e8f0!important;border-radius:2px!important;counter-increment:pr-sec;padding-top:20px!important}',
+  '.pr-report-mode .pr-sec-head{border-bottom:2px solid #0f172a;padding-bottom:11px;margin:0 0 16px!important}',
+  '.pr-report-mode .pr-sec-head h4{font-size:16px!important;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}',
+  '.pr-report-mode .pr-sec-head h4::before{content:counter(pr-sec,decimal-leading-zero);color:#fff;background:#0f172a;font-size:11px;font-weight:900;padding:3px 7px;border-radius:2px;letter-spacing:0}',
+  '.pr-report-mode .pr-info-card,.pr-report-mode .pr-wr-card{border-radius:2px!important;background:#f8fafc!important;border:1px solid #e2e8f0!important}',
+  '.pr-report-mode .pr-gauge-ring::before{background:#fff!important}',
+  '.pr-report-mode .pr-ai-box{background:#f8fafc!important;border:1px solid #e2e8f0!important;border-left:3px solid #0f172a!important;border-radius:2px!important}',
+  '.pr-report-mode .pr-ai-box.pr-ai-good{border-left-color:#16a34a!important}',
+  '.pr-report-mode .pr-ai-box.pr-ai-bad{border-left-color:#ef4444!important}',
+  '.pr-report-mode .pr-chip,.pr-report-mode .pr-btn,.pr-report-mode .pr-period-btn,.pr-report-mode .pr-filter-pill,.pr-report-mode .pr-nav-chip,.pr-report-mode .pr-recent-chip{border-radius:3px!important}',
+  '.pr-report-mode .pr-highlight-row{border-radius:2px!important}',
+  '.pr-report-mode .pr-bar-track,.pr-report-mode .pr-bar-fill{border-radius:2px!important}',
+  '.pr-report-mode .pr-nav-bar{border-bottom:1px solid #e2e8f0;padding-bottom:14px!important}'
+].join('\n');
+/* 캡처된 캔버스 바깥에 스타일 색 테두리/배너, 혹은 완전히 다른 레이아웃(보고서 스타일)을 Canvas2D로 합성.
+   DOM/레이아웃과 무관하게 항상 100% 반영됨. '기본' 스타일은 효과 없이 그대로 반환. */
+async function _prComposeStyledCanvas(baseCanvas, style, p){
+  if(style==='report') return _prDrawReportFrame(baseCanvas, p);
+
+  const frameColor = _prStyleFrameColor(style, p);
+  if(!frameColor) return baseCanvas; // 기본: 효과 없음
+
+  const BORDER = 26;
+  const BANNER = 56;
+  const outW = baseCanvas.width + BORDER*2;
+  const outH = baseCanvas.height + BORDER*2 + BANNER;
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = frameColor;
+  ctx.fillRect(0,0,outW,outH);
+  ctx.drawImage(baseCanvas, BORDER, BANNER + BORDER);
+  return out;
+}
+/* 보고서 스타일: 컨설팅 리포트/문서 표지 느낌의 전문적인 레이아웃.
+   상단 키커(letter-spaced) + 굵은 타이틀 + 메타 정보 바, 얇은 단일 테두리와 상단 포인트 바,
+   하단 3분할 푸터(브랜드 / 리포트 ID / 생성일)로 구성. 순수 Canvas2D 드로잉이라 항상 동일하게 렌더링됨. */
+function _prLetterSpacedText(ctx, text, x, y, spacing){
+  let cx = x;
+  for(const ch of String(text)){
+    ctx.fillText(ch, cx, y);
+    cx += ctx.measureText(ch).width + spacing;
+  }
+  return cx - spacing;
+}
+function _prDrawReportFrame(baseCanvas, p){
+  const FONT = '"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",-apple-system,sans-serif';
+  const INK = '#0f172a';
+  const ACCENT = '#1d4ed8';
+  const MUTED = '#64748b';
+  const FAINT = '#94a3b8';
+  const LINE = '#e2e8f0';
+
+  const PAD = 56;
+  const ACCENT_BAR_H = 6;
+  const HEADER_H = 172;
+  const FOOTER_H = 68;
+  const name = (p && p.name) || '스트리머';
+  const sub = [p && p.univ, p && p.tier].filter(Boolean).join('   ·   ');
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit'});
+  const reportId = `SDC-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(Math.abs((name||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%900+100)}`;
+
+  const outW = baseCanvas.width + PAD*2;
+  const outH = ACCENT_BAR_H + baseCanvas.height + PAD*2 + HEADER_H + FOOTER_H;
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const ctx = out.getContext('2d');
+  ctx.textBaseline = 'alphabetic';
+
+  // 배경 + 얇은 단일 테두리
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,outW,outH);
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5,0.5,outW-1,outH-1);
+
+  // 상단 포인트 바
+  ctx.fillStyle = ACCENT;
+  ctx.fillRect(0,0,outW,ACCENT_BAR_H);
+
+  // 헤더: 키커(letter-spaced) + 우측 리포트 ID
+  ctx.fillStyle = ACCENT;
+  ctx.font = `700 13px ${FONT}`;
+  _prLetterSpacedText(ctx, 'STAR DATA CENTER  ·  PLAYER PERFORMANCE REPORT', PAD, ACCENT_BAR_H+PAD-16, 1.4);
+
+  ctx.fillStyle = FAINT;
+  ctx.font = `600 13px ${FONT}`;
+  ctx.textAlign = 'right';
+  ctx.fillText(reportId, outW-PAD, ACCENT_BAR_H+PAD-16);
+  ctx.textAlign = 'left';
+
+  // 타이틀
+  ctx.fillStyle = INK;
+  ctx.font = `800 42px ${FONT}`;
+  ctx.fillText(`${name} 스트리머 리포트`, PAD, ACCENT_BAR_H+PAD+38);
+
+  // 메타 정보 (대학/티어 · 생성일) - 캡슐형 배지
+  let bx = PAD;
+  const by = ACCENT_BAR_H+PAD+64;
+  const badges = [sub, `발행일  ${dateStr}`].filter(Boolean);
+  ctx.font = `600 15px ${FONT}`;
+  badges.forEach((txt, i)=>{
+    const w = ctx.measureText(txt).width + 28;
+    const bColor = i===0 ? ACCENT : MUTED;
+    ctx.fillStyle = i===0 ? _prHexToRgba(ACCENT, 0.09) : '#f1f5f9';
+    _prRoundRect(ctx, bx, by, w, 30, 15);
+    ctx.fill();
+    ctx.fillStyle = bColor;
+    ctx.fillText(txt, bx+14, by+20);
+    bx += w + 10;
+  });
+
+  // 헤더 하단 구분선
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, ACCENT_BAR_H+HEADER_H-6);
+  ctx.lineTo(outW-PAD, ACCENT_BAR_H+HEADER_H-6);
+  ctx.stroke();
+
+  // 본문
+  ctx.drawImage(baseCanvas, PAD, ACCENT_BAR_H+HEADER_H+PAD/2);
+
+  // 푸터 구분선
+  const footTop = outH-FOOTER_H;
+  ctx.strokeStyle = LINE;
+  ctx.beginPath();
+  ctx.moveTo(PAD, footTop);
+  ctx.lineTo(outW-PAD, footTop);
+  ctx.stroke();
+
+  // 푸터 3분할: 브랜드 / 페이지 표기 / 생성 시각
+  ctx.fillStyle = INK;
+  ctx.font = `700 14px ${FONT}`;
+  ctx.fillText('STAR DATA CENTER', PAD, footTop+38);
+
+  ctx.fillStyle = FAINT;
+  ctx.font = `500 13px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.fillText('본 리포트는 star-datacenter 통계 시스템에서 자동 생성되었습니다', outW/2, footTop+38);
+
+  ctx.textAlign = 'right';
+  ctx.fillText(`Page 1 · ${dateStr}`, outW-PAD, footTop+38);
+  ctx.textAlign = 'left';
+
+  return out;
+}
+/* 캔버스 2D 라운드 사각형 헬퍼 (path만 생성, fill/stroke는 호출부에서) */
+function _prRoundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+/* ─── 캔버스 생성: 스타일이 바뀌면 카드 사이 배경 톤도 달라져야 하므로 매번 새로 캡처 ─── */
+async function _prGenerateReportCanvas(style){
+  const p = window._prName ? (players||[]).find(x=>x && x.name===window._prName) : null;
+  const baseCanvas = await _prCaptureBaseForStyle(style, p);
+  return await _prComposeStyledCanvas(baseCanvas, style, p);
+}
 /* ─── 리포트 전체 이미지 저장 ─── */
 async function _prSaveReportImage(){
   const el = document.getElementById('pr-report-capture');
   if(!el){ alert('캡처할 리포트가 없습니다.'); return; }
   const name = window._prName || '스트리머';
+  const style = window._prReportBgStyle || 'none';
   try{
     if(typeof _showSaveLoading==='function') _showSaveLoading();
-    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
-    if(typeof _imgToDataUrls==='function') await _imgToDataUrls(el);
-    try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
-    try{ if(typeof _sanitizeUnsupportedCssFunctions==='function') _sanitizeUnsupportedCssFunctions(el); }catch(e){}
-    const canvas = await html2canvas(el,{
-      backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000,
-      onclone:(doc)=>{ try{ doc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){} }
-    });
+    const canvas = await _prGenerateReportCanvas(style);
     window._prPendingSaveCanvas = canvas;
     window._prPendingSaveName = `${name}_리포트.png`;
-    _prShowImagePreview(canvas);
+    _prShowImagePreview(canvas, style);
   }catch(e){ alert('이미지 저장 오류: '+e.message); }
   finally{ if(typeof _hideSaveLoading==='function') _hideSaveLoading(); }
 }
+/* ─── 미리보기 안에서 배경 스타일 전환 ─── */
+async function _prSwitchBgStyle(style){
+  if(window._prBgSwitchBusy) return;
+  window._prBgSwitchBusy = true;
+  const wrap = document.getElementById('pr-img-preview-overlay');
+  if(wrap) wrap.classList.add('pr-bg-loading');
+  try{
+    const canvas = await _prGenerateReportCanvas(style);
+    window._prPendingSaveCanvas = canvas;
+    window._prReportBgStyle = style;
+    const imgEl = wrap ? wrap.querySelector('.pr-img-preview-body img') : null;
+    if(imgEl) imgEl.src = canvas.toDataURL('image/png');
+    if(wrap) wrap.querySelectorAll('.pr-bgstyle-btn').forEach(b=>b.classList.toggle('on', b.dataset.style===style));
+  }catch(e){ alert('배경 변경 오류: '+e.message); }
+  finally{ window._prBgSwitchBusy = false; if(wrap) wrap.classList.remove('pr-bg-loading'); }
+}
 /* ─── 이미지 저장 전 미리보기 모달 ─── */
-function _prShowImagePreview(canvas){
+function _prShowImagePreview(canvas, style){
   _prCloseImagePreview();
   const dataUrl = canvas.toDataURL('image/png');
+  const curStyle = style || window._prReportBgStyle || 'none';
+  const p = window._prName ? (players||[]).find(x=>x && x.name===window._prName) : null;
   const wrap = document.createElement('div');
   wrap.id = 'pr-img-preview-overlay';
   wrap.className = 'pr-img-preview-overlay';
@@ -1188,6 +1448,13 @@ function _prShowImagePreview(canvas){
       <div class="pr-img-preview-hdr">
         <span>🖼️ 리포트 이미지 미리보기</span>
         <button type="button" class="pr-img-preview-x" onclick="_prCloseImagePreview()">✕</button>
+      </div>
+      <div class="pr-bgstyle-row">
+        ${PR_BG_STYLES.map(([k,lbl])=>{
+          const col = _prStyleFrameColor(k, p);
+          const dot = col ? `<span class="pr-bgstyle-dot" style="background:${col}"></span>` : `<span class="pr-bgstyle-dot pr-bgstyle-dot--none"></span>`;
+          return `<button type="button" class="pr-bgstyle-btn ${k===curStyle?'on':''}" data-style="${k}" onclick="_prSwitchBgStyle('${k}')">${dot}${lbl}</button>`;
+        }).join('')}
       </div>
       <div class="pr-img-preview-body"><img src="${dataUrl}" alt="리포트 미리보기"></div>
       <div class="pr-img-preview-ftr">
