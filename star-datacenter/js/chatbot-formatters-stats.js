@@ -204,3 +204,117 @@ function formatPlayerStats(player) {
 try{
   window.formatPlayerStats = formatPlayerStats;
 }catch(e){}
+
+/* ─────────────────────────────────────────────
+   🤖 AI 분석 코멘트 (규칙 기반, 외부 API 미사용)
+   통계탭 > 선수 리포트의 코멘트 로직과 동일한 방식으로
+   승률/상대종족/최근 폼 조건에 따라 문장을 조합해 생성.
+───────────────────────────────────────────── */
+function _cbAiOppRace(h){
+  if(h.oppRace) return h.oppRace;
+  const op = (typeof players !== 'undefined') ? players.find(x=>x && x.name===h.opp) : null;
+  return op ? op.race : '';
+}
+function _cbAiGatherHistory(player){
+  const _existIds = new Set((player.history||[]).map(h=>h.matchId).filter(Boolean));
+  const _tourExtra = [];
+  (typeof tourneys !== 'undefined' ? tourneys : []).forEach(tn => {
+    (tn.groups||[]).forEach(grp => {
+      (grp.matches||[]).forEach(m => {
+        if(!m._id||_existIds.has(m._id)) return;
+        (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+          if(!g.playerA||!g.playerB||!g.winner) return;
+          const wn=g.winner==='A'?g.playerA:g.playerB;
+          const ln=g.winner==='A'?g.playerB:g.playerA;
+          if(wn!==player.name&&ln!==player.name) return;
+          _tourExtra.push({date:m.d||'',result:wn===player.name?'승':'패',opp:wn===player.name?ln:wn,mode:tn.type==='tier'?'티어대회':'조별리그'});
+        });});
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id||_existIds.has(m._id)) return;
+      (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner) return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(wn!==player.name&&ln!==player.name) return;
+        _tourExtra.push({date:m.d||'',result:wn===player.name?'승':'패',opp:wn===player.name?ln:wn,mode:'대회'});
+      });});
+    });
+  });
+  return [...(player.history||[]), ..._tourExtra];
+}
+function formatPlayerAiAnalysis(player) {
+  const now = new Date();
+  const from90 = new Date(now); from90.setDate(from90.getDate()-90);
+  const fromStr = from90.toISOString().slice(0,10);
+
+  const allHistory = _cbAiGatherHistory(player);
+  const recent90 = allHistory.filter(h => String(h.date||'') >= fromStr);
+  const useSet = recent90.length ? recent90 : allHistory; // 최근 90일 기록이 없으면 전체 기록으로 대체
+  const periodLabel = recent90.length ? '최근 90일' : '전체 기간';
+
+  const safeName = escapeHtml(player.name);
+  const header = `<div style="background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;padding:12px 14px">
+    <div style="font-size:var(--fs-md);font-weight:900">🤖 ${safeName} AI 분석 코멘트</div>
+    <div style="font-size:var(--fs-sm);font-weight:800;opacity:.92;margin-top:4px">${escapeHtml(periodLabel)} 기록 기반 · 규칙 기반 자동 코멘트</div>
+  </div>`;
+
+  if (!useSet.length) {
+    return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:var(--white);padding:16px;text-align:center;color:var(--text3);font-size:var(--fs-base)">📭 분석할 경기 기록이 없습니다.</div></div>`;
+  }
+
+  const w = useSet.filter(h=>h.result==='승').length;
+  const l = useSet.filter(h=>h.result==='패').length;
+  const tot = w + l;
+  const wr = tot ? Math.round(w/tot*100) : 0;
+
+  const rv = { T:{w:0,l:0}, Z:{w:0,l:0}, P:{w:0,l:0} };
+  useSet.forEach(h=>{
+    const r = _cbAiOppRace(h);
+    if(!rv[r]) return;
+    if(h.result==='승') rv[r].w++;
+    else if(h.result==='패') rv[r].l++;
+  });
+
+  const sentences = [];
+  if (wr>=65) sentences.push(`${periodLabel} 승률 ${wr}%(${w}승 ${l}패)로 컨디션이 매우 좋습니다.`);
+  else if (wr>=50) sentences.push(`${periodLabel} 승률 ${wr}%(${w}승 ${l}패)로 평균 이상의 흐름을 보이고 있습니다.`);
+  else if (wr>=35) sentences.push(`${periodLabel} 승률 ${wr}%(${w}승 ${l}패)로 다소 아쉬운 성적입니다.`);
+  else sentences.push(`${periodLabel} 승률 ${wr}%(${w}승 ${l}패)로 최근 고전하고 있습니다.`);
+
+  const RACE_KO = { T:'테란', Z:'저그', P:'프로토스' };
+  const raceEntries = ['T','Z','P'].map(r=>{
+    const e=rv[r]; const t=e.w+e.l;
+    return { r, w:e.w, l:e.l, tot:t, wr: t? Math.round(e.w/t*100):null };
+  }).filter(e=>e.tot>=2);
+  if (raceEntries.length) {
+    const best = raceEntries.slice().sort((a,b)=>b.wr-a.wr)[0];
+    const worst = raceEntries.slice().sort((a,b)=>a.wr-b.wr)[0];
+    if (best && best.wr>=60) sentences.push(`${RACE_KO[best.r]}전에서 ${best.wr}%(${best.w}승 ${best.l}패)로 강한 모습을 보였습니다.`);
+    if (worst && (!best || worst.r!==best.r) && worst.wr<=40) sentences.push(`반면 ${RACE_KO[worst.r]}전은 ${worst.wr}%(${worst.w}승 ${worst.l}패)로 약점으로 보입니다.`);
+  }
+
+  const sorted = useSet.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  let streak=0, streakType='';
+  for (const h of sorted) {
+    if (h.result!=='승' && h.result!=='패') continue;
+    if (!streakType) { streakType=h.result; streak=1; continue; }
+    if (h.result===streakType) streak++;
+    else break;
+  }
+  if (streak>=3) {
+    sentences.push(streakType==='승' ? `최근 ${streak}연승 중으로 상승세를 타고 있습니다.` : `최근 ${streak}연패 중으로 반등이 필요한 시점입니다.`);
+  }
+
+  const body = `<div style="background:var(--white);padding:16px 14px;display:flex;gap:10px;align-items:flex-start">
+    <div style="font-size:20px;flex-shrink:0">💬</div>
+    <div style="font-size:var(--fs-base);line-height:1.75;color:var(--text2);font-weight:600">${escapeHtml(sentences.join(' '))}</div>
+  </div>`;
+
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}${body}</div>`;
+}
+
+try{
+  window.formatPlayerAiAnalysis = formatPlayerAiAnalysis;
+}catch(e){}

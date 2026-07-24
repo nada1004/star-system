@@ -235,6 +235,7 @@ const LAZY_CHUNKS = {
     'js/stats-search.js',
     'js/stats-overview-elo.js',
     'js/stats-sharecard.js',
+    'js/stats-player-report.js',
   ],
   'lazy-roulette.js': [
     'js/wheel.js',

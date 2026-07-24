@@ -179,7 +179,7 @@ function applyEloSearch(q, forceExact){
   _eloSelPlayer=hit.name;
   const inp=document.getElementById('elo-search-input'); if(inp) inp.value=hit.name;
   const drop=document.getElementById('elo-search-drop'); if(drop) drop.style.display='none';
-  initEloChart();
+  render();
   return true;
 }
 function eloSearchFilter(q){
@@ -211,7 +211,18 @@ function statsEloHTML(){
           <div style="font-size:11px;color:var(--gray-l);margin-top:4px">선택한 스트리머의 ELO 흐름과 현재 랭킹을 함께 확인합니다.</div>
         </div>
         <div class="stats-chart-actions no-export">
-          <select id="elo-player-select" class="stats-select" onchange="_eloSelPlayer=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initEloChart()">
+          <div style="position:relative">
+            <input id="elo-search-input" type="text" value="${escHTML(_eloSelPlayer||'')}" placeholder="🔍 스트리머 검색"
+              class="stats-search-field"
+              oninput="eloSearchFilter(this.value)"
+              onfocus="document.getElementById('elo-search-drop').style.display='block'"
+              onblur="setTimeout(()=>{const d=document.getElementById('elo-search-drop');if(d)d.style.display='none'},200)"
+              onkeydown="if(event.key==='Enter'){applyEloSearch(this.value,true);}">
+            <div id="elo-search-drop" class="stats-search-drop">
+              ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<div class="sitem stats-search-item" onmousedown="applyEloSearch('${escJS(p.name)}',true)"><b>${escHTML(p.name)}</b> <span style="color:var(--gray-l);font-size:10px">${escHTML(p.univ)} · ELO ${p.elo||1200}</span></div>`).join('')}
+            </div>
+          </div>
+          <select id="elo-player-select" class="stats-select" onchange="_eloSelPlayer=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()">
             ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${escHTML(p.name)}"${_eloSelPlayer===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ELO ${p.elo||1200}</option>`).join('')}
           </select>
           <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
@@ -250,7 +261,7 @@ function statsEloHTML(){
         const eloColor=elo>=1400?'#7c3aed':elo>=1300?'#d97706':elo>=1200?'var(--green)':'var(--red)';
         const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
         const bar=Math.min(100,Math.max(0,((elo-900)/800)*100));
-        return`<div class="stats-list-item" style="cursor:pointer" onclick="_eloSelPlayer='${escJS(p.name)}';initEloChart()">
+        return`<div class="stats-list-item" style="cursor:pointer" onclick="_eloSelPlayer='${escJS(p.name)}';render()">
           <span style="min-width:28px;font-weight:800;font-size:12px">${badge}</span>
           <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:70px">${escHTML(p.name)}</span>
           <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:60px">${escHTML(p.univ)}</span>
@@ -280,14 +291,18 @@ function initEloChart(){
   if(!p||!histAll.length){canvas.style.display='none';return;}
   canvas.style.display='block';
   const hist=[...histAll].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
+  const _eloLastN=window._statsChartLastN|0;
   // ELO 재구성: eloAfter 필드를 우선 사용하고, 없는 구간은 직전까지 알려진 ELO에서 델타를 누적한다.
   // (주의) elo 추적 변수를 eloAfter가 있을 때도 동기화해야 함 — 안 그러면 eloAfter가 끊긴 다음 기록부터
   // ELO_DEFAULT 기준으로 다시 누적되어 그래프가 갑자기 뚝 떨어지거나 튀는 오류가 발생한다.
-  const pts=[];let elo=ELO_DEFAULT;
+  // (주의2) 최근N경기 필터는 표시 구간만 잘라내며, ELO 누적 계산 자체는 항상 전체 히스토리 기준으로 수행해
+  // 필터를 걸어도 ELO 값이 뚝 끊기거나 틀어지지 않도록 한다.
+  const ptsAll=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
-    if(h.eloAfter!=null){ elo=h.eloAfter; pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
-    else{ elo+=(h.eloDelta||0); pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
+    if(h.eloAfter!=null){ elo=h.eloAfter; ptsAll.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
+    else{ elo+=(h.eloDelta||0); ptsAll.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
   });
+  const pts=(_eloLastN>0?ptsAll.slice(-_eloLastN):ptsAll).map((pt,i)=>({...pt,i}));
   if(!pts.length)return;
   const ctx=canvas.getContext('2d');
   const W=canvas.offsetWidth||600;const H=280;
@@ -404,7 +419,7 @@ function applyGrowthSearch(q, forceExact){
   _growthSel=hit.name;
   const inp=document.getElementById('growth-search-input'); if(inp) inp.value=hit.name;
   const drop=document.getElementById('growth-search-drop'); if(drop) drop.style.display='none';
-  initGrowthChart();
+  render();
   return true;
 }
 function statsGrowthHTML(){
@@ -422,7 +437,19 @@ function statsGrowthHTML(){
           <div style="font-size:11px;color:var(--gray-l);margin-top:4px">누적 승률 변화와 최근 성장 흐름을 한눈에 봅니다.</div>
         </div>
         <div class="stats-chart-actions no-export">
-          <select id="growth-player-select" class="stats-select" onchange="_growthSel=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initGrowthChart()">
+          <div style="position:relative">
+            <input id="growth-search-input" type="text" value="${escHTML(_growthSel||'')}" placeholder="🔍 스트리머 검색"
+              class="stats-search-field"
+              oninput="growthSearchFilter(this.value)"
+              onfocus="document.getElementById('growth-search-drop').style.display='block'"
+              onblur="setTimeout(()=>{const d=document.getElementById('growth-search-drop');if(d)d.style.display='none'},200)"
+              onkeydown="if(event.key==='Enter'){applyGrowthSearch(this.value,true);}">
+            <div id="growth-search-drop" class="stats-search-drop">
+              ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<div class="sitem stats-search-item" onmousedown="applyGrowthSearch('${escJS(p.name)}',true)"><b>${escHTML(p.name)}</b> <span style="color:var(--gray-l);font-size:10px">${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</span></div>`).join('')}
+              <div id="growth-search-empty" style="display:none;padding:8px 12px;color:var(--gray-l);font-size:12px">검색 결과가 없습니다</div>
+            </div>
+          </div>
+          <select id="growth-player-select" class="stats-select" onchange="_growthSel=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()">
             ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${escHTML(p.name)}"${_growthSel===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
           </select>
           <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
@@ -471,9 +498,11 @@ function initGrowthChart(){
   }
   canvas.style.display='block';
   const hist=[...histF].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
-  // 누적 승률 계산
+  const _growthLastN=window._statsChartLastN|0;
+  const _histWindowed = _growthLastN>0 ? hist.slice(-_growthLastN) : hist;
+  // 누적 승률 계산 (최근N경기 필터 시 해당 구간만으로 다시 누적)
   const pts=[];let w=0,total=0;
-  hist.forEach((h,i)=>{
+  _histWindowed.forEach((h,i)=>{
     total++;if(h.result==='승')w++;
     pts.push({i,rate:Math.round(w/total*100),w,l:total-w,date:h.date||''});
   });
@@ -773,8 +802,10 @@ function statsRecordsHTML(){
   const _players = Array.isArray(players) ? players : [];
   if(!_players.length)return`<div class="ssec"><p style="color:var(--gray-l)">스트리머 데이터가 없습니다.</p></div>`;
   const proIds=statsProMatchIds();
+  const _recLastN=window._recordsLastN|0;
   const withStats=_players.map(p=>{
-    const h=statsNonProHist(p);
+    let h=statsNonProHist(p);
+    if(_recLastN>0) h=[...h].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||''))).slice(-_recLastN);
     const ph=(p.history||[]).filter(x=>proIds.has(x.matchId));
     const w=h.filter(x=>x.result==='승').length;
     const l=h.filter(x=>x.result==='패').length;

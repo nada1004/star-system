@@ -481,6 +481,7 @@ async function _ensureGlobalSearchReady(){
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-player-report.js?v=20260724-fix1');
     return typeof window.onGlobalSearch === 'function' && window.onGlobalSearch !== _lazyOnGlobalSearch;
   }catch(e){
     console.error('[lazy] global search load fail', e);

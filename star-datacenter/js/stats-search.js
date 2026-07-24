@@ -206,18 +206,24 @@ function statsPlayerVsHTML(){
   const pB=statsP(_vsSelB);
   const colA=pA?gc(pA.univ):'#2563eb';
   const colB=pB?gc(pB.univ):'#dc2626';
+  const _vsLastN=window._statsChartLastN|0;
+  function _vsHist(p){
+    const h=statsNonProHist(p);
+    if(_vsLastN<=0) return h;
+    return [...h].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(-_vsLastN);
+  }
 
   // 직접 대결 기록
   let h2hAwin=0,h2hBwin=0;
   if(pA&&pB){
-    statsNonProHist(pA).forEach(h=>{if(h.opp===_vsSelB){if(h.result==='승')h2hAwin++;else h2hBwin++;}});
+    _vsHist(pA).forEach(h=>{if(h.opp===_vsSelB){if(h.result==='승')h2hAwin++;else h2hBwin++;}});
   }
   const h2hTotal=h2hAwin+h2hBwin;
 
   // 개인 통계
   function getStats(p){
     if(!p)return null;
-    const h=statsNonProHist(p);
+    const h=_vsHist(p);
     const w=h.filter(x=>x.result==='승').length;
     const l=h.filter(x=>x.result==='패').length;
     const tot=w+l;

@@ -5,7 +5,7 @@ var _sCacheTime='', _sCache={}, _sCacheFilterKey='';
 // 다음 _scGet 호출에서 캐시를 버린다. 필터 변경 전 stale 데이터 방지.
 function _scGet(sub){
   const t=localStorage.getItem('su_last_save_time')||'0';
-  const fk=`${_statsDateFrom}|${_statsDateTo}|${_statsMinGames}|${_statsLastN}`;
+  const fk=`${_statsDateFrom}|${_statsDateTo}|${_statsMinGames}|${_statsLastN}|${window._streakLastN||0}|${window._recordsLastN||0}`;
   if(t!==_sCacheTime||fk!==_sCacheFilterKey||window._statsTabEntered){
     _sCache={};_sCacheTime=t;_sCacheFilterKey=fk;
     window._statsTabEntered=false; // 플래그 소비
@@ -21,7 +21,7 @@ function _scSet(sub,html){ _sCache[sub]=html; return html; }
 const escHTML = (s) => window.escHTML(s);
 
 /* ─── 전역 필터 상태 ─── */
-var _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
+var _statsDateFrom='', _statsDateTo='', _statsMinGames=10, _statsLastN=0;
 // 🚀 티어 랭킹(선수) 상태 — window._statsRankTier 단일 진실 공급원
 // (이전: var _statsRankTier + window._statsRankTier 이중 유지 → 단일화)
 try{
@@ -142,6 +142,7 @@ function _statsLatestActiveMonths(gender){
     '.stats-filter-tilde{color:var(--gray-l)}',
     '.stats-filter-field input[type=date],.stats-filter-field input[type=month]{font-size:11.5px;padding:2px 4px;border:none;background:transparent;color:var(--text1);outline:none}',
     '.stats-filter-field--range input[type=date]{width:116px}',
+    '.stats-filter-field input[type=month]{width:88px}',
     '.stats-filter-num{width:44px;font-size:11.5px;padding:2px 4px;border:none;background:transparent;color:var(--text1);outline:none;text-align:center}',
     '.stats-filter-info{font-size:10px;color:var(--gray-l);cursor:help}',
     '.stats-filter-reset{font-size:11.5px;font-weight:800;padding:6px 13px;border-radius:9px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;cursor:pointer;white-space:nowrap;transition:.14s}',
@@ -294,7 +295,7 @@ function rStats(C,T){
     return;
   }
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _coreIds = new Set(['overview','tierRank','award','radar','univwinbar','period','psearch','sharecard']);
+  const _coreIds = new Set(['overview','tierRank','award','radar','univwinbar','period','preport','sharecard']);
   window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
@@ -336,9 +337,8 @@ function rStats(C,T){
       {id:'seasonal',lbl:'📅 요일/시즌 승률'},
     ]},
     {label:'🔍 기록실',tabs:[
-      {id:'psearch',lbl:'🔍 스트리머 검색'},
+      {id:'preport',lbl:'👤 선수 리포트'},
       {id:'sharecard',lbl:'🎴 공유 카드'},
-      {id:'advsearch',lbl:'🔍 고급 검색'},
       ...(_li?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
@@ -408,7 +408,7 @@ function rStats(C,T){
   // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;
   // 전역 필터 바
-  const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==3||_statsLastN>0);
+  const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==10||_statsLastN>0);
   const _now=new Date();
   const _yyyy=_now.getFullYear();
   const _mm=String(_now.getMonth()+1).padStart(2,'0');
@@ -417,6 +417,7 @@ function rStats(C,T){
   const _thisYearStart=`${_yyyy}-01-01`;
   const _thisMonthStart=`${_yyyy}-${_mm}-01`;
   const _3mAgo=(()=>{const d=new Date(_now);d.setMonth(d.getMonth()-3);return d.toISOString().slice(0,10);})();
+  const _6mAgo=(()=>{const d=new Date(_now);d.setMonth(d.getMonth()-6);return d.toISOString().slice(0,10);})();
   function _qBtn(lbl,from,to){
     const on=_statsDateFrom===from&&_statsDateTo===to;
     return`<button class="stats-quickbtn ${on?'on':''}" onclick="_statsDateFrom='${from}';_statsDateTo='${to}';render()">${lbl}</button>`;
@@ -467,7 +468,7 @@ function rStats(C,T){
         <input type="number" min="1" max="99" class="stats-filter-num" value="${_statsMinGames}" onchange="_statsMinGames=Math.max(1,parseInt(this.value)||1);render()">
         <span class="stats-filter-info" title="최소 경기 수 미만인 스트리머는 승률 집계에서 제외">ℹ️</span>
       </label>
-      ${_isFiltered?`<button class="stats-filter-reset" onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=3;_statsLastN=0;render()">✕ 초기화</button>`:''}
+      ${_isFiltered?`<button class="stats-filter-reset" onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=10;_statsLastN=0;render()">✕ 초기화</button>`:''}
     </div>
     <div class="stats-filter-divider"></div>
     <div class="stats-filter-row stats-filter-row--quick">
@@ -477,13 +478,14 @@ function rStats(C,T){
           ${_qBtn('올해',_thisYearStart,_today)}
           ${_qBtn('이번달',_thisMonthStart,_today)}
           ${_qBtn('최근3개월',_3mAgo,_today)}
+          ${_qBtn('최근6개월',_6mAgo,_today)}
           ${_qBtn('전체','','')}
         </div>
       </div>
       <div class="stats-quickgroup">
         <span class="stats-quickgroup-lbl">🎯 최근N경기</span>
         <div class="stats-quickgroup-btns">
-          ${_nBtn(0)}${_nBtn(10)}${_nBtn(20)}${_nBtn(30)}${_nBtn(50)}
+          ${_nBtn(0)}${_nBtn(30)}${_nBtn(100)}${_nBtn(300)}${_nBtn(500)}${_nBtn(1000)}
         </div>
       </div>
     </div>
@@ -495,7 +497,7 @@ function rStats(C,T){
   } // end if(_statsFilterOpen)
   h+=`</div>`;
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
-  const _CACHEABLE=['overview','records','streakhist','period','mismatch','heatmap','univmatrix'];
+  const _CACHEABLE=['overview','records','streakhist','period','mismatch','univmatrix'];
   function _cached(sub, fn){
     if(!_CACHEABLE.includes(sub)) return fn();
     const c=_scGet(sub);
@@ -525,9 +527,8 @@ function rStats(C,T){
   else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
   else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
   else if(window.statsSub==='csvexport')h+=_safeRender(statsCsvExportHTML, 'CSV 내보내기');
-  else if(window.statsSub==='psearch')   h+=_safeRender(statsPlayerSearchHTML, '스트리머 검색');
+  else if(window.statsSub==='preport')   h+=_safeRender(statsPlayerReportHTML, '선수 리포트');
   else if(window.statsSub==='sharecard')h+=_safeRender(statsShareCardHTML, '공유 카드');
-  else if(window.statsSub==='advsearch')h+=_safeRender(statsAdvSearchHTML, '고급 검색');
   else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
   else if(window.statsSub==='streakhist')h+=_safeRender(()=>_cached('streakhist', statsStreakHistHTML), '연속 기록 히스토리');

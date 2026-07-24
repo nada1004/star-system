@@ -51,6 +51,7 @@ function formatPlayerMoreOptions(player) {
     { label: '종족별전적', q: `${player.name} 종족별전적` },
     { label: '대회기록', q: `${player.name} 대회기록` },
     { label: 'ELO', q: `${player.name} elo` },
+    { label: '🤖 AI 분석', q: `${player.name} AI분석` },
     ..._hasMoreImgs ? [{ label: '📷 프로필 이미지 더보기', q: `${player.name} 프로필사진` }] : []
   ];
   const chips = opts.map(o => `<button class="pcm-chip" data-chatbot-quick="${escapeAttr(o.q)}">${o.label}</button>`).join('');

@@ -716,3 +716,28 @@ _proPasteResults      프로리그 파싱 결과
 - 선수 스탯 롤백 → `data.js` 의 `revertMatchRecord`
 - 새 탭 추가 시 → `render-core.js` 의 `_renderImpl()` switch문에 case 추가
 - CSS 변수 수정 → `css/style.css` `:root` 섹션
+
+### 2026-07-23 — 통계탭 새 서브탭: 👤 선수 리포트
+
+**요청**: 외부 사이트(선수 개인 리포트 페이지) 레이아웃을 참고해 통계탭에 선수 검색형 종합 리포트 탭 추가.
+
+- **주의**: `js/stats.js` 는 죽은 파일(어디서도 로드되지 않음) — 실제 rStats는 `js/stats-core.js`. 서브탭 추가는 `stats-core.js`에만 반영함. `stats.js`는 미사용이므로 추후 삭제 검토 필요.
+- 신규 파일: `js/stats-player-report.js` (통계탭 지연로딩 목록 — `render-lazy-utils.js` `_ensureStatsLoaded()` 및 `build.mjs` `lazy-stats.js` 청크에 등록)
+- `stats-core.js`: `_statsGroups`의 "🔍 기록실" 그룹에 `{id:preport, lbl:선수 리포트}` 추가, `_coreIds`에 포함, 라우터에 `statsPlayerReportHTML` 연결
+- 기능: 선수 검색(+최근검색 localStorage `su_prReportRecent`) → 프로필 히어로(사진/종족/대학/티어+순위/ELO/ELO보드 외부링크) → 기간 필터(30일/90일/올해/전체) → 종족별 승률 카드 → 규칙 기반 AI 코멘트(템플릿 문장, 외부 API 미사용) → 최근 중요경기 W/L 스트립(미니대전 제외 토글) → 동일 티어 상대전적(최근 90일, 🔥/🥶 표시) → 1:1 상대 비교 + ELO 표준공식 기반 승부예측 → 최근 경기 표(기존 `buildPlayerRecentHistoryRowHTML` 재사용, 읽기전용)
+- ELO 보드는 개인 URL 등록 기능이 없어 `eloboard.com` 검색 링크로만 연결
+
+### 2026-07-23 (2) — 선수 리포트 개선 + 알등이봇 AI 분석 코멘트
+
+- 최근 중요경기 스트립 승패색: 빨강(승)/파랑(패)로 통일 (`var(--score-win)`/`var(--score-lose)`)
+- 동일 티어 상대전적 각 행에 프로필 사진(마우스오버 시 2번째 프로필 자동 스왑, 클릭시 상세팝업 — `getPlayerPhotoHTML` 내장기능 재사용) + "상세프로필" 버튼 추가
+- 1:1 상대 비교 프로필 이미지 56px → 92px 확대
+- 알등이봇에 AI 분석 코멘트 기능 추가: `chatbot-formatters-stats.js`의 `formatPlayerAiAnalysis()` (선수 리포트와 동일한 규칙 기반 로직, 최근 90일 기준 + 대회 경기 병합), `chatbot-handlers.js`에 "OOO AI분석" / "OOO 분석코멘트" 명령어 트리거 추가, `formatPlayerMoreOptions` 더보기 칩에도 노출
+
+### 2026-07-23 (3) — 렌더링 오류 수정: statsPlayerReportHTML is not defined
+
+**원인**: 실서비스는 `index.dist.html` + `dist/js/*` 번들(esbuild로 사전 빌드된 정적 청크)을 서빙하는데, 새 기능은 소스 파일(`js/stats-player-report.js`, 챗봇 AI분석)에만 추가했고 `dist/js/lazy-stats.js` / `lazy-chatbot.js` 번들은 재빌드하지 않아 실제 배포본에는 새 함수가 아예 없었음 → statsSub==='preport'일 때 `_safeRender(statsPlayerReportHTML, ...)`가 인자 평가 단계에서 바로 ReferenceError.
+
+**조치**: `npm install`(esbuild) 후 `node build.mjs` 재실행 → `dist/js/lazy-stats.js`(30개 파일 병합, statsPlayerReportHTML 포함), `dist/js/lazy-chatbot.js`(formatPlayerAiAnalysis 포함) 등 전체 번들 재생성 완료.
+
+**중요 — 앞으로 매 패치마다 지켜야 할 것**: 이 프로젝트는 `js/*.js` 소스와 `dist/js/*` 번들이 분리되어 있고, 실서비스(`index.dist.html`)는 번들만 봄. 소스 js 파일을 수정한 뒤에는 반드시 `node build.mjs`로 dist를 재빌드해야 실제 사이트에 반영됩니다. (`index.html`로 직접 개발 테스트할 때는 소스 파일이 바로 적용되어 이 문제가 안 보임 — 그래서 그동안 놓치기 쉬웠음)

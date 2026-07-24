@@ -106,6 +106,17 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       return formatPlayerStats(player);
     }
   }
+
+  // 🤖 AI 분석 코멘트 (예: "홍길동 AI분석", "홍길동 AI 분석", "홍길동 분석코멘트")
+  const aiAnalysisMatch = userMessage.match(/^([^\s]+)\s*(AI\s*분석(?:\s*코멘트)?|분석\s*코멘트)$/i);
+  if (aiAnalysisMatch && typeof formatPlayerAiAnalysis === 'function') {
+    const playerName = aiAnalysisMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerAiAnalysis(player);
+    return formatPlayerAiAnalysis(player);
+  }
   
   const monthMatch = userMessage.match(/([^\s]+)\s+(\d+)월\s+전적/i);
   if (monthMatch) {

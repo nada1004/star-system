@@ -111,15 +111,15 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260724-fix1');
   await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
+  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260724-fix1');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260717-ds03');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260717-ds03');
@@ -136,19 +136,20 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-player-report.js?v=20260724-fix1');
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260724-fix1');
   await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
+  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260724-fix1');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
@@ -168,6 +169,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
+  await _loadScriptOnce('js/stats-player-report.js?v=20260724-fix1');
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260717-ds03');
