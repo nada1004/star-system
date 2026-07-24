@@ -1,8 +1,9 @@
 /* ══════════════════════════════════════
    stats-player-report.js
-   통계 탭 > 🔍 기록실 > 👤 선수 리포트
-   - 선수 검색 후 개별 종합 리포트 (외부 사이트 레이아웃 참고: 전체/90일 리포트,
-     최근전적, ELO 보드, AI 분석 코멘트, 동일 티어 상대전적, 1:1 비교)
+   통계 탭 > 🔍 리포트 > 📡 스트리머 리포트
+   - 스트리머 검색 후 개별 종합 리포트 (기본 정보, 기간별 승률 게이지,
+     맵별 성적, 핵심 분석 결과, AI 분석 코멘트, 최근전적, ELO 보드,
+     동일 티어 상대전적, 1:1 비교)
    - AI 분석 코멘트: 규칙 기반 템플릿 문장 (외부 API 미사용)
    - ELO 보드: eloboard.com 외부 링크만 연결 (개인 URL 등록 기능 없음)
 ══════════════════════════════════════ */
@@ -11,6 +12,10 @@
 if(window._prName===undefined) window._prName = '';
 if(window._prPeriod===undefined) window._prPeriod = 'all'; // 30 | 90 | season | all
 if(window._prExcludeMini===undefined) window._prExcludeMini = false;
+if(window._prExcludeUniv===undefined) window._prExcludeUniv = false;
+if(window._prExcludeCk===undefined) window._prExcludeCk = false;
+if(window._prExcludeTier===undefined) window._prExcludeTier = false;
+if(window._prExcludeNormalTour===undefined) window._prExcludeNormalTour = false;
 if(window._prVsOpp===undefined) window._prVsOpp = '';
 if(window._prTableLimit===undefined) window._prTableLimit = 20;
 
@@ -74,7 +79,30 @@ function _prSaveRecent(name){
     '.pr-vs-side{text-align:center;flex:1;min-width:110px}',
     '.pr-predict-bar{height:24px;border-radius:999px;overflow:hidden;display:flex;background:var(--surface);margin-top:8px}',
     '.pr-empty{padding:60px 20px;text-align:center;color:var(--gray-l)}',
-    '@media(max-width:640px){.pr-hero{padding:16px}.pr-hero-photo{width:64px;height:64px}.pr-hero-name{font-size:19px}.pr-hero-actions{margin-left:0;width:100%}.pr-hero-actions .pr-btn{flex:1;justify-content:center}}'
+    '.pr-sec-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}',
+    '.pr-sec-head h4{margin:0;border:none;padding:0;font-size:15px}',
+    '.pr-sec-sub{font-size:11px;color:var(--text3);font-weight:700}',
+    '.pr-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}',
+    '.pr-info-card{text-align:center;padding:14px 8px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}',
+    '.pr-info-num{font-size:23px;font-weight:950;line-height:1.15}',
+    '.pr-info-lbl{font-size:11px;color:var(--text3);font-weight:800;margin-top:5px}',
+    '.pr-gauge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px}',
+    '.pr-gauge-card{text-align:center}',
+    '.pr-gauge-ring{width:92px;height:92px;border-radius:50%;margin:0 auto 8px;position:relative}',
+    '.pr-gauge-ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--white)}',
+    '.pr-gauge-pct{position:absolute;inset:9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:950}',
+    '.pr-gauge-lbl{font-size:12px;font-weight:800;color:var(--text2)}',
+    '.pr-gauge-rec{font-size:10.5px;color:var(--text3);font-weight:700;margin-top:2px}',
+    '.pr-bar-row{display:flex;align-items:center;gap:10px;padding:6px 0}',
+    '.pr-bar-lbl{width:66px;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.pr-bar-track{flex:1;height:20px;border-radius:999px;background:var(--surface);overflow:hidden}',
+    '.pr-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;color:#fff;font-size:10px;font-weight:900;white-space:nowrap;transition:width .3s}',
+    '.pr-bar-rec{width:76px;flex-shrink:0;font-size:11px;color:var(--text3);font-weight:700;text-align:right}',
+    '.pr-highlight-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;margin-bottom:8px;font-size:12.5px;font-weight:700;color:var(--text2);line-height:1.5}',
+    '.pr-highlight-row:last-child{margin-bottom:0}',
+    '.pr-highlight-row b{font-weight:900;color:var(--text1)}',
+    '.pr-hi-icon{font-size:17px;flex-shrink:0}',
+    '@media(max-width:640px){.pr-hero{padding:16px}.pr-hero-photo{width:64px;height:64px}.pr-hero-name{font-size:19px}.pr-hero-actions{margin-left:0;width:100%}.pr-hero-actions .pr-btn{flex:1;justify-content:center}.pr-info-grid{grid-template-columns:repeat(2,1fr)}.pr-gauge-grid{grid-template-columns:repeat(2,1fr)}}'
   ].join('\n');
   document.head.appendChild(s);
 })();
@@ -108,25 +136,126 @@ function _prRaceStats(hist){
   return {w,l,tot,wr,rv};
 }
 
-/* ─── 승률 카드 ─── */
+/* ─── 승률 색상 헬퍼 (강세=초록 / 균등=주황 / 약세=빨강) ─── */
+function _prWrColor(wr){
+  if(wr>=55) return '#16a34a';
+  if(wr>=38) return '#f59e0b';
+  return '#ef4444';
+}
+function _prGaugeCardHTML(label, w, l, icon){
+  const tot=w+l; const wr= tot? Math.round(w/tot*100):0;
+  const color=_prWrColor(wr);
+  return `<div class="pr-gauge-card">
+    <div class="pr-gauge-ring" style="background:conic-gradient(${color} ${wr*3.6}deg, var(--border) 0deg)">
+      <div class="pr-gauge-pct" style="color:${color}">${wr}%</div>
+    </div>
+    <div class="pr-gauge-lbl">${icon} ${escHTML(label)}</div>
+    <div class="pr-gauge-rec">${w}승 ${l}패</div>
+  </div>`;
+}
+/* ─── 승률 게이지 카드 그룹 (전체 승률 단독) ─── */
+function _prOverallGaugeHTML(stats){
+  return `<div style="display:flex;justify-content:center">${_prGaugeCardHTML('전체 승률', stats.w, stats.l, '🎮')}</div>`;
+}
+/* 하위 호환용 (다른 곳에서 참조 시 전체+종족 게이지 그리드) */
 function _prWinRateCardsHTML(stats){
   const RACE_LABEL={P:'프로토스전',T:'테란전',Z:'저그전'};
   const RACE_ICON={P:'🔵',T:'🔴',Z:'🟣'};
-  function card(label, w, l, icon){
-    const tot=w+l; const wr= tot? Math.round(w/tot*100):0;
-    return `<div class="pr-wr-card">
-      <div class="pr-wr-label">${icon} ${escHTML(label)}</div>
-      <div class="pr-wr-pct" style="color:${wr>=50?'var(--red)':'var(--text3)'}">${wr}%</div>
-      <div class="pr-wr-rec">${w}승 ${l}패</div>
-    </div>`;
-  }
-  let h=`<div class="pr-wr-grid">`;
-  h+=card('전체 승률', stats.w, stats.l, '🎮');
-  h+=card(RACE_LABEL.P, stats.rv.P.w, stats.rv.P.l, RACE_ICON.P);
-  h+=card(RACE_LABEL.T, stats.rv.T.w, stats.rv.T.l, RACE_ICON.T);
-  h+=card(RACE_LABEL.Z, stats.rv.Z.w, stats.rv.Z.l, RACE_ICON.Z);
+  let h=`<div class="pr-gauge-grid">`;
+  h+=_prGaugeCardHTML('전체 승률', stats.w, stats.l, '🎮');
+  h+=_prGaugeCardHTML(RACE_LABEL.P, stats.rv.P.w, stats.rv.P.l, RACE_ICON.P);
+  h+=_prGaugeCardHTML(RACE_LABEL.T, stats.rv.T.w, stats.rv.T.l, RACE_ICON.T);
+  h+=_prGaugeCardHTML(RACE_LABEL.Z, stats.rv.Z.w, stats.rv.Z.l, RACE_ICON.Z);
   h+=`</div>`;
   return h;
+}
+/* ─── 종족 전적 (동일 종족전 포함 · 상대 종족별 전적 바) ─── */
+function _prRaceBarsHTML(stats){
+  const RACE_LABEL={P:'프로토스전',T:'테란전',Z:'저그전'};
+  const RACE_ICON={P:'🔵',T:'🔴',Z:'🟣'};
+  let h=`<div>`;
+  ['P','T','Z'].forEach(r=>{
+    const rv=stats.rv[r]; const tot=rv.w+rv.l; const wr= tot? Math.round(rv.w/tot*100):0;
+    const color=_prWrColor(wr);
+    h+=`<div class="pr-bar-row">
+      <div class="pr-bar-lbl">${RACE_ICON[r]} ${escHTML(RACE_LABEL[r])}</div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${tot?Math.max(wr,10):0}%;background:${color}">${tot?wr+'%':'-'}</div></div>
+      <div class="pr-bar-rec">${rv.w}승 ${rv.l}패</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+/* ─── 기본 정보 (전체 통산) ─── */
+function _prInfoGridHTML(p){
+  const w=p.win||0, l=p.loss||0, tot=w+l;
+  const wr= tot? Math.round(w/tot*100):0;
+  function card(num, lbl, color){
+    return `<div class="pr-info-card"><div class="pr-info-num" style="color:${color||'var(--text1)'}">${num}</div><div class="pr-info-lbl">${escHTML(lbl)}</div></div>`;
+  }
+  return `<div class="pr-info-grid">
+    ${card(tot+'전', '총 경기수')}
+    ${card(w+'승', '승리', 'var(--score-win)')}
+    ${card(l+'패', '패배', 'var(--score-lose)')}
+    ${card(wr+'%', '통산 승률', _prWrColor(wr))}
+  </div>`;
+}
+/* ─── 맵별 성적 ─── */
+function _prMapStats(hist){
+  const m={};
+  (hist||[]).forEach(h=>{
+    if(h.result!=='승' && h.result!=='패') return;
+    const map = (h.map && h.map!=='-') ? h.map : null;
+    if(!map) return;
+    if(!m[map]) m[map]={w:0,l:0};
+    if(h.result==='승') m[map].w++; else m[map].l++;
+  });
+  return Object.entries(m).map(([map,r])=>{
+    const tot=r.w+r.l;
+    return {map, w:r.w, l:r.l, tot, wr: tot? Math.round(r.w/tot*100):0};
+  }).sort((a,b)=>b.tot-a.tot);
+}
+function _prMapBarsHTML(mapStats){
+  if(!mapStats.length) return `<div style="color:var(--gray-l);font-size:12px;padding:10px 0">맵 기록이 없습니다</div>`;
+  let h=`<div>`;
+  mapStats.forEach(m=>{
+    const color=_prWrColor(m.wr);
+    h+=`<div class="pr-bar-row">
+      <div class="pr-bar-lbl" title="${escAttr(m.map)}">${escHTML(m.map)}</div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color}">${m.wr}%</div></div>
+      <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+/* ─── 핵심 분석 결과 (하이라이트 콜아웃) ─── */
+function _prKeyInsightsHTML(stats, mapStats){
+  const RACE_KO={T:'테란',Z:'저그',P:'프로토스'};
+  const rows=[];
+  const raceEntries=['T','Z','P'].map(r=>{
+    const rv=stats.rv[r]; const t=rv.w+rv.l;
+    return {r, w:rv.w, l:rv.l, tot:t, wr: t? Math.round(rv.w/t*100):0};
+  }).filter(e=>e.tot>=2);
+  if(raceEntries.length){
+    const best=raceEntries.slice().sort((a,b)=>b.wr-a.wr)[0];
+    const worst=raceEntries.slice().sort((a,b)=>a.wr-b.wr)[0];
+    rows.push({icon:'🏆', bg:'#ecfdf5', html:`가장 강한 종족전: <b>${RACE_KO[best.r]}전</b> ${best.w}승 ${best.l}패 (승률 ${best.wr}%)`});
+    if(worst.r!==best.r){
+      rows.push({icon:'⚠️', bg:'#fff7ed', html:`가장 약한 종족전: <b>${RACE_KO[worst.r]}전</b> ${worst.w}승 ${worst.l}패 (승률 ${worst.wr}%)`});
+    }
+  }
+  const mapsEligible = mapStats.filter(m=>m.tot>=3);
+  if(mapsEligible.length){
+    const bestMap = mapsEligible.slice().sort((a,b)=>b.wr-a.wr)[0];
+    const worstMap = mapsEligible.slice().sort((a,b)=>a.wr-b.wr)[0];
+    rows.push({icon:'🗺️', bg:'#eff6ff', html:`가장 강한 맵: <b>${escHTML(bestMap.map)}</b> ${bestMap.w}승 ${bestMap.l}패 (승률 ${bestMap.wr}%)`});
+    if(worstMap.map!==bestMap.map){
+      rows.push({icon:'🚧', bg:'#fef2f2', html:`가장 어려운 맵: <b>${escHTML(worstMap.map)}</b> ${worstMap.w}승 ${worstMap.l}패 (승률 ${worstMap.wr}%)`});
+    }
+  }
+  if(!rows.length) return `<div style="color:var(--gray-l);font-size:12px;padding:10px 0">분석할 데이터가 부족합니다 (표본 부족)</div>`;
+  return rows.map(r=>`<div class="pr-highlight-row" style="background:${r.bg}"><span class="pr-hi-icon">${r.icon}</span><span>${r.html}</span></div>`).join('');
 }
 
 /* ─── AI 분석 코멘트 (규칙 기반) ─── */
@@ -167,13 +296,47 @@ function _prAiCommentHTML(p, histPeriod, stats, periodLabel){
   return `<div class="pr-ai-box"><div class="pr-ai-icon">🤖</div><div class="pr-ai-text">${sentences.map(s=>escHTML(s)).join(' ')}</div></div>`;
 }
 
-/* ─── 최근 중요경기 스트립 ─── */
-function _prImportantStripHTML(histAll, excludeMini){
-  const filtered = excludeMini ? (histAll||[]).filter(h=>h.mode!=='미니대전') : (histAll||[]).slice();
+/* ─── 제외 필터 (미니대전/대학대전/대학CK/티어대회/일반대회) ─── */
+// 일반대회 = 일반대회 소속의 일반경기(대회(일반경기)) + 조별리그 + 대진표기록(대회) 전부 포함
+var PR_NORMAL_TOUR_MODES = ['대회(일반경기)','조별리그','대회'];
+function _prExcludeFilter(hist){
+  return (hist||[]).filter(h=>{
+    if(window._prExcludeMini && h.mode==='미니대전') return false;
+    if(window._prExcludeUniv && h.mode==='대학대전') return false;
+    if(window._prExcludeCk && h.mode==='대학CK') return false;
+    if(window._prExcludeTier && h.mode==='티어대회') return false;
+    if(window._prExcludeNormalTour && PR_NORMAL_TOUR_MODES.includes(h.mode)) return false;
+    return true;
+  });
+}
+function _prExcludeTogglesHTML(){
+  const opts=[
+    ['_prExcludeMini','🚫 미니대전 제외'],
+    ['_prExcludeUniv','🚫 대학대전 제외'],
+    ['_prExcludeCk','🚫 대학CK 제외'],
+    ['_prExcludeTier','🚫 티어대회 제외'],
+    ['_prExcludeNormalTour','🚫 일반대회 제외 (일반·조별리그·대진표기록)'],
+  ];
+  return `<div style="display:flex;gap:12px;flex-wrap:wrap">${opts.map(([key,lbl])=>
+    `<label class="pr-toggle"><input type="checkbox" ${window[key]?'checked':''} onchange="window.${key}=this.checked;render()"> ${lbl}</label>`
+  ).join('')}</div>`;
+}
+/* ─── 전체 경기 승률 요약 (제외 필터 적용 · 전체 승률 + 종족별 승률) ─── */
+function _prAllMatchesWinRateHTML(filtered){
+  if(!filtered.length) return '';
+  const stats = _prRaceStats(filtered);
+  return `<div style="margin-bottom:14px">
+    ${_prRaceBarsHTML(stats)}
+  </div>`;
+}
+/* ─── 전체 경기 스트립 ─── */
+function _prImportantStripHTML(histAll){
+  const filtered = _prExcludeFilter(histAll);
+  let h = _prAllMatchesWinRateHTML(filtered);
   const sorted = filtered.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  const recent = sorted.slice(0,20);
-  if(!recent.length) return `<div style="color:var(--gray-l);font-size:12px;padding:10px 0">표시할 경기가 없습니다</div>`;
-  let h=`<div class="pr-strip">`;
+  const recent = sorted.slice(0,20).reverse();
+  if(!recent.length) return h + `<div style="color:var(--gray-l);font-size:12px;padding:10px 0">표시할 경기가 없습니다</div>`;
+  h+=`<div class="pr-strip">`;
   recent.forEach(hh=>{
     const isWin = hh.result==='승';
     const isDraw = hh.result==='무';
@@ -182,7 +345,7 @@ function _prImportantStripHTML(histAll, excludeMini){
     h+=`<div class="pr-strip-sq" style="background:${bg}" title="${escAttr(hh.date||'')} vs ${escAttr(hh.opp||'')} (${escAttr(hh.mode||'')})">${lbl}</div>`;
   });
   h+=`</div>`;
-  h+=`<div style="font-size:10px;color:var(--gray-l);margin-top:6px">최신 → 과거 순 · 최근 ${recent.length}경기</div>`;
+  h+=`<div style="font-size:10px;color:var(--gray-l);margin-top:6px">과거 → 최신 순 · 최근 ${recent.length}경기 (전체 ${filtered.length}경기 중)</div>`;
   return h;
 }
 
@@ -274,7 +437,7 @@ function _prVsCompareHTML(p){
 /* ─── 최근 경기 표 (기존 렌더 함수 재사용 · 읽기 전용) ─── */
 function _prRecentTableHTML(p){
   const hist = _statsAllHist(p).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  const filtered = window._prExcludeMini ? hist.filter(h=>h.mode!=='미니대전') : hist;
+  const filtered = _prExcludeFilter(hist);
   const shown = filtered.slice(0, window._prTableLimit||20);
   if(!shown.length) return `<div style="color:var(--gray-l);font-size:12px;padding:16px 0;text-align:center">경기 기록이 없습니다</div>`;
   let h=`<div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
@@ -385,12 +548,12 @@ function statsPlayerReportHTML(){
   let h = `<div class="ssec">
     <div class="stats-chart-toolbar" style="margin-bottom:14px">
       <div>
-        <h4 style="margin:0">👤 선수 리포트</h4>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">선수를 검색하면 종족별 승률, 최근 폼, 동일 티어 상대전적, 1:1 비교까지 한 번에 볼 수 있습니다.</div>
+        <h4 style="margin:0">📺 스트리머 리포트</h4>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">스트리머를 검색하면 통산 전적, 종족·맵별 승률, 최근 폼, 동일 티어 상대전적, 1:1 비교까지 한 번에 볼 수 있습니다. 위쪽 필터(기간/최근N경기)를 적용하면 이 리포트에도 함께 반영됩니다.</div>
       </div>
     </div>
     <div class="pr-search-wrap">
-      <input id="pr-search-input" class="pr-search-input" type="text" placeholder="🔍 선수 이름으로 검색..." value=""
+      <input id="pr-search-input" class="pr-search-input" type="text" placeholder="🔍 스트리머 이름으로 검색..." value=""
         oninput="_prOnSearchInput(this.value)" onkeydown="if(event.key==='Enter'){_prApplySearch(this.value);}" autocomplete="off">
       <div id="pr-search-drop" class="pr-search-drop" style="display:none"></div>
     </div>`;
@@ -406,39 +569,46 @@ function statsPlayerReportHTML(){
 
   const p = window._prName ? (players||[]).find(x=>x && x.name===window._prName) : null;
   if(!p){
-    h += `<div class="pr-empty"><div style="font-size:40px;margin-bottom:10px">🔍</div>선수를 검색해서 리포트를 확인해보세요</div>`;
+    h += `<div class="pr-empty"><div style="font-size:40px;margin-bottom:10px">🔍</div>스트리머를 검색해서 리포트를 확인해보세요</div>`;
     return h;
   }
 
   const period = window._prPeriod || 'all';
   const periodLabelMap = {'30':'최근 30일','90':'최근 90일','season':'올해','all':'전체'};
-  const histAll = _statsAllHist(p);
-  const histPeriod = _prFilterHistByPeriod(histAll, period);
+  // 상단 통계 필터(기간/최근N경기)를 먼저 적용한 뒤, 리포트 자체 기간 버튼으로 한 번 더 좁힌다
+  const histGlobal = (typeof statsNonProHist==='function') ? statsNonProHist(p) : _statsAllHist(p);
+  const histAll = _statsAllHist(p); // 전체 경기 스트립/최근 경기표는 전역 필터와 별개로 항상 전체 기록 기준
+  const histPeriod = _prFilterHistByPeriod(histGlobal, period);
   const stats = _prRaceStats(histPeriod);
+  const mapStats = _prMapStats(histPeriod);
 
   h += _prHeroHTML(p);
+
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 기본 정보</h4></div>${_prInfoGridHTML(p)}</div>`;
 
   h += `<div class="pr-period-bar">
     ${['30','90','season','all'].map(pk=>`<button class="pr-period-btn ${period===pk?'on':''}" onclick="window._prPeriod='${pk}';render()">${periodLabelMap[pk]}</button>`).join('')}
   </div>`;
 
-  h += `<div class="ssec"><h4>📊 ${periodLabelMap[period]} 승률</h4>${_prWinRateCardsHTML(stats)}</div>`;
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>🎮 ${periodLabelMap[period]} 전체 승률</h4></div>${_prWinRateCardsHTML(stats)}</div>`;
 
-  h += `<div class="ssec"><h4>🤖 AI 분석 코멘트</h4>${_prAiCommentHTML(p, histPeriod, stats, periodLabelMap[period])}</div>`;
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>🗺️ ${periodLabelMap[period]} 맵별 성적</h4></div>${_prMapBarsHTML(mapStats)}</div>`;
+
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>📈 핵심 분석 결과</h4></div>${_prKeyInsightsHTML(stats, mapStats)}</div>`;
+
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>🤖 AI 분석 코멘트</h4></div>${_prAiCommentHTML(p, histPeriod, stats, periodLabelMap[period])}</div>`;
 
   h += `<div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-      <h4 style="margin:0;border:none;padding:0">⭐ 최근 중요경기</h4>
-      <label class="pr-toggle"><input type="checkbox" ${window._prExcludeMini?'checked':''} onchange="window._prExcludeMini=this.checked;render()"> 🚫 미니대전 제외</label>
-    </div>
-    ${_prImportantStripHTML(histAll, window._prExcludeMini)}
+    <div class="pr-sec-head"><h4>📋 전체 경기</h4></div>
+    <div style="margin-bottom:10px">${_prExcludeTogglesHTML()}</div>
+    ${_prImportantStripHTML(histAll)}
   </div>`;
 
-  h += `<div class="ssec"><h4>🎯 동일 티어 상대전적 (최근 90일)</h4>${_prTierOpponentsHTML(p)}</div>`;
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>🎯 동일 티어 상대전적 (최근 90일)</h4></div>${_prTierOpponentsHTML(p)}</div>`;
 
-  h += `<div class="ssec"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4>${_prVsCompareHTML(p)}</div>`;
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
 
-  h += `<div class="ssec"><h4>📋 최근 경기</h4>${_prRecentTableHTML(p)}</div>`;
+  h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
 
   return h;
 }

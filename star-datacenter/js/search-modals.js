@@ -213,6 +213,13 @@ function openMiniPasteModal() {
   const hint = document.getElementById('paste-mode-hint');
   const isCivil = window._miniPasteType === 'civil';
   if (hint) hint.innerHTML = `<span style="color:#7c3aed;font-weight:700">${isCivil?'⚔️ 시빌워':'⚡ 미니대전'} 경기 결과 입력 모드</span>`;
+  // 경기명(선택) 입력란 노출
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) {
+    const inp = compWrap.querySelector('#paste-comp-name');
+    if (inp) { inp.placeholder = '경기명 입력 (선택)'; inp.value = ''; }
+    compWrap.style.display = 'flex';
+  }
 }
 
 /* ── 대학CK 전용 붙여넣기 ── */
@@ -225,6 +232,13 @@ function openCKPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🤝 대학CK 경기 결과 입력 모드</span>';
+  // 대회명(선택) 입력란 노출
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) {
+    const inp = compWrap.querySelector('#paste-comp-name');
+    if (inp) { inp.placeholder = '대회명 입력 (선택)'; inp.value = ''; }
+    compWrap.style.display = 'flex';
+  }
 }
 
 /* ── 개인전 전용 붙여넣기 ── */
@@ -332,4 +346,11 @@ function openUnivmPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🏟️ 대학대전 경기 결과 입력 모드</span>';
+  // 경기명(선택) 입력란 노출
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) {
+    const inp = compWrap.querySelector('#paste-comp-name');
+    if (inp) { inp.placeholder = '경기명 입력 (선택)'; inp.value = ''; }
+    compWrap.style.display = 'flex';
+  }
 }

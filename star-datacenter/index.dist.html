@@ -622,6 +622,10 @@ if ('serviceWorker' in navigator) {
         <span style="font-size:12px;font-weight:700;color:#dc2626;flex-shrink:0">🔴 B팀명</span>
         <input type="text" id="pro-paste-team-b" placeholder="B팀명 (미입력 시 B조)" oninput="onProPasteTeamNameInput()" style="flex:1;min-width:120px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
       </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0">🏷️ 경기명</span>
+        <input type="text" id="pro-paste-comp-name" placeholder="경기명 입력 (선택)" style="flex:1;min-width:160px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
+      </div>
     </div>
     <div style="position:relative">
       <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z&#10;&#10;여러 경기: ===경기구분=== 으로 구분 입력 가능"

@@ -336,8 +336,8 @@ function rStats(C,T){
       {id:'racetrend',lbl:'🔬 종족 트렌드'},
       {id:'seasonal',lbl:'📅 요일/시즌 승률'},
     ]},
-    {label:'🔍 기록실',tabs:[
-      {id:'preport',lbl:'👤 선수 리포트'},
+    {label:'🔍 리포트',tabs:[
+      {id:'preport',lbl:'📺 스트리머 리포트'},
       {id:'sharecard',lbl:'🎴 공유 카드'},
       ...(_li?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
@@ -527,7 +527,7 @@ function rStats(C,T){
   else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
   else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
   else if(window.statsSub==='csvexport')h+=_safeRender(statsCsvExportHTML, 'CSV 내보내기');
-  else if(window.statsSub==='preport')   h+=_safeRender(statsPlayerReportHTML, '선수 리포트');
+  else if(window.statsSub==='preport')   h+=_safeRender(statsPlayerReportHTML, '스트리머 리포트');
   else if(window.statsSub==='sharecard')h+=_safeRender(statsShareCardHTML, '공유 카드');
   else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
