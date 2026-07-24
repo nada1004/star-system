@@ -324,22 +324,43 @@ function _pqCleanup() {
 window._pqCleanup = _pqCleanup;
 
 // ─── 렌더링 ──────────────────────────────────────────────────────────────────
+// 50:50을 사용하면 흐림 정도는 즉시 절반으로 줄지만(현재 단계와 무관하게),
+// 그 대가로 이 문제에서 받을 점수는 절반으로 깎임(_pqEffectivePoints).
+function _pqEffectiveBlur(st, stageIdx) {
+  const stage = _PQ_STAGES[stageIdx] || _PQ_STAGES[0];
+  if (st && st.cur && typeof st.cur.fiftyBlur === 'number') {
+    return Math.min(stage.blur, st.cur.fiftyBlur);
+  }
+  return stage.blur;
+}
+function _pqEffectivePoints(st, stageIdx) {
+  const stage = _PQ_STAGES[stageIdx] || _PQ_STAGES[_PQ_STAGES.length - 1];
+  if (st && st.cur && st.cur.fiftyPenalty) return Math.max(1, Math.round(stage.points / 2));
+  return stage.points;
+}
+
 function _pqPhotoHTML(p, stageIdx) {
+  const st = window._pqState;
   const initial = _pqEsc(String(p.name || '?').trim().slice(0, 1));
   const stage = _PQ_STAGES[stageIdx] || _PQ_STAGES[0];
+  const blur = _pqEffectiveBlur(st, stageIdx);
+  const pts = _pqEffectivePoints(st, stageIdx);
   return p.photo
-    ? `<img id="pq-photo-img" src="${_pqEsc(_pqUrl(p.photo))}" alt="${_pqEsc(p.name)}" loading="lazy" style="filter:blur(${stage.blur}px)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img id="pq-photo-img" src="${_pqEsc(_pqUrl(p.photo))}" alt="${_pqEsc(p.name)}" loading="lazy" style="filter:blur(${blur}px)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="pq-photo-fallback" style="display:none">${initial}</div>
-       <span class="pq-stage-badge" id="pq-stage-badge">${stageIdx + 1}/${_PQ_STAGES.length}단계 · 최대 ${stage.points}점</span>`
+       <span class="pq-stage-badge" id="pq-stage-badge">${stageIdx + 1}/${_PQ_STAGES.length}단계 · 최대 ${pts}점${pts !== stage.points ? ' (50:50 적용)' : ''}</span>`
     : `<div class="pq-photo-fallback">${initial}</div>`;
 }
 
 function _pqApplyStageBlur(stageIdx) {
+  const st = window._pqState;
   const img = document.getElementById('pq-photo-img');
   const badge = document.getElementById('pq-stage-badge');
   const stage = _PQ_STAGES[stageIdx] || _PQ_STAGES[0];
-  if (img) img.style.filter = `blur(${stage.blur}px)`;
-  if (badge) badge.textContent = `${stageIdx + 1}/${_PQ_STAGES.length}단계 · 최대 ${stage.points}점`;
+  const blur = _pqEffectiveBlur(st, stageIdx);
+  const pts = _pqEffectivePoints(st, stageIdx);
+  if (img) img.style.filter = `blur(${blur}px)`;
+  if (badge) badge.textContent = `${stageIdx + 1}/${_PQ_STAGES.length}단계 · 최대 ${pts}점${pts !== stage.points ? ' (50:50 적용)' : ''}`;
 }
 
 function _pqSnapPhotoClear() {
@@ -369,15 +390,19 @@ window._pqHint = _pqHint;
 function _pqUseFifty() {
   const st = window._pqState;
   if (!st.running || !st.cur || st.locked || st.cur.fiftyUsed) return;
-  const correctIdx = st.cur.choices.findIndex(c => c.name === st.cur.answer.name);
-  const availableWrong = st.cur.choices
-    .map((c, i) => ({ c, i }))
-    .filter(({ i }) => i !== correctIdx && !(st.cur.wrongIndices || []).includes(i));
-  if (!availableWrong.length) return;
-  const target = availableWrong[Math.floor(Math.random() * availableWrong.length)];
-  (st.cur.wrongIndices || (st.cur.wrongIndices = [])).push(target.i);
+  const curBlur = _pqEffectiveBlur(st, st.cur.stage);
   st.cur.fiftyUsed = true;
-  st.statusText = '50:50 사용: 오답 보기 하나를 제거했습니다.';
+  st.cur.fiftyPenalty = true;
+  st.cur.fiftyBlur = Math.round(curBlur * 0.5 * 10) / 10; // 흐림 50% 감소, 단계 진행과는 별개
+  _pqApplyStageBlur(st.cur.stage);
+  const hintBtn = document.getElementById('pq-hint-btn');
+  if (hintBtn && !hintBtn.disabled) {
+    const next = st.cur.stage >= _PQ_STAGES.length - 1 ? null : _PQ_STAGES[st.cur.stage + 1];
+    hintBtn.textContent = st.cur.stage >= _PQ_STAGES.length - 1
+      ? '💡 마지막 단계'
+      : `💡 힌트 보기 (현재 정답 시 +${next ? _pqEffectivePoints(st, st.cur.stage + 1) : ''}점)`;
+  }
+  st.statusText = '50:50 사용: 흐림이 절반으로 줄었습니다. 대신 이 문제 점수는 50% 차감됩니다.';
   st.statusTone = 'info';
   _pqRenderRoot();
 }
@@ -445,7 +470,7 @@ function _pqRenderRoot() {
 
   const isLastStage = st.cur ? st.cur.stage >= _PQ_STAGES.length - 1 : false;
   const nextStageInfo = st.cur && !isLastStage ? _PQ_STAGES[st.cur.stage + 1] : null;
-  const hintLabel = isLastStage ? '💡 마지막 단계' : `💡 힌트 보기 (현재 정답 시 +${nextStageInfo ? nextStageInfo.points : ''}점)`;
+  const hintLabel = isLastStage ? '💡 마지막 단계' : `💡 힌트 보기 (현재 정답 시 +${nextStageInfo ? _pqEffectivePoints(st, st.cur.stage + 1) : ''}점)`;
 
   const isTyping = st.mode === 'typing';
   const answerAreaHTML = isTyping
@@ -460,7 +485,7 @@ function _pqRenderRoot() {
     <div class="pq-photo-wrap">${_pqPhotoHTML(st.cur.answer, st.cur.stage)}</div>
     <button class="pq-hint-btn" id="pq-hint-btn" onclick="_pqHint()" ${isLastStage ? 'disabled' : ''}>${hintLabel}</button>
     <div class="pq-tool-row">
-      ${isTyping ? '' : `<button class="pq-tool-btn" onclick="_pqUseFifty()" ${st.cur.fiftyUsed ? 'disabled' : ''}>✂️ 50:50 제거</button>`}
+      ${isTyping ? '' : `<button class="pq-tool-btn" onclick="_pqUseFifty()" ${st.cur.fiftyUsed ? 'disabled' : ''}>✂️ 50:50 (흐림 절반 · 점수 50%)</button>`}
       <button class="pq-tool-btn" onclick="_pqSkipQuestion()">⏭️ 패스 (-${_PQ_SKIP_PENALTY}초)</button>
     </div>
     ${answerAreaHTML}
@@ -512,13 +537,13 @@ function _pqAnswer(idx) {
     const hintBtn = document.getElementById('pq-hint-btn');
     if (hintBtn) hintBtn.disabled = true;
 
-    const stagePoints = (_PQ_STAGES[st.cur.stage] || _PQ_STAGES[_PQ_STAGES.length - 1]).points;
+    const stagePoints = _pqEffectivePoints(st, st.cur.stage);
     st.combo++;
     st.solved++;
     st.lastAnswerName = st.cur.answer.name;
     const comboBonus = Math.max(0, st.combo - 1) * 2;
-    st.score += stagePoints + comboBonus; // 실루엣 단계 점수 + 콤보 보너스
-    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
+    st.score += stagePoints + comboBonus; // 실루엣 단계 점수(50:50 사용 시 50% 차감) + 콤보 보너스
+    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${st.cur.fiftyPenalty ? ' (50:50 페널티 적용)' : ''}${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
     st.statusTone = 'good';
     _pqPlayCorrect(st.combo);
     _pqUpdateChips();
@@ -588,13 +613,13 @@ function _pqSubmitTyped() {
     const hintBtn = document.getElementById('pq-hint-btn');
     if (hintBtn) hintBtn.disabled = true;
 
-    const stagePoints = (_PQ_STAGES[st.cur.stage] || _PQ_STAGES[_PQ_STAGES.length - 1]).points;
+    const stagePoints = _pqEffectivePoints(st, st.cur.stage);
     st.combo++;
     st.solved++;
     st.lastAnswerName = st.cur.answer.name;
     const comboBonus = Math.max(0, st.combo - 1) * 2;
     st.score += stagePoints + comboBonus;
-    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
+    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${st.cur.fiftyPenalty ? ' (50:50 페널티 적용)' : ''}${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
     st.statusTone = 'good';
     _pqPlayCorrect(st.combo);
     _pqUpdateChips();

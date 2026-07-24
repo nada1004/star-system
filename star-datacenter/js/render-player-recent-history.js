@@ -1,16 +1,14 @@
 function _pdRecentModeColors(){
   const defaults={
-    '조별리그':'#2563eb',
-    '토너먼트':'#059669',
     '미니대전':'#7c3aed',
     '시빌워':'#db2777',
-    '대학대전':'#6d28d9',
+    '대학대전':'#4338ca',
     '대학CK':'#dc2626',
-    '프로리그':'#0369a1',
-    '티어대회':'#d97706',
-    '대회':'#7c3aed',
+    '프로리그':'#0891b2',
+    '티어대회':'#f59e0b',
+    '대회':'#c026d3',
     '프로리그대회':'#0f766e',
-    '끝장전':'#9333ea',
+    '끝장전':'#ea580c',
     '개인전':'#be185d',
     '테스트':'#6b7280'
   };
@@ -29,6 +27,8 @@ function _pdNormalizeRecentModeLabel(mode){
   if(modeLbl==='univ') modeLbl='대학대전';
   if(modeLbl==='ck') modeLbl='대학CK';
   if(modeLbl==='pro') modeLbl='프로리그';
+  if(modeLbl==='조별리그') modeLbl='대회'; // 대회 = 조별리그 + 토너먼트 기록 통합
+  if(modeLbl==='토너먼트') modeLbl='대회';
   return modeLbl;
 }
 
@@ -85,7 +85,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   const modeLbl=_pdNormalizeRecentModeLabel(hh.mode);
   const modeColor=(_pdRecentModeColors()[modeLbl])||'#6b7280';
   const hhMid=(hh.matchId||'').replace(/'/g,"\\'");
-  const navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전','티어대회 토너먼트'];
+  const navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','대회','프로리그대회','프로리그팀전','티어대회 토너먼트'];
   const selfSafe=escJS(pName);
   const oppSafe=escJS(hh.opp||'');
   const dSafe=escJS(hh.date||'');
@@ -108,10 +108,10 @@ function buildPlayerRecentHistoryRowHTML(opts){
     <td style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.date}</td>
     <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>
     <td style="text-align:center">${isWin
-      ?`<span style="${resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">WIN</span>`
+      ?`<span style="${resultBadgeStyle};background:var(--score-win);color:#fff;border:1px solid var(--score-win)">WIN</span>`
       :isDraw
-        ?`<span style="${resultBadgeStyle};background:#f1f5f9;color:#475569;border:1px solid #e2e8f0">DRAW</span>`
-        :`<span style="${resultBadgeStyle};background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">LOSE</span>`}</td>
+        ?`<span style="${resultBadgeStyle};background:#94a3b8;color:#fff;border:1px solid #94a3b8">DRAW</span>`
+        :`<span style="${resultBadgeStyle};background:var(--score-lose);color:#fff;border:1px solid var(--score-lose)">LOSE</span>`}</td>
     <td style="cursor:pointer;font-weight:700" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
     <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
     <td class="ph-col-map" style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.map && hh.map !== '-' ? hh.map : ''}</td>

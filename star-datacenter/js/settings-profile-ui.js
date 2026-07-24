@@ -3,9 +3,9 @@
 ══════════════════════════════════════ */
 function _cfgBuildPdModeBadgeColorRows(){
   const defaults = {
-    '조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777',
-    '대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b',
-    '대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'
+    '미니대전':'#7c3aed','대학대전':'#4338ca',
+    '시빌워':'#db2777','프로리그':'#0891b2','티어대회':'#f59e0b','대학CK':'#dc2626',
+    '대회':'#c026d3','프로리그대회':'#0f766e','끝장전':'#ea580c','개인전':'#be185d','테스트':'#6b7280'
   };
   const user = (()=>{ try{ return JSON.parse(localStorage.getItem('su_pd_mode_badge_colors')||'{}')||{}; }catch(e){ return {}; } })();
   const colors = {...defaults, ...user};
