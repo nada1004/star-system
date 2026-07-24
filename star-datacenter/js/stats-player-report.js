@@ -102,6 +102,16 @@ function _prSaveRecent(name){
     '.pr-highlight-row:last-child{margin-bottom:0}',
     '.pr-highlight-row b{font-weight:900;color:var(--text1)}',
     '.pr-hi-icon{font-size:17px;flex-shrink:0}',
+    '.pr-filter-bar{display:flex;gap:8px;flex-wrap:wrap}',
+    '.pr-filter-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:999px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:11px;font-weight:800;cursor:pointer;transition:.15s}',
+    '.pr-filter-pill:hover{border-color:var(--blue)}',
+    '.pr-filter-pill.on{background:#fef2f2;border-color:#ef4444;color:#b91c1c}',
+    '.pr-nav-bar{display:flex;gap:6px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 2px 14px;margin-bottom:4px}',
+    '.pr-nav-bar::-webkit-scrollbar{display:none}',
+    '.pr-nav-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.15s}',
+    '.pr-nav-chip:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue)}',
+    '.pr-hero-actions .pr-btn-icon{padding:9px 11px;font-size:14px}',
+    '.pr-hero-actions .pr-btn-icon span{display:none}',
     '@media(max-width:640px){.pr-hero{padding:16px}.pr-hero-photo{width:64px;height:64px}.pr-hero-name{font-size:19px}.pr-hero-actions{margin-left:0;width:100%}.pr-hero-actions .pr-btn{flex:1;justify-content:center}.pr-info-grid{grid-template-columns:repeat(2,1fr)}.pr-gauge-grid{grid-template-columns:repeat(2,1fr)}}'
   ].join('\n');
   document.head.appendChild(s);
@@ -311,15 +321,16 @@ function _prExcludeFilter(hist){
 }
 function _prExcludeTogglesHTML(){
   const opts=[
-    ['_prExcludeMini','🚫 미니대전 제외'],
-    ['_prExcludeUniv','🚫 대학대전 제외'],
-    ['_prExcludeCk','🚫 대학CK 제외'],
-    ['_prExcludeTier','🚫 티어대회 제외'],
-    ['_prExcludeNormalTour','🚫 일반대회 제외 (일반·조별리그·대진표기록)'],
+    ['_prExcludeMini','미니대전 제외'],
+    ['_prExcludeUniv','대학대전 제외'],
+    ['_prExcludeCk','대학CK 제외'],
+    ['_prExcludeTier','티어대회 제외'],
+    ['_prExcludeNormalTour','일반대회 제외 (일반·조별리그·대진표기록)'],
   ];
-  return `<div style="display:flex;gap:12px;flex-wrap:wrap">${opts.map(([key,lbl])=>
-    `<label class="pr-toggle"><input type="checkbox" ${window[key]?'checked':''} onchange="window.${key}=this.checked;render()"> ${lbl}</label>`
-  ).join('')}</div>`;
+  return `<div class="pr-filter-bar no-export">${opts.map(([key,lbl])=>{
+    const on=!!window[key];
+    return `<button type="button" class="pr-filter-pill${on?' on':''}" aria-pressed="${on}" onclick="window.${key}=!window.${key};render()">${on?'✕':'🚫'} ${escHTML(lbl)}</button>`;
+  }).join('')}</div>`;
 }
 /* ─── 전체 경기 승률 요약 (제외 필터 적용 · 전체 승률 + 종족별 승률) ─── */
 function _prAllMatchesWinRateHTML(filtered){
@@ -485,7 +496,7 @@ function _prHeroHTML(p){
     <div class="pr-hero-actions no-export">
       <a class="pr-btn pr-btn-elo" href="${eloBoardUrl}" target="_blank" rel="noopener">📡 ELO 보드</a>
       <button class="pr-btn" onclick="openPlayerModal('${escJS(p.name)}')">👤 상세 프로필</button>
-      <button class="pr-btn" onclick="_prSaveReportImage()">📸 리포트 이미지 저장</button>
+      <button class="pr-btn pr-btn-icon" title="리포트 이미지 저장" onclick="_prSaveReportImage()">📸<span>리포트 이미지 저장</span></button>
     </div>
   </div>`;
 }
@@ -586,34 +597,60 @@ function statsPlayerReportHTML(){
   h += `<div id="pr-report-capture">`;
   h += _prHeroHTML(p);
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 기본 정보</h4></div>${_prInfoGridHTML(p)}</div>`;
+  h += _prSectionNavHTML();
+
+  h += `<div class="ssec" id="pr-sec-info"><div class="pr-sec-head"><h4>📋 기본 정보</h4></div>${_prInfoGridHTML(p)}</div>`;
 
   h += `<div class="pr-period-bar">
     ${['30','90','season','all'].map(pk=>`<button class="pr-period-btn ${period===pk?'on':''}" onclick="window._prPeriod='${pk}';render()">${periodLabelMap[pk]}</button>`).join('')}
   </div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>🎮 ${periodLabelMap[period]} 전체 승률</h4></div>${_prWinRateCardsHTML(stats)}</div>`;
+  h += `<div class="ssec" id="pr-sec-winrate"><div class="pr-sec-head"><h4>🎮 ${periodLabelMap[period]} 전체 승률</h4></div>${_prWinRateCardsHTML(stats)}</div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>🗺️ ${periodLabelMap[period]} 맵별 성적</h4></div>${_prMapBarsHTML(mapStats)}</div>`;
+  h += `<div class="ssec" id="pr-sec-map"><div class="pr-sec-head"><h4>🗺️ ${periodLabelMap[period]} 맵별 성적</h4></div>${_prMapBarsHTML(mapStats)}</div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>📈 핵심 분석 결과</h4></div>${_prKeyInsightsHTML(stats, mapStats)}</div>`;
+  h += `<div class="ssec" id="pr-sec-insights"><div class="pr-sec-head"><h4>📈 핵심 분석 결과</h4></div>${_prKeyInsightsHTML(stats, mapStats)}</div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>🤖 AI 분석 코멘트</h4></div>${_prAiCommentHTML(p, histPeriod, stats, periodLabelMap[period])}</div>`;
+  h += `<div class="ssec" id="pr-sec-ai"><div class="pr-sec-head"><h4>🤖 AI 분석 코멘트</h4></div>${_prAiCommentHTML(p, histPeriod, stats, periodLabelMap[period])}</div>`;
 
-  h += `<div class="ssec">
+  h += `<div class="ssec" id="pr-sec-allmatches">
     <div class="pr-sec-head"><h4>📋 전체 경기</h4></div>
     <div style="margin-bottom:10px">${_prExcludeTogglesHTML()}</div>
     ${_prImportantStripHTML(histAll)}
   </div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>🎯 동일 티어 상대전적 (최근 90일)</h4></div>${_prTierOpponentsHTML(p)}</div>`;
+  h += `<div class="ssec" id="pr-sec-tier"><div class="pr-sec-head"><h4>🎯 동일 티어 상대전적 (최근 90일)</h4></div>${_prTierOpponentsHTML(p)}</div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
+  h += `<div class="ssec" id="pr-sec-vs"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
 
-  h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
+  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
   h += `</div>`;
 
   return h;
+}
+
+/* ─── 섹션 바로가기 내비게이션 ─── */
+function _prSectionNavHTML(){
+  const items=[
+    ['pr-sec-info','📋 기본정보'],
+    ['pr-sec-winrate','🎮 승률'],
+    ['pr-sec-map','🗺️ 맵'],
+    ['pr-sec-insights','📈 핵심분석'],
+    ['pr-sec-ai','🤖 AI코멘트'],
+    ['pr-sec-allmatches','📋 전체경기'],
+    ['pr-sec-tier','🎯 티어상대전적'],
+    ['pr-sec-vs','⚔️ 1:1비교'],
+    ['pr-sec-recent','📋 최근경기'],
+  ];
+  return `<div class="pr-nav-bar no-export">${items.map(([id,lbl])=>
+    `<button type="button" class="pr-nav-chip" onclick="_prScrollToSection('${id}')">${lbl}</button>`
+  ).join('')}</div>`;
+}
+function _prScrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const y = el.getBoundingClientRect().top + window.scrollY - 70;
+  window.scrollTo({ top:y, behavior:'smooth' });
 }
 
 /* ─── 리포트 전체 이미지 저장 ─── */
@@ -641,4 +678,5 @@ try{
   window._prSelectPlayer = _prSelectPlayer;
   window._prOnSearchInput = _prOnSearchInput;
   window._prSaveReportImage = _prSaveReportImage;
+  window._prScrollToSection = _prScrollToSection;
 }catch(e){}
