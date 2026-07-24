@@ -280,7 +280,7 @@ function pasteApply() {
           return true;
         });
         dedupedGrp.forEach(r=>{r._id=genId();if(!r._isTeam)applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','개인전');});
-        const games=dedupedGrp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const games=dedupedGrp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(compName?{n:compName}:{}),...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) indM.unshift(...games);
       });
       if (_idDup.count > 0) alert(`개인전(혼합) 중복 ${_idDup.count}건 제거됨`);
@@ -293,7 +293,7 @@ function pasteApply() {
         const sid=genId();
         // 중복 허용: 필터링 없이 전체 저장
         grp.forEach(r=>{r._id=genId();if(!r._isTeam)applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','끝장전');});
-        const games=grp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const games=grp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(_gjProFlag?{_proLabel:true}:{}),...(compName?{n:compName}:{}),...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) gjM.unshift(...games);
       });
     }
@@ -495,7 +495,7 @@ function pasteApply() {
         r._id = genId();
         if(!r._isTeam) applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', r._id, '', '', _pasteModeLabel);
       });
-      const games = dedupedGames.map(r => ({ _id: r._id, sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = dedupedGames.map(r => ({ _id: r._id, sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(compName ? { n: compName } : {}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) indM.unshift(...games);
     });
     if (_idDup.count > 0){
@@ -518,7 +518,7 @@ function pasteApply() {
         r._id = genId();
         if(!r._isTeam) applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', r._id, '', '', _pasteModeLabel);
       });
-      const games = group.map(r => ({ _id: r._id, sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = group.map(r => ({ _id: r._id, sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(compName ? { n: compName } : {}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) gjM.unshift(...games);
     });
   } else if (mode === 'tt') {

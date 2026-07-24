@@ -905,7 +905,7 @@ function indRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];const ns=s.games.map(g=>g.n||'').filter(Boolean);if(ns.length)s.n=ns[ns.length-1];});
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSess.sort((a,b)=>{
     const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
@@ -1035,6 +1035,7 @@ function indRecordsHTML(){
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
+        ${s.n?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#FEF3C7;color:#92400E">🏆 ${escHTML(s.n)}</span>`:''}
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
@@ -1077,7 +1078,7 @@ function gjRecordsHTML(proOnly){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];const ns=s.games.map(g=>g.n||'').filter(Boolean);if(ns.length)s.n=ns[ns.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSessGj.sort((a,b)=>{
     const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
@@ -1214,6 +1215,7 @@ function gjRecordsHTML(proOnly){
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
+        ${s.n?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#FEF3C7;color:#92400E">🏆 ${escHTML(s.n)}</span>`:''}
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>

@@ -482,9 +482,10 @@ function _prHeroHTML(p){
         <span class="pr-chip" style="background:var(--surface);color:var(--text3)">ELO ${p.elo||1200}</span>
       </div>
     </div>
-    <div class="pr-hero-actions">
+    <div class="pr-hero-actions no-export">
       <a class="pr-btn pr-btn-elo" href="${eloBoardUrl}" target="_blank" rel="noopener">📡 ELO 보드</a>
       <button class="pr-btn" onclick="openPlayerModal('${escJS(p.name)}')">👤 상세 프로필</button>
+      <button class="pr-btn" onclick="_prSaveReportImage()">📸 리포트 이미지 저장</button>
     </div>
   </div>`;
 }
@@ -582,6 +583,7 @@ function statsPlayerReportHTML(){
   const stats = _prRaceStats(histPeriod);
   const mapStats = _prMapStats(histPeriod);
 
+  h += `<div id="pr-report-capture">`;
   h += _prHeroHTML(p);
 
   h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 기본 정보</h4></div>${_prInfoGridHTML(p)}</div>`;
@@ -609,12 +611,34 @@ function statsPlayerReportHTML(){
   h += `<div class="ssec"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
 
   h += `<div class="ssec"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
+  h += `</div>`;
 
   return h;
+}
+
+/* ─── 리포트 전체 이미지 저장 ─── */
+async function _prSaveReportImage(){
+  const el = document.getElementById('pr-report-capture');
+  if(!el){ alert('캡처할 리포트가 없습니다.'); return; }
+  const name = window._prName || '스트리머';
+  try{
+    if(typeof _showSaveLoading==='function') _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+    if(typeof _imgToDataUrls==='function') await _imgToDataUrls(el);
+    try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
+    try{ if(typeof _sanitizeUnsupportedCssFunctions==='function') _sanitizeUnsupportedCssFunctions(el); }catch(e){}
+    const canvas = await html2canvas(el,{
+      backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000,
+      onclone:(doc)=>{ try{ doc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){} }
+    });
+    await _saveCanvasImage(canvas, `${name}_리포트.png`, 'png');
+  }catch(e){ alert('이미지 저장 오류: '+e.message); }
+  finally{ if(typeof _hideSaveLoading==='function') _hideSaveLoading(); }
 }
 
 try{
   window.statsPlayerReportHTML = statsPlayerReportHTML;
   window._prSelectPlayer = _prSelectPlayer;
   window._prOnSearchInput = _prOnSearchInput;
+  window._prSaveReportImage = _prSaveReportImage;
 }catch(e){}
