@@ -190,6 +190,16 @@ try{
     '.pr-bar-track{flex:1;height:20px;border-radius:999px;background:var(--surface);overflow:hidden}',
     '.pr-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;color:#fff;font-size:10px;font-weight:900;white-space:nowrap;transition:width .3s}',
     '.pr-bar-rec{width:76px;flex-shrink:0;font-size:11px;color:var(--text2);font-weight:700;text-align:right}',
+    /* 🎮 이스포츠 카드의 MATCH RECORD 칩 스타일을 리포트 본문(대회·모드별 성적)에도 그대로 재사용 */
+    '.pr-mode-chip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}',
+    '.pr-mode-chip{position:relative;padding:14px 16px 14px 20px;border-radius:14px;overflow:hidden}',
+    '.pr-mode-chip-accent{position:absolute;left:0;top:0;bottom:0;width:5px}',
+    '.pr-mode-chip-lbl{font-size:12px;font-weight:800;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.pr-mode-chip-row{display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap}',
+    '.pr-mode-chip-pct{font-size:24px;font-weight:950;color:var(--text1);line-height:1}',
+    '.pr-mode-chip-rec{font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap}',
+    '@media(max-width:900px){.pr-mode-chip-grid{grid-template-columns:repeat(3,1fr)}}',
+    '@media(max-width:640px){.pr-mode-chip-grid{grid-template-columns:repeat(2,1fr)}.pr-mode-chip-pct{font-size:22px}}',
     '.pr-highlight-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;margin-bottom:8px;font-size:12.5px;font-weight:700;color:var(--text2);line-height:1.5;border-left:3px solid transparent}',
     '.pr-highlight-row:last-child{margin-bottom:0}',
     '.pr-highlight-row b{font-weight:900;color:var(--text1)}',
@@ -762,11 +772,15 @@ function _prModeStatsHTML(p){
   const colors = (typeof _pdRecentModeColors==='function') ? _pdRecentModeColors() : {};
   const byMode = {};
   hist.forEach(h=>{
-    const lbl = (typeof _pdNormalizeRecentModeLabel==='function') ? (_pdNormalizeRecentModeLabel(h.mode)||'기타') : (h.mode||'기타');
+    let lbl = (typeof _pdNormalizeRecentModeLabel==='function') ? (_pdNormalizeRecentModeLabel(h.mode)||'기타') : (h.mode||'기타');
+    /* 프로리그 대회의 끝장전 세션은 조별리그/대진표와 같은 '프로리그대회' 기록으로 합쳐서 집계
+       (그렇지 않으면 소수 경기만 남아 별도 칩으로 쪼개져 눈에 잘 안 띔) */
+    if(lbl==='프로리그대회끝장전') lbl='프로리그대회';
     if(!byMode[lbl]) byMode[lbl]={w:0,l:0};
     if(h.result==='승') byMode[lbl].w++; else byMode[lbl].l++;
   });
-  const MODE_ORDER = ['끝장전','미니대전','대학대전','대학CK','티어대회','대회'];
+  /* 🎮 이스포츠 카드(MATCH RECORD)와 동일한 우선순위로 정렬해 두 곳이 같은 순서로 보이게 함 */
+  const MODE_ORDER = (typeof PR_CARD_MODE_ORDER!=='undefined') ? PR_CARD_MODE_ORDER : ['프로리그','프로리그대회','미니대전','대학대전','대학CK','티어대회','대회','끝장전'];
   const rows = Object.entries(byMode).map(([mode,rec])=>{
     const tot=rec.w+rec.l; const wr = tot? Math.round(rec.w/tot*100):0;
     return {mode, ...rec, tot, wr};
@@ -777,13 +791,18 @@ function _prModeStatsHTML(p){
     if(ib>=0) return 1;
     return b.tot-a.tot;
   });
-  let h=`<div>`;
+  /* 🎮 이스포츠 리포트 카드(MATCH RECORD)와 통일감을 주기 위해 막대그래프 대신
+     대학 컬러 악센트 + 큰 승률 숫자의 칩 카드 그리드로 노출 */
+  let h=`<div class="pr-mode-chip-grid">`;
   rows.forEach(r=>{
     const color = colors[r.mode] || _prWrColor(r.wr);
-    h+=`<div class="pr-bar-row">
-      <div class="pr-bar-lbl" title="${escAttr(r.mode)}">${escHTML(r.mode)}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(r.wr,10)}%;background:${color}">${_prWrIcon(r.wr)} ${r.wr}%</div></div>
-      <div class="pr-bar-rec"><span style="color:var(--score-win);font-weight:900">${r.w}승</span> <span style="color:var(--score-lose);font-weight:900">${r.l}패</span></div>
+    h+=`<div class="pr-mode-chip" style="background:${_prHexToRgba(color,.08)};border:1px solid ${_prHexToRgba(color,.25)}">
+      <div style="background:${color}" class="pr-mode-chip-accent"></div>
+      <div class="pr-mode-chip-lbl" style="color:${color}" title="${escAttr(r.mode)}">${escHTML(r.mode)}</div>
+      <div class="pr-mode-chip-row">
+        <div class="pr-mode-chip-pct">${r.wr}%</div>
+        <div class="pr-mode-chip-rec"><span style="color:var(--score-win);font-weight:900">${r.w}승</span> <span style="color:var(--score-lose);font-weight:900">${r.l}패</span></div>
+      </div>
     </div>`;
   });
   h+=`</div>`;
@@ -1166,11 +1185,14 @@ function _prScrollToSection(id){
   window.scrollTo({ top:y, behavior:'smooth' });
 }
 
-/* ─── 리포트 이미지 배경 스타일 (3종: 기본 + 대학 + 보고서) ─── */
+/* ─── 리포트 이미지 배경 스타일 (6종: 기본 + 대학 + 보고서 + 완전 신규 3종) ─── */
 var PR_BG_STYLES = [
   ['none','⚪ 기본'],
   ['univ','🏫 대학'],
-  ['report','📄 보고서']
+  ['report','📄 보고서'],
+  ['esports','🎮 이스포츠'],
+  ['magazine','📰 매거진'],
+  ['ticket','🎫 티켓']
 ];
 function _prHexToRgba(hex, a){
   try{
@@ -1184,6 +1206,9 @@ function _prHexToRgba(hex, a){
 function _prStyleFrameColor(style, p){
   if(style==='univ') return (p && p.univ && typeof gc==='function') ? (gc(p.univ)||'#6366f1') : '#6366f1';
   if(style==='report') return '#0f172a';
+  if(style==='esports') return '#22d3ee';
+  if(style==='magazine') return '#111827';
+  if(style==='ticket') return '#d97706';
   return null; // 기본(효과 없음)
 }
 /* 리포트 캡처 자체를 스타일별 옅은 색으로 채워서 캡처.
@@ -1251,6 +1276,7 @@ var PR_REPORT_MODE_CSS = [
   '.pr-report-mode .pr-chip,.pr-report-mode .pr-btn,.pr-report-mode .pr-period-btn,.pr-report-mode .pr-filter-pill,.pr-report-mode .pr-nav-chip,.pr-report-mode .pr-recent-chip{border-radius:3px!important}',
   '.pr-report-mode .pr-highlight-row{border-radius:2px!important}',
   '.pr-report-mode .pr-bar-track,.pr-report-mode .pr-bar-fill{border-radius:2px!important}',
+  '.pr-report-mode .pr-mode-chip{border-radius:2px!important}',
   '.pr-report-mode .pr-nav-bar{border-bottom:1px solid #e2e8f0;padding-bottom:14px!important}'
 ].join('\n');
 /* 캡처된 캔버스 바깥에 스타일 색 테두리/배너, 혹은 완전히 다른 레이아웃(보고서 스타일)을 Canvas2D로 합성.
@@ -1397,9 +1423,547 @@ function _prRoundRect(ctx, x, y, w, h, r){
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
 }
+/* ══════════════════════════════════════
+   완전히 다른 포맷의 리포트 이미지 (3종)
+   기존 카드 UI를 캡처하는 방식이 아니라, 선수 데이터만 뽑아서
+   매번 Canvas2D로 처음부터 새로 그리는 독립 렌더러.
+   - 🎮 이스포츠: 대학 컬러 기반 다크 방송 그래픽
+   - 📰 매거진: 에디토리얼 인터뷰 페이지
+   - 🎫 티켓: 보딩패스 스타일 (절취선+바코드)
+══════════════════════════════════════ */
+var PR_RACE_KO = {T:'테란',Z:'저그',P:'프로토스'};
+var PR_CANVAS_FONT = '"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",-apple-system,sans-serif';
+
+function _prWrOf(rv){ const t=(rv&&rv.w||0)+(rv&&rv.l||0); return t? Math.round(rv.w/t*100):0; }
+
+/* 이미지 로드 (CORS 실패해도 null 반환하고 카드 생성은 계속 진행) */
+function _prLoadImageEl(url){
+  return new Promise((resolve)=>{
+    if(!url){ resolve(null); return; }
+    try{
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>resolve(null);
+      img.src = url;
+    }catch(e){ resolve(null); }
+  });
+}
+/* object-fit:cover 방식으로 사각형 안에 이미지 그리기.
+   vBias(0~1): 세로로 잘릴 때 어느 지점을 기준으로 자를지 (0=위쪽 기준, .5=중앙, 1=아래쪽 기준).
+   인물 사진은 얼굴이 보통 상단~중상단에 있으므로 기본값을 중앙보다 위로 두어
+   얼굴이 잘리는 것을 방지한다. */
+function _prDrawImageCover(ctx, img, x, y, w, h, vBias){
+  if(!img || !img.width || !img.height) return;
+  if(vBias==null) vBias = 0.5;
+  const ir = img.width/img.height, tr = w/h;
+  let sx,sy,sw,sh;
+  if(ir>tr){ sh=img.height; sw=sh*tr; sx=(img.width-sw)/2; sy=0; }
+  else { sw=img.width; sh=sw/tr; sx=0; sy=(img.height-sh)*vBias; }
+  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
+}
+/* 둥근 사각형 안에 사진 클리핑 + cover 배치 (사진 없으면 플레이스홀더) */
+function _prDrawPhotoInRect(ctx, img, x, y, w, h, radius, fallbackColor, vBias){
+  ctx.save();
+  _prRoundRect(ctx, x, y, w, h, radius);
+  ctx.clip();
+  if(img){
+    _prDrawImageCover(ctx, img, x, y, w, h, vBias);
+  } else {
+    ctx.fillStyle = fallbackColor || '#334155';
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `700 ${Math.round(h*0.3)}px ${PR_CANVAS_FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('?', x+w/2, y+h/2+h*0.1);
+    ctx.textAlign = 'left';
+  }
+  ctx.restore();
+}
+/* 티어 → 카드 레어도 컬러 (사이트 티어 색상 재사용, 실패 시 골드 기본값) */
+function _prCardRarityColor(tier){
+  try{ if(typeof getTierBtnColor==='function'){ const c=getTierBtnColor(tier); if(c) return c; } }catch(e){}
+  return '#f59e0b';
+}
+/* hex 색을 검정/흰색 쪽으로 섞어 더 어둡거나 밝은 톤을 만든다.
+   percent: -1(가장 어둡게) ~ 0(원본) ~ 1(가장 밝게) */
+function _prShadeColor(hex, percent){
+  try{
+    let h = String(hex||'').replace('#','');
+    if(h.length===3) h = h.split('').map(c=>c+c).join('');
+    let r=parseInt(h.substring(0,2),16), g=parseInt(h.substring(2,4),16), b=parseInt(h.substring(4,6),16);
+    if([r,g,b].some(isNaN)) throw 0;
+    const t = percent<0 ? 0 : 255;
+    const p = Math.abs(percent);
+    r = Math.round((t-r)*p)+r; g = Math.round((t-g)*p)+g; b = Math.round((t-b)*p)+b;
+    return `rgb(${r},${g},${b})`;
+  }catch(e){ return hex || '#0b1220'; }
+}
+/* 3종 신규 스타일 공용 데이터 수집: 화면 캡처가 아니라 선수 원본 데이터를 직접 취합 */
+/* 카드용 모드별(미니대전/대학대전/대학CK/티어대회/대회/프로리그 등) 승패 집계.
+   성별로 하드코딩하지 않고 실제 기록에 있는 모드만 뽑아 보여줌(여자는 자연히 대학계열, 남자는 자연히 프로리그계열이 나옴) */
+var PR_CARD_MODE_ORDER = ['프로리그','프로리그대회','미니대전','대학대전','대학CK','티어대회','대회','끝장전'];
+function _prCardModeStats(p){
+  const hist = (typeof _statsAllHist==='function' ? _statsAllHist(p) : []).filter(h=>(h.result==='승'||h.result==='패') && (typeof _pdNormalizeRecentModeLabel!=='function' || _pdNormalizeRecentModeLabel(h.mode)!=='시빌워'));
+  const byMode = {};
+  hist.forEach(h=>{
+    let lbl = (typeof _pdNormalizeRecentModeLabel==='function') ? (_pdNormalizeRecentModeLabel(h.mode)||'기타') : (h.mode||'기타');
+    /* 프로리그 대회 끝장전도 조별리그/대진표와 함께 '프로리그대회' 한 칩으로 합산 (HTML 리포트 섹션과 동일하게) */
+    if(lbl==='프로리그대회끝장전') lbl='프로리그대회';
+    if(!byMode[lbl]) byMode[lbl]={w:0,l:0};
+    if(h.result==='승') byMode[lbl].w++; else byMode[lbl].l++;
+  });
+  /* 예전엔 상위 4개만 잘라서 보여줬는데, 그러면 정렬 순서상 뒤로 밀리는 '대회'(공통)나
+     '프로리그'(남자)가 기록이 있어도 카드에서 통째로 빠지는 문제가 있었다.
+     PR_CARD_MODE_ORDER에 정의된 실제 기록이 있는 모드는 자르지 않고 전부 보여준다
+     (카드 높이는 _prDrawEsportsCanvas에서 modeRows.length 기준으로 항상 동적으로 계산됨). */
+  return Object.entries(byMode).map(([mode,rec])=>{
+    const tot=rec.w+rec.l; return {mode, ...rec, tot, wr: tot?Math.round(rec.w/tot*100):0};
+  }).sort((a,b)=>{
+    const ia=PR_CARD_MODE_ORDER.indexOf(a.mode), ib=PR_CARD_MODE_ORDER.indexOf(b.mode);
+    if(ia>=0 && ib>=0) return ia-ib;
+    if(ia>=0) return -1;
+    if(ib>=0) return 1;
+    return b.tot-a.tot;
+  });
+}
+async function _prBuildCardData(p){
+  const histAll = (typeof _statsAllHist==='function') ? _statsAllHist(p) : [];
+  const raceStats = _prRaceStats(histAll);
+  const w = p.win||0, l = p.loss||0, tot = w+l;
+  const wr = tot ? Math.round(w/tot*100) : 0;
+  const streak = _prBestStreak(histAll);
+  const rankInfo = _prTierRank(p);
+  const sorted = (histAll||[]).filter(h=>h.result==='승'||h.result==='패')
+    .slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const recentForm = sorted.slice(0,10).map(h=>h.result==='승'?'W':'L').reverse();
+  const rawPhoto = p.photo || '';
+  const photoUrl = (typeof toHttpsUrl==='function') ? toHttpsUrl(rawPhoto) : rawPhoto;
+  const photoImg = await _prLoadImageEl(photoUrl);
+  const univColor = (p.univ && typeof gc==='function') ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb';
+  return {
+    name: p.name||'스트리머', univ: p.univ||'', tier: p.tier||'', race: p.race||'', elo: p.elo||1200,
+    univColor, photoImg, w, l, tot, wr,
+    raceStats: raceStats.rv,
+    bestWinStreak: (streak.win&&streak.win.n)||0,
+    bestLoseStreak: (streak.lose&&streak.lose.n)||0,
+    rank: rankInfo.rank, rankTotal: rankInfo.total,
+    recentForm,
+    modeStats: _prCardModeStats(p)
+  };
+}
+
+/* ─── 🎮 이스포츠 스포트라이트 스타일 (대학 컬러 기반의 밝고 화사한 톤) ─── */
+function _prDrawEsportsCanvas(data){
+  const FONT = PR_CANVAS_FONT;
+  const W=1080;
+  const photoY=96, photoH=640, photoX=56, photoW=W-112;
+  const modeRows = (data.modeStats||[]).filter(m=>m.tot>0);
+  const chipH=88, chipGap=16;
+  const raceBarH=28, raceGap=12, sq=30;
+
+  /* 세로 레이아웃 오프셋을 실제 그리기보다 먼저 계산해 캔버스 전체 높이(H)를 데이터(모드 전적 줄 수)에 맞게 정한다.
+     아래 그리기 단계와 반드시 같은 수식을 써야 하므로 이름 붙인 상수로 공유 */
+  const nameY = photoY+photoH+62;
+  const badgeY = nameY+26;
+  const statY = badgeY+74;
+  const raceLabelY = statY+170;
+  const raceBarsTop = raceLabelY+26;
+  const afterRaceBars = raceBarsTop + 3*(raceBarH+raceGap);
+  const recentLabelY = afterRaceBars+20;
+  const sqTop = recentLabelY+22;
+  const modeSecLabelY = sqTop + sq + 40;
+  const modeChipRows = Math.ceil(modeRows.length/2);
+  const modeSecBottom = modeRows.length ? (modeSecLabelY + 26 + modeChipRows*chipH + (modeChipRows-1)*chipGap) : modeSecLabelY;
+  const H = modeSecBottom + 90;
+
+  const out=document.createElement('canvas'); out.width=W; out.height=H;
+  const ctx=out.getContext('2d');
+  const UNIV = data.univColor || '#3b5bdb';
+  const ACCENT = _prShadeColor(UNIV, -0.1);   /* 배지/포인트용 - 대학 컬러를 살짝만 눌러 가독성 확보 */
+  const INK = '#1c1917';
+
+  /* 배경: 어두워지는 톤 없이 흰색 ~ 대학 컬러의 아주 옅은 톤으로만 구성 (밝고 화사하게) */
+  const bgGrad=ctx.createLinearGradient(0,0,W,H);
+  bgGrad.addColorStop(0,_prShadeColor(UNIV,0.95)); bgGrad.addColorStop(1,_prShadeColor(UNIV,0.84));
+  ctx.fillStyle=bgGrad; ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle=ACCENT; ctx.font=`800 15px ${FONT}`;
+  _prLetterSpacedText(ctx,'STAR DATA CENTER  ·  PLAYER SPOTLIGHT', 56, 66, 2);
+
+  /* 프로필 사진: 어두워지는 오버레이 없이 깔끔하게, 대학 컬러 보더로만 포인트 */
+  ctx.save();
+  ctx.shadowColor=_prHexToRgba(UNIV,.35); ctx.shadowBlur=26; ctx.shadowOffsetY=10;
+  _prDrawPhotoInRect(ctx, data.photoImg, photoX, photoY, photoW, photoH, 22, '#e7e5e4', 0.1);
+  ctx.restore();
+  ctx.strokeStyle=ACCENT; ctx.lineWidth=4;
+  _prRoundRect(ctx, photoX, photoY, photoW, photoH, 22); ctx.stroke();
+
+  /* 이름 + 배지: 사진 아래 밝은 배경 위에 배치 (사진 위에 검은 그라디언트를 얹지 않음) */
+  ctx.textAlign='left';
+  ctx.fillStyle=INK; ctx.font=`900 52px ${FONT}`;
+  ctx.fillText(data.name, 56, nameY);
+
+  let px=56, py=badgeY;
+  [[data.univ,ACCENT,'#fff'],[data.tier,'#fff',ACCENT]].filter(([t])=>t).forEach(([txt,bg,fg],i)=>{
+    ctx.font=`700 16px ${FONT}`;
+    const w=ctx.measureText(txt).width+26;
+    ctx.fillStyle=bg;
+    _prRoundRect(ctx, px, py, w, 34, 17); ctx.fill();
+    if(i===1){ ctx.strokeStyle=ACCENT; ctx.lineWidth=2; _prRoundRect(ctx, px, py, w, 34, 17); ctx.stroke(); }
+    ctx.fillStyle=fg;
+    ctx.fillText(txt, px+13, py+23);
+    px+=w+10;
+  });
+
+  ctx.fillStyle='#78716c'; ctx.font=`700 14px ${FONT}`;
+  _prLetterSpacedText(ctx,'WIN RATE', 56, statY, 2);
+  ctx.font=`900 96px ${FONT}`; ctx.fillStyle=ACCENT;
+  ctx.fillText(`${data.wr}%`, 56, statY+92);
+  ctx.font=`700 20px ${FONT}`; ctx.fillStyle='#57534e';
+  ctx.fillText(`${data.w}W ${data.l}L  ·  ELO ${data.elo}`, 56, statY+128);
+
+  if(data.rank){
+    ctx.textAlign='right';
+    ctx.fillStyle='#78716c'; ctx.font=`700 14px ${FONT}`;
+    ctx.fillText('TIER RANK', W-56, statY);
+    ctx.font=`900 48px ${FONT}`; ctx.fillStyle=INK;
+    ctx.fillText(`#${data.rank}`, W-56, statY+56);
+    ctx.font=`700 16px ${FONT}`; ctx.fillStyle='#78716c';
+    ctx.fillText(`/ ${data.rankTotal}명`, W-56, statY+82);
+    ctx.textAlign='left';
+  }
+
+  let ry = raceLabelY;
+  ctx.font=`800 15px ${FONT}`; ctx.fillStyle='#78716c';
+  ctx.fillText('RACE MATCHUP', 56, ry);
+  ry+=26;
+  ['T','P','Z'].forEach(r=>{
+    const rv=data.raceStats[r]||{w:0,l:0}; const tot=rv.w+rv.l; const wr=_prWrOf(rv);
+    const rc=_prRaceColor(r);
+    const barX=56, barW=W-112, barH=28;
+    ctx.fillStyle='rgba(28,25,23,.06)';
+    _prRoundRect(ctx, barX, ry, barW, barH, 8); ctx.fill();
+    const fillW = tot? Math.max(barW*wr/100, 14) : 0;
+    ctx.fillStyle=rc;
+    _prRoundRect(ctx, barX, ry, fillW, barH, 8); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font=`800 13px ${FONT}`;
+    ctx.fillText(`${PR_RACE_KO[r]}   ${tot?wr+'%':'-'}   (${rv.w}W ${rv.l}L)`, barX+12, ry+19);
+    ry+=barH+12;
+  });
+
+  ry += 20;
+  ctx.fillStyle='#78716c'; ctx.font=`800 15px ${FONT}`;
+  ctx.fillText('RECENT FORM', 56, ry);
+  ry+=22;
+  const gap=8;
+  data.recentForm.forEach((r,i)=>{
+    const x=56+i*(sq+gap);
+    ctx.fillStyle = r==='W' ? '#ef4444' : '#2563eb';
+    _prRoundRect(ctx, x, ry, sq, sq, 6); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font=`900 14px ${FONT}`; ctx.textAlign='center';
+    ctx.fillText(r, x+sq/2, ry+sq/2+5);
+    ctx.textAlign='left';
+  });
+
+  /* 모드별 전적: 미니대전/대학대전/대학CK/티어대회/대회(여자) 또는 프로리그/프로리그대회(남자) 등
+     실제 기록에 있는 모드만 상위 4개까지, RACE MATCHUP 막대와는 다른 2단 컬러 스탯 칩으로 노출해서 구분감을 줌 */
+  if(modeRows.length){
+    ry += sq + 40;
+    ctx.fillStyle='#78716c'; ctx.font=`800 15px ${FONT}`;
+    ctx.fillText('MATCH RECORD', 56, ry);
+    ry += 26;
+    const chipW = (W-112-24)/2;
+    modeRows.forEach((m,i)=>{
+      const col=i%2, row=Math.floor(i/2);
+      const bx = 56 + col*(chipW+24);
+      const by = ry + row*(chipH+chipGap);
+      const col2 = (typeof _pdRecentModeColors==='function' && _pdRecentModeColors()[m.mode]) || ACCENT;
+      ctx.fillStyle=_prHexToRgba(col2,.08);
+      _prRoundRect(ctx, bx, by, chipW, chipH, 14); ctx.fill();
+      ctx.strokeStyle=_prHexToRgba(col2,.25); ctx.lineWidth=2;
+      _prRoundRect(ctx, bx, by, chipW, chipH, 14); ctx.stroke();
+      ctx.fillStyle=col2;
+      _prRoundRect(ctx, bx, by, 6, chipH, 3); ctx.fill();
+      ctx.font=`700 13px ${FONT}`; ctx.fillStyle=col2;
+      ctx.fillText(m.mode, bx+22, by+26);
+      ctx.font=`900 30px ${FONT}`; ctx.fillStyle=INK;
+      ctx.fillText(`${m.wr}%`, bx+22, by+64);
+      ctx.textAlign='right'; ctx.font=`700 13px ${FONT}`; ctx.fillStyle='#57534e';
+      ctx.fillText(`${m.w}W ${m.l}L`, bx+chipW-16, by+64);
+      ctx.textAlign='left';
+    });
+    ry += modeChipRows*chipH + (modeChipRows-1)*chipGap;
+  }
+
+  ctx.fillStyle='#a8a29e'; ctx.font=`600 13px ${FONT}`;
+  ctx.fillText(`STAR DATA CENTER  ·  ${new Date().toLocaleDateString('ko-KR')}`, 56, H-40);
+
+  return out;
+}
+
+/* ─── 📰 매거진/에디토리얼 스타일 ─── */
+function _prDrawMagazineCanvas(data){
+  const FONT = PR_CANVAS_FONT;
+  const W=1240, H=860;
+  const out=document.createElement('canvas'); out.width=W; out.height=H;
+  const ctx=out.getContext('2d');
+  const ACCENT = data.univColor || '#b91c1c';
+  ctx.fillStyle='#faf9f6'; ctx.fillRect(0,0,W,H);
+
+  /* 좌측 상단 포인트 바 (학교 컬러) — 매거진 표지 느낌의 포인트 */
+  ctx.fillStyle=ACCENT; ctx.fillRect(0,0,10,H);
+
+  const photoW = Math.round(W*0.44), photoX = W-photoW;
+  if(data.photoImg) _prDrawImageCover(ctx, data.photoImg, photoX, 0, photoW, H, 0.16);
+  else { ctx.fillStyle='#1e293b'; ctx.fillRect(photoX,0,photoW,H); }
+  ctx.fillStyle='rgba(15,23,42,.14)'; ctx.fillRect(photoX,0,photoW,H);
+  ctx.strokeStyle=ACCENT; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(photoX+2,0); ctx.lineTo(photoX+2,H); ctx.stroke();
+
+  const PAD=68;
+  const colRight = photoX-44;
+  ctx.textAlign='left';
+
+  /* 상단 키커 + 우측 이슈 태그 */
+  ctx.fillStyle='#0f172a'; ctx.font=`800 12px ${FONT}`;
+  _prLetterSpacedText(ctx,'STAR DATA CENTER', PAD, 52, 2);
+  ctx.textAlign='right';
+  ctx.fillStyle=ACCENT; ctx.font=`800 12px ${FONT}`;
+  ctx.fillText('PLAYER FEATURE', colRight, 52);
+  ctx.textAlign='left';
+  ctx.strokeStyle='#0f172a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(PAD,66); ctx.lineTo(colRight,66); ctx.stroke();
+
+  /* 선수명 + 언더라인 스와이프 */
+  ctx.fillStyle='#0f172a'; ctx.font=`900 60px ${FONT}`;
+  ctx.fillText(data.name, PAD, 150);
+  const nameW = ctx.measureText(data.name).width;
+  ctx.fillStyle=ACCENT; ctx.fillRect(PAD, 162, Math.min(nameW, colRight-PAD)*0.42, 6);
+
+  /* 소속/티어 배지 (알약형) */
+  let bx=PAD, by=188;
+  [[`${data.univ||'-'} 소속`,'#0f172a'],[`${data.tier||'-'} 티어`,ACCENT]].forEach(([txt,col])=>{
+    ctx.font=`700 14px ${FONT}`;
+    const bw=ctx.measureText(txt).width+24;
+    ctx.fillStyle=_prHexToRgba(col,.1);
+    _prRoundRect(ctx, bx, by, bw, 30, 15); ctx.fill();
+    ctx.strokeStyle=_prHexToRgba(col,.4); ctx.lineWidth=1;
+    _prRoundRect(ctx, bx, by, bw, 30, 15); ctx.stroke();
+    ctx.fillStyle=col;
+    ctx.fillText(txt, bx+12, by+20);
+    bx+=bw+10;
+  });
+
+  /* 승률 헤드라인 */
+  const qy=284;
+  ctx.fillStyle='#94a3b8'; ctx.font=`800 13px ${FONT}`;
+  _prLetterSpacedText(ctx,'SEASON WIN RATE', PAD, qy-34, 1.5);
+  ctx.fillStyle='#0f172a'; ctx.font=`900 46px ${FONT}`;
+  ctx.fillText(`시즌 승률 `, PAD, qy);
+  const wrLabelW = ctx.measureText('시즌 승률 ').width;
+  ctx.fillStyle=ACCENT;
+  ctx.fillText(`${data.wr}%`, PAD+wrLabelW, qy);
+  ctx.fillStyle='#64748b'; ctx.font=`600 16px ${FONT}`;
+  ctx.fillText(`통산 ${data.w}승 ${data.l}패  ·  ELO ${data.elo}`, PAD, qy+32);
+
+  ctx.strokeStyle='#d6d3d1'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD, qy+68); ctx.lineTo(colRight, qy+68); ctx.stroke();
+
+  /* 팩트 그리드: 칸 사이 구분선 + 컬러 불릿으로 정돈된 인상 */
+  const colW=(colRight-PAD-30)/2;
+  const rowH=68;
+  const facts=[
+    ['최고 연승', `${data.bestWinStreak}연승`],
+    ['최고 연패', `${data.bestLoseStreak}연패`],
+    ['티어 내 순위', data.rank?`${data.rank}위 / ${data.rankTotal}명`:'-'],
+    ['테란전 승률', `${_prWrOf(data.raceStats.T)}%`],
+    ['저그전 승률', `${_prWrOf(data.raceStats.Z)}%`],
+    ['프로토스전 승률', `${_prWrOf(data.raceStats.P)}%`]
+  ];
+  let fy=qy+108;
+  facts.forEach(([lbl,val],i)=>{
+    const col=i%2, row=Math.floor(i/2);
+    const fx=PAD+col*(colW+30);
+    const yy=fy+row*rowH;
+    ctx.fillStyle=ACCENT; _prRoundRect(ctx, fx, yy-11, 6, 6, 2); ctx.fill();
+    ctx.fillStyle='#94a3b8'; ctx.font=`700 12px ${FONT}`;
+    _prLetterSpacedText(ctx, lbl, fx+14, yy, .5);
+    ctx.fillStyle='#0f172a'; ctx.font=`800 25px ${FONT}`;
+    ctx.fillText(val, fx+14, yy+31);
+    if(row<2){
+      ctx.strokeStyle='#e7e5e4'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(fx, yy+rowH-24); ctx.lineTo(fx+colW-16, yy+rowH-24); ctx.stroke();
+    }
+  });
+  ctx.strokeStyle='#e7e5e4'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD+colW+15, fy-30); ctx.lineTo(PAD+colW+15, fy+2*rowH-40); ctx.stroke();
+
+  ctx.fillStyle='#94a3b8'; ctx.font=`600 12px ${FONT}`;
+  ctx.fillText(`발행 · star-datacenter · ${new Date().toLocaleDateString('ko-KR')}`, PAD, H-30);
+  ctx.textAlign='right'; ctx.fillStyle=ACCENT; ctx.font=`800 12px ${FONT}`;
+  ctx.fillText('No. 01', colRight, H-30);
+  ctx.textAlign='left';
+
+  return out;
+}
+
+/* ─── 🎫 티켓/보딩패스 스타일 (절취선+바코드, 대학 컬러 테마) ─── */
+function _prDrawTicketCanvas(data){
+  const FONT = PR_CANVAS_FONT;
+  const W=1400, H=560;
+  const out=document.createElement('canvas'); out.width=W; out.height=H;
+  const ctx=out.getContext('2d');
+  const stubW=340, mainW=W-stubW;
+  const UNIV = data.univColor || '#3b5bdb';
+  const ACCENT = _prShadeColor(UNIV, -0.06);
+  /* 우측 스텁은 대학 컬러 → 점점 어두워지는 그라디언트 (요청대로 여기만 다크 효과 적용) */
+  const stubBg1 = UNIV;
+  const stubBg2 = _prShadeColor(UNIV, -0.6);
+
+  /* 카드 전체를 둥근 사각형으로 클리핑해 실제 티켓처럼 라운드 처리 */
+  ctx.save();
+  _prRoundRect(ctx, 0, 0, W, H, 26);
+  ctx.clip();
+
+  /* 좌측 본체: 대학 컬러를 아주 옅게 섞은 밝은 톤 (예쁘고 화사하게) */
+  const mainGrad=ctx.createLinearGradient(0,0,mainW,H);
+  mainGrad.addColorStop(0,_prShadeColor(UNIV,0.94)); mainGrad.addColorStop(1,_prShadeColor(UNIV,0.88));
+  ctx.fillStyle=mainGrad; ctx.fillRect(0,0,mainW,H);
+  ctx.fillStyle=UNIV; ctx.fillRect(0,0,mainW,10);
+
+  const stubGrad=ctx.createLinearGradient(mainW,0,W,H);
+  stubGrad.addColorStop(0,stubBg1); stubGrad.addColorStop(1,stubBg2);
+  ctx.fillStyle=stubGrad; ctx.fillRect(mainW,0,stubW,H);
+
+  /* 여백 없는 얇은 대각선 패턴으로 스텁을 항공권 느낌으로 */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(mainW,0,stubW,H); ctx.clip();
+  ctx.globalAlpha=.08; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+  for(let i=mainW-H;i<W;i+=34){ ctx.beginPath(); ctx.moveTo(i,H); ctx.lineTo(i+H,0); ctx.stroke(); }
+  ctx.restore();
+
+  const holeR=16;
+  ctx.save();
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath(); ctx.arc(mainW, 0, holeR, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(mainW, H, holeR, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  /* 절취선을 따라 작은 펀치 홀을 촘촘히 배치해 진짜 절취선처럼 보이도록 */
+  ctx.save();
+  ctx.globalCompositeOperation='destination-out';
+  for(let y=holeR*2+6; y<H-holeR*2; y+=16){ ctx.beginPath(); ctx.arc(mainW,y,2.6,0,Math.PI*2); ctx.fill(); }
+  ctx.restore();
+
+  const PAD=40;
+  ctx.textAlign='left';
+  ctx.fillStyle=ACCENT; ctx.font=`800 12px ${FONT}`;
+  _prLetterSpacedText(ctx,'STAR DATA CENTER · BOARDING PASS', PAD, 34, 2);
+
+  /* 프로필 사진을 훨씬 크게 - 본체 좌측을 거의 채우는 크기 */
+  const phS=460, phY=52;
+  ctx.save();
+  ctx.shadowColor=_prHexToRgba(UNIV,.3); ctx.shadowBlur=20; ctx.shadowOffsetY=8;
+  _prDrawPhotoInRect(ctx, data.photoImg, PAD, phY, phS, phS, 20, '#d6d3d1', 0.18);
+  ctx.restore();
+  ctx.strokeStyle=ACCENT; ctx.lineWidth=4;
+  _prRoundRect(ctx, PAD, phY, phS, phS, 20); ctx.stroke();
+
+  const tx=PAD+phS+36;
+  const tw=mainW-tx-28;
+  ctx.fillStyle='#292524'; ctx.font=`900 44px ${FONT}`;
+  ctx.fillText(data.name, tx, 118);
+  ctx.fillStyle='#78716c'; ctx.font=`700 16px ${FONT}`;
+  ctx.fillText(`${data.univ||'-'}  ·  ${data.tier||'-'}  ·  ELO ${data.elo}`, tx, 150);
+
+  const tag = data.wr>=60 ? 'PRIORITY BOARDING' : 'STREAMER PASS';
+  ctx.font=`800 12px ${FONT}`;
+  const tagW=ctx.measureText(tag).width+22;
+  ctx.fillStyle=ACCENT; _prRoundRect(ctx, tx, 168, tagW, 28, 14); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.fillText(tag, tx+11, 187);
+
+  ctx.strokeStyle=_prHexToRgba(UNIV,.25); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(tx, 218); ctx.lineTo(tx+tw, 218); ctx.stroke();
+
+  ctx.fillStyle='#a8a29e'; ctx.font=`700 11px ${FONT}`;
+  _prLetterSpacedText(ctx,'WIN RATE', tx, 250, 1.5);
+  ctx.fillStyle=ACCENT; ctx.font=`900 84px ${FONT}`;
+  ctx.fillText(`${data.wr}%`, tx, 330);
+  ctx.fillStyle='#57534e'; ctx.font=`700 16px ${FONT}`;
+  ctx.fillText(`${data.w}W ${data.l}L`, tx, 358);
+
+  ctx.strokeStyle=_prHexToRgba(UNIV,.25); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(tx, 384); ctx.lineTo(tx+tw, 384); ctx.stroke();
+
+  const gates=[['RECORD',`${data.w}W ${data.l}L`],['STREAK',`${data.bestWinStreak}연승`]];
+  let gx=tx;
+  gates.forEach(([lbl,val])=>{
+    ctx.fillStyle='#a8a29e'; ctx.font=`700 11px ${FONT}`;
+    _prLetterSpacedText(ctx, lbl, gx, 412, 1.5);
+    ctx.fillStyle='#292524'; ctx.font=`900 26px ${FONT}`;
+    ctx.fillText(val, gx, 444);
+    gx+=Math.min(tw/2, 220);
+  });
+
+  let fy = 486;
+  ctx.fillStyle='#a8a29e'; ctx.font=`700 11px ${FONT}`;
+  _prLetterSpacedText(ctx,'RECENT FORM', tx, fy, 1.5);
+  const sq=22, gap=6;
+  data.recentForm.forEach((r,i)=>{
+    const x=tx+i*(sq+gap);
+    ctx.fillStyle = r==='W' ? '#16a34a' : '#dc2626';
+    _prRoundRect(ctx, x, fy+10, sq, sq, 4); ctx.fill();
+  });
+
+  ctx.save();
+  ctx.translate(mainW+stubW/2, 0);
+  ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,255,255,.7)'; ctx.font=`800 11px ${FONT}`;
+  ctx.fillText('STREAMER', 0, 40);
+  ctx.fillStyle='#fff'; ctx.font=`900 24px ${FONT}`;
+  ctx.fillText(data.name.length>7?data.name.slice(0,7)+'…':data.name, 0, 72);
+  ctx.font=`700 13px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.fillText(data.tier||'-', 0, 98);
+
+  ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=6;
+  ctx.arc(0,180,52, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.strokeStyle='#fff'; ctx.lineWidth=6;
+  ctx.arc(0,180,52, -Math.PI/2, -Math.PI/2 + Math.PI*2*(data.wr/100));
+  ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font=`900 26px ${FONT}`;
+  ctx.fillText(`${data.wr}%`, 0, 189);
+
+  ctx.textAlign='left';
+  const bcY=H-84; let bcx=-stubW/2+34;
+  const seed = String(data.name||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) || 42;
+  for(let i=0;i<28;i++){
+    const bw2 = ((seed*(i+1))%3)+1;
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillRect(bcx, bcY, bw2, 40);
+    bcx+=bw2+3;
+  }
+  ctx.font=`600 9px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.65)'; ctx.textAlign='center';
+  ctx.fillText(`SDC-${seed%9000+1000}`, 0, bcY+56);
+  ctx.restore();
+
+  ctx.restore(); /* 카드 라운드 클리핑 해제 */
+
+  ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.lineWidth=1.5;
+  _prRoundRect(ctx, .75, .75, W-1.5, H-1.5, 26); ctx.stroke();
+
+  return out;
+}
+
 /* ─── 캔버스 생성: 스타일이 바뀌면 카드 사이 배경 톤도 달라져야 하므로 매번 새로 캡처 ─── */
 async function _prGenerateReportCanvas(style){
   const p = window._prName ? (players||[]).find(x=>x && x.name===window._prName) : null;
+  if(!p) throw new Error('선택된 스트리머가 없습니다.');
+  if(style==='esports' || style==='magazine' || style==='ticket'){
+    const data = await _prBuildCardData(p);
+    if(style==='esports') return _prDrawEsportsCanvas(data);
+    if(style==='magazine') return _prDrawMagazineCanvas(data);
+    return _prDrawTicketCanvas(data);
+  }
   const baseCanvas = await _prCaptureBaseForStyle(style, p);
   return await _prComposeStyledCanvas(baseCanvas, style, p);
 }

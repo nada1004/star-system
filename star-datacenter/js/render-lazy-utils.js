@@ -136,7 +136,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report.js?v=20260725-report03');
+  await _loadScriptOnce('js/stats-player-report.js?v=20260725-styles04');
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
@@ -169,7 +169,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report.js?v=20260725-report03');
+  await _loadScriptOnce('js/stats-player-report.js?v=20260725-styles04');
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260717-ds03');

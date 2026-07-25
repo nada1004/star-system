@@ -59,8 +59,21 @@ function _statsEnsureHistoryReady(){
   try{
     const sig = (function(){
       try{
-        const arrs=[miniM,univM,ckM,comps,proM,ttM,gjM,indM,tourneys,proTourneys];
-        return arrs.map(a=>Array.isArray(a)?a.length:0).join('|');
+        /* comps/tourneys/proTourneys는 "대회를 새로 만들 때"만 배열 길이가 늘고,
+           이미 만들어진 대회 안에 조별리그/대진표 경기를 채워 넣는 편집은 배열 길이를 바꾸지 않는다.
+           예전엔 배열 길이만으로 signature를 만들어서, 예를 들어 프로리그대회 조별리그·대진표에
+           경기를 새로 입력해도 signature가 그대로라 자동 재생성이 트리거되지 않고
+           player.history가 오래된 상태로 남아있는 문제가 있었다(리포트에 '프로리그대회' 기록 누락).
+           경기 데이터가 실제로 들어있는 이 3개 배열은 JSON 문자열 길이까지 같이 반영해서
+           내부 경기 추가/수정도 감지되게 한다. */
+        const flat=[miniM,univM,ckM,proM,ttM,gjM,indM];
+        const flatSig = flat.map(a=>Array.isArray(a)?a.length:0).join('|');
+        const deep=[comps,tourneys,proTourneys];
+        const deepSig = deep.map(a=>{
+          if(!Array.isArray(a)) return '0';
+          try{ return a.length+':'+JSON.stringify(a).length; }catch(e){ return a.length+':?'; }
+        }).join('|');
+        return flatSig+'||'+deepSig;
       }catch(e){
         return '';
       }
