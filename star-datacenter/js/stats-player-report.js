@@ -1540,10 +1540,14 @@ async function _prBuildCardData(p){
   const rawPhoto = p.photo || '';
   const photoUrl = (typeof toHttpsUrl==='function') ? toHttpsUrl(rawPhoto) : rawPhoto;
   const photoImg = await _prLoadImageEl(photoUrl);
+  const univLogoRaw = (typeof univCfg!=='undefined' ? (univCfg.find(x=>x.name===p.univ)||{}) : {});
+  const univLogoUrl0 = univLogoRaw.icon || univLogoRaw.img || '';
+  const univLogoUrl = univLogoUrl0 ? ((typeof toHttpsUrl==='function') ? toHttpsUrl(univLogoUrl0) : univLogoUrl0) : '';
+  const univLogoImg = univLogoUrl ? await _prLoadImageEl(univLogoUrl) : null;
   const univColor = (p.univ && typeof gc==='function') ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb';
   return {
     name: p.name||'스트리머', univ: p.univ||'', tier: p.tier||'', race: p.race||'', elo: p.elo||1200,
-    univColor, photoImg, w, l, tot, wr,
+    univColor, photoImg, univLogoImg, w, l, tot, wr,
     raceStats: raceStats.rv,
     bestWinStreak: (streak.win&&streak.win.n)||0,
     bestLoseStreak: (streak.lose&&streak.lose.n)||0,
@@ -1605,6 +1609,16 @@ function _prDrawEsportsCanvas(data){
   ctx.fillText(data.name, 56, nameY);
 
   let px=56, py=badgeY;
+  /* 대학 로고 — 원형 배지 없이 로고 자체 모양 그대로, 반투명 */
+  if (data.univLogoImg) {
+    const logoS=38, logoCy=py+17;
+    ctx.save();
+    ctx.globalAlpha=0.75;
+    ctx.shadowColor='rgba(28,25,23,.18)'; ctx.shadowBlur=5;
+    ctx.drawImage(data.univLogoImg, px, logoCy-logoS/2, logoS, logoS);
+    ctx.restore();
+    px = px+logoS+10;
+  }
   [[data.univ,ACCENT,'#fff'],[data.tier,'#fff',ACCENT]].filter(([t])=>t).forEach(([txt,bg,fg],i)=>{
     ctx.font=`700 16px ${FONT}`;
     const w=ctx.measureText(txt).width+26;
@@ -1702,107 +1716,178 @@ function _prDrawEsportsCanvas(data){
   return out;
 }
 
-/* ─── 📰 매거진/에디토리얼 스타일 ─── */
+/* ─── 📰 매거진/에디토리얼 스타일 (2세대 리디자인) ───
+   - 이전 버전의 "SEASON WIN RATE" 라벨과 "통산 ○승 ○패" 줄 겹침 버그를 근본적으로 해결
+     (좌표를 개별 매직넘버로 흩어놓지 않고, 섹션마다 세로 커서를 순차적으로 내려가며 배치)
+   - 승률 히어로 넘버를 훨씬 크게, 연승/연패는 색상+화살표로 방향성을 즉시 인지되게,
+     종족전 승률은 숫자 나열 대신 미니 바 차트로, 하단 여백엔 최근 10경기 폼을 채워 넣음 */
 function _prDrawMagazineCanvas(data){
   const FONT = PR_CANVAS_FONT;
   const W=1240, H=860;
   const out=document.createElement('canvas'); out.width=W; out.height=H;
   const ctx=out.getContext('2d');
-  const ACCENT = data.univColor || '#b91c1c';
+  const UNIV = data.univColor || '#b91c1c';
+  const ACCENT = _prShadeColor(UNIV, -0.1); /* 텍스트 대비 확보를 위해 살짝 눌러 사용 */
   ctx.fillStyle='#faf9f6'; ctx.fillRect(0,0,W,H);
 
-  /* 좌측 상단 포인트 바 (학교 컬러) — 매거진 표지 느낌의 포인트 */
+  /* 좌측 세로 포인트 바 (학교 컬러) */
   ctx.fillStyle=ACCENT; ctx.fillRect(0,0,10,H);
 
-  const photoW = Math.round(W*0.44), photoX = W-photoW;
-  if(data.photoImg) _prDrawImageCover(ctx, data.photoImg, photoX, 0, photoW, H, 0.16);
+  /* ── 우측 사진 패널: 사진 → 여백으로 자연스럽게 스며드는 그라디언트 블렌드 ── */
+  const photoW = Math.round(W*0.42), photoX = W-photoW;
+  if(data.photoImg) _prDrawImageCover(ctx, data.photoImg, photoX, 0, photoW, H, 0.14);
   else { ctx.fillStyle='#1e293b'; ctx.fillRect(photoX,0,photoW,H); }
-  ctx.fillStyle='rgba(15,23,42,.14)'; ctx.fillRect(photoX,0,photoW,H);
-  ctx.strokeStyle=ACCENT; ctx.lineWidth=4;
+  /* 대학 컬러 듀오톤 오버레이(하단으로 갈수록 살짝 짙어짐) */
+  const duo = ctx.createLinearGradient(0,0,0,H);
+  duo.addColorStop(0, _prHexToRgba(UNIV,.10));
+  duo.addColorStop(1, _prHexToRgba('#0f172a',.30));
+  ctx.fillStyle=duo; ctx.fillRect(photoX,0,photoW,H);
+  /* 좌측 경계를 배경색으로 페이드시켜 "패널이 붙어있는" 느낌 대신 스며드는 느낌으로 */
+  const blend = ctx.createLinearGradient(photoX-90,0,photoX+40,0);
+  blend.addColorStop(0,'rgba(250,249,246,1)');
+  blend.addColorStop(1,'rgba(250,249,246,0)');
+  ctx.fillStyle=blend; ctx.fillRect(photoX-90,0,130,H);
+  ctx.strokeStyle=_prHexToRgba(UNIV,.55); ctx.lineWidth=3;
   ctx.beginPath(); ctx.moveTo(photoX+2,0); ctx.lineTo(photoX+2,H); ctx.stroke();
 
   const PAD=68;
-  const colRight = photoX-44;
+  const colRight = photoX-48;
+  const contentW = colRight-PAD;
   ctx.textAlign='left';
+  let cy; /* 세로 커서 — 섹션마다 순차적으로 내려간다 (겹침 방지) */
 
-  /* 상단 키커 + 우측 이슈 태그 */
+  /* ── 상단 키커 + 발행 태그 ── */
   ctx.fillStyle='#0f172a'; ctx.font=`800 12px ${FONT}`;
-  _prLetterSpacedText(ctx,'STAR DATA CENTER', PAD, 52, 2);
+  _prLetterSpacedText(ctx,'STAR DATA CENTER', PAD, 50, 2);
   ctx.textAlign='right';
   ctx.fillStyle=ACCENT; ctx.font=`800 12px ${FONT}`;
-  ctx.fillText('PLAYER FEATURE', colRight, 52);
+  ctx.fillText('ISSUE 01 · PLAYER FEATURE', colRight, 50);
   ctx.textAlign='left';
   ctx.strokeStyle='#0f172a'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(PAD,66); ctx.lineTo(colRight,66); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD,64); ctx.lineTo(colRight,64); ctx.stroke();
 
-  /* 선수명 + 언더라인 스와이프 */
-  ctx.fillStyle='#0f172a'; ctx.font=`900 60px ${FONT}`;
-  ctx.fillText(data.name, PAD, 150);
+  /* ── 선수명 + 언더라인 스와이프 ── */
+  ctx.fillStyle='#0f172a'; ctx.font=`900 58px ${FONT}`;
+  ctx.fillText(data.name, PAD, 134);
   const nameW = ctx.measureText(data.name).width;
-  ctx.fillStyle=ACCENT; ctx.fillRect(PAD, 162, Math.min(nameW, colRight-PAD)*0.42, 6);
+  ctx.fillStyle=ACCENT; ctx.fillRect(PAD, 146, Math.min(nameW, contentW)*0.42, 6);
 
-  /* 소속/티어 배지 (알약형) */
-  let bx=PAD, by=188;
-  [[`${data.univ||'-'} 소속`,'#0f172a'],[`${data.tier||'-'} 티어`,ACCENT]].forEach(([txt,col])=>{
-    ctx.font=`700 14px ${FONT}`;
-    const bw=ctx.measureText(txt).width+24;
-    ctx.fillStyle=_prHexToRgba(col,.1);
-    _prRoundRect(ctx, bx, by, bw, 30, 15); ctx.fill();
-    ctx.strokeStyle=_prHexToRgba(col,.4); ctx.lineWidth=1;
-    _prRoundRect(ctx, bx, by, bw, 30, 15); ctx.stroke();
-    ctx.fillStyle=col;
-    ctx.fillText(txt, bx+12, by+20);
-    bx+=bw+10;
-  });
+  /* ── 소속/티어 배지: 소속은 학교 컬러로 꽉 채워 이름과 시각적으로 연결 ── */
+  let bx=PAD, by=168;
+  /* 대학 로고 — 원형 배지 없이 로고 자체 모양 그대로, 반투명 */
+  if (data.univLogoImg) {
+    const logoS=36, logoCy=by+16;
+    ctx.save();
+    ctx.globalAlpha=0.75;
+    ctx.shadowColor='rgba(15,23,42,.18)'; ctx.shadowBlur=5;
+    ctx.drawImage(data.univLogoImg, bx, logoCy-logoS/2, logoS, logoS);
+    ctx.restore();
+    bx = bx+logoS+10;
+  }
+  ctx.font=`700 14px ${FONT}`;
+  const univTxt = `${data.univ||'-'} 소속`;
+  const univBw = ctx.measureText(univTxt).width+26;
+  ctx.fillStyle=UNIV; _prRoundRect(ctx, bx, by, univBw, 32, 16); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.fillText(univTxt, bx+13, by+21);
+  bx += univBw+10;
+  const tierTxt = `${data.tier||'-'} 티어`;
+  const tierBw = ctx.measureText(tierTxt).width+26;
+  ctx.strokeStyle=_prHexToRgba(ACCENT,.5); ctx.lineWidth=1.5;
+  _prRoundRect(ctx, bx, by, tierBw, 32, 16); ctx.stroke();
+  ctx.fillStyle=ACCENT; ctx.fillText(tierTxt, bx+13, by+21);
+  cy = by+32; /* = 200 */
 
-  /* 승률 헤드라인 */
-  const qy=284;
-  ctx.fillStyle='#94a3b8'; ctx.font=`800 13px ${FONT}`;
-  _prLetterSpacedText(ctx,'SEASON WIN RATE', PAD, qy-34, 1.5);
-  ctx.fillStyle='#0f172a'; ctx.font=`900 46px ${FONT}`;
-  ctx.fillText(`시즌 승률 `, PAD, qy);
-  const wrLabelW = ctx.measureText('시즌 승률 ').width;
-  ctx.fillStyle=ACCENT;
-  ctx.fillText(`${data.wr}%`, PAD+wrLabelW, qy);
-  ctx.fillStyle='#64748b'; ctx.font=`600 16px ${FONT}`;
-  ctx.fillText(`통산 ${data.w}승 ${data.l}패  ·  ELO ${data.elo}`, PAD, qy+32);
+  /* ── 승률 히어로 넘버 (겹침 버그 수정: 라벨→숫자→서브텍스트 순서로 커서를 확실히 내림) ── */
+  cy += 34; /* 234: 라벨 baseline */
+  ctx.fillStyle='#a8a29e'; ctx.font=`800 13px ${FONT}`;
+  _prLetterSpacedText(ctx,'SEASON WIN RATE', PAD, cy, 1.6);
+  cy += 92; /* 326: 히어로 숫자 baseline (큰 폰트 캡하이트 고려해 충분히 확보) */
+  ctx.fillStyle='#0f172a'; ctx.font=`900 96px ${FONT}`;
+  ctx.fillText(`${data.wr}`, PAD, cy);
+  const wrNumW = ctx.measureText(`${data.wr}`).width;
+  ctx.fillStyle=ACCENT; ctx.font=`900 46px ${FONT}`;
+  ctx.fillText('%', PAD+wrNumW+4, cy);
+  cy += 38; /* 서브텍스트 baseline — 히어로 숫자와 명확히 분리되는 간격 확보 */
+  ctx.fillStyle='#78716c'; ctx.font=`600 17px ${FONT}`;
+  ctx.fillText(`통산 ${data.w}승 ${data.l}패  ·  ELO ${data.elo}`, PAD, cy);
 
+  cy += 26;
   ctx.strokeStyle='#d6d3d1'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(PAD, qy+68); ctx.lineTo(colRight, qy+68); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD, cy); ctx.lineTo(colRight, cy); ctx.stroke();
 
-  /* 팩트 그리드: 칸 사이 구분선 + 컬러 불릿으로 정돈된 인상 */
-  const colW=(colRight-PAD-30)/2;
-  const rowH=68;
+  /* ── 팩트 그리드 2×2: 연승/연패는 색+화살표로 방향성을 즉시 전달 ── */
+  const colW=(contentW-30)/2;
+  const rowH=60;
+  cy += 40;
+  const gridTop = cy;
   const facts=[
-    ['최고 연승', `${data.bestWinStreak}연승`],
-    ['최고 연패', `${data.bestLoseStreak}연패`],
-    ['티어 내 순위', data.rank?`${data.rank}위 / ${data.rankTotal}명`:'-'],
-    ['테란전 승률', `${_prWrOf(data.raceStats.T)}%`],
-    ['저그전 승률', `${_prWrOf(data.raceStats.Z)}%`],
-    ['프로토스전 승률', `${_prWrOf(data.raceStats.P)}%`]
+    ['최고 연승', `▲ ${data.bestWinStreak}연승`, '#dc2626'],
+    ['최고 연패', `▼ ${data.bestLoseStreak}연패`, '#2563eb'],
+    ['티어 내 순위', data.rank?`${data.rank}위 / ${data.rankTotal}명`:'-', '#0f172a'],
+    ['통산 경기수', `${data.tot}전`, '#0f172a']
   ];
-  let fy=qy+108;
-  facts.forEach(([lbl,val],i)=>{
+  facts.forEach(([lbl,val,valCol],i)=>{
     const col=i%2, row=Math.floor(i/2);
     const fx=PAD+col*(colW+30);
-    const yy=fy+row*rowH;
+    const yy=gridTop+row*rowH;
     ctx.fillStyle=ACCENT; _prRoundRect(ctx, fx, yy-11, 6, 6, 2); ctx.fill();
-    ctx.fillStyle='#94a3b8'; ctx.font=`700 12px ${FONT}`;
+    ctx.fillStyle='#a8a29e'; ctx.font=`700 12px ${FONT}`;
     _prLetterSpacedText(ctx, lbl, fx+14, yy, .5);
-    ctx.fillStyle='#0f172a'; ctx.font=`800 25px ${FONT}`;
-    ctx.fillText(val, fx+14, yy+31);
-    if(row<2){
-      ctx.strokeStyle='#e7e5e4'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(fx, yy+rowH-24); ctx.lineTo(fx+colW-16, yy+rowH-24); ctx.stroke();
-    }
+    ctx.fillStyle=valCol; ctx.font=`800 24px ${FONT}`;
+    ctx.fillText(val, fx+14, yy+30);
   });
   ctx.strokeStyle='#e7e5e4'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(PAD+colW+15, fy-30); ctx.lineTo(PAD+colW+15, fy+2*rowH-40); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD+colW+15, gridTop-30); ctx.lineTo(PAD+colW+15, gridTop+rowH+6); ctx.stroke();
+  cy = gridTop+rowH+30;
+  ctx.strokeStyle='#d6d3d1'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD, cy); ctx.lineTo(colRight, cy); ctx.stroke();
 
-  ctx.fillStyle='#94a3b8'; ctx.font=`600 12px ${FONT}`;
-  ctx.fillText(`발행 · star-datacenter · ${new Date().toLocaleDateString('ko-KR')}`, PAD, H-30);
-  ctx.textAlign='right'; ctx.fillStyle=ACCENT; ctx.font=`800 12px ${FONT}`;
-  ctx.fillText('No. 01', colRight, H-30);
+  /* ── 종족전 승률 미니 바 차트 (숫자 나열 대신 한눈에 비교되도록) ── */
+  cy += 32;
+  ctx.fillStyle='#a8a29e'; ctx.font=`800 12px ${FONT}`;
+  _prLetterSpacedText(ctx,'RACE MATCHUP', PAD, cy, 1.5);
+  cy += 24;
+  const raceRows=[['T','테란전',data.raceStats.T],['Z','저그전',data.raceStats.Z],['P','프로토스전',data.raceStats.P]];
+  const barLabelW=76, barPctW=48, barGap=10;
+  const barTrackW=contentW-barLabelW-barPctW-barGap*2;
+  raceRows.forEach(([code,lbl,rv])=>{
+    const wr=_prWrOf(rv);
+    const rc=(typeof _prRaceColor==='function') ? _prRaceColor(code) : '#94a3b8';
+    ctx.fillStyle='#57534e'; ctx.font=`700 14px ${FONT}`;
+    ctx.fillText(lbl, PAD, cy+13);
+    const trackX=PAD+barLabelW+barGap;
+    ctx.fillStyle='#e7e5e4'; _prRoundRect(ctx, trackX, cy, barTrackW, 16, 8); ctx.fill();
+    ctx.fillStyle=rc; _prRoundRect(ctx, trackX, cy, Math.max(barTrackW*wr/100, wr>0?10:0), 16, 8); ctx.fill();
+    ctx.textAlign='right'; ctx.fillStyle='#0f172a'; ctx.font=`800 15px ${FONT}`;
+    ctx.fillText(`${wr}%`, colRight, cy+13);
+    ctx.textAlign='left';
+    cy += 34;
+  });
+
+  /* ── 최근 폼 (하단 여백을 데이터로 채움) ── */
+  cy += 12;
+  ctx.fillStyle='#a8a29e'; ctx.font=`800 12px ${FONT}`;
+  _prLetterSpacedText(ctx,'RECENT FORM', PAD, cy, 1.5);
+  cy += 14;
+  const sq=24, gap=7;
+  (data.recentForm||[]).forEach((r,i)=>{
+    const x=PAD+i*(sq+gap);
+    ctx.fillStyle = r==='W' ? '#dc2626' : '#2563eb';
+    _prRoundRect(ctx, x, cy, sq, sq, 5); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font=`800 11px ${FONT}`;
+    ctx.textAlign='center';
+    ctx.fillText(r, x+sq/2, cy+sq/2+4);
+    ctx.textAlign='left';
+  });
+
+  /* ── 푸터: 발행 정보 + ISSUE 넘버 ── */
+  const footTop = H-76;
+  ctx.strokeStyle='#d6d3d1'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD, footTop); ctx.lineTo(colRight, footTop); ctx.stroke();
+  ctx.fillStyle='#a8a29e'; ctx.font=`600 12px ${FONT}`;
+  ctx.fillText(`발행 · star-datacenter · ${new Date().toLocaleDateString('ko-KR')}`, PAD, footTop+30);
+  ctx.textAlign='right'; ctx.fillStyle=ACCENT; ctx.font=`900 20px ${FONT}`;
+  ctx.fillText('ISSUE 01', colRight, footTop+34);
   ctx.textAlign='left';
 
   return out;
@@ -1811,6 +1896,7 @@ function _prDrawMagazineCanvas(data){
 /* ─── 🎫 티켓/보딩패스 스타일 (절취선+바코드, 대학 컬러 테마) ─── */
 function _prDrawTicketCanvas(data){
   const FONT = PR_CANVAS_FONT;
+  const hasLogo = !!data.univLogoImg;
   const W=1400, H=560;
   const out=document.createElement('canvas'); out.width=W; out.height=H;
   const ctx=out.getContext('2d');
@@ -1911,7 +1997,7 @@ function _prDrawTicketCanvas(data){
   const sq=22, gap=6;
   data.recentForm.forEach((r,i)=>{
     const x=tx+i*(sq+gap);
-    ctx.fillStyle = r==='W' ? '#16a34a' : '#dc2626';
+    ctx.fillStyle = r==='W' ? '#dc2626' : '#2563eb';
     _prRoundRect(ctx, x, fy+10, sq, sq, 4); ctx.fill();
   });
 
@@ -1932,6 +2018,18 @@ function _prDrawTicketCanvas(data){
   ctx.stroke();
   ctx.fillStyle='#fff'; ctx.font=`900 26px ${FONT}`;
   ctx.fillText(`${data.wr}%`, 0, 189);
+
+  /* 승률 게이지 아래: 대학 로고만 (원형 배지 없이 로고 자체 모양 그대로, 반투명 스탬프 느낌) */
+  if (hasLogo) {
+    const logoS = 112, logoCy = 316;
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    ctx.shadowColor='rgba(0,0,0,.28)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+    ctx.drawImage(data.univLogoImg, -logoS/2, logoCy-logoS/2, logoS, logoS);
+    ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font=`800 13px ${FONT}`;
+    ctx.fillText(data.univ||'', 0, logoCy+logoS/2+22);
+  }
 
   ctx.textAlign='left';
   const bcY=H-84; let bcx=-stubW/2+34;

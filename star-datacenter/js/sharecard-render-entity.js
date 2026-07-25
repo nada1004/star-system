@@ -71,8 +71,8 @@
     const elo=p.elo||1200;
     const col=gc(p.univ);
     const form=h.slice(0,5).map(x=>x.result==='승'
-      ?'<span style="display:inline-block;width:30px;height:30px;background:#16a34a;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">W</span>'
-      :'<span style="display:inline-block;width:30px;height:30px;background:#dc2626;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">L</span>').join('');
+      ?'<span style="display:inline-block;width:30px;height:30px;background:#dc2626;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">W</span>'
+      :'<span style="display:inline-block;width:30px;height:30px;background:#2563eb;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">L</span>').join('');
     const pts=p.points||0;
     const raceLabel=p.race==='T'?'테란':p.race==='Z'?'저그':p.race==='P'?'프로토스':'?';
     const bgImg=String(p.shareCardBgImg||'').trim();
@@ -114,19 +114,22 @@
     const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(accentA,'#ffffff',.10)},${_scMixHex(accentB,'#ffffff',.04)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
     const surfaceBlur = bgImg ? '0px' : (scp.surface==='glass' ? '10px' : '4px');
     const _cacheKey = `player:${name}`;
-    const _html = `<div class="share-shell share-shell--player" data-sc-mode="${scp.mode}" data-sc-entity-layout="${entityLayout}" style="background:${shellBg};padding:16px;border-radius:26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 24px 52px rgba(15,23,42,.30),0 2px 0 rgba(255,255,255,.45) inset">
+    const _html = `<div class="share-shell share-shell--player" data-sc-mode="${scp.mode}" data-sc-entity-layout="${entityLayout}" style="background:${shellBg};padding:16px;border-radius:28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 24px 52px rgba(15,23,42,.30),0 2px 0 rgba(255,255,255,.45) inset">
     <div style="position:absolute;inset:0;background:${bgCss};opacity:.96"></div>
     ${bgImg?`<div style="position:absolute;inset:0;background-image:url('${toHttpsUrl(bgImg)}');background-position:${bgPos};background-size:${bgSize};background-repeat:no-repeat;opacity:1"></div>`:''}
     ${bgImg?`<div style="position:absolute;inset:0;background:linear-gradient(135deg, rgba(15,23,42,${(bgDark/100).toFixed(2)}), rgba(15,23,42,${Math.max(0, (bgDark-10)/100).toFixed(2)})), linear-gradient(135deg, rgba(255,255,255,${(bgFade/100).toFixed(2)}), rgba(255,255,255,${Math.max(0, (bgFade-25)/100).toFixed(2)}));pointer-events:none"></div>`:''}
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.10).toFixed(2)}),rgba(15,23,42,${(0.62+scp.fx*0.22).toFixed(2)}));pointer-events:none"></div>
     <div style="position:absolute;top:-32px;right:-28px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
     <div style="position:absolute;left:-42px;bottom:-44px;width:160px;height:160px;border-radius:50%;background:${baseCol}${Math.round(20+scp.color*30).toString(16).padStart(2,'0')};pointer-events:none"></div>
-    <div class="share-surface" style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${glassBg};backdrop-filter:blur(${surfaceBlur})">
-      <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;margin-bottom:14px">
-        <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
+    <div class="share-surface" style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:20px;background:${glassBg};backdrop-filter:blur(${surfaceBlur})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:9px;font-weight:900;letter-spacing:1.4px;color:rgba(255,255,255,.55);text-shadow:0 1px 2px rgba(0,0,0,.3)">STAR DATA CENTER</div>
+        <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:5px 12px;font-size:10px;font-weight:900;display:inline-flex;align-items:center;gap:6px">
+          <span style="width:6px;height:6px;border-radius:50%;background:${baseCol};box-shadow:0 0 6px ${baseCol}"></span>${p.tier||'-'}
+        </div>
       </div>
       <div class="share-player-top" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
-        <div class="share-player-photo-wrap ${(photoUrl && p.secondProfileFile)?'ph-swap':''}" style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+        <div class="share-player-photo-wrap ${(photoUrl && p.secondProfileFile)?'ph-swap':''}" style="width:${profileW}px;height:${profileH}px;border-radius:20px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.28);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.26),0 0 0 5px ${baseCol}26;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
           ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${photoPos?`object-position:${photoPos};`:''}" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
           ${(photoUrl && p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : ''}
         </div>
@@ -136,17 +139,20 @@
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;display:inline-flex;align-items:center;gap:5px">${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${raceLabel}</span>
           </div>
-          <div class="share-player-form" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:var(--fs-sm)">기록없음</span>'}</div>
         </div>
         <div class="share-hero-metric" style="min-width:92px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:10px 12px;text-align:center">
           <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.35)">ELO</div>
           <div class="share-hero-number" style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3)">${elo}</div>
         </div>
       </div>
+      <div class="share-player-form" style="display:flex;align-items:center;gap:9px;margin-top:14px">
+        <span style="font-size:9px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.55);white-space:nowrap">RECENT</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${form||'<span style="opacity:.6;font-size:var(--fs-sm)">기록없음</span>'}</div>
+      </div>
       <div class="share-stat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px">
         <div class="share-stat-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">⚔️ 승패</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:16px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)"><span style="color:#4ade80">${w}</span> / <span style="color:#f87171">${l}</span></div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:16px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)"><span style="color:#f87171">${w}</span> / <span style="color:#60a5fa">${l}</span></div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">📈 승률</div>
@@ -161,10 +167,10 @@
           <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${h.slice(0,5).filter(x=>x.result==='승').length}</div>
         </div>
       </div>
-      ${tot?`<div style="margin-top:14px">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.88);font-weight:800;margin-bottom:5px;text-shadow:0 1px 2px rgba(0,0,0,.3)"><span>WIN RATE</span><span>${ratePct}%</span></div>
-        <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden">
-          <div style="height:100%;width:${ratePct}%;background:linear-gradient(90deg,${col},#ffffff);border-radius:999px"></div>
+      ${tot?`<div style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.88);font-weight:800;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,.3)"><span>WIN RATE</span><span>${ratePct}%</span></div>
+        <div style="height:9px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.1) inset">
+          <div style="height:100%;width:${ratePct}%;background:linear-gradient(90deg,${col},#ffffff);border-radius:999px;box-shadow:0 0 10px ${col}88"></div>
         </div>
       </div>`:''}
     </div>

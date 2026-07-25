@@ -182,7 +182,7 @@ function buildPlayerDetailHTML(p){
       </div>
     </div>` : '';
 
-  const _modeColors=_computed?.modeColors || {'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
+  const _modeColors=_computed?.modeColors || {'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a','프로리그대회':'#0d9488'};
   const _fixedModes=_computed?.fixedModes || [];
   const _secModeStatsRaw = (typeof buildPlayerModeStatsHTML==='function')
     ? buildPlayerModeStatsHTML({

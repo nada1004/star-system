@@ -768,6 +768,40 @@ function _rebuildAllPlayerHistoryCore() {
           count++;
         });
       });
+      // (버그픽스) 프로리그 대회 "🗂️ 대진표 / 📝 입력" 화면에서 라운드별로 기록한
+      // tn.stageRecords가 재생성(rebuild) 시 전혀 처리되지 않아, 재생성 버튼을 누르거나
+      // 초기화 시점마다 해당 기록이 스트리머 전적(승/패)·리포트에서 통째로 사라지는 문제가 있었다.
+      // → 조별리그/대진표/팀전과 동일하게 '프로리그대회' 한 모드로 합산되게 복구한다.
+      Object.keys(tn.stageRecords || {}).forEach(round => {
+        (tn.stageRecords[round] || []).forEach((m, mi) => {
+          if (!m || !m.a || !m.b) return;
+          const mid = m._id || _ensureMid(m, `pTS${tnIdx}_${round}`, mi);
+          const games = (Array.isArray(m._games) && m._games.length)
+            ? m._games
+            : (m.winner ? [{ winner: m.winner, map: m.map || '', d: m.d || '' }] : []);
+          games.forEach((g, gameIdx) => {
+            if (!g || (g.winner !== 'A' && g.winner !== 'B')) return;
+            const wName = g.winner === 'A' ? m.a : m.b;
+            const lName = g.winner === 'A' ? m.b : m.a;
+            const gameId = (games.length > 1) ? `${mid}_s0_g${gameIdx}` : mid;
+            applyGameResult(wName, lName, g.d || m.d || '', g.map || m.map || '', gameId, '', '', '프로리그대회');
+            count++;
+          });
+        });
+      });
+      // (버그픽스) 프로리그 대회 "🔥 중장전"(tn.gjMatches)도 재생성 시 처리되지 않아
+      // 스트리머 전적에서 누락되던 문제 → '프로리그대회끝장전'으로 복구
+      // (리포트/모드별 전적 화면에서는 '프로리그대회' 한 칩으로 자동 합산 표시됨)
+      (tn.gjMatches || []).forEach((sess, si) => {
+        if (!sess || !sess.a || !sess.b) return;
+        const mid = sess._id || _ensureMid(sess, `pTGJ${tnIdx}`, si);
+        (sess.games || []).forEach(g => {
+          if (!g || !g.winner) return;
+          const win = g.winner, loss = (g.winner === sess.a) ? sess.b : sess.a;
+          applyGameResult(win, loss, sess.d || '', g.map || '', mid, '', '', '프로리그대회끝장전');
+          count++;
+        });
+      });
     });
   }
 
