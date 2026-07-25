@@ -639,43 +639,407 @@ function _newsBuildHtml(ctx, meta){
     </div>
   </div>`;
 }
-async function _captureBriefingNewspaper(meta){
+/* ══════════════════════════════════════
+   브리핑 저장 — 다양한 모드(신문기사/카드형/포스터/SNS 정사각형/미니멀)
+   통계탭 스트리머 리포트의 "미리보기 → 스타일 전환 → 다운로드" 흐름을 그대로 차용.
+   각 모드는 window._b2BriefingExportCtx(board2-briefing.js가 저장해둔 통계 스냅샷)를
+   바탕으로 완전히 독립된 레이아웃을 렌더링해 캡처한다.
+══════════════════════════════════════ */
+var BRIEF_MODES = [
+  ['newspaper','📰 신문기사'],
+  ['card','🃏 카드형'],
+  ['poster','🎬 포스터'],
+  ['sns','📱 SNS 정사각형'],
+  ['minimal','⬜ 미니멀']
+];
+
+function _cardCss(){
+  return `
+  .bc-sheet{width:880px;background:linear-gradient(180deg,#fef9f0 0%,#f5ead8 100%);font-family:"Noto Sans KR",sans-serif;color:#2d2418;padding:56px 60px 64px;box-sizing:border-box}
+  .bc-sheet *,.bc-sheet *::before,.bc-sheet *::after{box-sizing:border-box}
+  .bc-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:2px solid #2d2418;margin-bottom:34px}
+  .bc-brand{font-size:13px;font-weight:900;letter-spacing:.08em}
+  .bc-period{font-size:12px;font-weight:700;color:#8a7a5c}
+  .bc-mvp-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:34px}
+  .bc-mvp-photo{width:168px;height:168px;border-radius:50%;overflow:hidden;border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.18);margin-bottom:18px;background:#e7dcc4;display:flex;align-items:center;justify-content:center}
+  .bc-mvp-photo img{width:100%;height:100%;object-fit:cover}
+  .bc-mvp-photo-fallback{font-size:58px;font-weight:900;color:#a8925f}
+  .bc-mvp-label{display:inline-block;font-size:12px;font-weight:900;background:#2d2418;color:#fef9f0;padding:5px 16px;border-radius:999px;margin-bottom:10px}
+  .bc-mvp-name{font-size:36px;font-weight:950;margin-bottom:6px}
+  .bc-mvp-univ{font-size:14px;font-weight:700;color:#8a7a5c;margin-bottom:20px}
+  .bc-mvp-stats{display:flex;gap:14px}
+  .bc-mvp-stat{background:#fff;border-radius:16px;padding:14px 22px;box-shadow:0 4px 14px rgba(0,0,0,.08);min-width:76px;text-align:center}
+  .bc-mvp-stat b{display:block;font-size:24px;font-weight:950}
+  .bc-mvp-stat i{font-size:11px;font-weight:700;color:#8a7a5c;font-style:normal}
+  .bc-section-title{font-size:14px;font-weight:900;margin:0 0 12px}
+  .bc-highlight-list{display:flex;flex-direction:column;gap:8px;margin-bottom:30px}
+  .bc-hl-row{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:11px 16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .bc-hl-tag{font-size:11px;font-weight:900;color:#fff;background:#c08a3e;border-radius:8px;padding:4px 9px;white-space:nowrap}
+  .bc-hl-name{font-weight:800;font-size:13px}
+  .bc-hl-univ{font-size:11px;color:#8a7a5c}
+  .bc-hl-rec{margin-left:auto;font-size:12px;font-weight:800}
+  .bc-standings{display:flex;flex-direction:column;gap:6px}
+  .bc-st-row{display:flex;align-items:center;gap:10px;padding:9px 16px;background:#fff;border-radius:10px}
+  .bc-st-rank{width:22px;height:22px;border-radius:50%;background:#2d2418;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bc-st-rank.r1{background:#d4a017}
+  .bc-st-rank.r2{background:#9ca3af}
+  .bc-st-rank.r3{background:#b45309}
+  .bc-st-name{font-weight:800;font-size:13px}
+  .bc-st-rec{margin-left:auto;font-size:12px;color:#8a7a5c}
+  .bc-st-wr{font-size:13px;font-weight:900;width:44px;text-align:right}
+  .bc-footer{margin-top:34px;padding-top:16px;border-top:1px solid #d8caa9;font-size:10px;color:#a8925f;text-align:center;font-weight:700}
+  `;
+}
+function _cardBuildHtml(ctx, meta){
+  const mvp=ctx.mvp;
+  const photo=mvp&&mvp.p?_newsPhotoUrl(mvp.p):'';
+  const initial=mvp&&mvp.p?String(mvp.p.name||'-').trim().slice(0,1):'?';
+  const streak=(mvp&&mvp.hist&&typeof _b2CalcStreak==='function')?_b2CalcStreak(mvp.hist,'승'):0;
+  const hlItems=[
+    ['연승가도',ctx.streakPlayer, ctx.streakPlayer?`${ctx.streakPlayer.streak}연승`:''],
+    ['최다승',ctx.mostWinsPlayer,''],
+    ['급상승',ctx.hotPlayer, ctx.hotPlayer&&ctx.hotPlayer.wrDelta>0?`▲${ctx.hotPlayer.wrDelta}%p`:''],
+    ['최고승률',ctx.bestWrPlayer,'']
+  ].filter(([,s])=>s&&s.p);
+  const standings=(ctx.rankedUnivs&&ctx.rankedUnivs.length?ctx.rankedUnivs:ctx.topUnivs)||[];
+  return `<div class="bc-sheet">
+    <div class="bc-top"><span class="bc-brand">STAR DATACENTER</span><span class="bc-period">${_esc(meta.presetLabel)} · ${_esc(meta.from)} ~ ${_esc(meta.to)}</span></div>
+    <div class="bc-mvp-wrap">
+      <div class="bc-mvp-photo">${photo?`<img src="${photo}" alt="">`:`<span class="bc-mvp-photo-fallback">${_esc(initial)}</span>`}</div>
+      <span class="bc-mvp-label">🏆 ${_esc(ctx.mvpLabel||'MVP')}</span>
+      <div class="bc-mvp-name">${mvp&&mvp.p?_esc(mvp.p.name):'-'}</div>
+      <div class="bc-mvp-univ">${mvp&&mvp.p?_esc(mvp.p.univ||'무소속'):''}</div>
+      <div class="bc-mvp-stats">
+        <div class="bc-mvp-stat"><b>${mvp?mvp.wins??0:0}</b><i>승</i></div>
+        <div class="bc-mvp-stat"><b>${mvp?mvp.losses??0:0}</b><i>패</i></div>
+        <div class="bc-mvp-stat"><b>${mvp?mvp.winRate??0:0}%</b><i>승률</i></div>
+        ${streak>=2?`<div class="bc-mvp-stat"><b>${streak}</b><i>연승</i></div>`:''}
+      </div>
+    </div>
+    <div class="bc-section-title">⚡ 이 주의 기록</div>
+    <div class="bc-highlight-list">
+      ${hlItems.map(([label,s,extra])=>`<div class="bc-hl-row"><span class="bc-hl-tag">${_esc(label)}</span><span class="bc-hl-name">${_esc(s.p.name)}</span><span class="bc-hl-univ">${_esc(s.p.univ||'무소속')}</span><span class="bc-hl-rec">${extra?_esc(extra)+' · ':''}${s.wins??0}승 ${s.losses??0}패</span></div>`).join('') || '<div class="bc-hl-row">집계된 기록이 없습니다</div>'}
+    </div>
+    <div class="bc-section-title">🏫 대학 순위</div>
+    <div class="bc-standings">
+      ${standings.slice(0,8).map((ud,idx)=>{const rank=ud.rank||(idx+1);const rc=rank===1?'r1':rank===2?'r2':rank===3?'r3':'';return `<div class="bc-st-row"><span class="bc-st-rank ${rc}">${rank}</span><span class="bc-st-name">${_esc(ud.u.name)}</span><span class="bc-st-rec">${ud.tw}승 ${ud.tl}패</span><span class="bc-st-wr">${ud.wr??0}%</span></div>`;}).join('') || '<div class="bc-st-row">집계된 대학 활동이 없습니다</div>'}
+    </div>
+    <div class="bc-footer">STAR DATACENTER · ${_esc(meta.univ)} · 발행 ${_esc(meta.issueDateFull)}</div>
+  </div>`;
+}
+
+function _posterCss(){
+  return `
+  .bp-sheet{width:1000px;height:1400px;box-sizing:border-box;background:radial-gradient(circle at 30% 0%,#1e293b 0%,#0b0f1a 55%,#05070c 100%);color:#fff;font-family:"Noto Sans KR",sans-serif;position:relative;overflow:hidden;padding:70px 64px}
+  .bp-sheet *,.bp-sheet *::before,.bp-sheet *::after{box-sizing:border-box}
+  .bp-tag{font-size:14px;font-weight:900;letter-spacing:.16em;color:#fbbf24;margin-bottom:18px}
+  .bp-headline{font-size:44px;font-weight:950;line-height:1.25;margin-bottom:26px;max-width:820px}
+  .bp-period{font-size:13px;color:rgba(255,255,255,.55);font-weight:700;margin-bottom:56px}
+  .bp-mvp-row{display:flex;align-items:center;gap:30px;margin-bottom:52px}
+  .bp-mvp-photo{width:150px;height:150px;border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.2);background:#1e293b;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bp-mvp-photo img{width:100%;height:100%;object-fit:cover}
+  .bp-mvp-photo-fallback{font-size:52px;font-weight:900;color:rgba(255,255,255,.5)}
+  .bp-mvp-info b{display:block;font-size:13px;font-weight:900;color:#fbbf24;margin-bottom:6px}
+  .bp-mvp-name{font-size:34px;font-weight:950;margin-bottom:6px}
+  .bp-mvp-sub{font-size:14px;color:rgba(255,255,255,.6);font-weight:700}
+  .bp-kpi-row{display:flex;gap:16px;margin-bottom:52px}
+  .bp-kpi{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px 18px;text-align:center}
+  .bp-kpi b{display:block;font-size:34px;font-weight:950}
+  .bp-kpi i{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);font-style:normal}
+  .bp-standings-title{font-size:14px;font-weight:900;color:#fbbf24;margin-bottom:16px;letter-spacing:.06em}
+  .bp-st-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+  .bp-st-rank{font-size:20px;font-weight:950;width:34px;color:rgba(255,255,255,.4)}
+  .bp-st-rank.top{color:#fbbf24}
+  .bp-st-name{font-size:17px;font-weight:800;flex:1}
+  .bp-st-rec{font-size:13px;color:rgba(255,255,255,.55)}
+  .bp-st-wr{font-size:17px;font-weight:950;width:56px;text-align:right}
+  .bp-footer{position:absolute;left:64px;right:64px;bottom:44px;display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);font-weight:700;border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+  `;
+}
+function _posterBuildHtml(ctx, meta){
+  const headline=(typeof _newsHeadline==='function')?_newsHeadline(ctx):((ctx.briefingInfo&&ctx.briefingInfo.title)||'브리핑');
+  const mvp=ctx.mvp;
+  const photo=mvp&&mvp.p?_newsPhotoUrl(mvp.p):'';
+  const initial=mvp&&mvp.p?String(mvp.p.name||'-').trim().slice(0,1):'?';
+  const standings=(ctx.rankedUnivs&&ctx.rankedUnivs.length?ctx.rankedUnivs:ctx.topUnivs)||[];
+  return `<div class="bp-sheet">
+    <div class="bp-tag">WEEKLY BRIEFING</div>
+    <div class="bp-headline">${headline}</div>
+    <div class="bp-period">${_esc(meta.presetLabel)} · ${_esc(meta.from)} ~ ${_esc(meta.to)} · ${_esc(meta.univ)}</div>
+    <div class="bp-mvp-row">
+      <div class="bp-mvp-photo">${photo?`<img src="${photo}" alt="">`:`<span class="bp-mvp-photo-fallback">${_esc(initial)}</span>`}</div>
+      <div class="bp-mvp-info">
+        <b>🏆 ${_esc(ctx.mvpLabel||'MVP')}</b>
+        <div class="bp-mvp-name">${mvp&&mvp.p?_esc(mvp.p.name):'-'}</div>
+        <div class="bp-mvp-sub">${mvp&&mvp.p?_esc(mvp.p.univ||'무소속'):''} · ${mvp?mvp.wins??0:0}승 ${mvp?mvp.losses??0:0}패 · 승률 ${mvp?mvp.winRate??0:0}%</div>
+      </div>
+    </div>
+    <div class="bp-kpi-row">
+      <div class="bp-kpi"><b>${ctx.totalGames||0}</b><i>총 경기수</i></div>
+      <div class="bp-kpi"><b>${ctx.activeUnivs||0}</b><i>활동 대학</i></div>
+      <div class="bp-kpi"><b>${ctx.activePlayerCount||0}</b><i>활동 선수</i></div>
+    </div>
+    <div class="bp-standings-title">🏫 대학 순위</div>
+    ${standings.slice(0,5).map((ud,idx)=>{const rank=ud.rank||(idx+1);return `<div class="bp-st-row"><span class="bp-st-rank ${rank<=3?'top':''}">${rank}</span><span class="bp-st-name">${_esc(ud.u.name)}</span><span class="bp-st-rec">${ud.tw}승 ${ud.tl}패</span><span class="bp-st-wr">${ud.wr??0}%</span></div>`;}).join('') || '<div class="bp-st-row">집계된 대학 활동이 없습니다</div>'}
+    <div class="bp-footer"><span>STAR DATACENTER</span><span>발행 ${_esc(meta.issueDateFull)}</span></div>
+  </div>`;
+}
+
+function _snsCss(){
+  return `
+  .bs-sheet{width:1080px;height:1080px;box-sizing:border-box;background:linear-gradient(160deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%);color:#fff;font-family:"Noto Sans KR",sans-serif;position:relative;padding:64px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .bs-sheet *,.bs-sheet *::before,.bs-sheet *::after{box-sizing:border-box}
+  .bs-brand{font-size:15px;font-weight:900;letter-spacing:.14em;margin-bottom:6px;opacity:.9}
+  .bs-period{font-size:13px;font-weight:700;opacity:.75;margin-bottom:40px}
+  .bs-mvp-photo{width:200px;height:200px;border-radius:50%;overflow:hidden;border:6px solid rgba(255,255,255,.85);box-shadow:0 16px 40px rgba(0,0,0,.25);margin-bottom:20px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
+  .bs-mvp-photo img{width:100%;height:100%;object-fit:cover}
+  .bs-mvp-photo-fallback{font-size:70px;font-weight:900}
+  .bs-mvp-label{font-size:13px;font-weight:900;background:rgba(255,255,255,.22);padding:6px 18px;border-radius:999px;margin-bottom:12px;display:inline-block}
+  .bs-mvp-name{font-size:38px;font-weight:950;margin-bottom:6px}
+  .bs-mvp-univ{font-size:15px;font-weight:700;opacity:.85;margin-bottom:34px}
+  .bs-kpi-row{display:flex;gap:14px;margin-bottom:36px}
+  .bs-kpi{background:rgba(255,255,255,.16);border-radius:20px;padding:18px 26px;min-width:110px}
+  .bs-kpi b{display:block;font-size:30px;font-weight:950}
+  .bs-kpi i{font-size:11px;font-weight:700;opacity:.8;font-style:normal}
+  .bs-chip-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .bs-chip{background:rgba(255,255,255,.18);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:800}
+  .bs-footer{margin-top:auto;font-size:11px;opacity:.7;font-weight:700}
+  `;
+}
+function _snsBuildHtml(ctx, meta){
+  const mvp=ctx.mvp;
+  const photo=mvp&&mvp.p?_newsPhotoUrl(mvp.p):'';
+  const initial=mvp&&mvp.p?String(mvp.p.name||'-').trim().slice(0,1):'?';
+  const standings=(ctx.rankedUnivs&&ctx.rankedUnivs.length?ctx.rankedUnivs:ctx.topUnivs)||[];
+  return `<div class="bs-sheet">
+    <div class="bs-brand">STAR DATACENTER</div>
+    <div class="bs-period">${_esc(meta.presetLabel)} · ${_esc(meta.from)} ~ ${_esc(meta.to)}</div>
+    <div class="bs-mvp-photo">${photo?`<img src="${photo}" alt="">`:`<span class="bs-mvp-photo-fallback">${_esc(initial)}</span>`}</div>
+    <span class="bs-mvp-label">🏆 ${_esc(ctx.mvpLabel||'MVP')}</span>
+    <div class="bs-mvp-name">${mvp&&mvp.p?_esc(mvp.p.name):'-'}</div>
+    <div class="bs-mvp-univ">${mvp&&mvp.p?_esc(mvp.p.univ||'무소속'):''} · ${mvp?mvp.wins??0:0}승 ${mvp?mvp.losses??0:0}패 · 승률 ${mvp?mvp.winRate??0:0}%</div>
+    <div class="bs-kpi-row">
+      <div class="bs-kpi"><b>${ctx.totalGames||0}</b><i>총 경기수</i></div>
+      <div class="bs-kpi"><b>${ctx.activeUnivs||0}</b><i>활동 대학</i></div>
+    </div>
+    <div class="bs-chip-row">
+      ${standings.slice(0,3).map((ud,idx)=>`<div class="bs-chip">${idx+1}위 ${_esc(ud.u.name)} ${ud.wr??0}%</div>`).join('')}
+    </div>
+    <div class="bs-footer">${_esc(meta.univ)} · 발행 ${_esc(meta.issueDateFull)}</div>
+  </div>`;
+}
+
+function _minimalCss(){
+  return `
+  .bm-sheet{width:860px;box-sizing:border-box;background:#ffffff;color:#18181b;font-family:"Noto Sans KR",sans-serif;padding:54px 58px 46px}
+  .bm-sheet *,.bm-sheet *::before,.bm-sheet *::after{box-sizing:border-box}
+  .bm-head{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:14px;border-bottom:1px solid #18181b;margin-bottom:28px}
+  .bm-title{font-size:20px;font-weight:900;letter-spacing:-.01em}
+  .bm-period{font-size:12px;color:#71717a;font-weight:600}
+  .bm-mvp{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid #e4e4e7;margin-bottom:22px}
+  .bm-mvp-photo{width:64px;height:64px;border-radius:8px;overflow:hidden;background:#f4f4f5;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bm-mvp-photo img{width:100%;height:100%;object-fit:cover}
+  .bm-mvp-photo-fallback{font-size:24px;font-weight:800;color:#a1a1aa}
+  .bm-mvp-label{font-size:10px;font-weight:800;color:#71717a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+  .bm-mvp-name{font-size:18px;font-weight:900}
+  .bm-mvp-sub{font-size:12px;color:#71717a;font-weight:600}
+  .bm-mvp-rec{margin-left:auto;font-size:13px;font-weight:800;text-align:right}
+  .bm-sec-title{font-size:12px;font-weight:800;color:#71717a;text-transform:uppercase;letter-spacing:.06em;margin:22px 0 10px}
+  .bm-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f4f4f5;font-size:13px}
+  .bm-row-tag{font-size:10px;font-weight:800;color:#3f3f46;background:#f4f4f5;border-radius:5px;padding:3px 8px}
+  .bm-row-name{font-weight:800}
+  .bm-row-univ{color:#a1a1aa;font-size:11px}
+  .bm-row-rec{margin-left:auto;color:#52525b}
+  .bm-st-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;border-bottom:1px solid #f4f4f5}
+  .bm-st-rank{width:18px;font-weight:900;color:#a1a1aa}
+  .bm-st-name{font-weight:800;flex:1}
+  .bm-st-rec{color:#71717a;font-size:12px}
+  .bm-st-wr{font-weight:900;width:42px;text-align:right}
+  .bm-footer{margin-top:24px;padding-top:14px;border-top:1px solid #18181b;font-size:10px;color:#a1a1aa;font-weight:700;text-align:right}
+  `;
+}
+function _minimalBuildHtml(ctx, meta){
+  const mvp=ctx.mvp;
+  const photo=mvp&&mvp.p?_newsPhotoUrl(mvp.p):'';
+  const initial=mvp&&mvp.p?String(mvp.p.name||'-').trim().slice(0,1):'?';
+  const hlItems=[
+    ['연승',ctx.streakPlayer, ctx.streakPlayer?`${ctx.streakPlayer.streak}연승`:''],
+    ['최다승',ctx.mostWinsPlayer,''],
+    ['급상승',ctx.hotPlayer, ctx.hotPlayer&&ctx.hotPlayer.wrDelta>0?`▲${ctx.hotPlayer.wrDelta}%p`:''],
+    ['최고승률',ctx.bestWrPlayer,''],
+    ['하락세',ctx.coldPlayer, ctx.coldPlayer&&ctx.coldPlayer.wrDelta<0?`▼${Math.abs(ctx.coldPlayer.wrDelta)}%p`:'']
+  ].filter(([,s])=>s&&s.p);
+  const standings=(ctx.rankedUnivs&&ctx.rankedUnivs.length?ctx.rankedUnivs:ctx.topUnivs)||[];
+  return `<div class="bm-sheet">
+    <div class="bm-head"><span class="bm-title">${_esc((ctx.briefingInfo&&ctx.briefingInfo.title)||'브리핑')}</span><span class="bm-period">${_esc(meta.presetLabel)} · ${_esc(meta.from)} ~ ${_esc(meta.to)} · ${_esc(meta.univ)}</span></div>
+    <div class="bm-mvp">
+      <div class="bm-mvp-photo">${photo?`<img src="${photo}" alt="">`:`<span class="bm-mvp-photo-fallback">${_esc(initial)}</span>`}</div>
+      <div>
+        <div class="bm-mvp-label">${_esc(ctx.mvpLabel||'MVP')}</div>
+        <div class="bm-mvp-name">${mvp&&mvp.p?_esc(mvp.p.name):'-'}</div>
+        <div class="bm-mvp-sub">${mvp&&mvp.p?_esc(mvp.p.univ||'무소속'):''}</div>
+      </div>
+      <div class="bm-mvp-rec">${mvp?mvp.wins??0:0}승 ${mvp?mvp.losses??0:0}패<br>승률 ${mvp?mvp.winRate??0:0}%</div>
+    </div>
+    <div class="bm-sec-title">이 주의 기록</div>
+    ${hlItems.map(([label,s,extra])=>`<div class="bm-row"><span class="bm-row-tag">${_esc(label)}</span><span class="bm-row-name">${_esc(s.p.name)}</span><span class="bm-row-univ">${_esc(s.p.univ||'무소속')}</span><span class="bm-row-rec">${extra?_esc(extra)+' · ':''}${s.wins??0}승 ${s.losses??0}패</span></div>`).join('') || '<div class="bm-row">집계된 기록이 없습니다</div>'}
+    <div class="bm-sec-title">대학 순위</div>
+    ${standings.slice(0,10).map((ud,idx)=>`<div class="bm-st-row"><span class="bm-st-rank">${ud.rank||(idx+1)}</span><span class="bm-st-name">${_esc(ud.u.name)}</span><span class="bm-st-rec">${ud.tw}승 ${ud.tl}패</span><span class="bm-st-wr">${ud.wr??0}%</span></div>`).join('') || '<div class="bm-st-row">집계된 대학 활동이 없습니다</div>'}
+    <div class="bm-footer">STAR DATACENTER · 발행 ${_esc(meta.issueDateFull)}</div>
+  </div>`;
+}
+
+function _briefModeConfig(mode){
+  switch(mode){
+    case 'card':    return { buildHtml:_cardBuildHtml,    css:_cardCss,    sheetClass:'bc-sheet', width:880,  scale:2,   bg:'#f5ead8',  fixedHeight:null, label:'카드형' };
+    case 'poster':  return { buildHtml:_posterBuildHtml,  css:_posterCss,  sheetClass:'bp-sheet', width:1000, scale:2,   bg:'#05070c',  fixedHeight:1400, label:'포스터' };
+    case 'sns':     return { buildHtml:_snsBuildHtml,     css:_snsCss,     sheetClass:'bs-sheet', width:1080, scale:1,   bg:'#6366f1',  fixedHeight:1080, label:'SNS' };
+    case 'minimal': return { buildHtml:_minimalBuildHtml, css:_minimalCss, sheetClass:'bm-sheet', width:860,  scale:2,   bg:'#ffffff',  fixedHeight:null, label:'미니멀' };
+    default:        return { buildHtml:_newsBuildHtml,    css:_newsCss,    sheetClass:'b2n-sheet', width:1040, scale:2.5, bg:'#ece7da',  fixedHeight:null, label:'신문기사' };
+  }
+}
+
+async function _briefGenerateCanvas(mode, meta){
   const ctx = window._b2BriefingExportCtx;
-  if(!ctx){ alert('브리핑 데이터를 아직 불러오지 못했습니다. 브리핑 화면을 한 번 연 뒤 다시 시도해주세요.'); return; }
+  if(!ctx) throw new Error('브리핑 데이터를 아직 불러오지 못했습니다. 브리핑 화면을 한 번 연 뒤 다시 시도해주세요.');
+  const cfg = _briefModeConfig(mode);
   const holder=document.createElement('div');
   // html2canvas는 뷰포트 밖(left:-99999px)에 있는 콘텐츠를 렌더 윈도우 밖으로 취급해
   // 잘라내는 경우가 있어, 실제 좌표(0,0)에 두고 opacity:0으로 화면에는 보이지 않게 처리한다.
   holder.style.cssText='position:fixed;left:0;top:0;opacity:0;pointer-events:none;z-index:-1';
-  holder.innerHTML=_newsBuildHtml(ctx, meta);
+  holder.innerHTML = `<style>${cfg.css()}</style>` + cfg.buildHtml(ctx, meta);
   document.body.appendChild(holder);
   try{
-    const sheet=holder.querySelector('.b2n-sheet');
+    const sheet=holder.querySelector('.'+cfg.sheetClass);
     await _imgToDataUrls(sheet);
     try{ if(typeof _waitForImages==='function') await _waitForImages(sheet,1500); }catch(e){}
     _sanitizeUnsupportedCssFunctions(sheet);
-    const w=1040;
-    const h=Math.max(1, Math.ceil(sheet.scrollHeight||0));
+    const w=cfg.width;
+    const h=cfg.fixedHeight || Math.max(1, Math.ceil(sheet.scrollHeight||0));
     const canvas=await html2canvas(sheet,{
-      backgroundColor:'#ece7da', scale:2.5, useCORS:true, allowTaint:false, logging:false,
+      backgroundColor:cfg.bg, scale:cfg.scale, useCORS:true, allowTaint:false, logging:false,
       imageTimeout:20000, width:w, height:h, windowWidth:w+80, windowHeight:h+80, scrollX:0, scrollY:0
     });
-    const rawName=`브리핑_신문기사_${meta.presetLabel}_${String(window._b2WeeklyDateFrom||'').slice(0,10)}_${String(window._b2WeeklyDateTo||'').slice(0,10)}${meta.univ!=='전체'?'_'+meta.univ:''}.png`;
-    const safeName=rawName.replace(/[\\/:*?"<>|]+/g,'_');
-    await _saveCanvasImage(canvas, safeName, 'png');
+    return canvas;
   } finally {
     try{ if(holder.parentNode) holder.parentNode.removeChild(holder); }catch(e){}
   }
 }
 
+function _briefFilename(mode, meta){
+  const cfg = _briefModeConfig(mode);
+  const rawName=`브리핑_${cfg.label}_${meta.presetLabel}_${String(window._b2WeeklyDateFrom||'').slice(0,10)}_${String(window._b2WeeklyDateTo||'').slice(0,10)}${meta.univ!=='전체'?'_'+meta.univ:''}.png`;
+  return rawName.replace(/[\\/:*?"<>|]+/g,'_');
+}
+
+/* ─── 미리보기 모달 스타일 (1회 주입) — render-capture-utils.js는 항상 로드되는
+   core 번들이므로, 통계탭 전용 스타일(pr-report-style, lazy 로드)에 기대지 않고
+   자체 클래스로 완전히 독립시킨다. ─── */
+function _briefInjectPreviewCss(){
+  if(document.getElementById('brief-preview-style')) return;
+  const s=document.createElement('style');
+  s.id='brief-preview-style';
+  s.textContent = `
+    .brief-img-preview-overlay{position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+    .brief-img-preview-modal{background:var(--white);border-radius:20px;box-shadow:var(--sh3);max-width:min(720px,92vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+    .brief-img-preview-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:900;color:var(--text1)}
+    .brief-img-preview-x{border:none;background:transparent;font-size:15px;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:8px}
+    .brief-img-preview-x:hover{background:var(--surface);color:var(--text1)}
+    .brief-mode-row{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:wrap}
+    .brief-mode-btn{border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:.12s}
+    .brief-mode-btn:hover{border-color:var(--blue)}
+    .brief-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+    .brief-img-preview-body{overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;position:relative}
+    .brief-img-preview-body img{max-width:100%;height:auto;border-radius:10px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1));display:block;transition:opacity .15s}
+    .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+    .brief-loading .brief-img-preview-body img{opacity:.35}
+    .brief-loading .brief-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1))}
+    .brief-btn{border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer}
+    .brief-btn-ghost{background:var(--surface);color:var(--text2)}
+    .brief-btn-ghost:hover{background:var(--border)}
+    .brief-btn-primary{background:var(--blue);color:#fff}
+    .brief-btn-primary:hover{background:var(--blue-d,var(--blue))}
+  `;
+  document.head.appendChild(s);
+}
+
+function _briefShowImagePreview(canvas, mode, meta){
+  _briefInjectPreviewCss();
+  _briefCloseImagePreview();
+  const dataUrl = canvas.toDataURL('image/png');
+  const wrap=document.createElement('div');
+  wrap.id='brief-img-preview-overlay';
+  wrap.className='brief-img-preview-overlay';
+  wrap.innerHTML = `
+    <div class="brief-img-preview-modal">
+      <div class="brief-img-preview-hdr">
+        <span>📰 브리핑 이미지 미리보기</span>
+        <button type="button" class="brief-img-preview-x" onclick="_briefCloseImagePreview()">✕</button>
+      </div>
+      <div class="brief-mode-row">
+        ${BRIEF_MODES.map(([k,lbl])=>`<button type="button" class="brief-mode-btn ${k===mode?'on':''}" data-mode="${k}" onclick="_briefSwitchMode('${k}')">${lbl}</button>`).join('')}
+      </div>
+      <div class="brief-img-preview-body"><img src="${dataUrl}" alt="브리핑 미리보기"></div>
+      <div class="brief-img-preview-ftr">
+        <button type="button" class="brief-btn brief-btn-ghost" onclick="_briefCloseImagePreview()">취소</button>
+        <button type="button" class="brief-btn brief-btn-primary" onclick="_briefConfirmSaveImage()">📥 다운로드</button>
+      </div>
+    </div>`;
+  wrap.addEventListener('click', (e)=>{ if(e.target===wrap) _briefCloseImagePreview(); });
+  document.body.appendChild(wrap);
+}
+function _briefCloseImagePreview(){
+  const el = document.getElementById('brief-img-preview-overlay');
+  if(el) el.remove();
+}
+async function _briefSwitchMode(mode){
+  if(window._briefSwitchBusy) return;
+  window._briefSwitchBusy = true;
+  const wrap = document.getElementById('brief-img-preview-overlay');
+  if(wrap) wrap.classList.add('brief-loading');
+  try{
+    const meta = window._briefPendingMeta || _getBriefingExportMeta();
+    const canvas = await _briefGenerateCanvas(mode, meta);
+    window._briefPendingCanvas = canvas;
+    window._briefLastMode = mode;
+    const imgEl = wrap ? wrap.querySelector('.brief-img-preview-body img') : null;
+    if(imgEl) imgEl.src = canvas.toDataURL('image/png');
+    if(wrap) wrap.querySelectorAll('.brief-mode-btn').forEach(b=>b.classList.toggle('on', b.dataset.mode===mode));
+  }catch(e){ alert('모드 전환 오류: '+e.message); }
+  finally{ window._briefSwitchBusy = false; if(wrap) wrap.classList.remove('brief-loading'); }
+}
+async function _briefConfirmSaveImage(){
+  const canvas = window._briefPendingCanvas;
+  const meta = window._briefPendingMeta || _getBriefingExportMeta();
+  const mode = window._briefLastMode || 'newspaper';
+  _briefCloseImagePreview();
+  if(!canvas) return;
+  try{
+    if(typeof _showSaveLoading==='function') _showSaveLoading();
+    await _saveCanvasImage(canvas, _briefFilename(mode, meta), 'png');
+  }catch(e){ alert('이미지 저장 오류: '+e.message); }
+  finally{
+    if(typeof _hideSaveLoading==='function') _hideSaveLoading();
+    window._briefPendingCanvas = null;
+  }
+}
+
 // 브리핑 저장 — 화면을 그대로 캡처하지 않고(그리드 레이아웃이 깨지거나 헤더만
-// 캡처되는 등 html2canvas 호환성 문제가 있었음), 신문기사 스타일로 별도 렌더링해서
-// 안정적으로 캡처한다. (예전 "저장(분할)" 기능은 제거됨)
+// 캡처되는 등 html2canvas 호환성 문제가 있었음), 별도 레이아웃으로 렌더링해서
+// 안정적으로 캡처한다. 저장 직전에 항상 미리보기 모달을 띄워, 모달 안에서
+// 신문기사/카드형/포스터/SNS 정사각형/미니멀 중 원하는 모드로 바꿔보고 다운로드할 수 있다.
 async function captureBriefingArticle(){
   try{
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     if(typeof html2canvas!=='function') throw new Error('html2canvas를 불러오지 못했습니다.');
-    await _captureBriefingNewspaper(_getBriefingExportMeta());
+    const meta = _getBriefingExportMeta();
+    const mode = window._briefLastMode || 'newspaper';
+    const canvas = await _briefGenerateCanvas(mode, meta);
+    window._briefPendingCanvas = canvas;
+    window._briefPendingMeta = meta;
+    window._briefLastMode = mode;
+    _briefShowImagePreview(canvas, mode, meta);
   }catch(e){alert('브리핑 이미지 저장 오류: '+e.message);}
   finally{ _hideSaveLoading(); }
 }
@@ -722,4 +1086,7 @@ try{
   window.captureBriefingArticle = captureBriefingArticle;
   window._saveCanvasImage = _saveCanvasImage;
   window._downloadCanvasImage = _downloadCanvasImage;
+  window._briefSwitchMode = _briefSwitchMode;
+  window._briefCloseImagePreview = _briefCloseImagePreview;
+  window._briefConfirmSaveImage = _briefConfirmSaveImage;
 }catch(e){}

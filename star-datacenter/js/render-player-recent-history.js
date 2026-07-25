@@ -112,9 +112,9 @@ function buildPlayerRecentHistoryRowHTML(opts){
       :isDraw
         ?`<span style="${resultBadgeStyle};background:#94a3b8;color:#fff;border:1px solid #94a3b8">DRAW</span>`
         :`<span style="${resultBadgeStyle};background:var(--score-lose);color:#fff;border:1px solid var(--score-lose)">LOSE</span>`}</td>
-    <td style="cursor:pointer;font-weight:700" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
+    <td style="cursor:pointer;font-weight:700;white-space:nowrap" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">${getPlayerPhotoHTML(hh.opp,'18px','pointer-events:none;flex-shrink:0;')}<span style="color:var(--blue);white-space:nowrap">${hh.opp}</span></span></td>
     <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
-    <td class="ph-col-map" style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
+    <td class="ph-col-map" style="color:var(--gray-l);font-size:var(--fs-caption);white-space:nowrap">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
     <td class="ph-col-elo">${eloStr}</td>
     ${editBtnHTML}
   </tr>`;

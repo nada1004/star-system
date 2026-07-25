@@ -13870,6 +13870,21 @@ body.team-chip--wave .grp-team-chip::after {
   transform: translateY(-1px);
 }
 
+/* ===== 스트리머 상세 팝업 최근 기록 테이블: 상대/맵 등 세로줄바꿈 방지 + 폭 축소 ===== */
+.player-hist-table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border-radius:var(--r);
+}
+.player-hist-table-wrap table{
+  table-layout:auto;
+}
+.player-hist-table-wrap th,
+.player-hist-table-wrap td{
+  padding:7px 6px;
+  white-space:nowrap;
+}
+
 /* ===== 모바일 스트리머 상세 개선 (v24-fixed8) ===== */
 @media(max-width:768px){
   /* 히스토리 테이블 가로스크롤 */
