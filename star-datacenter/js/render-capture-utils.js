@@ -833,13 +833,13 @@ function _newsBuildHtml(ctx, meta){
   </div>`;
 }
 /* ══════════════════════════════════════
-   브리핑 저장 — 다양한 모드(전체/신문기사/포스터/미니멀)
+   브리핑 저장 — 다양한 모드(기본/신문기사/포스터/미니멀)
    통계탭 스트리머 리포트의 "미리보기 → 스타일 전환 → 다운로드" 흐름을 그대로 차용.
    각 모드는 window._b2BriefingExportCtx(board2-briefing.js가 저장해둔 통계 스냅샷)를
    바탕으로 완전히 독립된 레이아웃을 렌더링해 캡처한다.
 ══════════════════════════════════════ */
 var BRIEF_MODES = [
-  ['full','📋 전체'],
+  ['basic','📋 기본'],
   ['newspaper','📰 신문기사'],
   ['poster','🎬 포스터'],
   ['minimal','⬜ 미니멀']
@@ -1013,7 +1013,7 @@ function _minimalBuildHtml(ctx, meta){
 
 function _briefModeConfig(mode){
   switch(mode){
-    case 'full':    return { buildHtml:null, css:null, sheetClass:null, width:null, scale:4, bg:'#ffffff', fixedHeight:null, label:'전체' };
+    case 'basic':   return { buildHtml:null, css:null, sheetClass:null, width:null, scale:4, bg:'#ffffff', fixedHeight:null, label:'기본' };
     case 'poster':  return { buildHtml:_posterBuildHtml,  css:_posterCss,  sheetClass:'bp-sheet', width:1000, scale:2,   bg:'#05070c',  fixedHeight:null, label:'포스터' };
     case 'minimal': return { buildHtml:_minimalBuildHtml, css:_minimalCss, sheetClass:'bm-sheet', width:860,  scale:2,   bg:'#ffffff',  fixedHeight:null, label:'미니멀' };
     default:        return { buildHtml:_newsBuildHtml,    css:_newsCss,    sheetClass:'b2n-sheet', width:1280, scale:2.5, bg:'#ece7da',  fixedHeight:null, label:'신문기사' };
@@ -1121,12 +1121,11 @@ function _safeExportScale(w, h, desiredScale){
   if(!isFinite(scale) || scale<=0) scale = 0.1;
   return Math.max(0.1, Math.min(desiredScale, scale));
 }
-/* '전체' 모드: 별도 템플릿을 새로 그리지 않고, 지금 화면에 실제로 렌더링된 브리핑탭
-   전체(#b2w2-export-root)를 그대로 캡처한다 — 통계탭 스트리머 리포트의 '기본' 스타일과
-   동일한 방식(필터/버튼 등 .no-export 요소만 제거하고 나머지는 화면 그대로). */
-async function _fullCaptureBase(){
-  const el = document.getElementById('b2w2-export-root');
-  if(!el) throw new Error('브리핑 화면을 찾을 수 없습니다. 브리핑 탭을 연 상태에서 다시 시도해주세요.');
+/* '기본' 모드: 브리핑 화면 전체가 아니라, "데이터 범위" 아래의 본문(#b2w2-basic-export-root)만
+   실제 렌더링된 화면 그대로 캡처한다. */
+async function _basicCaptureBase(){
+  const el = document.getElementById('b2w2-basic-export-root') || document.getElementById('b2w2-export-root');
+  if(!el) throw new Error('브리핑 본문 화면을 찾을 수 없습니다. 브리핑 탭을 연 상태에서 다시 시도해주세요.');
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   await _imgToDataUrls(el);
   try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
@@ -1139,12 +1138,12 @@ async function _fullCaptureBase(){
   }catch(e){}
   // 브리핑 화면(.b2w2-wrap)은 반응형 레이아웃이라, 사용자가 좁은 창(모바일 폭 등)에서
   // 저장 버튼을 눌러도 그 화면 그대로 캡처하면 글자와 카드가 모두 작게 찌그러진 채로
-  // 저장됨. '전체' 모드는 항상 데스크톱 디자인 폭(1320px)으로 강제 렌더링해서
+  // 저장됨. '기본' 모드는 항상 데스크톱 디자인 폭(1320px)으로 강제 렌더링해서
   // 실제 화면 크기와 무관하게 큼직하고 읽기 좋은 이미지가 저장되도록 한다.
-  const FULL_CAPTURE_WIDTH = 1320;
+  const BASIC_CAPTURE_WIDTH = 1320;
   const onclone = (clonedDoc)=>{
     try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
-    // '전체' 이미지 저장본에서는 MVP 카드 위에 얹히는 가독성 보조 효과(그라디언트/비네트/틴트 등)를
+    // '기본' 이미지 저장본에서는 MVP 카드 위에 얹히는 가독성 보조 효과(그라디언트/비네트/틴트 등)를
     // 빼고 사진을 그대로 보여달라는 요청 반영 — data-fx만 "none"으로 바꿔 오버레이 CSS를 끄고,
     // 카드 레이아웃(디자인 모드) 자체는 그대로 유지한다.
     try{
@@ -1155,7 +1154,7 @@ async function _fullCaptureBase(){
     }catch(e){}
     // 카드 모서리의 장식용 원형 블롭(::before)과 box-shadow가 overflow:hidden과 함께 쓰이는데,
     // html2canvas가 이 조합을 완벽히 클리핑하지 못해 카드 모서리/하단에 회색 얼룩이 찍히는
-    // 경우가 있었다. '전체' 저장본에서는 순수 장식 요소이므로 꺼서 깨끗하게 캡처되도록 한다.
+    // 경우가 있었다. '기본' 저장본에서는 순수 장식 요소이므로 꺼서 깨끗하게 캡처되도록 한다.
     try{
       const fixStyle = clonedDoc.createElement('style');
       fixStyle.textContent = `
@@ -1165,17 +1164,17 @@ async function _fullCaptureBase(){
       clonedDoc.head.appendChild(fixStyle);
     }catch(e){}
     _sanitizeUnsupportedColorsInDoc(clonedDoc);
-    try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
-    try{ _fixGradientTextClipInDoc(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
+    try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-basic-export-root') || clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
+    try{ _fixGradientTextClipInDoc(clonedDoc.getElementById('b2w2-basic-export-root') || clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
     try{ _killCloneAnimations(clonedDoc); }catch(e){}
   };
   const baseOpts = {
     backgroundColor:bg, useCORS:true, allowTaint:false, logging:false, imageTimeout:20000,
-    windowWidth: FULL_CAPTURE_WIDTH + 80, scrollX:0, scrollY:0, onclone
+    windowWidth: BASIC_CAPTURE_WIDTH + 80, scrollX:0, scrollY:0, onclone
   };
   // 1차: 데스크톱 폭 기준 실제 렌더링 크기를 가늠하기 위한 scale:1 측정용 캡처
   const probeCanvas = await html2canvas(el, { ...baseOpts, scale:1 });
-  const naturalW = probeCanvas.width || FULL_CAPTURE_WIDTH;
+  const naturalW = probeCanvas.width || BASIC_CAPTURE_WIDTH;
   const naturalH = probeCanvas.height || 1;
   const scale = _safeExportScale(naturalW, naturalH, 4);
   if(scale <= 1.02) return probeCanvas;
@@ -1186,7 +1185,7 @@ async function _fullCaptureBase(){
 async function _briefGenerateCanvas(mode, meta){
   const ctx = window._b2BriefingExportCtx;
   if(!ctx) throw new Error('브리핑 데이터를 아직 불러오지 못했습니다. 브리핑 화면을 한 번 연 뒤 다시 시도해주세요.');
-  if(mode === 'full') return await _fullCaptureBase();
+  if(mode === 'basic') return await _basicCaptureBase();
   const cfg = _briefModeConfig(mode);
   const holder=document.createElement('div');
   // html2canvas는 뷰포트 밖(left:-99999px)에 있는 콘텐츠를 렌더 윈도우 밖으로 취급해
@@ -1304,7 +1303,7 @@ async function _briefSwitchMode(mode){
 async function _briefConfirmSaveImage(){
   const canvas = window._briefPendingCanvas;
   const meta = window._briefPendingMeta || _getBriefingExportMeta();
-  const mode = window._briefLastMode || 'full';
+  const mode = window._briefLastMode || 'basic';
   _briefCloseImagePreview();
   if(!canvas) return;
   try{
@@ -1320,14 +1319,14 @@ async function _briefConfirmSaveImage(){
 // 브리핑 저장 — 화면을 그대로 캡처하지 않고(그리드 레이아웃이 깨지거나 헤더만
 // 캡처되는 등 html2canvas 호환성 문제가 있었음), 별도 레이아웃으로 렌더링해서
 // 안정적으로 캡처한다. 저장 직전에 항상 미리보기 모달을 띄워, 모달 안에서
-// 전체/신문기사/포스터/미니멀 중 원하는 모드로 바꿔보고 다운로드할 수 있다.
+// 기본/신문기사/포스터/미니멀 중 원하는 모드로 바꿔보고 다운로드할 수 있다.
 async function captureBriefingArticle(){
   try{
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     if(typeof html2canvas!=='function') throw new Error('html2canvas를 불러오지 못했습니다.');
     const meta = _getBriefingExportMeta();
-    const mode = window._briefLastMode || 'full';
+    const mode = window._briefLastMode || 'basic';
     const canvas = await _briefGenerateCanvas(mode, meta);
     window._briefPendingCanvas = canvas;
     window._briefPendingMeta = meta;

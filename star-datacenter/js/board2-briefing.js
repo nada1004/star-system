@@ -628,14 +628,13 @@ function _b2WeeklyBriefingView() {
       .b2w2-kpi-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0,1fr));
-        gap: 10px;
+        gap: 12px;
         margin-bottom: 20px;
       }
       .b2w2-kpi-card {
         padding: 14px 16px;
-        border-radius: 14px;
+        border-radius: var(--b2w-r);
         border: 1px solid var(--b2w-rule);
-        background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 72%, rgba(15,23,42,.03) 100%);
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
         box-shadow: var(--b2w-shadow-sm);
         transition: transform .16s cubic-bezier(.2,.8,.3,1.2), box-shadow .16s ease, border-color .16s ease;
@@ -648,7 +647,7 @@ function _b2WeeklyBriefingView() {
         top: 0; left: 0; right: 0;
         height: 3px;
         background: linear-gradient(90deg, var(--kpi-accent, var(--b2w-accent)), transparent);
-        border-radius: 14px 14px 0 0;
+        border-radius: var(--b2w-r) var(--b2w-r) 0 0;
       }
       .b2w2-kpi-card::after {
         content: '';
@@ -661,7 +660,7 @@ function _b2WeeklyBriefingView() {
         pointer-events: none;
       }
       .b2w2-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.10); border-color: rgba(148,163,184,.22) }
-      .b2w2-kpi-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); letter-spacing: .1em; text-transform: uppercase }
+      .b2w2-kpi-label { font-size: 10px; font-weight: 900; color: var(--b2w-ink-soft); letter-spacing: .12em; text-transform: uppercase }
       .b2w2-kpi-value {
         margin-top: 6px;
         font-size: 28px;
@@ -1569,9 +1568,24 @@ function _b2WeeklyBriefingView() {
         letter-spacing: .02em;
       }
 
-      /* ── 하이라이트 그리드용 단일 MVP 카드 (더 길게) ── */
-      .b2w2-mvp-card.b2w2-mvp-card-lead {
-        aspect-ratio: 3/4;
+      /* ── 상단 피처 로우: MVP 카드 + 종합 전적 카드를 나란히, 같은 높이로 배치 ──
+         (예전엔 하이라이트 그리드 안에 MVP를 같이 섞어뒀는데, 옆에 오는 카드 내용 길이에 따라
+         MVP 사진 카드만 키가 크고 짧은 카드 아래엔 빈 공간이 크게 남는 문제가 있었음.
+         MVP와 종합 전적 카드만 따로 2칸 그리드로 묶고 stretch시켜 서로 높이를 맞춘다.) */
+      .b2w2-feature-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 300px) 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+        align-items: stretch;
+      }
+      @media (max-width: 900px) {
+        .b2w2-feature-row { grid-template-columns: 1fr; }
+      }
+      .b2w2-feature-row .b2w2-mvp-card.b2w2-mvp-card-lead {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
         min-height: 280px;
       }
 
@@ -1641,7 +1655,7 @@ function _b2WeeklyBriefingView() {
         grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
         align-items: start;
         gap: 12px;
-        margin-bottom: 22px;
+        margin-bottom: 20px;
       }
       .b2w2-lead-card { background: var(--b2w-paper-alt) }
       .b2w2-lead-card .b2w2-highlight-title { font-size: 21px }
@@ -2106,11 +2120,9 @@ function _b2WeeklyBriefingView() {
 
       /* ── 반응형 ── */
       @media(min-width:1180px){
-        .b2w2-highlight-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
-        .b2w2-lead-card{grid-column:span 2}
-        /* 기간 요약(2칸) + 일반 카드 6개(6칸) + MVP 카드(2칸) = 10칸 = 5열 x 2줄로 정확히 채움.
-           MVP 카드를 1칸으로 두면 9칸이 되어 마지막 줄에 빈 슬롯이 하나 남는 문제를 방지. */
-        .b2w2-mvp-card-lead{grid-column:span 2}
+        /* MVP·종합 전적 카드는 위쪽 b2w2-feature-row로 분리됐고, 여기 남은 6개 카드는
+           키가 비슷한 간단한 통계 카드들이라 6열 한 줄로 딱 채운다. */
+        .b2w2-highlight-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
       }
       @media(max-width:900px){
         .b2w2-hero{flex-direction:column}
@@ -2135,8 +2147,6 @@ function _b2WeeklyBriefingView() {
       }
       @media(min-width:961px) and (max-width:1179px){
         .b2w2-highlight-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
-        /* 1180px 미만에서는 lead/MVP 카드의 span 2가 적용되지 않으므로(미디어쿼리 스코프 밖)
-           모든 카드가 1칸씩 차지해 자연스럽게 흐른다. 이 구간에서만 별도 span 처리는 불필요. */
       }
 
       /* ── 은은한 등장 애니메이션 ── */
@@ -2416,11 +2426,12 @@ function _b2WeeklyBriefingView() {
       <span style="font-size:10px;color:var(--b2w-accent);background:var(--b2w-tag-accent-bg);border:1px solid var(--b2w-tag-accent-border);border-radius:4px;padding:2px 7px;font-weight:700">티어대회 · 조별리그</span>
       <span style="font-size:10px;color:var(--b2w-accent);background:var(--b2w-tag-accent-bg);border:1px solid var(--b2w-tag-accent-border);border-radius:4px;padding:2px 7px;font-weight:700">티어대회 · 대진표기록</span>
       <span style="font-size:10px;color:var(--b2w-tag-muted);margin-left:2px">※ 개인전·끝장전·프로리그 기록은 브리핑 집계에서 제외됩니다</span>
-    </div>`;
+    </div>
+    <div id="b2w2-basic-export-root">`;
 
     const hasData = targetStats.some(ud => ud.tg > 0);
     if (!hasData) {
-      h += `<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">📭</div>해당 기간에 기록된 경기가 없습니다.<div style="font-size:var(--fs-caption);margin-top:4px">기간을 변경해보세요</div></div></div>`;
+      h += `<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">📭</div>해당 기간에 기록된 경기가 없습니다.<div style="font-size:var(--fs-caption);margin-top:4px">기간을 변경해보세요</div></div></div></div>`;
       return h;
     }
 
@@ -2464,7 +2475,17 @@ function _b2WeeklyBriefingView() {
       </article>
     </section>`;
 
-    h += `<section class="b2w2-highlight-grid">
+    h += `<section class="b2w2-feature-row">
+      ${(() => {
+        const _profileMvp = mvp || monthlyTopPlayers[0] || null;
+        if (!_profileMvp) {
+          return `<article class="b2w2-highlight-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;--hc-top:#f59e0b">
+            <div class="b2w2-highlight-kicker" style="color:#b45309">🏆 ${_mvpLabel}</div>
+            <div class="b2w2-highlight-desc">집계할 기록이 없습니다.</div>
+          </article>`;
+        }
+        return _mkMvpCard(_profileMvp, 1, false, 'b2w2-mvp-card-lead');
+      })()}
       <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:var(--b2w-accent)">
         <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">전체 전적</div>
         <div class="b2w2-highlight-title">종합 승패 개요</div>
@@ -2512,6 +2533,8 @@ function _b2WeeklyBriefingView() {
           <span class="b2w2-note-chip">${_briefingInfo.prevLabel} 대비 비교</span>
         </div>
       </article>
+    </section>
+    <section class="b2w2-highlight-grid">
       <article class="b2w2-highlight-card" style="--hc-top:#6366f1">
         <div class="b2w2-highlight-kicker" style="color:#4f46e5">🏫 대학 활동량</div>
         <div class="b2w2-highlight-title">${_topLabel}</div>
@@ -2684,16 +2707,6 @@ function _b2WeeklyBriefingView() {
           </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">승리 기록이 없습니다.</div>`}
       </article>
-      ${(() => {
-        const _profileMvp = mvp || monthlyTopPlayers[0] || null;
-        if (!_profileMvp) {
-          return `<article class="b2w2-highlight-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;--hc-top:#f59e0b">
-            <div class="b2w2-highlight-kicker" style="color:#b45309">🏆 ${_mvpLabel}</div>
-            <div class="b2w2-highlight-desc">집계할 기록이 없습니다.</div>
-          </article>`;
-        }
-        return _mkMvpCard(_profileMvp, 1, false, 'b2w2-mvp-card-lead');
-      })()}
     </section>`;
 
     const _renderMonthlyRankRows = (list) => {
@@ -3010,7 +3023,7 @@ function _b2WeeklyBriefingView() {
       h += `</div></div>`;
     });
 
-    h += `</div>`;
+    h += `</div></div>`;
     return h;
 
   } catch(e) {
