@@ -672,10 +672,14 @@ function _b2PlayersView() {
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
+    // 그대로 노출되던 문제 수정: 1회 재시도 후에도 실패하면 해당 슬롯을 완전히 숨겨
+    // 배경 테마색만 보이도록 한다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;_t.removeAttribute('src');setTimeout(function(){_t.src=_o;},600);}else{_t.style.opacity='0';_t.style.visibility='hidden';}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
-    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
   const _slot1 = _hasMediaUrl(_b2SelectedPlayer.photo)
@@ -904,10 +908,14 @@ function _b2UpdateMainDisplay(playerName) {
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
+    // 그대로 노출되던 문제 수정: 1회 재시도 후에도 실패하면 해당 슬롯을 완전히 숨겨
+    // 배경 테마색만 보이도록 한다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;_t.removeAttribute('src');setTimeout(function(){_t.src=_o;},600);}else{_t.style.opacity='0';_t.style.visibility='hidden';}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
-    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
   const _hasMediaUrl2 = (v)=>!!String(v || '').trim();
