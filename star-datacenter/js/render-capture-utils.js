@@ -22,6 +22,41 @@ function _hideSaveLoading(){
   if(t) t.style.display='none';
 }
 
+/* html2canvas는 캡처 대상을 별도 iframe 문서로 복제(clone)한 뒤 그 복제본을 그리는데,
+   복제 과정에서 요소가 새로 DOM에 삽입되는 셈이 되어 CSS keyframe 등장 애니메이션
+   (예: 카드 fade-up)이 처음부터 다시 재생된다. html2canvas는 이 재생이 끝나길
+   기다리지 않고 거의 즉시 스냅샷을 뜨기 때문에, 애니메이션 중간(투명도 낮음·위치 이동 중)
+   상태가 그대로 캡처되어 글자/카드가 겹쳐 보이거나 흐릿하게 번지는 현상이 생긴다.
+   복제 문서 전체에 애니메이션·트랜지션을 강제로 끄는 스타일을 주입해 방지한다. */
+function _killCloneAnimations(clonedDoc){
+  if(!clonedDoc) return;
+  const s = clonedDoc.createElement('style');
+  s.textContent = `*, *::before, *::after {
+    animation-play-state: paused !important;
+    animation-delay: 0s !important;
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }`;
+  (clonedDoc.head || clonedDoc.documentElement).appendChild(s);
+}
+/* 웹폰트(Noto Sans/Serif KR)가 브라우저에 완전히 로드되기 전에 html2canvas가
+   먼저 캡처해버리면, 대체 폰트로 그려지거나 폰트 교체 도중 상태가 찍혀서
+   글자 획이 겹치거나 색이 번져 보이는("글자 깨짐") 현상이 생긴다.
+   캡처 직전에 document.fonts.ready를 짧은 타임아웃과 함께 기다려서 방지한다. */
+async function _waitForFonts(timeoutMs){
+  timeoutMs = timeoutMs || 2000;
+  try{
+    if(!document.fonts || !document.fonts.ready) return;
+    await Promise.race([
+      document.fonts.ready,
+      new Promise(res => setTimeout(res, timeoutMs))
+    ]);
+    // 폰트가 늦게 붙는 환경 대비, ready 이후에도 한 프레임 더 그리도록 소폭 대기
+    await new Promise(res => setTimeout(res, 50));
+  }catch(e){}
+}
+
 async function capturePlayerModal(){
   const body=document.getElementById('playerModalBody');
   if(!body){alert('캡처할 영역이 없습니다.');return;}
@@ -31,7 +66,8 @@ async function capturePlayerModal(){
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     try{ if(typeof _waitForImages==='function') await _waitForImages(body,1500); }catch(e){}
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
+    try{ await _waitForFonts(2000); }catch(e){}
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000,onclone:(d)=>{try{_killCloneAnimations(d);}catch(e){}}});
     await _saveCanvasImage(canvas,`${st.currentName||'player'}_stat.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
@@ -46,7 +82,8 @@ async function captureUnivModal(){
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     try{ if(typeof _waitForImages==='function') await _waitForImages(body,1500); }catch(e){}
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
+    try{ await _waitForFonts(2000); }catch(e){}
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000,onclone:(d)=>{try{_killCloneAnimations(d);}catch(e){}}});
     await _saveCanvasImage(canvas,`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
@@ -60,7 +97,8 @@ async function captureDetail(id, filename){
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
-    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
+  try{ await _waitForFonts(2000); }catch(e){}
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000,onclone:(d)=>{try{_killCloneAnimations(d);}catch(e){}}});
     await _saveCanvasImage(canvas,`경기상세_${filename}.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
@@ -511,7 +549,7 @@ function _newsCss(){
   return `
     .b2n-sheet{
       --ink:#1c1917; --ink2:#6b6a63; --accent:#9f1d1d;
-      width:1040px; margin:0 auto; padding:0 0 30px;
+      width:1280px; margin:0 auto; padding:0 0 40px;
       font-family:'Noto Sans KR', -apple-system, sans-serif;
       background:radial-gradient(140% 100% at 50% 0%, #f3efe4 0%, #ece7da 55%, #e6e0d0 100%);
       color:var(--ink);
@@ -551,11 +589,11 @@ function _newsCss(){
       font-size:44px; font-weight:900; line-height:1.18; letter-spacing:-.02em; color:var(--ink);
     }
     .b2n-dek{
-      margin-top:10px; font-size:14px; line-height:1.7; color:var(--ink2); max-width:900px;
+      margin-top:10px; font-size:14px; line-height:1.7; color:var(--ink2); max-width:1100px;
       border-left:4px solid var(--accent); padding-left:12px;
     }
     .b2n-analysis{
-      margin-top:14px; font-size:12.5px; line-height:1.8; color:var(--ink); max-width:960px;
+      margin-top:14px; font-size:12.5px; line-height:1.8; color:var(--ink); max-width:1180px;
       background:#faf9f6; border:1px solid rgba(28,25,23,.14); border-radius:8px; padding:12px 16px;
       column-gap:22px;
     }
@@ -564,8 +602,8 @@ function _newsCss(){
       display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; padding-top:10px; padding-bottom:16px;
       border-top:1px dashed rgba(28,25,23,.3); font-size:var(--fs-caption); font-weight:700; color:var(--ink2);
     }
-    .b2n-body{ display:flex; gap:22px; padding:20px 26px 0 }
-    .b2n-body > .b2n-col:first-child{ width:638px; flex-shrink:0 }
+    .b2n-body{ display:flex; gap:26px; padding:26px 30px 0 }
+    .b2n-body > .b2n-col:first-child{ width:785px; flex-shrink:0 }
     .b2n-body > .b2n-col:last-child{ flex:1; min-width:0 }
     .b2n-col-title{
       display:flex; align-items:center; gap:7px;
@@ -975,10 +1013,10 @@ function _minimalBuildHtml(ctx, meta){
 
 function _briefModeConfig(mode){
   switch(mode){
-    case 'full':    return { buildHtml:null, css:null, sheetClass:null, width:null, scale:2, bg:'#ffffff', fixedHeight:null, label:'전체' };
+    case 'full':    return { buildHtml:null, css:null, sheetClass:null, width:null, scale:4, bg:'#ffffff', fixedHeight:null, label:'전체' };
     case 'poster':  return { buildHtml:_posterBuildHtml,  css:_posterCss,  sheetClass:'bp-sheet', width:1000, scale:2,   bg:'#05070c',  fixedHeight:null, label:'포스터' };
     case 'minimal': return { buildHtml:_minimalBuildHtml, css:_minimalCss, sheetClass:'bm-sheet', width:860,  scale:2,   bg:'#ffffff',  fixedHeight:null, label:'미니멀' };
-    default:        return { buildHtml:_newsBuildHtml,    css:_newsCss,    sheetClass:'b2n-sheet', width:1040, scale:2.5, bg:'#ece7da',  fixedHeight:null, label:'신문기사' };
+    default:        return { buildHtml:_newsBuildHtml,    css:_newsCss,    sheetClass:'b2n-sheet', width:1280, scale:2.5, bg:'#ece7da',  fixedHeight:null, label:'신문기사' };
   }
 }
 
@@ -1033,8 +1071,8 @@ function _forceResolveComputedColors(rootEl){
    보수적인 기준값으로 계산한다. 브리핑 '전체' 모드처럼 콘텐츠가 길어질수록 실제
    렌더링 높이가 커지는 경우, 고정 scale(2배)을 그대로 곱하면 한 변 또는 전체 픽셀 수가
    한도를 넘어 "Canvas exceeds max size" 오류가 발생했던 문제를 막기 위함이다. */
-var CAPTURE_MAX_DIM = 8000;       // 캔버스 한 변 최대 픽셀 (보수적 값)
-var CAPTURE_MAX_AREA = 32000000;  // 캔버스 전체 최대 픽셀 수 (보수적 값, 약 8000x4000)
+var CAPTURE_MAX_DIM = 14000;      // 캔버스 한 변 최대 픽셀
+var CAPTURE_MAX_AREA = 80000000;  // 캔버스 전체 최대 픽셀 수 (약 8000x10000)
 function _safeExportScale(w, h, desiredScale){
   w = Math.max(1, w||1); h = Math.max(1, h||1);
   desiredScale = desiredScale || 1;
@@ -1054,26 +1092,36 @@ async function _fullCaptureBase(){
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   await _imgToDataUrls(el);
   try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
+  try{ await _waitForFonts(2000); }catch(e){}
   try{ _sanitizeUnsupportedCssFunctions(el); }catch(e){}
   let bg = '#f1f5f9';
   try{
     const cs = getComputedStyle(el);
     if(cs.backgroundColor && cs.backgroundColor!=='rgba(0, 0, 0, 0)' && cs.backgroundColor!=='transparent') bg = cs.backgroundColor;
   }catch(e){}
-  let scale = 2;
-  try{
-    const rectW = Math.max(el.scrollWidth||0, el.offsetWidth||0);
-    const rectH = Math.max(el.scrollHeight||0, el.offsetHeight||0);
-    scale = _safeExportScale(rectW, rectH, 2);
-  }catch(e){}
-  return await html2canvas(el, {
-    backgroundColor:bg, scale:scale, useCORS:true, allowTaint:false, logging:false, imageTimeout:20000,
-    onclone:(clonedDoc)=>{
-      try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
-      _sanitizeUnsupportedColorsInDoc(clonedDoc);
-      try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
-    }
-  });
+  // 브리핑 화면(.b2w2-wrap)은 반응형 레이아웃이라, 사용자가 좁은 창(모바일 폭 등)에서
+  // 저장 버튼을 눌러도 그 화면 그대로 캡처하면 글자와 카드가 모두 작게 찌그러진 채로
+  // 저장됨. '전체' 모드는 항상 데스크톱 디자인 폭(1320px)으로 강제 렌더링해서
+  // 실제 화면 크기와 무관하게 큼직하고 읽기 좋은 이미지가 저장되도록 한다.
+  const FULL_CAPTURE_WIDTH = 1320;
+  const onclone = (clonedDoc)=>{
+    try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
+    _sanitizeUnsupportedColorsInDoc(clonedDoc);
+    try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
+    try{ _killCloneAnimations(clonedDoc); }catch(e){}
+  };
+  const baseOpts = {
+    backgroundColor:bg, useCORS:true, allowTaint:false, logging:false, imageTimeout:20000,
+    windowWidth: FULL_CAPTURE_WIDTH + 80, scrollX:0, scrollY:0, onclone
+  };
+  // 1차: 데스크톱 폭 기준 실제 렌더링 크기를 가늠하기 위한 scale:1 측정용 캡처
+  const probeCanvas = await html2canvas(el, { ...baseOpts, scale:1 });
+  const naturalW = probeCanvas.width || FULL_CAPTURE_WIDTH;
+  const naturalH = probeCanvas.height || 1;
+  const scale = _safeExportScale(naturalW, naturalH, 4);
+  if(scale <= 1.02) return probeCanvas;
+  // 2차: 안전한 배율로 최종 고해상도 캡처
+  return await html2canvas(el, { ...baseOpts, scale });
 }
 
 async function _briefGenerateCanvas(mode, meta){
@@ -1091,6 +1139,7 @@ async function _briefGenerateCanvas(mode, meta){
     const sheet=holder.querySelector('.'+cfg.sheetClass);
     await _imgToDataUrls(sheet);
     try{ if(typeof _waitForImages==='function') await _waitForImages(sheet,1500); }catch(e){}
+    try{ await _waitForFonts(2000); }catch(e){}
     _sanitizeUnsupportedCssFunctions(sheet);
     const w=cfg.width;
     const h=cfg.fixedHeight || Math.max(1, Math.ceil(sheet.scrollHeight||0));
@@ -1101,6 +1150,7 @@ async function _briefGenerateCanvas(mode, meta){
       onclone:(clonedDoc)=>{
         _sanitizeUnsupportedColorsInDoc(clonedDoc);
         try{ _forceResolveComputedColors(clonedDoc.querySelector('.'+cfg.sheetClass)); }catch(e){}
+        try{ _killCloneAnimations(clonedDoc); }catch(e){}
       }
     });
     return canvas;
@@ -1124,7 +1174,7 @@ function _briefInjectPreviewCss(){
   s.id='brief-preview-style';
   s.textContent = `
     .brief-img-preview-overlay{position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
-    .brief-img-preview-modal{background:var(--white);border-radius:20px;box-shadow:var(--sh3);max-width:min(720px,92vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+    .brief-img-preview-modal{background:var(--white);border-radius:20px;box-shadow:var(--sh3);max-width:min(1440px,96vw);max-height:94vh;display:flex;flex-direction:column;overflow:hidden}
     .brief-img-preview-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:900;color:var(--text1);flex-shrink:0}
     .brief-img-preview-x{border:none;background:transparent;font-size:15px;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:8px}
     .brief-img-preview-x:hover{background:var(--surface);color:var(--text1)}
@@ -1132,8 +1182,8 @@ function _briefInjectPreviewCss(){
     .brief-mode-btn{border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:.12s}
     .brief-mode-btn:hover{border-color:var(--blue)}
     .brief-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
-    .brief-img-preview-body{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;position:relative}
-    .brief-img-preview-body img{max-width:100%;height:auto;border-radius:10px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1));display:block;transition:opacity .15s}
+    .brief-img-preview-body{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;align-items:flex-start;position:relative}
+    .brief-img-preview-body img{width:100%;max-width:100%;height:auto;flex-shrink:0;border-radius:10px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1));display:block;transition:opacity .15s}
     .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
     .brief-loading .brief-img-preview-body img{opacity:.35}
     .brief-loading .brief-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1))}

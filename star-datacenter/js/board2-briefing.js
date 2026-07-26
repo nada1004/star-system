@@ -53,7 +53,7 @@ function _b2EnsureStyleTag(id, cssText) {
 }
 // ── MVP 카드 그라디언트 효과 / 디자인 모드 설정 (설정탭 "브리핑 디자인 & 효과"에서 조정) ──
 function _b2MvpFxDefaults() {
-  return { on: true, style: 'fade', intensity: 45, design: 'photo' };
+  return { on: true, style: 'fade', intensity: 30, design: 'photo' };
 }
 const _B2_MVP_FX_STYLES = ['fade', 'vignette', 'topbottom', 'tint', 'spotlight', 'noir', 'diagonal', 'glass', 'none'];
 const _B2_MVP_DESIGNS = ['photo', 'panel', 'frame', 'glasscard', 'border', 'ribbon', 'split', 'poster'];
@@ -949,9 +949,9 @@ function _b2WeeklyBriefingView() {
         /* 기본(fade) 스타일: --b2mvp-fx-op(0~1)로 강도를 조절, 원본 100% 강도 기준 색상값은 유지 */
         background: linear-gradient(180deg,
           rgba(15,23,42,0) 0%,
-          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.10)) 25%,
-          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.52)) 65%,
-          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.86)) 100%);
+          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.08)) 25%,
+          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.36)) 65%,
+          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.62)) 100%);
       }
       /* 효과 스타일: 비네트 — 하단 중앙에서 은은하게 퍼지는 음영 */
       .b2w2-mvp-card[data-fx="vignette"] .b2w2-mvp-overlay {
@@ -1139,10 +1139,10 @@ function _b2WeeklyBriefingView() {
         display: none;
       }
       .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-bg {
-        filter: contrast(1.10) saturate(1.16);
+        filter: brightness(1.14) contrast(1.06) saturate(1.16);
       }
       .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-bottom {
-        background: #0b0f19;
+        background: #1c2436;
         padding: 12px 11px 10px;
         /* 사진 → 불투명 블록 경계를 자연스럽게 블렌드 */
         box-shadow: inset 0 14px 16px -10px rgba(0,0,0,.55);
@@ -2983,10 +2983,11 @@ function _b2WeeklyBriefingView() {
             ${isMVP?`<span style="font-size:var(--fs-caption);background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>
           <td>
-            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-              <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text1);background:var(--surface,#f8fafc);border:1px solid var(--border,#e2e8f0);padding:1px 8px;border-radius:999px">${total}전</span>
-              <span style="font-size:var(--fs-caption);font-weight:900;color:var(--win-col,#dc2626);background:color-mix(in srgb, var(--win-col,#dc2626) 14%, transparent);padding:1px 7px;border-radius:999px">${wins}승</span>
-              <span style="font-size:var(--fs-caption);font-weight:900;color:var(--lose-col,#2563eb);background:color-mix(in srgb, var(--lose-col,#2563eb) 14%, transparent);padding:1px 7px;border-radius:999px">${losses}패</span>
+            <div style="display:flex;align-items:baseline;gap:7px;font-family:'Noto Serif KR',Georgia,serif">
+              <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text1)">${total}전</span>
+              <span style="font-size:var(--fs-caption);font-weight:700;color:var(--b2w-rule-hard,#94a3b8)">·</span>
+              <span style="font-size:var(--fs-sm);font-weight:800;color:var(--win-col,#dc2626)">${wins}승</span>
+              <span style="font-size:var(--fs-sm);font-weight:800;color:var(--lose-col,#2563eb)">${losses}패</span>
             </div>
             ${winRate!==null?`<div style="margin-top:3px;font-size:var(--fs-caption);font-weight:700;color:${wrCls}">${winRate}%${_b2WeeklyDelta(winRate,prevWr2)}</div>`:''}
           </td>
