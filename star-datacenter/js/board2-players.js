@@ -68,6 +68,12 @@ function _b2PlayersView() {
   }
 
   // 기본 선택 선수: 없거나 현재 필터 목록에 없으면 랜덤으로 선택
+  // (대학 소속 스트리머만 대상 — YB/무소속은 위 visPlayers 단계에서 이미 제외됨)
+  // [복원] 이전 요청으로 "고정"으로 바꿨었으나, 이 랜덤은 이미지 순환 버그와 무관한
+  // 의도된 기능(탭 진입 시 매번 다른 대학 소속 스트리머 노출)이라 원복함.
+  // 대신 render-nav-lazy.js의 _TAB_ENTER.board2 훅에서 board2 탭에 "새로 진입할 때"만
+  // _b2SelectedPlayer/셔플 캐시를 초기화해서, 같은 탭 안에서 필터만 바꿀 때는
+  // 화면이 계속 랜덤으로 튀지 않고 유지되도록 한다.
   if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     const withPhoto2 = tierFilteredPlayers.filter(p => p.photo || (window.playerPhotos && window.playerPhotos[p.name]));
     const pool2 = withPhoto2.length ? withPhoto2 : tierFilteredPlayers;
@@ -90,6 +96,7 @@ function _b2PlayersView() {
   // (요청사항) 이미지탭 목록 랜덤(셔플) 옵션
   // [FIX-12] 선수가 이미 선택된 상태에서 필터만 바꿀 때 셔플이 재발생하면 그리드 위치가 튀므로
   //          셔플 순서는 처음 렌더(또는 필터 변경) 때만 결정하고 그 이후엔 선택 선수를 맨 앞에 고정
+  // [복원] 이 옵션도 이미지 순환 버그와 무관한 의도된 랜덤 기능이라 원복함.
   const _shuffleOn = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
   if (_shuffleOn) {
     // 셔플 순서 캐시 키 (필터 조합이 바뀌면 재셔플)
@@ -348,7 +355,7 @@ function _b2PlayersView() {
         left: 0;
         right: 0;
         padding: 24px;
-        z-index: 12;
+        z-index: 60;
       }
       .b2-players-info .b2-players-name,
       .b2-players-info .b2-players-race {
@@ -623,7 +630,14 @@ function _b2PlayersView() {
   const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
   const imgSettings = primarySettings;
   const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _hasMediaUrl = (v)=>!!_normMediaUrl(v);
   const hasPrimary = _hasMediaUrl(_b2SelectedPlayer.photo);
   const hasSecondary = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile);
   const _b2PosPct = (useFlag, x, y)=>{
@@ -673,9 +687,11 @@ function _b2PlayersView() {
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
     // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
-    // 그대로 노출되던 문제 수정: 1회 재시도 후에도 실패하면 해당 슬롯을 완전히 숨겨
-    // 배경 테마색만 보이도록 한다 (첨부파일 아이콘처럼 보이는 현상 방지).
-    const onErrJs = `var _t=this;var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;_t.removeAttribute('src');setTimeout(function(){_t.src=_o;},600);}else{_t.style.opacity='0';_t.style.visibility='hidden';}`;
+    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
+    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
+    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
+    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
       return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
@@ -855,6 +871,13 @@ function _b2PlayersView() {
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
   try{
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls([player.photo, player.secondProfileFile], 4);
@@ -909,16 +932,18 @@ function _b2UpdateMainDisplay(playerName) {
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
     // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
-    // 그대로 노출되던 문제 수정: 1회 재시도 후에도 실패하면 해당 슬롯을 완전히 숨겨
-    // 배경 테마색만 보이도록 한다 (첨부파일 아이콘처럼 보이는 현상 방지).
-    const onErrJs = `var _t=this;var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;_t.removeAttribute('src');setTimeout(function(){_t.src=_o;},600);}else{_t.style.opacity='0';_t.style.visibility='hidden';}`;
+    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
+    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
+    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
+    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
       return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
-  const _hasMediaUrl2 = (v)=>!!String(v || '').trim();
+  const _hasMediaUrl2 = (v)=>!!_normMediaUrl(v);
   const _slot1 = _hasMediaUrl2(player.photo)
     ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'transition:opacity 0.4s ease;' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
@@ -1028,7 +1053,14 @@ function _b2UpdateMainDisplay(playerName) {
 function openB2ProfileEditModal(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
-  const _trimMedia = (v)=>String(v || '').trim();
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _trimMedia = (v)=>_normMediaUrl(v);
   const _media1 = _trimMedia(player.photo);
   const _media2 = _trimMedia(player.secondProfileFile);
   const _media3 = _trimMedia(player.profileFile3);
@@ -1350,4 +1382,3 @@ function saveB2Profile(playerName) {
    🏆 랭킹 뷰 v2 — 정렬기준 전환 + 실전승률 + 순위변동
 ══════════════════════════════════════ */
 window._b2RankingSort = window._b2RankingSort || 'tier';
-

@@ -350,7 +350,14 @@ function _b2ScheduleImageSwap(playerName) {
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
   const _myGen = mainBox._swapGen;
-  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _hasMediaUrl = (v)=>!!_normMediaUrl(v);
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
   const imgList = p ? [
@@ -371,6 +378,16 @@ function _b2ScheduleImageSwap(playerName) {
     return Math.max(0.2, Math.min(60, n));
   };
   const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
+  const isBrokenEl = (el)=>{
+    if(!el) return true;
+    if(String(el.dataset?.b2Broken || '') === '1') return true;
+    if(el.style.visibility === 'hidden') return true;
+    return false;
+  };
+  const getLiveImgList = ()=>{
+    const live = imgList.filter(item => !isBrokenEl(getEl(item.slot)));
+    return live.length ? live : imgList;
+  };
   const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
   // 비디오 슬롯이 화면에 보일 때 재생 시작(음소거 자동재생) — 전환 타이밍 자체는
   // 항상 아래 delayMs()로 설정한 "전환 시간(초)"을 따르며, 영상 길이와는 무관함.
@@ -422,28 +439,26 @@ function _b2ScheduleImageSwap(playerName) {
       if (el) el.style.zIndex = (s === slot) ? '50' : String(s);
     }
   };
-  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
-  if (imgList.length < 2) {
-    const showSlot = (imgList[0] && imgList[0].slot) ? imgList[0].slot : 1;
-    bringToFront(showSlot);
-    // 먼저 showSlot을 즉시 보이게 한 뒤 나머지를 숨김
-    const _showEl = document.getElementById('b2-main-img-' + showSlot);
-    if (_showEl) _showEl.style.opacity = '1';
-    for (let slot = 1; slot <= 10; slot++) {
-      if (slot === showSlot) continue;
-      const el = document.getElementById('b2-main-img-' + slot);
-      if (el) el.style.opacity = '0';
+  const showOnlySlot = (slot)=>{
+    bringToFront(slot);
+    for (let s = 1; s <= 10; s++) {
+      const el = getEl(s);
+      if (!el) continue;
+      el.style.opacity = (s === slot) ? '1' : '0';
     }
-    applyMediaForSlot(showSlot);
+    mainBox._swapCurSlot = slot;
+    applyMediaForSlot(slot);
+  };
+  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
+  const initialLiveList = getLiveImgList();
+  if (initialLiveList.length < 2) {
+    const showSlot = (initialLiveList[0] && initialLiveList[0].slot) ? initialLiveList[0].slot : ((imgList[0] && imgList[0].slot) ? imgList[0].slot : 1);
+    showOnlySlot(showSlot);
     return;
   }
   // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
-  const firstSlot = imgList[0].slot;
-  bringToFront(firstSlot);
-  for (let slot = 1; slot <= 10; slot++) {
-    const el = document.getElementById('b2-main-img-' + slot);
-    if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
-  }
+  const firstSlot = initialLiveList[0].slot;
+  showOnlySlot(firstSlot);
   try{
     const badge = document.getElementById('b2-cur-img-slot');
     if(badge) badge.textContent = '🖼️ 이미지 ' + firstSlot;
@@ -455,10 +470,17 @@ function _b2ScheduleImageSwap(playerName) {
   applyMediaForSlot(firstSlot);
   function doSwap() {
     if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
-    const prev = mainBox._swapIdx;
-    mainBox._swapIdx = (prev + 1) % totalImgs;
-    const cur = mainBox._swapIdx;
-    const curSlot = imgList[cur] ? imgList[cur].slot : 1;
+    const liveImgList = getLiveImgList();
+    if (liveImgList.length < 2) {
+      const fallbackSlot = (liveImgList[0] && liveImgList[0].slot) ? liveImgList[0].slot : firstSlot;
+      showOnlySlot(fallbackSlot);
+      return;
+    }
+    const prevSlot = mainBox._swapCurSlot || firstSlot;
+    const prevIdx = liveImgList.findIndex(item => item.slot === prevSlot);
+    const cur = ((prevIdx >= 0 ? prevIdx : 0) + 1) % liveImgList.length;
+    mainBox._swapIdx = cur;
+    const curSlot = liveImgList[cur] ? liveImgList[cur].slot : firstSlot;
     mainBox._swapCurSlot = curSlot;
     // 들어오는 이미지를 맨 위로 올리고 페이드인. 나머지(나가는 이미지 포함)는
     // 그 아래에 그대로 두어(opacity 유지) 자연스럽게 가려지도록 한다.
@@ -503,15 +525,24 @@ function _b2ScheduleImageSwap(playerName) {
 
     // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름
     if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-    const next = (cur + 1) % totalImgs;
+    const next = (cur + 1) % liveImgList.length;
     const fromSlot = curSlot;
-    const toSlot = imgList[next] ? imgList[next].slot : 1;
+    const toSlot = liveImgList[next] ? liveImgList[next].slot : firstSlot;
     mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
-  const firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
+  const firstDelay = (initialLiveList[0] && initialLiveList[1]) ? delayMs(initialLiveList[0].slot, initialLiveList[1].slot) : 1000;
   mainBox._swapCurSlot = firstSlot;
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
+window._b2HandleMediaFailure = function(mediaEl) {
+  try{
+    if(!mediaEl) return;
+    mediaEl.dataset.b2Broken = '1';
+    const playerName = String(window._b2SelectedPlayer?.name || '').trim();
+    if(!playerName || typeof window._b2ScheduleImageSwap !== 'function') return;
+    setTimeout(()=>window._b2ScheduleImageSwap(playerName), 0);
+  }catch(e){}
+};
 window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.zoom = settings.scale;
