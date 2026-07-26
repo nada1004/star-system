@@ -1131,11 +1131,11 @@ async function _basicCaptureBase(){
   try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
   try{ await _waitForFonts(2000); }catch(e){}
   try{ _sanitizeUnsupportedCssFunctions(el); }catch(e){}
-  let bg = '#f1f5f9';
-  try{
-    const cs = getComputedStyle(el);
-    if(cs.backgroundColor && cs.backgroundColor!=='rgba(0, 0, 0, 0)' && cs.backgroundColor!=='transparent') bg = cs.backgroundColor;
-  }catch(e){}
+  // '기본' 저장본은 카드들이 다 흰색/거의 흰색 계열이라, 카드 사이 그리드 gap이나
+  // 모서리 서브픽셀 반올림 틈에서 무슨 색이 비치든 흰색이면 눈에 띄지 않는다.
+  // 페이지의 실제 배경색(회색 계열)을 따라가려던 이전 방식은 그 회색 자체가 카드와
+  // 대비돼 보인다는 피드백이 있어, 그냥 흰색으로 고정한다.
+  const bg = '#ffffff';
   // 브리핑 화면(.b2w2-wrap)은 반응형 레이아웃이라, 사용자가 좁은 창(모바일 폭 등)에서
   // 저장 버튼을 눌러도 그 화면 그대로 캡처하면 글자와 카드가 모두 작게 찌그러진 채로
   // 저장됨. '기본' 모드는 항상 데스크톱 디자인 폭(1320px)으로 강제 렌더링해서
@@ -1155,11 +1155,17 @@ async function _basicCaptureBase(){
     // 카드 모서리의 장식용 원형 블롭(::before)과 box-shadow가 overflow:hidden과 함께 쓰이는데,
     // html2canvas가 이 조합을 완벽히 클리핑하지 못해 카드 모서리/하단에 회색 얼룩이 찍히는
     // 경우가 있었다. '기본' 저장본에서는 순수 장식 요소이므로 꺼서 깨끗하게 캡처되도록 한다.
+    // (실제 회색 원인은 캔버스 바탕색이 흰색이 아니었던 것 — 아래 background:#fff로 해결.
+    //  카드 상단 포인트 컬러 바(::after)는 원인이 아니었고 화면과 동일하게 살려둔다.)
+    // ::before를 꺼버렸으면 더 이상 카드 밖으로 삐져나갈 장식 요소가 없으므로,
+    // 애초에 그걸 가두려고 걸어뒀던 overflow:hidden도 같이 풀어준다 — border-radius와
+    // overflow:hidden 조합 자체가 html2canvas에서 모서리에 회색 얼룩을 남기는 경우가 있었다.
     try{
       const fixStyle = clonedDoc.createElement('style');
       fixStyle.textContent = `
         .b2w2-highlight-card::before, .b2w2-kpi-card::before, .b2w2-card::before, .b2w2-mvp-card::before { display:none !important; }
-        .b2w2-highlight-card, .b2w2-kpi-card, .b2w2-card { box-shadow:none !important; border:none !important; }
+        .b2w2-highlight-card, .b2w2-kpi-card, .b2w2-card { box-shadow:none !important; border:none !important; overflow:visible !important; }
+        #b2w2-basic-export-root, .b2w2-kpi-grid, .b2w2-feature-row, .b2w2-highlight-grid { background:#ffffff !important; }
       `;
       clonedDoc.head.appendChild(fixStyle);
     }catch(e){}

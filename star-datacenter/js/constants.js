@@ -1138,10 +1138,19 @@ const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓'
 const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490','대표':'#8b5cf6'};
 
 const _ROLE_ORDER_MAP = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
+// 긴 키워드부터 검사해야 "총장"이 "부총장" 안의 부분 문자열로 먼저 걸려서 우선순위가
+// 잘못 올라가는(부총장인데 총장 취급) 일을 막을 수 있다.
+const _ROLE_ORDER_KEYS = Object.keys(_ROLE_ORDER_MAP).sort((a,b)=>b.length-a.length);
 function getRoleOrder(role){
   // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
   if(!role) return 99;
-  return role in _ROLE_ORDER_MAP ? _ROLE_ORDER_MAP[role] : 99;
+  // 직책 필드에 "이사장 & 회장"처럼 두 직책을 함께 적어도, 그 안에 알려진 직책 키워드가
+  // 하나라도 포함돼 있으면 그 키워드 기준 정렬 우선순위를 그대로 적용한다(현황판 순서 유지).
+  if(role in _ROLE_ORDER_MAP) return _ROLE_ORDER_MAP[role];
+  for(const key of _ROLE_ORDER_KEYS){
+    if(role.includes(key)) return _ROLE_ORDER_MAP[key];
+  }
+  return 99;
 }
 function getRoleBadgeHTML(role, size='11px'){
   if(!role) return '';

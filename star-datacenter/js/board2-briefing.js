@@ -2486,7 +2486,7 @@ function _b2WeeklyBriefingView() {
         }
         return _mkMvpCard(_profileMvp, 1, false, 'b2w2-mvp-card-lead');
       })()}
-      <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:var(--b2w-accent)">
+      <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:#2563eb">
         <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">전체 전적</div>
         <div class="b2w2-highlight-title">종합 승패 개요</div>
         <div class="b2w2-racetable">
@@ -2558,15 +2558,15 @@ function _b2WeeklyBriefingView() {
             ${hotPlayer ? `
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
-                  <div class="b2w2-dual-title" style="color:#15803d">상승세</div>
+                  <div class="b2w2-dual-title" style="color:#dc2626">상승세</div>
                   <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${hotPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${hotPlayer.p?.name || '-'}</span> · ${String(hotPlayer.p?.univ || '무소속')}</div>
                 </div>
-                <span class="b2w2-note-chip" style="border-color:#bbf7d0;color:#15803d;background:#f0fdf4">${hotPlayer.wrDelta >= 0 ? '+' : ''}${hotPlayer.wrDelta}%p</span>
+                <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">${hotPlayer.wrDelta >= 0 ? '+' : ''}${hotPlayer.wrDelta}%p</span>
               </div>
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">전적</span><span style="color:var(--text1)">${hotPlayer.wins}승 ${hotPlayer.losses}패</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">경기 수 변화</span><span style="color:var(--text1)">${hotPlayer.totalDelta >= 0 ? '+' : ''}${hotPlayer.totalDelta}전</span></div>
-                ${risingPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#15803d">${risingPlayers[1].p?.name || '-'} ${risingPlayers[1].wrDelta >= 0 ? '+' : ''}${risingPlayers[1].wrDelta}%p</span></div>` : ''}
+                ${risingPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#dc2626">${risingPlayers[1].p?.name || '-'} ${risingPlayers[1].wrDelta >= 0 ? '+' : ''}${risingPlayers[1].wrDelta}%p</span></div>` : ''}
               </div>
             ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 상승한 스트리머가 없습니다.</div>`}
           </div>
@@ -2574,15 +2574,15 @@ function _b2WeeklyBriefingView() {
             ${coldPlayer ? `
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
-                  <div class="b2w2-dual-title" style="color:#dc2626">하락세</div>
+                  <div class="b2w2-dual-title" style="color:#2563eb">하락세</div>
                   <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${coldPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${coldPlayer.p?.name || '-'}</span> · ${String(coldPlayer.p?.univ || '무소속')}</div>
                 </div>
-                <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">${coldPlayer.wrDelta}%p</span>
+                <span class="b2w2-note-chip" style="border-color:#bfdbfe;color:#2563eb;background:#eff6ff">${coldPlayer.wrDelta}%p</span>
               </div>
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">전적</span><span style="color:var(--text1)">${coldPlayer.wins}승 ${coldPlayer.losses}패</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">경기 수 변화</span><span style="color:var(--text1)">${coldPlayer.totalDelta >= 0 ? '+' : ''}${coldPlayer.totalDelta}전</span></div>
-                ${decliningPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#dc2626">${decliningPlayers[1].p?.name || '-'} ${decliningPlayers[1].wrDelta}%p</span></div>` : ''}
+                ${decliningPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#2563eb">${decliningPlayers[1].p?.name || '-'} ${decliningPlayers[1].wrDelta}%p</span></div>` : ''}
               </div>
             ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 하락한 스트리머가 없습니다.</div>`}
           </div>

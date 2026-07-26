@@ -342,10 +342,22 @@ function _b2ExpandAll() {
 }
 
 const _B2_ROLE_ORDER = ['이사장','동아리 회장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
+// 긴 키워드부터 검사해야 "총장"이 "부총장"의 부분 문자열로 먼저 걸려서 순위가 잘못
+// 앞당겨지는 걸 막을 수 있다.
+const _B2_ROLE_ORDER_BY_LEN = [..._B2_ROLE_ORDER].sort((a,b)=>b.length-a.length);
 
 function _b2RoleRank(p) {
-  const i = _B2_ROLE_ORDER.indexOf(p.role||'');
-  return i >= 0 ? i : 99;
+  const role = p.role || '';
+  const exact = _B2_ROLE_ORDER.indexOf(role);
+  if (exact >= 0) return exact;
+  // 직책란에 "이사장 & 회장"처럼 두 직책을 함께 적어도, 그 안에 알려진 직책 키워드가
+  // 있으면 그 키워드의 순위를 그대로 적용해 현황판 순서가 바뀌지 않게 한다.
+  if (role) {
+    for (const key of _B2_ROLE_ORDER_BY_LEN) {
+      if (role.includes(key)) return _B2_ROLE_ORDER.indexOf(key);
+    }
+  }
+  return 99;
 }
 
 // 현황판 표시용 대학 리스트

@@ -748,7 +748,14 @@ function _b2FemcoView() {
     const r = (p.role || '').trim();
     const order = ['이사장', '총장', '교수', '코치'];
     const i = order.indexOf(r);
-    return i >= 0 ? i : 99;
+    if (i >= 0) return i;
+    if (r) {
+      // 부총장이 총장의 부분 문자열이므로 긴 키워드부터 검사
+      for (const key of [...order].sort((a,b)=>b.length-a.length)) {
+        if (r.includes(key)) return order.indexOf(key);
+      }
+    }
+    return 99;
   };
 
   // (요청) 종족 표기: T / P / Z

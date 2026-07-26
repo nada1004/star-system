@@ -344,7 +344,7 @@ async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot-formatters-records.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-search.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260717-ds01');
-  await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260727-role05');
   await _loadScriptOnce('js/chatbot-formatters-extra.js?v=20260720-ds02');
   await _loadScriptOnce('js/chatbot-handlers.js?v=20260722-ds03');
   await _loadScriptOnce('js/chatbot-ui.js?v=20260719-ds01');
