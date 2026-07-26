@@ -1020,6 +1020,44 @@ function _briefModeConfig(mode){
   }
 }
 
+// [3차 방어선] `background-clip:text` + `-webkit-text-fill-color:transparent` 조합으로 만든
+// 그라디언트 글자(예: 브리핑 헤드라인)는 html2canvas가 텍스트 클리핑을 지원하지 않아,
+// 글자 모양대로 잘리지 않은 배경(그라디언트/단색)이 통째로 칠해지고 글자 자체는 투명 처리되어
+// "까맣게(어둡게) 뭉개진 네모 블록"으로 캡처되는 버그가 있다. 캡처 직전 클론 문서에서 이런 요소를
+// 찾아 그라디언트 배경을 제거하고, 원래 선언돼 있던 solid color(대개 color 속성)로 텍스트를
+// 그대로 그려지도록 강제한다.
+function _fixGradientTextClipInDoc(rootEl){
+  try{
+    if(!rootEl) return;
+    const doc = rootEl.ownerDocument;
+    const win = doc && doc.defaultView;
+    if(!win || typeof win.getComputedStyle!=='function') return;
+    const TRANSPARENT_RE=/^transparent$|rgba?\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/i;
+    const walk=(el)=>{
+      if(!el || el.nodeType!==1) return;
+      let cs=null;
+      try{ cs=win.getComputedStyle(el); }catch(e){}
+      if(cs){
+        const clip = cs.webkitBackgroundClip || cs.backgroundClip || '';
+        const fill = cs.webkitTextFillColor || '';
+        if(/text/i.test(clip) && fill && TRANSPARENT_RE.test(fill)){
+          let solid = cs.color;
+          if(!solid || TRANSPARENT_RE.test(solid)) solid = '#1e293b';
+          el.style.background = 'none';
+          el.style.backgroundImage = 'none';
+          el.style.webkitBackgroundClip = 'border-box';
+          el.style.backgroundClip = 'border-box';
+          el.style.webkitTextFillColor = solid;
+          el.style.color = solid;
+        }
+      }
+      const kids = el.children;
+      for(let i=0;i<(kids?kids.length:0);i++) walk(kids[i]);
+    };
+    walk(rootEl);
+  }catch(e){}
+}
+
 // [2차 방어선] 위의 텍스트 기반 스캔(_sanitizeUnsupportedCssFunctions / _sanitizeUnsupportedColorsInDoc)은
 // style 속성과 접근 가능한 스타일시트 규칙의 "원문 텍스트"만 본다. 크로스오리진이라 CSSOM 접근이
 // 막힌 시트가 있거나 텍스트 스캔이 놓친 경우를 대비해, 실제 계산된 스타일(getComputedStyle)을
@@ -1106,8 +1144,32 @@ async function _fullCaptureBase(){
   const FULL_CAPTURE_WIDTH = 1320;
   const onclone = (clonedDoc)=>{
     try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
+    // '전체' 이미지 저장본에서는 MVP 카드 위에 얹히는 가독성 보조 효과(그라디언트/비네트/틴트 등)를
+    // 빼고 사진을 그대로 보여달라는 요청 반영 — data-fx만 "none"으로 바꿔 오버레이 CSS를 끄고,
+    // 카드 레이아웃(디자인 모드) 자체는 그대로 유지한다.
+    try{
+      clonedDoc.querySelectorAll('[data-fx]').forEach(card=>{
+        card.setAttribute('data-fx','none');
+        card.style.setProperty('--b2mvp-fx-op','0');
+      });
+    }catch(e){}
+    // 카드 모서리의 장식용 원형 블롭(::before)과 box-shadow가 overflow:hidden과 함께 쓰이는데,
+    // html2canvas가 이 조합을 완벽히 클리핑하지 못해 카드 모서리/하단에 회색 얼룩이 찍히는
+    // 경우가 있었다. '전체' 저장본에서는 순수 장식 요소이므로 꺼서 깨끗하게 캡처되도록 한다.
+    try{
+      const fixStyle = clonedDoc.createElement('style');
+      fixStyle.textContent = `
+        .b2w2-highlight-card::before, .b2w2-kpi-card::before, .b2w2-card::before, .b2w2-mvp-card::before { display:none !important; }
+        .b2w2-highlight-card, .b2w2-kpi-card, .b2w2-card { box-shadow:none !important; border:none !important; }
+        /* 모드 선택 카드/캘린더/필터 칩 등 나머지 요소에 남아있는 회색 테두리도 저장본에서는
+           전부 안 보이게 처리 (레이아웃 크기는 유지하고 색상만 투명 처리) */
+        #b2w2-export-root, #b2w2-export-root * { border-color: transparent !important; }
+      `;
+      clonedDoc.head.appendChild(fixStyle);
+    }catch(e){}
     _sanitizeUnsupportedColorsInDoc(clonedDoc);
     try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
+    try{ _fixGradientTextClipInDoc(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
     try{ _killCloneAnimations(clonedDoc); }catch(e){}
   };
   const baseOpts = {
@@ -1150,6 +1212,7 @@ async function _briefGenerateCanvas(mode, meta){
       onclone:(clonedDoc)=>{
         _sanitizeUnsupportedColorsInDoc(clonedDoc);
         try{ _forceResolveComputedColors(clonedDoc.querySelector('.'+cfg.sheetClass)); }catch(e){}
+        try{ _fixGradientTextClipInDoc(clonedDoc.querySelector('.'+cfg.sheetClass)); }catch(e){}
         try{ _killCloneAnimations(clonedDoc); }catch(e){}
       }
     });
@@ -1183,7 +1246,7 @@ function _briefInjectPreviewCss(){
     .brief-mode-btn:hover{border-color:var(--blue)}
     .brief-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
     .brief-img-preview-body{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;align-items:flex-start;position:relative}
-    .brief-img-preview-body img{width:100%;max-width:100%;height:auto;flex-shrink:0;border-radius:10px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1));display:block;transition:opacity .15s}
+    .brief-img-preview-body img{width:100%;max-width:100%;height:auto;flex-shrink:0;display:block;transition:opacity .15s}
     .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
     .brief-loading .brief-img-preview-body img{opacity:.35}
     .brief-loading .brief-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1))}

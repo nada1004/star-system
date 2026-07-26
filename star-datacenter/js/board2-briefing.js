@@ -634,7 +634,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-kpi-card {
         padding: 14px 16px;
         border-radius: 14px;
-        border: 1px solid var(--b2w-rule);
+        border: none;
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 72%, rgba(15,23,42,.03) 100%);
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
         box-shadow: var(--b2w-shadow-sm);
@@ -1639,6 +1639,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-highlight-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+        align-items: start;
         gap: 12px;
         margin-bottom: 22px;
       }
@@ -1648,7 +1649,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-highlight-card {
         padding: 16px 18px;
         border-radius: var(--b2w-r);
-        border: 1px solid var(--b2w-rule);
+        border: none;
         background: var(--b2w-paper);
         box-shadow: var(--b2w-shadow-sm);
         display: flex;
@@ -1988,7 +1989,7 @@ function _b2WeeklyBriefingView() {
       /* ── 대학별 카드 ── */
       .b2w2-card {
         background: var(--b2w-paper);
-        border: 1px solid var(--b2w-rule);
+        border: none;
         border-radius: var(--b2w-r-lg);
         margin-bottom: 14px;
         overflow: hidden;
