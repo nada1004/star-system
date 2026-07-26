@@ -1161,9 +1161,6 @@ async function _fullCaptureBase(){
       fixStyle.textContent = `
         .b2w2-highlight-card::before, .b2w2-kpi-card::before, .b2w2-card::before, .b2w2-mvp-card::before { display:none !important; }
         .b2w2-highlight-card, .b2w2-kpi-card, .b2w2-card { box-shadow:none !important; border:none !important; }
-        /* 모드 선택 카드/캘린더/필터 칩 등 나머지 요소에 남아있는 회색 테두리도 저장본에서는
-           전부 안 보이게 처리 (레이아웃 크기는 유지하고 색상만 투명 처리) */
-        #b2w2-export-root, #b2w2-export-root * { border-color: transparent !important; }
       `;
       clonedDoc.head.appendChild(fixStyle);
     }catch(e){}

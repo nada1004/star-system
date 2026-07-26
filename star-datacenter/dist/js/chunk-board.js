@@ -3419,7 +3419,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       .b2w2-kpi-card {
         padding: 14px 16px;
         border-radius: 14px;
-        border: none;
+        border: 1px solid var(--b2w-rule);
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 72%, rgba(15,23,42,.03) 100%);
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
         box-shadow: var(--b2w-shadow-sm);
@@ -4434,7 +4434,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       .b2w2-highlight-card {
         padding: 16px 18px;
         border-radius: var(--b2w-r);
-        border: none;
+        border: 1px solid var(--b2w-rule);
         background: var(--b2w-paper);
         box-shadow: var(--b2w-shadow-sm);
         display: flex;
@@ -4774,7 +4774,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       /* \u2500\u2500 \uB300\uD559\uBCC4 \uCE74\uB4DC \u2500\u2500 */
       .b2w2-card {
         background: var(--b2w-paper);
-        border: none;
+        border: 1px solid var(--b2w-rule);
         border-radius: var(--b2w-r-lg);
         margin-bottom: 14px;
         overflow: hidden;

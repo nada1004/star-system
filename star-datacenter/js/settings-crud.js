@@ -131,8 +131,10 @@ window.openEP=function(name){
   };
   const _photo6to10AnyFilled = _photoPosData.slice(4).some(item=>!!item.url);
   const _delayValue = (key)=>{
-    const n = parseFloat(p?.[key] ?? 1);
-    if(isNaN(n)) return 1;
+    // [FIX] 값을 지정하지 않았을 때 실제로 런타임에서 사용되는 기본값(4초)과
+    // 다른 값(1초)을 화면에 보여줘서 설정한 시간이 반영 안 된 것처럼 보이던 문제 수정.
+    const n = parseFloat(p?.[key] ?? 4);
+    if(isNaN(n)) return 4;
     return Math.max(0.2, Math.min(60, n));
   };
   const _swapDelayHtml = _slotOrder.length < 2
@@ -1009,16 +1011,14 @@ function savePlayer(){
 
 
   try {
-    // 이미지 전환 딜레이 저장 (기본값 1초와 같으면 키 삭제해 용량 절약)
-    const _clampDelay = (v) => { const n = parseFloat(v); return isNaN(n) ? 1 : Math.max(0.2, Math.min(60, n)); };
-    const _setDelay = (key, val) => {
-      const v = _clampDelay(val || '1');
-      if (v === 1) delete p[key]; else p[key] = v;
-    };
+    // [FIX] 예전에는 값이 1(구 기본값 표기)이면 무조건 삭제해서, 사용자가 실제로 원하는
+    // 전환 시간(예: 1초)을 입력해도 저장 시 사라지고 런타임 기본값(4초)으로 되돌아가는 문제가 있었음.
+    // 현황판(board2) 프로필 수정 모달과 동일하게, 입력된 값을 항상 그대로 저장한다.
+    const _clampDelay = (v) => { const n = parseFloat(v); return isNaN(n) ? 4 : Math.max(0.2, Math.min(60, n)); };
     document.querySelectorAll('#emBody [data-delay-key]').forEach(inp=>{
       const key = String(inp?.getAttribute('data-delay-key') || '').trim();
       if(!key) return;
-      _setDelay(key, inp.value);
+      p[key] = _clampDelay(inp?.value ?? p[key] ?? 4);
     });
   } catch (e) { /* 딜레이 저장 실패는 치명적이지 않음 */ }
 
