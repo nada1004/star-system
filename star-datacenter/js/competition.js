@@ -58,8 +58,12 @@ function _compActionMenuHTML(items){
 }
 
 function getCurrentTourney(){
+  // [BUGFIX] curComp가 비어있을 때(=대회를 아직 선택 안 한 상태) _tourneys[0]으로
+  // 폴백하면, 배열의 첫 대회가 하필 type:'tier'인 경우 선택도 안 했는데 티어대회
+  // 서브메뉴/최근 기록이 자동으로 표시되는 문제가 있었음. 선택된 게 없으면 null.
+  if(!curComp) return null;
   const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
-  return _tourneys.find(t=>t && t.name===curComp) || _tourneys[0] || null;
+  return _tourneys.find(t=>t && t.name===curComp) || null;
 }
 
 function rComp(C,T){

@@ -1228,6 +1228,7 @@ async function _prCaptureBaseForStyle(style, p){
     backgroundColor: bgFill, scale:2, useCORS:true, allowTaint:false, logging:false, imageTimeout:15000,
     onclone:(clonedDoc)=>{
       try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
+      try{ if(typeof _sanitizeUnsupportedColorsInDoc==='function') _sanitizeUnsupportedColorsInDoc(clonedDoc); }catch(e){}
       if(style==='report'){
         try{
           const cloneEl = clonedDoc.getElementById('pr-report-capture');

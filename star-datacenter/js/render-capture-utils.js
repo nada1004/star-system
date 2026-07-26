@@ -86,18 +86,124 @@ function _getBriefingExportMeta(){
   return { issueDate, issueDateFull, presetKey, presetLabel, from, to, univ };
 }
 
+// color-mix()/color() 등 html2canvas가 못 읽는 함수를, 브라우저 자신의 canvas 2D 색상
+// 파서에 맡겨 실제 계산된 legacy rgb()/hex 값으로 정확히 치환한다. 캔버스 fillStyle은
+// 브라우저가 이해하는 어떤 CSS <color> 문법이든(color-mix, oklch, oklab, lab, color() 등)
+// 항상 sRGB 8bit "rgb()"/"#hex" 문자열로 정규화해 돌려주는 스펙 특성을 이용한 것으로,
+// 우리가 직접 색상 수식을 재구현하는 것보다 훨씬 정확하고 안전하다.
+var _colorProbeCtx=null;
+function _tryResolveColorViaCanvas(str){
+  try{
+    if(typeof document==='undefined' || typeof document.createElement!=='function') return null;
+    if(!_colorProbeCtx){
+      const c=document.createElement('canvas');
+      _colorProbeCtx = c.getContext && c.getContext('2d');
+    }
+    const ctx=_colorProbeCtx;
+    if(!ctx) return null;
+    const SENTINEL='rgba(1, 2, 3, 0.5)'; // 파싱 실패 시 fillStyle이 이 값 그대로 유지됨을 이용한 판별용
+    ctx.fillStyle=SENTINEL;
+    ctx.fillStyle=str;
+    const resolved=ctx.fillStyle;
+    if(!resolved || resolved===SENTINEL) return null;
+    return resolved;
+  }catch(e){ return null; }
+}
+// 문자열 s에서 openIdx가 가리키는 '(' 와 짝이 맞는 ')' 의 인덱스를 찾는다 (중첩 괄호 지원).
+function _matchParenIdx(s, openIdx){
+  let depth=0;
+  for(let i=openIdx;i<s.length;i++){
+    if(s[i]==='(') depth++;
+    else if(s[i]===')'){ depth--; if(depth===0) return i; }
+  }
+  return -1;
+}
+// s를 "괄호 깊이 0인 위치의 콤마"만 기준으로 분리한다.
+// (var(--x,#fallback)처럼 인자 자체에 콤마가 들어있는 경우를 안전하게 통과시키기 위함)
+function _splitTopLevelCommas(s){
+  const parts=[]; let depth=0, last=0;
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(c==='(') depth++;
+    else if(c===')') depth--;
+    else if(c===',' && depth===0){ parts.push(s.slice(last,i)); last=i+1; }
+  }
+  parts.push(s.slice(last));
+  return parts;
+}
+// color-mix()의 한 인자(예: "black 15%", "15% black", "var(--x,#hex) 75%")에서
+// 앞/뒤에 붙은 퍼센트 토큰만 제거하고 순수 색상 부분만 남긴다.
+// (이걸 안 하면 "black 15%"가 그대로 대체색으로 쓰여 "color: black 15%;" 같은
+//  무효한 선언이 되고, 결국 color-mix가 완전히 안 지워진 것과 같은 효과가 남는다)
+function _stripMixPercent(part){
+  let p=String(part||'').trim();
+  p=p.replace(/^[\d.]+%\s+/, '');
+  p=p.replace(/\s+[\d.]+%$/, '');
+  return p.trim();
+}
+// html2canvas가 못 읽는 color-mix()/color() 함수 호출을 안전한 대체색으로 치환한다.
+// 정규식([^,]+, [^)]+ 등)은 var(--x,#fallback)처럼 인자 안에 콤마·괄호가 중첩되면
+// 첫 번째 안쪽 ')'에서 매칭이 끊겨 "10%, #fff)" 같은 깨진 CSS 조각을 남겼음
+// (color-mix가 완전히 치환되지 않아 Safari가 계산값을 color(...)로 직렬화 →
+//  "Attempting to parse an unsupported color function \"color\"" 캡처 오류로 이어짐).
+// 괄호 깊이를 직접 세어 정확한 함수 호출 범위를 찾고, 우선 canvas로 실제 계산값을 구하며,
+// canvas를 못 쓰는 상황에서만 top-level 콤마 기반 텍스트 휴리스틱으로 대체한다.
+function _scrubUnsupportedColors(text){
+  const s=String(text||'');
+  let out='', i=0;
+  while(i<s.length){
+    const prev = i>0 ? s[i-1] : '';
+    const boundaryOk = !/[a-zA-Z0-9_-]/.test(prev); // background-color( 등의 일부가 아닌지 확인
+    if(boundaryOk && /^color-mix\(/i.test(s.slice(i))){
+      const openIdx=i+9; // 'color-mix'.length
+      const closeIdx=_matchParenIdx(s, openIdx);
+      if(closeIdx!==-1){
+        const whole=s.slice(i, closeIdx+1);
+        let fallback=_tryResolveColorViaCanvas(whole);
+        if(!fallback){
+          const inner=s.slice(openIdx+1, closeIdx);
+          const parts=_splitTopLevelCommas(inner);
+          fallback=_stripMixPercent(parts[parts.length-1]||'');
+          if(!fallback) fallback='#94a3b8';
+          // fallback 자체가 또 다른 color-mix()/color()를 담고 있을 수 있으므로 재귀적으로 정리
+          if(/color-mix\(|(?:^|[^-\w])color\(/i.test(fallback)) fallback=_scrubUnsupportedColors(fallback);
+        }
+        out+=fallback;
+        i=closeIdx+1;
+        continue;
+      }
+    } else if(boundaryOk && /^color\(/i.test(s.slice(i))){
+      const openIdx=i+5; // 'color'.length
+      const closeIdx=_matchParenIdx(s, openIdx);
+      if(closeIdx!==-1){
+        const whole=s.slice(i, closeIdx+1);
+        out+= _tryResolveColorViaCanvas(whole) || '#94a3b8';
+        i=closeIdx+1;
+        continue;
+      }
+    } else if(boundaryOk && /^(oklch|oklab|lab|lch|hwb)\(/i.test(s.slice(i))){
+      // Safari 등에서 계산값이 이 형태로 직렬화되는 경우까지 대비한 추가 방어선
+      const fname=/^(oklch|oklab|lab|lch|hwb)\(/i.exec(s.slice(i))[1];
+      const openIdx=i+fname.length;
+      const closeIdx=_matchParenIdx(s, openIdx);
+      if(closeIdx!==-1){
+        const whole=s.slice(i, closeIdx+1);
+        out+= _tryResolveColorViaCanvas(whole) || '#94a3b8';
+        i=closeIdx+1;
+        continue;
+      }
+    }
+    out+=s[i];
+    i++;
+  }
+  return out;
+}
 function _sanitizeUnsupportedCssFunctions(root){
   if(!root || typeof root.querySelectorAll!=='function') return;
   // html2canvas가 못 읽는 color-mix()/color() 함수만 안전한 대체색으로 치환한다.
   // (이전에는 해당 함수가 포함된 선언 전체를 지워버려서, 예를 들어 .b2w2-kpi-card의
   //  background 전체가 사라져 카드 배경이 화면과 다르게 밋밋해지는 문제가 있었음)
-  const scrub=(text)=>{
-    return String(text||'')
-      // color-mix(in srgb, A 7%, B) → B (혼합 결과와 가장 가까운 마지막 색상으로 대체)
-      .replace(/color-mix\(\s*in\s+[a-z0-9-]+\s*,\s*[^,]+,\s*([^)]+)\)/gi, (m, fallback) => fallback.trim())
-      // color(display-p3 ...) 같은 미지원 색상 함수 → 무난한 회색으로 대체 (전체 삭제 대신)
-      .replace(/\bcolor\(\s*[a-z0-9-]+[^)]*\)/gi, '#94a3b8');
-  };
+  const scrub=_scrubUnsupportedColors;
   try{
     root.querySelectorAll('[style]').forEach((el)=>{
       const raw=el.getAttribute('style')||'';
@@ -110,6 +216,39 @@ function _sanitizeUnsupportedCssFunctions(root){
       const raw=el.textContent||'';
       const cleaned=scrub(raw);
       if(cleaned!==raw) el.textContent=cleaned;
+    });
+  }catch(e){}
+}
+/* 위 _sanitizeUnsupportedCssFunctions는 "캡처 대상 요소 안"의 인라인 style/<style> 태그만
+   본다 — '전체' 모드처럼 실제 화면 전체(#b2w2-export-root)를 캡처할 때는 대부분의 색상이
+   <link>로 불러온 외부 시트(css/style.css)의 클래스 규칙에서 오는데, 이건 root의 자손이 아니라
+   <head> 쪽에 있어서 위 함수가 전혀 손대지 못한다. color-mix()가 있는 그 규칙들을 CSSOM으로
+   직접 순회하며 값을 고쳐써서, "Attempting to parse an unsupported color function" 캡처 실패를 막는다. */
+function _sanitizeUnsupportedColorsInDoc(doc){
+  if(!doc) return;
+  const scrub=_scrubUnsupportedColors;
+  try{
+    Array.from(doc.styleSheets||[]).forEach((sheet)=>{
+      let rules;
+      try{ rules = sheet.cssRules; }catch(e){ return; } // 크로스오리진 등으로 접근 불가하면 skip
+      if(!rules) return;
+      const walk=(ruleList)=>{
+        Array.from(ruleList).forEach((rule)=>{
+          try{
+            if(rule.cssRules){ walk(rule.cssRules); return; } // @media 등 중첩 규칙
+            if(!rule.style) return;
+            const props=[];
+            for(let i=0;i<rule.style.length;i++) props.push(rule.style[i]);
+            props.forEach((prop)=>{
+              const val=rule.style.getPropertyValue(prop);
+              if(val && /color-mix\(|(?:^|[^-\w])color\(|oklch\(|oklab\(|(?:^|[^-\w])lab\(|(?:^|[^-\w])lch\(|hwb\(/i.test(val)){
+                try{ rule.style.setProperty(prop, scrub(val), rule.style.getPropertyPriority(prop)); }catch(e){}
+              }
+            });
+          }catch(e){}
+        });
+      };
+      walk(rules);
     });
   }catch(e){}
 }
@@ -238,6 +377,17 @@ function _newsStandingsHtml(ctx){
     </div>`;
   }).join('');
   return `<div class="b2n-standings">${rows}</div>`;
+}
+function _newsSilentUnivsHtml(ctx){
+  const list = ctx.silentUnivs || [];
+  if(!list.length) return '';
+  const shown = list.slice(0, 10);
+  const rest = list.length - shown.length;
+  return `<div class="b2n-silent-row">
+    <span class="b2n-silent-label">기록 없는 대학</span>
+    ${shown.map(name=>`<span class="b2n-silent-chip">${_esc(name)}</span>`).join('')}
+    ${rest>0?`<span class="b2n-silent-more">외 ${rest}곳</span>`:''}
+  </div>`;
 }
 function _newsHighlightRows(ctx){
   const rows = [
@@ -512,6 +662,10 @@ function _newsCss(){
     }
     .b2n-kpi b{ display:block; font-size:23px; font-weight:900; color:var(--ink); line-height:1.2 }
     .b2n-kpi i{ font-style:normal; font-size:10px; font-weight:800; color:var(--ink2); letter-spacing:.02em }
+    .b2n-silent-row{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--rule2,#d6d0c4) }
+    .b2n-silent-label{ font-size:9px; font-weight:900; color:var(--ink2); margin-right:2px }
+    .b2n-silent-chip{ font-size:10px; font-weight:700; color:var(--ink2); background:var(--paper2,#f4f1ea); border:1px solid var(--rule2,#d6d0c4); border-radius:999px; padding:3px 9px }
+    .b2n-silent-more{ font-size:10px; font-weight:700; color:var(--ink2) }
     .b2n-worst{ background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:12px; margin-top:16px }
     .b2n-worst-title{ font-size:var(--fs-caption); font-weight:900; color:var(--ink2); margin-bottom:6px }
     .b2n-empty{ font-size:var(--fs-sm); color:var(--ink2); padding:10px 0 }
@@ -629,6 +783,7 @@ function _newsBuildHtml(ctx, meta){
         </div>
         <div class="b2n-col-title"><i></i>대학 순위</div>
         ${_newsStandingsHtml(ctx)}
+        ${_newsSilentUnivsHtml(ctx)}
       </div>
     </div>
     ${_newsUnivAcesHtml(ctx)}
@@ -640,15 +795,15 @@ function _newsBuildHtml(ctx, meta){
   </div>`;
 }
 /* ══════════════════════════════════════
-   브리핑 저장 — 다양한 모드(신문기사/카드형/포스터/SNS 정사각형/미니멀)
+   브리핑 저장 — 다양한 모드(전체/신문기사/포스터/미니멀)
    통계탭 스트리머 리포트의 "미리보기 → 스타일 전환 → 다운로드" 흐름을 그대로 차용.
    각 모드는 window._b2BriefingExportCtx(board2-briefing.js가 저장해둔 통계 스냅샷)를
    바탕으로 완전히 독립된 레이아웃을 렌더링해 캡처한다.
 ══════════════════════════════════════ */
 var BRIEF_MODES = [
+  ['full','📋 전체'],
   ['newspaper','📰 신문기사'],
   ['poster','🎬 포스터'],
-  ['sns','📱 SNS 정사각형'],
   ['minimal','⬜ 미니멀']
 ];
 
@@ -699,7 +854,8 @@ function _posterCss(){
   .bp-st-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.1)}
   .bp-st-rank{font-size:20px;font-weight:950;width:34px;color:rgba(255,255,255,.4)}
   .bp-st-rank.top{color:#fbbf24}
-  .bp-st-name{font-size:17px;font-weight:800;flex:1}
+  .bp-st-name{font-size:17px;font-weight:800;flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+  .bp-st-name img,.bp-st-name svg{width:18px;height:18px;flex-shrink:0}
   .bp-st-rec{font-size:13px;color:rgba(255,255,255,.55)}
   .bp-st-wr{font-size:17px;font-weight:950;width:56px;text-align:right}
   .bp-footer{margin-top:44px;padding-top:16px;display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);font-weight:700;border-top:1px solid rgba(255,255,255,.12)}
@@ -750,52 +906,8 @@ function _posterBuildHtml(ctx, meta){
       ${hlItems.map(([label,s,extra])=>`<div class="bp-hl-row"><span class="bp-hl-tag">${_esc(label)}</span><span class="bp-hl-name">${_esc(s.p.name)}</span><span class="bp-hl-univ">${_esc(s.p.univ||'무소속')}</span><span class="bp-hl-rec">${extra?_esc(extra)+' · ':''}${s.wins??0}승 ${s.losses??0}패</span></div>`).join('') || '<div class="bp-hl-row">집계된 기록이 없습니다</div>'}
     </div>
     <div class="bp-standings-title">🏫 대학 순위</div>
-    ${standings.slice(0,5).map((ud,idx)=>{const rank=ud.rank||(idx+1);return `<div class="bp-st-row"><span class="bp-st-rank ${rank<=3?'top':''}">${rank}</span><span class="bp-st-name">${_esc(ud.u.name)}</span><span class="bp-st-rec">${ud.tw}승 ${ud.tl}패</span><span class="bp-st-wr">${ud.wr??0}%</span></div>`;}).join('') || '<div class="bp-st-row">집계된 대학 활동이 없습니다</div>'}
+    ${standings.slice(0,5).map((ud,idx)=>{const rank=ud.rank||(idx+1);const uLogo=(typeof gUI==='function')?gUI(ud.u.name,'18px'):'';return `<div class="bp-st-row"><span class="bp-st-rank ${rank<=3?'top':''}">${rank}</span><span class="bp-st-name">${uLogo}${_esc(ud.u.name)}</span><span class="bp-st-rec">${ud.tw}승 ${ud.tl}패</span><span class="bp-st-wr">${ud.wr??0}%</span></div>`;}).join('') || '<div class="bp-st-row">집계된 대학 활동이 없습니다</div>'}
     <div class="bp-footer"><span>STAR DATACENTER</span><span>발행 ${_esc(meta.issueDateFull)}</span></div>
-  </div>`;
-}
-
-function _snsCss(){
-  return `
-  .bs-sheet{width:1080px;height:1080px;box-sizing:border-box;background:linear-gradient(160deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%);color:#fff;font-family:"Noto Sans KR",sans-serif;position:relative;padding:64px;display:flex;flex-direction:column;align-items:center;text-align:center}
-  .bs-sheet *,.bs-sheet *::before,.bs-sheet *::after{box-sizing:border-box}
-  .bs-brand{font-size:15px;font-weight:900;letter-spacing:.14em;margin-bottom:6px;opacity:.9}
-  .bs-period{font-size:13px;font-weight:700;opacity:.75;margin-bottom:40px}
-  .bs-mvp-photo{width:200px;height:200px;border-radius:50%;overflow:hidden;border:6px solid rgba(255,255,255,.85);box-shadow:0 16px 40px rgba(0,0,0,.25);margin-bottom:20px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
-  .bs-mvp-photo img{width:100%;height:100%;object-fit:cover}
-  .bs-mvp-photo-fallback{font-size:70px;font-weight:900}
-  .bs-mvp-label{font-size:13px;font-weight:900;background:rgba(255,255,255,.22);padding:6px 18px;border-radius:999px;margin-bottom:12px;display:inline-block}
-  .bs-mvp-name{font-size:38px;font-weight:950;margin-bottom:6px}
-  .bs-mvp-univ{font-size:15px;font-weight:700;opacity:.85;margin-bottom:34px}
-  .bs-kpi-row{display:flex;gap:14px;margin-bottom:36px}
-  .bs-kpi{background:rgba(255,255,255,.16);border-radius:20px;padding:18px 26px;min-width:110px}
-  .bs-kpi b{display:block;font-size:30px;font-weight:950}
-  .bs-kpi i{font-size:11px;font-weight:700;opacity:.8;font-style:normal}
-  .bs-chip-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  .bs-chip{background:rgba(255,255,255,.18);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:800}
-  .bs-footer{margin-top:auto;font-size:11px;opacity:.7;font-weight:700}
-  `;
-}
-function _snsBuildHtml(ctx, meta){
-  const mvp=ctx.mvp;
-  const photo=mvp&&mvp.p?_newsPhotoUrl(mvp.p):'';
-  const initial=mvp&&mvp.p?String(mvp.p.name||'-').trim().slice(0,1):'?';
-  const standings=(ctx.rankedUnivs&&ctx.rankedUnivs.length?ctx.rankedUnivs:ctx.topUnivs)||[];
-  return `<div class="bs-sheet">
-    <div class="bs-brand">STAR DATACENTER</div>
-    <div class="bs-period">${_esc(meta.presetLabel)} · ${_esc(meta.from)} ~ ${_esc(meta.to)}</div>
-    <div class="bs-mvp-photo">${photo?`<img src="${photo}" alt="">`:`<span class="bs-mvp-photo-fallback">${_esc(initial)}</span>`}</div>
-    <span class="bs-mvp-label">🏆 ${_esc(ctx.mvpLabel||'MVP')}</span>
-    <div class="bs-mvp-name">${mvp&&mvp.p?_esc(mvp.p.name):'-'}</div>
-    <div class="bs-mvp-univ">${mvp&&mvp.p?_esc(mvp.p.univ||'무소속'):''} · ${mvp?mvp.wins??0:0}승 ${mvp?mvp.losses??0:0}패 · 승률 ${mvp?mvp.winRate??0:0}%</div>
-    <div class="bs-kpi-row">
-      <div class="bs-kpi"><b>${ctx.totalGames||0}</b><i>총 경기수</i></div>
-      <div class="bs-kpi"><b>${ctx.activeUnivs||0}</b><i>활동 대학</i></div>
-    </div>
-    <div class="bs-chip-row">
-      ${standings.slice(0,3).map((ud,idx)=>`<div class="bs-chip">${idx+1}위 ${_esc(ud.u.name)} ${ud.wr??0}%</div>`).join('')}
-    </div>
-    <div class="bs-footer">${_esc(meta.univ)} · 발행 ${_esc(meta.issueDateFull)}</div>
   </div>`;
 }
 
@@ -863,16 +975,111 @@ function _minimalBuildHtml(ctx, meta){
 
 function _briefModeConfig(mode){
   switch(mode){
+    case 'full':    return { buildHtml:null, css:null, sheetClass:null, width:null, scale:2, bg:'#ffffff', fixedHeight:null, label:'전체' };
     case 'poster':  return { buildHtml:_posterBuildHtml,  css:_posterCss,  sheetClass:'bp-sheet', width:1000, scale:2,   bg:'#05070c',  fixedHeight:null, label:'포스터' };
-    case 'sns':     return { buildHtml:_snsBuildHtml,     css:_snsCss,     sheetClass:'bs-sheet', width:1080, scale:1,   bg:'#6366f1',  fixedHeight:1080, label:'SNS' };
     case 'minimal': return { buildHtml:_minimalBuildHtml, css:_minimalCss, sheetClass:'bm-sheet', width:860,  scale:2,   bg:'#ffffff',  fixedHeight:null, label:'미니멀' };
     default:        return { buildHtml:_newsBuildHtml,    css:_newsCss,    sheetClass:'b2n-sheet', width:1040, scale:2.5, bg:'#ece7da',  fixedHeight:null, label:'신문기사' };
   }
 }
 
+// [2차 방어선] 위의 텍스트 기반 스캔(_sanitizeUnsupportedCssFunctions / _sanitizeUnsupportedColorsInDoc)은
+// style 속성과 접근 가능한 스타일시트 규칙의 "원문 텍스트"만 본다. 크로스오리진이라 CSSOM 접근이
+// 막힌 시트가 있거나 텍스트 스캔이 놓친 경우를 대비해, 실제 계산된 스타일(getComputedStyle)을
+// 한 번 더 검사해서 여전히 미지원 색 함수가 남아있으면 캔버스로 계산한 값으로 강제 덮어쓴다.
+function _forceResolveComputedColors(rootEl){
+  try{
+    if(!rootEl) return;
+    const doc = rootEl.ownerDocument;
+    const win = doc && doc.defaultView;
+    if(!win || typeof win.getComputedStyle!=='function') return;
+    const RISKY=/color-mix\(|(?:^|[^-\w])color\(|oklch\(|oklab\(|(?:^|[^-\w])lab\(|(?:^|[^-\w])lch\(|hwb\(/i;
+    const SIMPLE_PROPS=['color','backgroundColor','borderTopColor','borderRightColor','borderBottomColor','borderLeftColor','outlineColor','textDecorationColor','caretColor','columnRuleColor'];
+    const TEXT_PROPS=['boxShadow','backgroundImage','borderImage'];
+    const walk=(el)=>{
+      if(!el || el.nodeType!==1) return;
+      let cs=null;
+      try{ cs=win.getComputedStyle(el); }catch(e){}
+      if(cs){
+        SIMPLE_PROPS.forEach((p)=>{
+          try{
+            const v=cs[p];
+            if(v && RISKY.test(v)) el.style[p]=_tryResolveColorViaCanvas(v)||_scrubUnsupportedColors(v);
+          }catch(e){}
+        });
+        TEXT_PROPS.forEach((p)=>{
+          try{
+            const v=cs[p];
+            if(v && RISKY.test(v)) el.style[p]=_scrubUnsupportedColors(v);
+          }catch(e){}
+        });
+      }
+      try{
+        if(el.namespaceURI==='http://www.w3.org/2000/svg'){
+          ['fill','stroke'].forEach((attr)=>{
+            const v=el.getAttribute && el.getAttribute(attr);
+            if(v && RISKY.test(v)) el.setAttribute(attr, _scrubUnsupportedColors(v));
+          });
+        }
+      }catch(e){}
+      const kids=el.children;
+      for(let i=0;i<(kids?kids.length:0);i++) walk(kids[i]);
+    };
+    walk(rootEl);
+  }catch(e){}
+}
+/* html2canvas로 만들 캔버스가 브라우저의 최대 캔버스 크기를 넘지 않도록 scale을
+   안전한 값으로 낮춘다. 브라우저마다 한도가 달라(Firefox는 한 변 32767px 또는
+   전체 픽셀 수 한도, Safari 구형 기기는 한 변 4096px, Chrome도 메모리 한도가 있음)
+   보수적인 기준값으로 계산한다. 브리핑 '전체' 모드처럼 콘텐츠가 길어질수록 실제
+   렌더링 높이가 커지는 경우, 고정 scale(2배)을 그대로 곱하면 한 변 또는 전체 픽셀 수가
+   한도를 넘어 "Canvas exceeds max size" 오류가 발생했던 문제를 막기 위함이다. */
+var CAPTURE_MAX_DIM = 8000;       // 캔버스 한 변 최대 픽셀 (보수적 값)
+var CAPTURE_MAX_AREA = 32000000;  // 캔버스 전체 최대 픽셀 수 (보수적 값, 약 8000x4000)
+function _safeExportScale(w, h, desiredScale){
+  w = Math.max(1, w||1); h = Math.max(1, h||1);
+  desiredScale = desiredScale || 1;
+  let scale = desiredScale;
+  if(w*scale > CAPTURE_MAX_DIM) scale = Math.min(scale, CAPTURE_MAX_DIM/w);
+  if(h*scale > CAPTURE_MAX_DIM) scale = Math.min(scale, CAPTURE_MAX_DIM/h);
+  if((w*scale)*(h*scale) > CAPTURE_MAX_AREA) scale = Math.min(scale, Math.sqrt(CAPTURE_MAX_AREA/(w*h)));
+  if(!isFinite(scale) || scale<=0) scale = 0.1;
+  return Math.max(0.1, Math.min(desiredScale, scale));
+}
+/* '전체' 모드: 별도 템플릿을 새로 그리지 않고, 지금 화면에 실제로 렌더링된 브리핑탭
+   전체(#b2w2-export-root)를 그대로 캡처한다 — 통계탭 스트리머 리포트의 '기본' 스타일과
+   동일한 방식(필터/버튼 등 .no-export 요소만 제거하고 나머지는 화면 그대로). */
+async function _fullCaptureBase(){
+  const el = document.getElementById('b2w2-export-root');
+  if(!el) throw new Error('브리핑 화면을 찾을 수 없습니다. 브리핑 탭을 연 상태에서 다시 시도해주세요.');
+  try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+  await _imgToDataUrls(el);
+  try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
+  try{ _sanitizeUnsupportedCssFunctions(el); }catch(e){}
+  let bg = '#f1f5f9';
+  try{
+    const cs = getComputedStyle(el);
+    if(cs.backgroundColor && cs.backgroundColor!=='rgba(0, 0, 0, 0)' && cs.backgroundColor!=='transparent') bg = cs.backgroundColor;
+  }catch(e){}
+  let scale = 2;
+  try{
+    const rectW = Math.max(el.scrollWidth||0, el.offsetWidth||0);
+    const rectH = Math.max(el.scrollHeight||0, el.offsetHeight||0);
+    scale = _safeExportScale(rectW, rectH, 2);
+  }catch(e){}
+  return await html2canvas(el, {
+    backgroundColor:bg, scale:scale, useCORS:true, allowTaint:false, logging:false, imageTimeout:20000,
+    onclone:(clonedDoc)=>{
+      try{ clonedDoc.querySelectorAll('.no-export').forEach(n=>n.remove()); }catch(e){}
+      _sanitizeUnsupportedColorsInDoc(clonedDoc);
+      try{ _forceResolveComputedColors(clonedDoc.getElementById('b2w2-export-root')); }catch(e){}
+    }
+  });
+}
+
 async function _briefGenerateCanvas(mode, meta){
   const ctx = window._b2BriefingExportCtx;
   if(!ctx) throw new Error('브리핑 데이터를 아직 불러오지 못했습니다. 브리핑 화면을 한 번 연 뒤 다시 시도해주세요.');
+  if(mode === 'full') return await _fullCaptureBase();
   const cfg = _briefModeConfig(mode);
   const holder=document.createElement('div');
   // html2canvas는 뷰포트 밖(left:-99999px)에 있는 콘텐츠를 렌더 윈도우 밖으로 취급해
@@ -887,9 +1094,14 @@ async function _briefGenerateCanvas(mode, meta){
     _sanitizeUnsupportedCssFunctions(sheet);
     const w=cfg.width;
     const h=cfg.fixedHeight || Math.max(1, Math.ceil(sheet.scrollHeight||0));
+    const scale = _safeExportScale(w, h, cfg.scale);
     const canvas=await html2canvas(sheet,{
-      backgroundColor:cfg.bg, scale:cfg.scale, useCORS:true, allowTaint:false, logging:false,
-      imageTimeout:20000, width:w, height:h, windowWidth:w+80, windowHeight:h+80, scrollX:0, scrollY:0
+      backgroundColor:cfg.bg, scale:scale, useCORS:true, allowTaint:false, logging:false,
+      imageTimeout:20000, width:w, height:h, windowWidth:w+80, windowHeight:h+80, scrollX:0, scrollY:0,
+      onclone:(clonedDoc)=>{
+        _sanitizeUnsupportedColorsInDoc(clonedDoc);
+        try{ _forceResolveComputedColors(clonedDoc.querySelector('.'+cfg.sheetClass)); }catch(e){}
+      }
     });
     return canvas;
   } finally {
@@ -913,16 +1125,16 @@ function _briefInjectPreviewCss(){
   s.textContent = `
     .brief-img-preview-overlay{position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
     .brief-img-preview-modal{background:var(--white);border-radius:20px;box-shadow:var(--sh3);max-width:min(720px,92vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
-    .brief-img-preview-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:900;color:var(--text1)}
+    .brief-img-preview-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:900;color:var(--text1);flex-shrink:0}
     .brief-img-preview-x{border:none;background:transparent;font-size:15px;cursor:pointer;color:var(--text2);padding:4px 8px;border-radius:8px}
     .brief-img-preview-x:hover{background:var(--surface);color:var(--text1)}
-    .brief-mode-row{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:wrap}
+    .brief-mode-row{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:wrap;flex-shrink:0}
     .brief-mode-btn{border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:.12s}
     .brief-mode-btn:hover{border-color:var(--blue)}
     .brief-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
-    .brief-img-preview-body{overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;position:relative}
+    .brief-img-preview-body{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;position:relative}
     .brief-img-preview-body img{max-width:100%;height:auto;border-radius:10px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1));display:block;transition:opacity .15s}
-    .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+    .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
     .brief-loading .brief-img-preview-body img{opacity:.35}
     .brief-loading .brief-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1))}
     .brief-btn{border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer}
@@ -982,7 +1194,7 @@ async function _briefSwitchMode(mode){
 async function _briefConfirmSaveImage(){
   const canvas = window._briefPendingCanvas;
   const meta = window._briefPendingMeta || _getBriefingExportMeta();
-  const mode = window._briefLastMode || 'newspaper';
+  const mode = window._briefLastMode || 'full';
   _briefCloseImagePreview();
   if(!canvas) return;
   try{
@@ -998,14 +1210,14 @@ async function _briefConfirmSaveImage(){
 // 브리핑 저장 — 화면을 그대로 캡처하지 않고(그리드 레이아웃이 깨지거나 헤더만
 // 캡처되는 등 html2canvas 호환성 문제가 있었음), 별도 레이아웃으로 렌더링해서
 // 안정적으로 캡처한다. 저장 직전에 항상 미리보기 모달을 띄워, 모달 안에서
-// 신문기사/카드형/포스터/SNS 정사각형/미니멀 중 원하는 모드로 바꿔보고 다운로드할 수 있다.
+// 전체/신문기사/포스터/미니멀 중 원하는 모드로 바꿔보고 다운로드할 수 있다.
 async function captureBriefingArticle(){
   try{
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     if(typeof html2canvas!=='function') throw new Error('html2canvas를 불러오지 못했습니다.');
     const meta = _getBriefingExportMeta();
-    const mode = window._briefLastMode || 'newspaper';
+    const mode = window._briefLastMode || 'full';
     const canvas = await _briefGenerateCanvas(mode, meta);
     window._briefPendingCanvas = canvas;
     window._briefPendingMeta = meta;

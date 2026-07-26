@@ -339,8 +339,20 @@ function pastePreview() {
       return;
     }
 
+    // ── [N세트/N SET] (팀A 승 X : Y 패 팀B) 헤더 처리 ──
+    // 예: "[1SET] (수술대 승 3 : 1 패 신세계)", "[2세트] (수술대 승 3 : 0 패 신세계)"
+    const _setHeaderM2 = trimmed.match(/^\[?\s*(\d+)\s*(?:세트|셋|set)\s*\]?\s*\(?\s*(.+?)\s*승\s*\d+\s*[：:]\s*\d+\s*패\s*(.+?)\s*\)?\s*$/i);
+    if (_setHeaderM2) {
+      currentSet = parseInt(_setHeaderM2[1]);
+      const _hWin = _setHeaderM2[2].trim();
+      const _hLose = _setHeaderM2[3].trim();
+      if (_hWin && !window._pasteForceTeamA) window._pasteForceTeamA = _hWin;
+      if (_hLose && !window._pasteForceTeamB) window._pasteForceTeamB = _hLose;
+      return;
+    }
+
     // ── [N세트] 팀A(score) : 팀B(score) 헤더 처리 ──
-    const _setHeaderM = trimmed.match(/^\[(\d+)\s*(?:세트|셋)\]\s*(.+?)\s*[：:]\s*(.+)$/);
+    const _setHeaderM = trimmed.match(/^\[(\d+)\s*(?:세트|셋|set)\]\s*(.+?)\s*[：:]\s*(.+)$/i);
     if (_setHeaderM) {
       currentSet = parseInt(_setHeaderM[1]);
       const _hTeamA = _setHeaderM[2].replace(/\s*\(\d+\)\s*$/, '').trim();
