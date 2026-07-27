@@ -1131,11 +1131,17 @@ async function _basicCaptureBase(){
   try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
   try{ await _waitForFonts(2000); }catch(e){}
   try{ _sanitizeUnsupportedCssFunctions(el); }catch(e){}
-  // '기본' 저장본은 카드들이 다 흰색/거의 흰색 계열이라, 카드 사이 그리드 gap이나
-  // 모서리 서브픽셀 반올림 틈에서 무슨 색이 비치든 흰색이면 눈에 띄지 않는다.
-  // 페이지의 실제 배경색(회색 계열)을 따라가려던 이전 방식은 그 회색 자체가 카드와
-  // 대비돼 보인다는 피드백이 있어, 그냥 흰색으로 고정한다.
-  const bg = '#ffffff';
+  // '기본' 저장본 배경색: 예전엔 무조건 흰색으로 고정했는데, 다크모드(body.dark)나
+  // 어두운 브리핑 테마(네온/이스포츠 등)에서는 카드 자체는 어두운 톤 그대로 나오면서
+  // 카드 사이 여백/전체 배경만 흰색으로 붕 떠 보이는 문제가 있었다.
+  // 현재 적용된 테마의 --b2w-paper 토큰(라이트 테마=밝은 색, 다크 테마=어두운 색)을
+  // 그대로 읽어와서 배경으로 쓰면, 화면에서 보던 톤과 저장 이미지 톤이 항상 일치한다.
+  const wrapEl = (el.closest ? el.closest('.b2w2-wrap') : null) || el;
+  let bg = '#ffffff';
+  try{
+    const paperVar = getComputedStyle(wrapEl).getPropertyValue('--b2w-paper').trim();
+    if(paperVar) bg = _tryResolveColorViaCanvas(paperVar) || paperVar;
+  }catch(e){}
   // 브리핑 화면(.b2w2-wrap)은 반응형 레이아웃이라, 사용자가 좁은 창(모바일 폭 등)에서
   // 저장 버튼을 눌러도 그 화면 그대로 캡처하면 글자와 카드가 모두 작게 찌그러진 채로
   // 저장됨. '기본' 모드는 항상 데스크톱 디자인 폭(1320px)으로 강제 렌더링해서
@@ -1152,20 +1158,30 @@ async function _basicCaptureBase(){
         card.style.setProperty('--b2mvp-fx-op','0');
       });
     }catch(e){}
-    // 카드 모서리의 장식용 원형 블롭(::before)과 box-shadow가 overflow:hidden과 함께 쓰이는데,
+    // 카드 모서리의 장식용 원형 블롭과 box-shadow가 overflow:hidden과 함께 쓰이는데,
     // html2canvas가 이 조합을 완벽히 클리핑하지 못해 카드 모서리/하단에 회색 얼룩이 찍히는
     // 경우가 있었다. '기본' 저장본에서는 순수 장식 요소이므로 꺼서 깨끗하게 캡처되도록 한다.
-    // (실제 회색 원인은 캔버스 바탕색이 흰색이 아니었던 것 — 아래 background:#fff로 해결.
-    //  카드 상단 포인트 컬러 바(::after)는 원인이 아니었고 화면과 동일하게 살려둔다.)
-    // ::before를 꺼버렸으면 더 이상 카드 밖으로 삐져나갈 장식 요소가 없으므로,
-    // 애초에 그걸 가두려고 걸어뒀던 overflow:hidden도 같이 풀어준다 — border-radius와
-    // overflow:hidden 조합 자체가 html2canvas에서 모서리에 회색 얼룩을 남기는 경우가 있었다.
+    // (실제 회색 원인은 캔버스 바탕색이 배경 토큰과 안 맞았던 것 — 위에서 --b2w-paper로 해결.
+    //  카드 상단 포인트 컬러 바(.b2w2-highlight-card::after)는 원인이 아니었고 화면과 동일하게 살려둔다.)
+    // 장식용 원형 블롭은 카드마다 ::before/::after로 위치가 제각각이라(하이라이트 카드는
+    // ::before, KPI 카드는 ::after) 둘 다 꺼야 한다 — 하나만 끄면 overflow:visible 상태에서
+    // 나머지 하나가 카드 밖(그리드 간격/이웃 카드 위)으로 그대로 새어나온다.
+    // MVP 카드의 ::after(호버 시 스윽 지나가는 대각선 샤인 스윕)는 정지 상태에서도 카드
+    // 왼쪽 밖으로 translateX(-130%)만큼 밀려나 있어 캡처에 불필요하므로 함께 끈다.
+    // (MVP 카드는 배경 프로필 사진을 카드 모양대로 잘라내는 데 overflow:hidden이 꼭 필요해서
+    //  overflow는 그대로 유지하고, ::after만 display:none으로 제거한다.)
+    // 하이라이트/KPI/일반 카드는 ::before·::after를 꺼버려 더 이상 카드 밖으로 삐져나갈
+    // 장식 요소가 없으므로, 애초에 그걸 가두려고 걸어뒀던 overflow:hidden도 같이 풀어준다 —
+    // border-radius와 overflow:hidden 조합 자체가 html2canvas에서 모서리에 회색 얼룩을
+    // 남기는 경우가 있었다.
     try{
       const fixStyle = clonedDoc.createElement('style');
       fixStyle.textContent = `
-        .b2w2-highlight-card::before, .b2w2-kpi-card::before, .b2w2-card::before, .b2w2-mvp-card::before { display:none !important; }
+        .b2w2-highlight-card::before, .b2w2-card::before, .b2w2-mvp-card::before,
+        .b2w2-kpi-card::before, .b2w2-kpi-card::after, .b2w2-mvp-card::after { display:none !important; }
         .b2w2-highlight-card, .b2w2-kpi-card, .b2w2-card { box-shadow:none !important; border:none !important; overflow:visible !important; }
-        #b2w2-basic-export-root, .b2w2-kpi-grid, .b2w2-feature-row, .b2w2-highlight-grid { background:#ffffff !important; }
+        .b2w2-mvp-card { box-shadow:none !important; border:none !important; }
+        #b2w2-basic-export-root, .b2w2-kpi-grid, .b2w2-feature-row, .b2w2-highlight-grid { background:${bg} !important; }
       `;
       clonedDoc.head.appendChild(fixStyle);
     }catch(e){}
@@ -1178,14 +1194,38 @@ async function _basicCaptureBase(){
     backgroundColor:bg, useCORS:true, allowTaint:false, logging:false, imageTimeout:20000,
     windowWidth: BASIC_CAPTURE_WIDTH + 80, scrollX:0, scrollY:0, onclone
   };
-  // 1차: 데스크톱 폭 기준 실제 렌더링 크기를 가늠하기 위한 scale:1 측정용 캡처
-  const probeCanvas = await html2canvas(el, { ...baseOpts, scale:1 });
-  const naturalW = probeCanvas.width || BASIC_CAPTURE_WIDTH;
-  const naturalH = probeCanvas.height || 1;
+  // 안전 배율(scale) 계산용 예상 크기를 구한다.
+  // 예전엔 scale:1로 html2canvas를 한 번 통째로 실행해서(=전체 페이지를 픽셀 단위로 완전히
+  // 한 번 그려본 뒤 크기만 재고 버림) 이 값을 얻었는데, 대학이 많아 콘텐츠가 길수록 이
+  // "측정용" 렌더링 자체가 무거워 저장/모드 전환이 느렸다. html2canvas를 실행하지 않고
+  // DOM을 화면 밖에 실제 목표 폭(1320px)으로 잠깐 복제해 브라우저 레이아웃 계산만 시켜서
+  // (래스터라이즈 없이) scrollHeight를 재는 방식으로 바꿔, 무거운 렌더링 없이 크기를 추정한다.
+  const { naturalW, naturalH } = await _measureBasicCaptureSize(wrapEl, el, BASIC_CAPTURE_WIDTH);
   const scale = _safeExportScale(naturalW, naturalH, 4);
-  if(scale <= 1.02) return probeCanvas;
-  // 2차: 안전한 배율로 최종 고해상도 캡처
   return await html2canvas(el, { ...baseOpts, scale });
+}
+// #b2w2-basic-export-root(또는 wrap 전체)를 실제로 캔버스에 그리지 않고, 목표 폭(targetWidth)으로
+// 화면 밖에 잠깐 복제해서 레이아웃만 계산한 뒤 크기를 재고 치운다. html2canvas 전체 래스터라이즈보다
+// 훨씬 가벼워서, 이 측정 실패 시에도 저장 자체는 계속 진행되도록 안전한 기본값으로 폴백한다.
+async function _measureBasicCaptureSize(wrapEl, el, targetWidth){
+  const fallback = { naturalW: targetWidth, naturalH: Math.max(1, el.scrollHeight || 2000) };
+  try{
+    const holder = document.createElement('div');
+    holder.style.cssText = `position:fixed;left:-99999px;top:0;width:${targetWidth}px;visibility:hidden;pointer-events:none;`;
+    const clone = wrapEl.cloneNode(true);
+    clone.style.width = targetWidth + 'px';
+    clone.style.maxWidth = 'none';
+    holder.appendChild(clone);
+    document.body.appendChild(holder);
+    let target = clone;
+    if(wrapEl !== el && el.id){
+      target = clone.querySelector('#' + el.id) || clone;
+    }
+    const h = target.scrollHeight || fallback.naturalH;
+    const w = target.scrollWidth || targetWidth;
+    document.body.removeChild(holder);
+    return { naturalW: w, naturalH: h };
+  }catch(e){ return fallback; }
 }
 
 async function _briefGenerateCanvas(mode, meta){
@@ -1249,6 +1289,14 @@ function _briefInjectPreviewCss(){
     .brief-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
     .brief-img-preview-body{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--surface);display:flex;justify-content:center;align-items:flex-start;position:relative}
     .brief-img-preview-body img{width:100%;max-width:100%;height:auto;flex-shrink:0;display:block;transition:opacity .15s}
+    /* '기본' 모드처럼 페이지 전체를 그대로 캡처하면 이미지가 세로로 매우 길어져,
+       기본값(width:100%)으로는 계속 스크롤해야 전체를 확인할 수 있었다.
+       기본은 "화면에 맞춰 축소해서 한눈에 보기"로 하고, 원본 크기로 보고 싶을 때만
+       버튼으로 전환하도록 분리한다. */
+    .brief-img-preview-body.fit-mode{align-items:center}
+    .brief-img-preview-body.fit-mode img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain}
+    .brief-fit-toggle{border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;margin-left:auto}
+    .brief-fit-toggle:hover{border-color:var(--blue)}
     .brief-img-preview-ftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
     .brief-loading .brief-img-preview-body img{opacity:.35}
     .brief-loading .brief-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2,0 4px 14px rgba(0,0,0,.1))}
@@ -1276,8 +1324,9 @@ function _briefShowImagePreview(canvas, mode, meta){
       </div>
       <div class="brief-mode-row">
         ${BRIEF_MODES.map(([k,lbl])=>`<button type="button" class="brief-mode-btn ${k===mode?'on':''}" data-mode="${k}" onclick="_briefSwitchMode('${k}')">${lbl}</button>`).join('')}
+        <button type="button" class="brief-fit-toggle" onclick="_briefTogglePreviewFit()">🔍 원본 크기로 보기</button>
       </div>
-      <div class="brief-img-preview-body"><img src="${dataUrl}" alt="브리핑 미리보기"></div>
+      <div class="brief-img-preview-body fit-mode"><img src="${dataUrl}" alt="브리핑 미리보기"></div>
       <div class="brief-img-preview-ftr">
         <button type="button" class="brief-btn brief-btn-ghost" onclick="_briefCloseImagePreview()">취소</button>
         <button type="button" class="brief-btn brief-btn-primary" onclick="_briefConfirmSaveImage()">📥 다운로드</button>
@@ -1289,6 +1338,16 @@ function _briefShowImagePreview(canvas, mode, meta){
 function _briefCloseImagePreview(){
   const el = document.getElementById('brief-img-preview-overlay');
   if(el) el.remove();
+}
+// 화면맞춤(축소해서 한번에 보기) ↔ 원본 크기(가로 100%, 세로 스크롤) 전환.
+// '기본' 모드처럼 세로로 매우 긴 이미지를 처음부터 원본 크기로 띄우면 계속 스크롤해야
+// 전체를 확인할 수 있어, 기본은 화면맞춤으로 시작하고 필요할 때만 원본 크기로 바꾼다.
+function _briefTogglePreviewFit(){
+  const body = document.querySelector('#brief-img-preview-overlay .brief-img-preview-body');
+  const btn = document.querySelector('#brief-img-preview-overlay .brief-fit-toggle');
+  if(!body) return;
+  const nowFit = body.classList.toggle('fit-mode');
+  if(btn) btn.textContent = nowFit ? '🔍 원본 크기로 보기' : '🗗 화면에 맞추기';
 }
 async function _briefSwitchMode(mode){
   if(window._briefSwitchBusy) return;
@@ -1387,4 +1446,5 @@ try{
   window._briefSwitchMode = _briefSwitchMode;
   window._briefCloseImagePreview = _briefCloseImagePreview;
   window._briefConfirmSaveImage = _briefConfirmSaveImage;
+  window._briefTogglePreviewFit = _briefTogglePreviewFit;
 }catch(e){}
