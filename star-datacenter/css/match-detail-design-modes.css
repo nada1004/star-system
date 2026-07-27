@@ -828,147 +828,179 @@
 ══════════════════════════════════════════════════════════ */
 
 /* ──────────────────────────────────────────────────────────
-   1. CLEAN — 완전히 새로 디자인한 프리미엄 카드형
-      (기존 "컴팩트형"은 삭제되었습니다. 넉넉한 여백 + 팀 컬러 포인트 바 +
-       라운드 카드 + 은은한 그림자로 전체를 새로 디자인)
+   1. CLEAN — 미니멀 플랫 리스트형 (v2 전면 재설계)
+      기존 "카드+그림자" 문법을 완전히 걷어내고, 헤어라인 구분선과
+      여백만으로 구성한 텍스트 중심 레이아웃. 승자는 컬러 도트+굵은
+      글씨로, 패자는 흑백 사진+옅은 텍스트로만 구분합니다.
+      (기본형과는 배경/테두리/그림자를 전부 사용하지 않는다는 점에서
+       근본적으로 다른 톤입니다.)
 ──────────────────────────────────────────────────────────── */
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-set-head{
-  margin:14px 0 8px !important;
-  padding:6px 4px !important;
+  margin:20px 0 2px !important;
+  padding:0 2px 9px !important;
   border-radius:0 !important;
   box-shadow:none !important;
   background:transparent !important;
   border:none !important;
-  border-bottom:2px solid rgba(15,23,42,.08) !important;
-  font-size:11px !important; font-weight:900 !important; letter-spacing:.4px;
-  color:#64748b !important;
+  border-bottom:1px solid rgba(15,23,42,.1) !important;
+  font-size:10px !important; font-weight:800 !important; letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:#94a3b8 !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game:first-of-type .cmd-set-head{
   margin-top:0 !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game{
-  padding:5px 0;
+  padding:0 !important;
+  border-bottom:1px solid rgba(15,23,42,.055);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game:last-of-type{
+  border-bottom:none;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game-row{
-  gap:8px;
-  align-items:stretch;
-  border-radius:18px;
-  background:#fff;
-  box-shadow:0 6px 18px rgba(15,23,42,.055);
-  border:1px solid rgba(148,163,184,.14);
-  padding:4px;
-  transition:box-shadow .18s ease, transform .18s ease;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game-row:hover{
-  box-shadow:0 10px 26px rgba(15,23,42,.09);
+  gap:0;
+  align-items:center;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border:none !important;
+  padding:13px 2px;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player{
   position:relative;
   min-width:0;
-  padding:11px 14px 11px 18px !important;
-  border-radius:14px !important;
-  background:linear-gradient(180deg,#fff,#fbfdff) !important;
-  border:1px solid rgba(148,163,184,.16) !important;
+  padding:0 8px !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  border:none !important;
   box-shadow:none !important;
-  gap:11px !important;
-  overflow:hidden;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player::before{
-  content:'';
-  position:absolute; left:0; top:10%; bottom:10%; width:4px; border-radius:0 4px 4px 0;
-  background:var(--cmd-col,#2563eb);
-  opacity:.7;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right{
-  padding:11px 18px 11px 14px !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right::before{
-  left:auto; right:0; border-radius:4px 0 0 4px;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win{
-  background:linear-gradient(180deg,color-mix(in srgb, var(--cmd-col,#2563eb) 8%, #fff),color-mix(in srgb, var(--cmd-col,#2563eb) 3%, #fff)) !important;
-  border-color:color-mix(in srgb, var(--cmd-col,#2563eb) 32%, rgba(148,163,184,.2)) !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win::before{
-  opacity:1;
-  box-shadow:0 0 10px color-mix(in srgb, var(--cmd-col,#2563eb) 60%, transparent);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-lose{
-  opacity:.82;
+  gap:10px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player .cmd-photo{
-  width:38px !important; height:38px !important; margin:0 !important; transform:none !important;
+  width:32px !important; height:32px !important; margin:0 !important; transform:none !important;
   flex-shrink:0;
   border-radius:50% !important;
-  box-shadow:0 3px 10px rgba(15,23,42,.12);
+  box-shadow:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player .cmd-photo *{
+  box-shadow:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-lose{
+  opacity:.62;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-lose .cmd-photo{
+  filter:grayscale(1) saturate(0);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player-name{
-  font-size:13px !important; font-weight:800 !important; gap:6px !important; min-width:0;
+  font-size:12.5px !important; font-weight:700 !important; gap:6px !important; min-width:0;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
+  font-weight:900 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name__txt{
+  position:relative;
+  padding-left:12px;
+  color:#0f172a !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name__txt::before{
+  content:'';
+  position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:6px; height:6px; border-radius:50%;
+  background:var(--cmd-col,#2563eb);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--cmd-col,#2563eb) 16%, transparent);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right.is-win .cmd-player-name__txt{
+  padding-left:0; padding-right:12px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right.is-win .cmd-player-name__txt::before{
+  left:auto; right:0;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-midbox{
-  width:56px !important; flex-shrink:0; border-radius:14px !important; padding:6px 4px !important;
-  background:linear-gradient(180deg,#f8fafc,#eef2f7) !important;
-  border:1px solid rgba(148,163,184,.16) !important; box-shadow:none !important;
+  width:42px !important; flex-shrink:0; border-radius:0 !important; padding:0 4px !important;
+  background:transparent !important;
+  border:none !important; box-shadow:none !important;
+  border-left:1px solid rgba(15,23,42,.07) !important;
+  border-right:1px solid rgba(15,23,42,.07) !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-gno{
-  color:#334155 !important; font-weight:900 !important;
+  color:#94a3b8 !important; font-weight:800 !important; font-size:9.5px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-win{
-  position:static !important; display:inline-flex; align-items:center; gap:3px;
-  margin-left:8px; transform:none; flex-shrink:0;
-  padding:2px 8px 2px 6px !important; border-radius:999px !important;
-  box-shadow:0 4px 10px color-mix(in srgb, var(--cmd-col,#2563eb) 35%, transparent);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-win::before{
-  content:'✓';
-  font-size:9px;
+  position:absolute !important;
+  background:transparent !important; color:var(--cmd-col,#2563eb) !important;
+  box-shadow:none !important; padding:0 !important;
+  font-size:9px !important; font-weight:950 !important; letter-spacing:.7px;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-single-summary,
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-single-summary__row{
-  padding:14px 16px !important; border-radius:18px !important;
-  box-shadow:0 6px 18px rgba(15,23,42,.055) !important;
-  border:1px solid rgba(148,163,184,.14) !important;
+  padding:13px 2px !important; border-radius:0 !important;
+  box-shadow:none !important;
+  border:none !important;
+  border-top:1px solid rgba(15,23,42,.09) !important;
+  background:transparent !important;
 }
 
 /* ──────────────────────────────────────────────────────────
-   2. FOCUS — 승자 스포트라이트 (비대칭: 승자 확대·전진, 패자 축소·후퇴)
+   2. FOCUS — 승자 스포트라이트 (v2 전면 재설계)
+      transform 확대만 쓰던 기존 방식과 달리, 실제 flex 비율(폭) 자체를
+      승자/패자에 다르게 배분해 구조적으로 비대칭을 만듭니다. 승자는
+      폭이 넓어지고 떠오르며 왕관 리본이 붙고, 패자는 폭이 줄고
+      그레이스케일로 가라앉습니다.
 ──────────────────────────────────────────────────────────── */
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-game{
-  padding-top:10px !important;
+  padding:13px 0 !important;
   overflow:visible;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-game-row{
-  align-items:center;
+  align-items:stretch;
+  gap:6px;
   overflow:visible;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player{
-  transition:transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease, opacity .22s ease;
+  flex:0.8 1 0% !important;
+  transition:flex-grow .25s cubic-bezier(.2,.8,.2,1), transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, opacity .25s ease, filter .25s ease;
   position:relative;
   overflow:visible;
+  border-radius:16px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win{
-  transform:scale(1.06);
-  box-shadow:0 16px 30px color-mix(in srgb, var(--cmd-col,#2563eb) 24%, rgba(15,23,42,.1));
-  z-index:2;
+  flex:1.4 1 0% !important;
+  transform:translateY(-4px) !important;
+  box-shadow:0 18px 34px color-mix(in srgb, var(--cmd-col,#2563eb) 26%, rgba(15,23,42,.12)) !important;
   border-width:2px !important;
+  border-color:var(--cmd-col,#2563eb) !important;
+  padding:14px !important;
+  z-index:2;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-lose{
-  transform:scale(.94);
-  opacity:.72;
+  transform:translateY(3px) scale(.94) !important;
+  opacity:.5;
+  filter:grayscale(.75) saturate(.6);
+  box-shadow:none !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
-  transform:scale(1.1) !important;
+  width:46px !important; height:46px !important;
+  box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--cmd-col,#2563eb), 0 10px 20px rgba(15,23,42,.2) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-lose .cmd-photo{
+  width:28px !important; height:28px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
+  font-size:14.5px !important; font-weight:950 !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win::before{
-  content:'WIN';
-  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
-  font-size:9px; font-weight:950; letter-spacing:.6px; color:#fff;
-  background:var(--cmd-col,#2563eb); padding:2px 9px; border-radius:999px;
-  box-shadow:0 4px 10px rgba(0,0,0,.2); z-index:3;
+  content:'👑 WIN';
+  position:absolute; top:-11px; left:50%; transform:translateX(-50%);
+  font-size:9px; font-weight:950; letter-spacing:.4px; color:#fff;
+  background:var(--cmd-col,#2563eb); padding:3px 11px; border-radius:999px;
+  box-shadow:0 4px 10px rgba(0,0,0,.22); z-index:3;
   white-space:nowrap;
 }
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-win{
+  display:none !important;
+}
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-midbox{
-  width:52px; border-radius:12px; opacity:.9;
+  width:44px; flex:0 0 auto; border-radius:12px; opacity:.85; align-self:center;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-single-summary__row{
   padding:16px 18px; border-radius:20px;
@@ -1026,18 +1058,13 @@
 ──────────────────────────────────────────────────────────── */
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-set-head{
   position:relative;
-  padding:7px 16px 7px 32px !important;
+  padding:7px 16px !important;
   border-radius:999px !important;
   font-size:11px !important; font-weight:900 !important; letter-spacing:.4px;
   color:#475569 !important;
   background:linear-gradient(180deg,#fff,#f8fafc) !important;
   border:1px solid rgba(148,163,184,.22) !important;
   box-shadow:0 8px 18px rgba(15,23,42,.06);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-set-head::before{
-  content:'🏆';
-  position:absolute; left:12px; top:50%; transform:translateY(-50%);
-  font-size:12px; line-height:1;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-game{
   padding:12px 0;
