@@ -61,7 +61,7 @@ function _renderCfgPdSection(){
       <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
     </div>`;
   }).join('');
-  const _validPdLayoutModes=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const _validPdLayoutModes=['default','board','tabs','report','flip','story'];
   const dm = _validPdDesignModes.includes(s.design_mode) ? s.design_mode : 'classic';
   const lm = _validPdLayoutModes.includes(s.layout_mode) ? s.layout_mode : 'default';
   const dmCards = [
@@ -96,26 +96,23 @@ function _renderCfgPdSection(){
     </button>`).join('');
   const lmCards = [
     ['default','기본형','지금 구조 그대로 안정적인 기본 배치','linear-gradient(180deg,#ffffff 0 38%,#eef2ff 38% 100%)','grid-template-columns:36px 1fr 42px;'],
-    ['photocard','포토카드형','프로필/비주얼 강조, 카드 감성 강화','linear-gradient(180deg,#fdf2f8 0 55%,#ffffff 55% 100%)','grid-template-columns:1fr;'],
-    ['showcase','쇼케이스형','이름과 핵심 정보 중심의 넓은 전개형','linear-gradient(180deg,#eff6ff 0 48%,#ffffff 48% 100%)','grid-template-columns:52px 1fr;'],
-    ['stats','통계강조형','상단에서 기록과 지표를 먼저 보여주는 타입','linear-gradient(180deg,#ecfeff 0 40%,#ffffff 40% 100%)','grid-template-columns:1fr 1fr;'],
-    ['split','스플릿형','프로필과 요약 정보를 좌우 분할해서 강조','linear-gradient(180deg,#eef2ff 0 46%,#ffffff 46% 100%)','grid-template-columns:22px 1fr;'],
-    ['banner','배너형','상단을 슬림하게 정리한 방송 배너 타입','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:20px 1fr 30px;'],
-    ['poster','포스터형','큰 배너+포스터 느낌으로 완전 다른 상단','linear-gradient(180deg,#fff7ed 0 48%,#ffffff 48% 100%)','grid-template-columns:1fr 34px 1fr;'],
-    ['timeline','타임라인형','최근 경기 기록을 메인 스트림으로 배치','linear-gradient(180deg,#ecfeff 0 44%,#ffffff 44% 100%)','grid-template-columns:26px 1fr 18px;'],
-    ['board','보드형','상단 KPI 보드 + 카드 그리드 중심','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:1fr 1fr;']
+    ['board','보드형','컬러 KPI 타일 대시보드로 지표를 한눈에 스캔','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:1fr 1fr;'],
+    ['tabs','탭 전환형','스크롤 대신 개요/전적/최근경기/기타 탭으로 전환','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:1fr 1fr 1fr;'],
+    ['report','보고서형','목차 사이드바 + 번호 매긴 문서형 섹션, 격식 있는 느낌','linear-gradient(180deg,#f8fafc 0 34%,#ffffff 34% 100%)','grid-template-columns:1fr;'],
+    ['flip','플립카드형','앞면은 요약만, 버튼 누르면 카드가 뒤집히며 상세 공개','linear-gradient(180deg,#eef2ff 0 50%,#ffffff 50% 100%)','grid-template-columns:1fr;'],
+    ['story','스토리형','인스타 스토리처럼 세로 슬라이드+진행바로 넘겨보기','linear-gradient(180deg,#0f172a 0 60%,#1e293b 60% 100%)','grid-template-columns:1fr;']
   ].map(([key,label,desc,bg,grid])=>`
     <button class="btn btn-xs ${lm===key?'btn-b':'btn-w'}" onclick="_setPdLayoutMode('${key}')"
       style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${lm===key?'2px':'1px'}">
       <span style="display:block;height:56px;background:${bg};padding:8px">
-        <span style="display:grid;${key==='showcase'?'grid-template-columns:24px 1fr;grid-template-rows:auto auto;':'grid-template-columns:auto;'}gap:5px;height:100%">
+        <span style="display:grid;grid-template-columns:auto;gap:5px;height:100%">
           <span style="display:grid;${grid}gap:4px;align-items:center">
-            <span style="width:${key==='photocard'?'100%':'24px'};height:${key==='photocard'?'24px':'24px'};border-radius:${key==='stats'?'8px':'999px'};background:rgba(79,70,229,.26);display:block"></span>
+            <span style="width:24px;height:24px;border-radius:999px;background:rgba(79,70,229,.26);display:block"></span>
             <span style="height:8px;border-radius:999px;background:rgba(15,23,42,.16);display:block"></span>
-            ${key==='default'?'<span style="height:18px;border-radius:var(--r);background:rgba(148,163,184,.26);display:block"></span>':(key==='photocard'?'':(key==='showcase'?'':(key==='split'?'':'<span style="height:18px;border-radius:var(--r);background:rgba(148,163,184,.22);display:block"></span>')))}
+            <span style="height:18px;border-radius:var(--r);background:rgba(148,163,184,.26);display:block"></span>
           </span>
-          <span style="display:grid;grid-template-columns:${key==='stats'||key==='banner'?'repeat(4,1fr)':(key==='split'?'repeat(3,1fr)':'repeat(3,1fr)')};gap:4px">
-            ${Array.from({length:key==='stats'||key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
+          <span style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+            ${Array.from({length:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
           </span>
         </span>
       </span>
@@ -145,21 +142,15 @@ function _renderCfgPdSection(){
     ,obsidian:{bg:'linear-gradient(135deg,#f5f3ff,#e9d5ff,#c4b5fd)',fg:'#4c1d95',chip:'rgba(255,255,255,.92)'}
   };
   const _pdPreviewSkin = _pdPreviewSkinMap[dm] || _pdPreviewSkinMap.classic;
-  const _pdPreviewHeroLayout = (lm==='photocard' || lm==='poster')
-    ? 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center'
-    : (lm==='showcase' || lm==='split'
-      ? 'display:grid;grid-template-columns:28px 1fr;align-items:center;gap:8px'
-      : 'display:grid;grid-template-columns:28px 1fr 38px;align-items:center;gap:8px');
-  const _pdPreviewStatsCols = (lm==='stats' || lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : ((lm==='split' || lm==='poster') ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
-  const _pdPreviewPhoto = (lm==='photocard' || lm==='poster')
-    ? 'width:54px;height:54px;border-radius:18px'
-    : (lm==='split' ? 'width:34px;height:40px;border-radius:12px' : 'width:28px;height:28px;border-radius:999px');
-  const _pdPreviewMetaAlign = (lm==='photocard' || lm==='poster') ? 'center' : 'left';
+  const _pdPreviewHeroLayout = 'display:grid;grid-template-columns:28px 1fr 38px;align-items:center;gap:8px';
+  const _pdPreviewStatsCols = (lm==='board') ? 'repeat(4,1fr)' : 'repeat(2,1fr)';
+  const _pdPreviewPhoto = 'width:28px;height:28px;border-radius:999px';
+  const _pdPreviewMetaAlign = 'left';
   const _pdUiPreset = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-        <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('photocard')">포토카드형</button>
+        <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('flip')">플립카드형</button>
         <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('studio')">방송형</button>
         <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('dark')">라이트 프리미엄</button>
       </div>
@@ -177,29 +168,29 @@ function _renderCfgPdSection(){
             <span style="position:absolute;inset:auto auto 10px 10px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.14);filter:blur(2px)"></span>
             <span style="${_pdPreviewPhoto};background:${_pdPreviewSkin.chip};border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 18px rgba(15,23,42,.12);display:block;z-index:1"></span>
             <span style="display:block;min-width:0;text-align:${_pdPreviewMetaAlign};z-index:1">
-              <span style="display:block;font-size:${lm==='photocard'?'15px':'13px'};font-weight:1000;color:${_pdPreviewSkin.fg};line-height:1.1">이경민</span>
-              <span style="display:flex;justify-content:${lm==='photocard'?'center':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:6px">
+              <span style="display:block;font-size:13px;font-weight:1000;color:${_pdPreviewSkin.fg};line-height:1.1">이경민</span>
+              <span style="display:flex;justify-content:flex-start;gap:4px;flex-wrap:wrap;margin-top:6px">
                 <span style="padding:3px 7px;border-radius:999px;background:${_pdPreviewSkin.chip};font-size:9px;font-weight:800;color:${_pdPreviewSkin.fg}">늪지대</span>
                 <span style="padding:3px 7px;border-radius:999px;background:${_pdPreviewSkin.chip};font-size:9px;font-weight:800;color:${_pdPreviewSkin.fg}">T 테란</span>
               </span>
             </span>
-            ${lm==='photocard'?'':`<span style="padding:7px 8px;border-radius:12px;background:${_pdPreviewSkin.chip};font-size:10px;font-weight:900;color:${_pdPreviewSkin.fg};text-align:center;line-height:1.1;z-index:1">ELO<br>1320</span>`}
+            <span style="padding:7px 8px;border-radius:12px;background:${_pdPreviewSkin.chip};font-size:10px;font-weight:900;color:${_pdPreviewSkin.fg};text-align:center;line-height:1.1;z-index:1">ELO<br>1320</span>
           </div>
           <div style="display:grid;grid-template-columns:${_pdPreviewStatsCols};gap:7px;padding:10px;background:linear-gradient(180deg,#fff,rgba(99,102,241,.04))">
-            ${Array.from({length: (lm==='stats' || lm==='board')?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
+            ${Array.from({length: lm==='board'?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
               <span style="display:block;font-size:8px;font-weight:900;color:#94a3b8;letter-spacing:.08em">${idx===0?'전적':idx===1?'승률':idx===2?'포인트':'상태'}</span>
-              <span style="display:block;font-size:${(lm==='stats' || lm==='board')?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'12승 4패':idx===1?'75%':idx===2?'+18':'활동중'}</span>
+              <span style="display:block;font-size:${lm==='board'?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'12승 4패':idx===1?'75%':idx===2?'+18':'활동중'}</span>
             </span>`).join('')}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'프로필 이미지와 감성 분위기 강조':lm==='showcase'?'이름과 핵심 정보가 넓게 펼쳐짐':lm==='stats'?'상단에서 지표를 먼저 읽기 쉬움':lm==='poster'?'포스터/배너 느낌으로 ‘완전 다른 화면’ 체감':lm==='timeline'?'최근 경기 스트림을 메인으로 바로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'균형형 구조로 가장 안정적'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='board'?'컬러 KPI 타일 보드 중심으로 빠르게 스캔':lm==='tabs'?'스크롤 없이 탭 눌러서 원하는 정보만 확인':lm==='report'?'목차부터 훑고 원하는 항목으로 바로 이동하는 문서형':lm==='flip'?'앞면은 요약만 보여주고 버튼 눌러야 카드가 뒤집히며 펼쳐짐':lm==='story'?'세로로 넘기는 모바일 스토리 슬라이드 + 진행바':'균형형 구조로 가장 안정적'}</div>
           </div>
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'glass / aurora / pastel':lm==='showcase'?'luxury / editorial / sunset':lm==='stats'?'dashboard / classic / mono':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / holo'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='board'?'dashboard / mono / classic':lm==='tabs'?'dashboard / mono / terminal':lm==='report'?'mono / dashboard / editorial':lm==='flip'?'glass / holo / neon':lm==='story'?'neon / holo / obsidian':'classic / botanical / holo'}</div>
           </div>
         </div>
       </div>
@@ -591,15 +582,15 @@ function _setPdUnivBgTint(val){
 }
 function _applyPdUiPreset(preset){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  if(preset==='photocard'){
+  if(preset==='flip'){
     s.design_mode='blush';
-    s.layout_mode='photocard';
+    s.layout_mode='flip';
   }else if(preset==='studio'){
     s.design_mode='studio';
-    s.layout_mode='banner';
+    s.layout_mode='board';
   }else if(preset==='dark'){
     s.design_mode='obsidian';
-    s.layout_mode='split';
+    s.layout_mode='story';
   }
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
@@ -616,7 +607,7 @@ function _setPdDesignMode(mode){
   _pdTouchPrefs();
 }
 function _setPdLayoutMode(mode){
-  const valid=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const valid=['default','board','tabs','report','flip','story'];
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.layout_mode=valid.includes(mode)?mode:'default';
   localStorage.setItem('su_pd_style',JSON.stringify(s));
@@ -746,6 +737,66 @@ function _setGlobalProfileShape(shape){
   try{ if(typeof render==='function') render(); }catch(e){}
 }
 
+function _pdStylePickerOutsideClick(e){
+  const p=document.getElementById('pdStylePicker');
+  if(!p) return;
+  if(e.target && e.target.closest && (e.target.closest('#pdStylePicker') || e.target.closest('#playerModalStyleBtn'))) return;
+  _pdCloseStylePicker();
+}
+function _pdCloseStylePicker(){
+  const p=document.getElementById('pdStylePicker');
+  if(p) p.remove();
+  try{ document.removeEventListener('click', _pdStylePickerOutsideClick, true); }catch(e){}
+}
+function _pdToggleStylePicker(){
+  const existing = document.getElementById('pdStylePicker');
+  if(existing){ _pdCloseStylePicker(); return; }
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const dm = s.design_mode||'classic';
+  const lm = s.layout_mode||'default';
+  const designs = [
+    ['classic','클래식'],['editorial','매거진'],['pastel','파스텔'],['glass','글래스'],['dashboard','대시보드'],['mono','모노'],
+    ['sunset','선셋'],['botanical','보태니컬'],['neon','네온'],['terminal','터미널'],['paper','페이퍼'],['holo','홀로그램'],
+    ['arcade','아케이드'],['luxury','럭셔리'],['aurora','오로라'],['studio','스튜디오'],['blush','블러시'],['obsidian','옵시디언']
+  ];
+  const layouts = [
+    ['default','기본'],['board','보드'],['tabs','탭 전환'],['report','보고서'],
+    ['flip','플립카드'],['story','스토리']
+  ];
+  const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_pdRefreshStylePicker()"
+    style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
+    border:1.5px solid ${active?'#0f172a':'rgba(148,163,184,.32)'};
+    background:${active?'#0f172a':'#fff'};color:${active?'#fff':'#334155'}">${label}</button>`;
+  const panel=document.createElement('div');
+  panel.id='pdStylePicker';
+  panel.style.cssText='position:absolute;top:100%;right:12px;margin-top:8px;z-index:100050;width:min(320px,90vw);max-height:min(60vh,480px);overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.18);padding:12px';
+  panel.innerHTML = `
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">디자인 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+      ${designs.map(([key,label])=>_chip(key,label,key===dm,'_setPdDesignMode')).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${layouts.map(([key,label])=>_chip(key,label,key===lm,'_setPdLayoutMode')).join('')}
+    </div>
+  `;
+  const head=document.getElementById('playerModalHead');
+  if(head){
+    if(!head.style.position) head.style.position='relative';
+    head.appendChild(panel);
+  }else{
+    document.body.appendChild(panel);
+  }
+  setTimeout(()=>{ document.addEventListener('click', _pdStylePickerOutsideClick, true); }, 0);
+}
+function _pdRefreshStylePicker(){
+  if(!document.getElementById('pdStylePicker')) return;
+  _pdCloseStylePicker();
+  _pdToggleStylePicker();
+}
+
 try{
   window.SettingsModules = window.SettingsModules || {};
   window.SettingsModules.playerDetail = {
@@ -764,4 +815,7 @@ try{
   window._setPdLayoutMode = _setPdLayoutMode;
   window._setUdHeaderBg = _setUdHeaderBg;
   window._setMdTeamHeaderColor = _setMdTeamHeaderColor;
+  window._pdToggleStylePicker = _pdToggleStylePicker;
+  window._pdCloseStylePicker = _pdCloseStylePicker;
+  window._pdRefreshStylePicker = _pdRefreshStylePicker;
 }catch(e){}

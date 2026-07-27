@@ -63,9 +63,11 @@ function preparePlayerDetailStyleData(player){
   const cWin=cp.win;
   const cLoss=cp.loss;
   const _validDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validLayoutModes=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const _validLayoutModes=['default','board','tabs','report','flip','story'];
+  // 구버전 저장값 호환: 삭제된 레이아웃(포토카드/쇼케이스/통계강조/스플릿/타임라인/잡지)은 기본형으로 대체
+  const _rawLayoutMode = pdStyle.layout_mode;
   const designMode=_validDesignModes.includes(pdStyle.design_mode) ? pdStyle.design_mode : 'classic';
-  const layoutMode=_validLayoutModes.includes(pdStyle.layout_mode) ? pdStyle.layout_mode : 'default';
+  const layoutMode=_validLayoutModes.includes(_rawLayoutMode) ? _rawLayoutMode : 'default';
   const _hexToRgb = (hex) => {
     const s = String(hex||'').trim();
     const m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);

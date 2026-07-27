@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="dist/css/bundle.css?v=c55d180c12">
+<link rel="stylesheet" href="dist/css/bundle.css?v=bd57f8b638">
 <!-- /* [Z-IDX] */ -->
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
@@ -377,6 +377,7 @@ if ('serviceWorker' in navigator) {
       <div class="mtitle detail-modal-title" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
       <div class="detail-modal-actions">
         <button id="playerModalEditBtn" class="btn btn-o btn-sm detail-act detail-act-edit" style="display:none" title="수정" aria-label="수정" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️</button>
+        <button id="playerModalStyleBtn" class="btn btn-o btn-sm detail-act detail-act-style" style="display:none" title="스타일 전환" aria-label="스타일 전환" onclick="event.stopPropagation();try{_pdToggleStylePicker();}catch(e){console.error('[styleBtn]',e);}">🎨</button>
         <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromPlayer()">🎴</button>
         <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('playerModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>

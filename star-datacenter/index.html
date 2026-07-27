@@ -383,6 +383,7 @@ if ('serviceWorker' in navigator) {
       <div class="mtitle detail-modal-title" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
       <div class="detail-modal-actions">
         <button id="playerModalEditBtn" class="btn btn-o btn-sm detail-act detail-act-edit" style="display:none" title="수정" aria-label="수정" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️</button>
+        <button id="playerModalStyleBtn" class="btn btn-o btn-sm detail-act detail-act-style" style="display:none" title="스타일 전환" aria-label="스타일 전환" onclick="event.stopPropagation();try{_pdToggleStylePicker();}catch(e){console.error('[styleBtn]',e);}">🎨</button>
         <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromPlayer()">🎴</button>
         <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('playerModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>

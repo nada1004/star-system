@@ -295,33 +295,127 @@ function buildPlayerDetailHTML(p){
   </div>` : '';
 
   let h='';
-  if(_layoutMode==='poster'){
-    h = `<div class="pd-layout pd-layout--poster">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}</div>
-      <div class="pd-layout-grid">
-        <div class="pd-layout-main">${_secYearBar}${_secEloChart}${_secHistFilterBar}${_secRecent}${_secOppTable}</div>
-        <div class="pd-layout-side">${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secTeammates}${_secMemo}</div>
-      </div>
-    </div>`;
-  }else if(_layoutMode==='split'){
-    h = `<div class="pd-layout pd-layout--split">
-      <div class="pd-split-left">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}${_secYearBar}</div>
-      <div class="pd-split-right">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}</div>
-    </div>`;
-  }else if(_layoutMode==='timeline'){
-    h = `<div class="pd-layout pd-layout--timeline">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}</div>
-      <div class="pd-layout-grid">
-        <div class="pd-layout-main">${_secYearBar}${_secHistFilterBar}${_secRecent}</div>
-        <div class="pd-layout-side">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secTeammates}${_secMemo}</div>
-      </div>
-    </div>`;
-  }else if(_layoutMode==='board'){
+  if(_layoutMode==='board'){
     h = `<div class="pd-layout pd-layout--board">
       ${_secHeader}
       <div class="pd-board-grid">${_secStrip}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}</div>
       ${_secJumpNav}${_secMvpHistory}${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
     </div>`;
+  }else if(_layoutMode==='tabs'){
+    const _tabDefs = [
+      ['overview','개요', `${_secMvpHistory}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}`],
+      ['records','전적', `${_secOppTable}`],
+      ['recent','최근경기', `${_secYearBar}${_secHistFilterBar}${_secRecent}`],
+      ['extra','기타', `${_secTeammates}${_secMemo}`]
+    ].filter(([,,html])=>!!html.trim());
+    if(!_pdState.pdTab || !_tabDefs.some(([k])=>k===_pdState.pdTab)) _pdState.pdTab = _tabDefs[0]?.[0] || 'overview';
+    const _activeTab = _pdState.pdTab;
+    const _tabBar = _tabDefs.length>1 ? `<div class="pd-tabbar">
+      ${_tabDefs.map(([key,label])=>`<button type="button" class="pd-tabbtn${key===_activeTab?' pd-tabbtn--active':''}" data-pd-tab-btn="${key}" onclick="_pdSwitchTab('${key}')">${label}</button>`).join('')}
+    </div>` : '';
+    h = `<div class="pd-layout pd-layout--tabs">
+      ${_secHeader}${_secStrip}
+      ${_tabBar}
+      <div class="pd-tabpanels">
+        ${_tabDefs.map(([key,,html])=>`<div class="pd-tabpanel" data-pd-tab-panel="${key}"${key===_activeTab?'':' hidden'}>${html}</div>`).join('')}
+      </div>
+    </div>`;
+    if(typeof window._pdSwitchTab !== 'function'){
+      window._pdSwitchTab = function(key){
+        try{
+          const state = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+          state.pdTab = key;
+          const panels = document.querySelectorAll('[data-pd-tab-panel]');
+          panels.forEach(el=>{ el.hidden = (el.getAttribute('data-pd-tab-panel')!==key); });
+          const btns = document.querySelectorAll('[data-pd-tab-btn]');
+          btns.forEach(el=>{ el.classList.toggle('pd-tabbtn--active', el.getAttribute('data-pd-tab-btn')===key); });
+        }catch(e){}
+      };
+    }
+  }else if(_layoutMode==='report'){
+    let _repNum = 0;
+    const _repSec = (label, html) => {
+      if(!html || !html.trim()) return '';
+      _repNum++;
+      return `<div class="pd-secblock"><div class="pd-secblock-head"><span class="pd-secblock-num">${String(_repNum).padStart(2,'0')}</span><span class="pd-secblock-label">${label}</span></div><div class="pd-secblock-body">${html}</div></div>`;
+    };
+    const _repToc = _jumpTargets.length ? `<div class="pd-toc"><div class="pd-toc-title">목차</div>${_jumpTargets.map(([id,label],i)=>`<button type="button" class="pd-toc-item" onclick="const t=document.getElementById('${id}');if(t)t.scrollIntoView({behavior:'smooth',block:'start'})"><span class="pd-toc-num">${String(i+1).padStart(2,'0')}</span>${label}</button>`).join('')}</div>` : '';
+    h = `<div class="pd-layout pd-layout--report">
+      <div class="pd-report-cover">${_secHeader}${_secStrip}</div>
+      ${_repToc}
+      ${_repSec('MVP', _secMvpHistory)}
+      ${_repSec('연도별 필터', _secYearBar)}
+      ${_repSec('ELO 추이', _secEloChart)}
+      ${_repSec('모드별 기록', _secModeStats)}
+      ${_repSec('맵별 기록', _secMapStats)}
+      ${_repSec('종족별 기록', _secRaceStats)}
+      ${_repSec('상대 대학', _secVsUniv)}
+      ${_repSec('상대 전적', _secOppTable)}
+      ${_repSec('최근 경기', `${_secHistFilterBar}${_secRecent}`)}
+      ${_repSec('팀원', _secTeammates)}
+      ${_repSec('메모', _secMemo)}
+    </div>`;
+  }else if(_layoutMode==='flip'){
+    const _flipBackHtml = `${_secMvpHistory}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
+    if(!_pdState.pdFlipSide) _pdState.pdFlipSide = 'front';
+    const _flipSide = _pdState.pdFlipSide;
+    h = `<div class="pd-layout pd-layout--flip">
+      <div class="pd-flip-face" data-pd-flip-face="front"${_flipSide==='front'?'':' hidden'}>
+        ${_secHeader}${_secStrip}
+        <button type="button" class="pd-flip-btn" onclick="_pdFlipTo('back')">상세 기록 보기</button>
+      </div>
+      <div class="pd-flip-face" data-pd-flip-face="back"${_flipSide==='back'?'':' hidden'}>
+        <button type="button" class="pd-flip-btn pd-flip-btn--back" onclick="_pdFlipTo('front')">← 앞면으로</button>
+        ${_flipBackHtml}
+      </div>
+    </div>`;
+    if(typeof window._pdFlipTo !== 'function'){
+      window._pdFlipTo = function(side){
+        try{
+          const state = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+          state.pdFlipSide = side;
+          const faces = document.querySelectorAll('[data-pd-flip-face]');
+          faces.forEach(el=>{ el.hidden = (el.getAttribute('data-pd-flip-face')!==side); });
+        }catch(e){}
+      };
+    }
+  }else if(_layoutMode==='story'){
+    const _storySlides = [
+      ['header', `${_secHeader}${_secStrip}`],
+      ['overview', `${_secMvpHistory}${_secEloChart}`],
+      ['modes', `${_secModeStats}${_secMapStats}${_secRaceStats}`],
+      ['vsuniv', _secVsUniv],
+      ['opp', _secOppTable],
+      ['recent', `${_secYearBar}${_secHistFilterBar}${_secRecent}`],
+      ['extra', `${_secTeammates}${_secMemo}`]
+    ].filter(([,html])=>!!html && html.trim());
+    h = `<div class="pd-layout pd-layout--story">
+      <div class="pd-story-dots">${_storySlides.map((_s,i)=>`<span class="pd-story-dot${i===0?' is-active':''}" data-pd-story-dot="${i}"></span>`).join('')}</div>
+      <div class="pd-story-track" id="pdStoryTrack">
+        ${_storySlides.map(([,html2],i)=>`<div class="pd-story-slide" data-pd-story-slide="${i}">${html2}</div>`).join('')}
+      </div>
+    </div>`;
+    if(typeof window._pdStoryBind !== 'function'){
+      window._pdStoryBind = function(){
+        try{
+          const track = document.getElementById('pdStoryTrack');
+          if(!track || track.dataset.pdStoryBound) return;
+          track.dataset.pdStoryBound = '1';
+          track.addEventListener('scroll', ()=>{
+            const slides = track.querySelectorAll('[data-pd-story-slide]');
+            let idx = 0, best = Infinity;
+            slides.forEach(s=>{
+              const d = Math.abs(s.offsetTop - track.scrollTop);
+              if(d < best){ best = d; idx = Number(s.getAttribute('data-pd-story-slide')); }
+            });
+            document.querySelectorAll('[data-pd-story-dot]').forEach(dot=>{
+              dot.classList.toggle('is-active', Number(dot.getAttribute('data-pd-story-dot'))===idx);
+            });
+          }, {passive:true});
+        }catch(e){}
+      };
+    }
+    setTimeout(()=>{ try{ window._pdStoryBind(); }catch(e){} }, 0);
   }else{
     h = `${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
   }
