@@ -289,6 +289,7 @@ const CSS_FILES = [
   'css/ui-custom-v3.css',
   'css/player-detail-design-modes.css',
   'css/univ-detail-design-modes.css',
+  'css/match-detail-design-modes.css',
   'css/rec-card-minimal.css',
 ];
 

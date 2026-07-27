@@ -2,8 +2,8 @@
 
 function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   try{ window.__detailCtx = 'compModal'; }catch(_){}
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn=tourneys.find(t=>t.id===tnId);
   if(!tn)return;
   let m;
@@ -75,6 +75,7 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       const okShare=(!_adm||isLoggedIn) && isDone;
       const isLeagueMatch=(gi!=null && (rnd==null || rnd===undefined) && !isManual);
       let btnHtml='';
+      const canStyle = !!isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
       if(isLoggedIn){
         // 수정 버튼
         if(isLeagueMatch){
@@ -82,6 +83,9 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
         } else if(isManual){
           btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openBktManualEditModal==='function')openBktManualEditModal('${tnId}',${mi})">✏️ 수정</button>`;
         }
+      }
+      if(canStyle){
+        btnHtml+=`<button class="btn btn-w btn-xs detail-act-md-style" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" title="스타일 전환" onclick="event.stopPropagation();try{_mdToggleStylePicker(event);}catch(e){console.error('[mdStyleBtn]',e);}">🎨</button>`;
       }
       if(okShare){
         btnHtml+=`<button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:104px;padding:7px 12px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 20px rgba(37,99,235,.22);color:#fff;font-weight:900" onclick="${isLeagueMatch?`openCompMatchShareCard('${tnId}',${gi},${mi})`:`openBktShareCard('${tnId}',${rnd},${mi})`}">🎴 공유 카드</button>`;
@@ -128,6 +132,7 @@ function closeCompMatchDetailModal(){
   try{
     const headActions=document.getElementById('cmdHeadActions');
     if(headActions) headActions.innerHTML='';
+    try{ if(typeof window._mdCloseStylePicker==='function') window._mdCloseStylePicker(); }catch(e){}
     if(typeof cm==='function') cm('compMatchDetailModal');
     else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='none'; }
   }catch(e){}

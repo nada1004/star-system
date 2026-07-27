@@ -63,8 +63,8 @@ function _renderCfgMatchDetailSection(){
   const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
-  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -88,7 +88,11 @@ function _renderCfgMatchDetailSection(){
           ['midnight','미드나잇','짙은 방송형 헤더와 어두운 대비','linear-gradient(135deg,#0f172a,#1e293b)'],
           ['sunset','선셋','오렌지/핑크 계열의 경기 포스터 톤','linear-gradient(135deg,#fb7185,#f59e0b)'],
           ['aurora','오로라','민트/라벤더 계열 몽환 톤','linear-gradient(135deg,#67e8f9,#a78bfa)'],
-          ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)']
+          ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)'],
+          ['retro','레트로','80s 아케이드풍 원색 대비','linear-gradient(135deg,#fde047,#ef4444)'],
+          ['paper','스크랩북','종이 질감의 다이어리 콜라주 톤','linear-gradient(135deg,#fef3c7,#fbcfe8)'],
+          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)'],
+          ['terminal','터미널','블랙 배경의 해커 콘솔 스타일','linear-gradient(135deg,#052e16,#166534)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdDesignMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailMode('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdDesignMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px;position:relative">
@@ -116,7 +120,9 @@ function _renderCfgMatchDetailSection(){
           ['focus','포커스형','승자/핵심 경기 카드 존재감 확대','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
           ['broadcast','브로드캐스트형','헤더와 스코어바를 방송형으로 강조','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
           ['split','스플릿형','좌우 카드와 중간 스코어 분리감 강화','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
-          ['poster','포스터형','상단 배너와 경기행 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fff7ed 38% 100%)']
+          ['poster','포스터형','상단 배너와 경기행 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fff7ed 38% 100%)'],
+          ['timeline','타임라인형','세로 흐름의 연결선형 경기 목록','linear-gradient(180deg,#fff 0 38%,#f0fdfa 38% 100%)'],
+          ['arena','아레나형','대형 아바타와 중앙 VS 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdLayoutMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailLayout('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdLayoutMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px">
@@ -331,7 +337,7 @@ function _refreshOpenMatchDetailModals(){
 }
 
 function cfgSetMatchDetailMode(mode){
-  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(mode)?mode:'classic'); }catch(e){}
+  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(mode)?mode:'classic'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -356,7 +362,7 @@ function cfgSetMatchDetailMode(mode){
 }
 
 function cfgSetMatchDetailLayout(mode){
-  try{ localStorage.setItem('su_md_layout_mode', ['default','compact','focus','broadcast','split','poster'].includes(mode)?mode:'default'); }catch(e){}
+  try{ localStorage.setItem('su_md_layout_mode', ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(mode)?mode:'default'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -380,6 +386,98 @@ function cfgSetMatchDetailLayout(mode){
   try{ _renderCfgMatchDetailSection(); }catch(e){}
 }
 
+function _mdStylePickerOutsideClick(e){
+  const p=document.getElementById('mdStylePicker');
+  if(!p) return;
+  if(e.target && e.target.closest && (e.target.closest('#mdStylePicker') || e.target.closest('.detail-act-md-style'))) return;
+  _mdCloseStylePicker();
+}
+function _mdStylePickerReposition(){
+  const p=document.getElementById('mdStylePicker');
+  if(!p) return;
+  const anchor = p._mdAnchor;
+  if(!anchor || !anchor.isConnected){ _mdCloseStylePicker(); return; }
+  const r = anchor.getBoundingClientRect();
+  const w = Math.min(320, window.innerWidth - 24);
+  let left = r.right - w;
+  left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+  let top = r.bottom + 8;
+  const maxH = Math.min(window.innerHeight * 0.6, 480);
+  if(top + maxH > window.innerHeight - 12){ top = Math.max(12, r.top - maxH - 8); }
+  p.style.left = left + 'px';
+  p.style.top = top + 'px';
+  p.style.width = w + 'px';
+  p.style.maxHeight = maxH + 'px';
+}
+function _mdCloseStylePicker(){
+  const p=document.getElementById('mdStylePicker');
+  if(p) p.remove();
+  try{ document.removeEventListener('click', _mdStylePickerOutsideClick, true); }catch(e){}
+  try{ window.removeEventListener('resize', _mdStylePickerReposition); }catch(e){}
+  try{ window.removeEventListener('scroll', _mdStylePickerReposition, true); }catch(e){}
+}
+function _mdToggleStylePicker(evt){
+  const existing = document.getElementById('mdStylePicker');
+  if(existing){ _mdCloseStylePicker(); return; }
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
+  const lm = (localStorage.getItem('su_md_layout_mode')||'default').trim();
+  const designs = [
+    ['classic','클래식'],['glass','글래스'],['editorial','에디토리얼'],['neon','네온'],
+    ['midnight','미드나잇'],['sunset','선셋'],['aurora','오로라'],['mono','모노'],
+    ['retro','레트로'],['paper','스크랩북'],['holo','홀로그램'],['terminal','터미널']
+  ];
+  const layouts = [
+    ['default','기본'],['compact','컴팩트'],['focus','포커스'],
+    ['broadcast','방송형'],['split','스플릿'],['poster','포스터'],
+    ['timeline','타임라인'],['arena','아레나']
+  ];
+  const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_mdRefreshStylePicker()"
+    style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
+    border:1.5px solid ${active?'#0f172a':'rgba(148,163,184,.32)'};
+    background:${active?'#0f172a':'#fff'};color:${active?'#fff':'#334155'}">${label}</button>`;
+  const panel=document.createElement('div');
+  panel.id='mdStylePicker';
+  panel.style.cssText='position:fixed;z-index:100050;overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.24);padding:12px';
+  panel.innerHTML = `
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">디자인 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+      ${designs.map(([key,label])=>_chip(key,label,key===md,'cfgSetMatchDetailMode')).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${layouts.map(([key,label])=>_chip(key,label,key===lm,'cfgSetMatchDetailLayout')).join('')}
+    </div>
+  `;
+  // 현재 열려있는 경기 상세 팝업(대회/히스토리)의 스타일 전환 버튼을 앵커로 사용
+  // (팝업 shell에 overflow:hidden이 걸려있어 절대 위치로 자식에 붙이면 잘려서 안 보이는 문제가 있었음 →
+  //  document.body에 fixed로 부착하고 좌표만 버튼 기준으로 계산)
+  let anchor = (evt && evt.currentTarget) || document.querySelector('.detail-act-md-style');
+  if(!anchor){
+    for(const id of ['compMatchDetailModal','histDetModal']){
+      const modal=document.getElementById(id);
+      if(modal && getComputedStyle(modal).display!=='none'){
+        anchor = modal.querySelector('.detail-act-md-style') || modal.querySelector('.cmd-head');
+        if(anchor) break;
+      }
+    }
+  }
+  panel._mdAnchor = anchor || document.body;
+  document.body.appendChild(panel);
+  _mdStylePickerReposition();
+  setTimeout(()=>{
+    document.addEventListener('click', _mdStylePickerOutsideClick, true);
+    window.addEventListener('resize', _mdStylePickerReposition);
+    window.addEventListener('scroll', _mdStylePickerReposition, true);
+  }, 0);
+}
+function _mdRefreshStylePicker(){
+  if(!document.getElementById('mdStylePicker')) return;
+  _mdCloseStylePicker();
+  _mdToggleStylePicker();
+}
+
 try{
   window.SettingsModules = window.SettingsModules || {};
   window.SettingsModules.matchDetail = {
@@ -390,4 +488,7 @@ try{
   window.cfgSetMatchDetailMode = cfgSetMatchDetailMode;
   window.cfgSetMatchDetailLayout = cfgSetMatchDetailLayout;
   window._renderCfgMatchDetailSection = _renderCfgMatchDetailSection;
+  window._mdToggleStylePicker = _mdToggleStylePicker;
+  window._mdCloseStylePicker = _mdCloseStylePicker;
+  window._mdRefreshStylePicker = _mdRefreshStylePicker;
 }catch(e){}

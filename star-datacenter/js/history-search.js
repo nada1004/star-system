@@ -837,7 +837,7 @@ function _ensureHistDetailModal(){
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
   m.style.cssText='z-index:var(--z-modal-4);display:none';
-  m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none'");
+  m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}");
   m.innerHTML=`
     <div class="mbox mbox--matchdetail" onclick="event.stopPropagation()">
       <div class="cmd-head">
@@ -846,15 +846,16 @@ function _ensureHistDetailModal(){
           <div id="hmdSub" class="cmd-sub"></div>
         </div>
         <div class="cmd-head-actions no-export">
+          <button id="hmdActStyle" class="cmd-hbtn detail-act-md-style" style="display:none" title="스타일 전환" onclick="event.stopPropagation();try{_mdToggleStylePicker(event);}catch(e){console.error('[hmdActStyle]',e);}">🎨</button>
           <button id="hmdActCopy" class="cmd-hbtn" title="결과 복사">📤</button>
           <button id="hmdActShare" class="cmd-hbtn" title="공유 카드">🎴</button>
         </div>
-        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none'" aria-label="닫기">✕</button>
+        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}" aria-label="닫기">✕</button>
       </div>
       <div id="hmdScoreBar" class="cmd-scorebar" style="display:none"></div>
       <div id="histDetBody" class="cmd-body"></div>
       <div class="cmd-actions no-export">
-        <button class="btn btn-w" onclick="document.getElementById('histDetModal').style.display='none'">닫기</button>
+        <button class="btn btn-w" onclick="document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}">닫기</button>
       </div>
     </div>`;
   document.body.appendChild(m);
@@ -907,8 +908,8 @@ function _applyOpenHistDetailTeamHeaderColors(){
 function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{
     window._lastHistDetailState = {
       key,
@@ -948,6 +949,13 @@ function openHistDetailModal(key){
     const editable = ['mini','univm','ck','pro','tt','comp'].includes(modeForEdit);
     if(canEdit && editable && match && !match._editRef){
       match._editRef = `${modeForEdit}:${idx}`;
+    }
+  }catch(e){}
+  try{
+    const styleBtn=document.getElementById('hmdActStyle');
+    if(styleBtn){
+      const canStyle = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+      styleBtn.style.display = canStyle ? 'inline-flex' : 'none';
     }
   }catch(e){}
   try{
