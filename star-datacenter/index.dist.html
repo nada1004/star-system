@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="dist/css/bundle.css?v=793398fe5b">
+<link rel="stylesheet" href="dist/css/bundle.css?v=3d55f2aa9f">
 <!-- /* [Z-IDX] */ -->
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
@@ -394,6 +394,7 @@ if ('serviceWorker' in navigator) {
       <div class="detail-modal-actions">
         <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromUniv()">🎴</button>
         <button id="univEditBtn" class="btn btn-o btn-sm no-export detail-act detail-act-edit" title="수정" aria-label="수정" onclick="toggleUnivEdit()" style="display:none">✏️</button>
+        <button id="univModalStyleBtn" class="btn btn-o btn-sm no-export detail-act detail-act-style" title="스타일 전환" aria-label="스타일 전환" onclick="event.stopPropagation();try{_udToggleStylePicker();}catch(e){console.error('[udStyleBtn]',e);}" style="display:none">🎨</button>
         <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('univModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
     </div>

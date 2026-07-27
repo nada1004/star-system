@@ -32,8 +32,8 @@ function buildUnivBoardCard(u, forExport){
   // 티어별 칩 레이아웃 빌더 (무소속 + forExport 시 모든 대학에 적용)
   const buildChipLayout=(isWide)=>{
     // 직급자와 일반 선수 분리
-    const rolePlayers = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const normalPlayers = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
+    const rolePlayers = sorted.filter(p=>p.role&&roleIsMain(p.role));
+    const normalPlayers = sorted.filter(p=>!p.role||!roleIsMain(p.role));
 
     const tierMap={};
     normalPlayers.forEach(p=>{
@@ -51,9 +51,10 @@ function buildUnivBoardCard(u, forExport){
       const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.name) : String(p && p.name || '');
       const pRoleHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.role) : String(p && p.role || '');
       const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
-      const isMain=p.role&&MAIN_ROLES.includes(p.role);
-      const rCol=ROLE_COLORS[p.role]||'';
-      const rIcon=ROLE_ICONS[p.role]||'';
+      const _pRoleKey=p.role?_roleMatchedMain(p.role):null;
+      const isMain=!!_pRoleKey;
+      const rCol=ROLE_COLORS[_pRoleKey]||'';
+      const rIcon=ROLE_ICONS[_pRoleKey]||'';
       const photoSrcChip = _getBrdPhoto(p);
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
@@ -165,16 +166,21 @@ function buildUnivBoardCard(u, forExport){
 
     // 직급자 섹션
     // 직책별 개별 행 (MAIN_ROLES 순서대로 각 역할 따로 표시)
+    // "이사장&총장"처럼 직책을 함께 적은 경우도 매칭되는 첫 MAIN_ROLES 키워드 기준으로
+    // 그룹핑해야 완전일치 실패로 어느 섹션에도 표시되지 않는 문제가 생기지 않는다.
     const roleRowsArr = MAIN_ROLES
-      .map(role => rolePlayers.filter(p => p.role === role))
+      .map(role => rolePlayers.filter(p => _roleMatchedMain(p.role) === role))
       .filter(group => group.length > 0);
     const roleSection = roleRowsArr.length > 0
       ? roleRowsArr.map(group => {
-          const role = group[0].role;
-          const rIcon = ROLE_ICONS[role] || '';
-          const rCol = ROLE_COLORS[role] || col;
+          const roleKey = _roleMatchedMain(group[0].role);
+          const rIcon = ROLE_ICONS[roleKey] || '';
+          const rCol = ROLE_COLORS[roleKey] || col;
+          // 그룹 안에 직책 텍스트가 서로 다른 경우(예: "이사장", "이사장&총장")를 대비해
+          // 헤더 라벨은 그룹 내 실제로 쓰인 직책 텍스트들을 " · "로 이어 보여준다.
+          const roleLabel = [...new Set(group.map(p=>p.role))].join(' · ');
           return `<div style="margin-bottom:6px;padding:6px 8px 8px;border-radius:var(--r);background:${hexToRgba(col,.1)};border:1.5px solid ${hexToRgba(col,.25)}">
-            <div style="font-size:10px;font-weight:900;color:#fff;padding:2px 9px;margin-bottom:4px;background:${rCol};border-radius:5px;display:inline-block;line-height:1.6">${rIcon}${role}</div>
+            <div style="font-size:10px;font-weight:900;color:#fff;padding:2px 9px;margin-bottom:4px;background:${rCol};border-radius:5px;display:inline-block;line-height:1.6">${rIcon}${roleLabel}</div>
             <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${group.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
           </div>`;
         }).join('')

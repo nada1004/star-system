@@ -82,7 +82,7 @@ function buildPlayerTeammatesHTML(opts){
   if(!p || !p.univ || p.univ==='무소속') return '';
   const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
   if(!teammates.length) return '';
-  const tmSorted = [...teammates].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||(b.points||0)-(a.points||0));
+  const tmSorted = [...teammates].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||(b.points||0)-(a.points||0));
   const tmCards = tmSorted.map(q=>{
     const qCol=gc(q.univ);
     const qSafe=(typeof escJS==='function') ? escJS(q.name) : String(q.name||'').replace(/'/g,"\\'");

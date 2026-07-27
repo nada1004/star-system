@@ -3,7 +3,7 @@ function _b2RankingView() {
   const tieredVis = players.filter(p =>
     !p.hidden && !p.retired && !p.hideFromBoard &&
     !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
+    !_b2HasRole(p)
   );
   const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
   const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
@@ -224,7 +224,7 @@ function _b2RadarView() {
   const tieredVis = players.filter(p =>
     !p.hidden && !p.retired && !p.hideFromBoard &&
     !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
+    !_b2HasRole(p)
   );
   const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
   const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
@@ -601,8 +601,8 @@ function _b2RadarView() {
 function _b2SummaryView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
-  const tieredVis = vis.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
-  const roledVis  = vis.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const tieredVis = vis.filter(p => !_b2HasRole(p));
+  const roledVis  = vis.filter(p => _b2HasRole(p));
   const univList  = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
 
   // 종족 카운트
@@ -926,8 +926,8 @@ function _b2CompareView() {
 
   const getStats = (name) => {
     const members = players.filter(p=>String(p?.univ||'').trim()===name&&!p.hidden&&!p.retired&&!p.hideFromBoard&&!_dissSet.has(name));
-    const tiered  = members.filter(p=>!_B2_ROLE_ORDER.includes(p.role||''));
-    const roled   = members.filter(p=>_B2_ROLE_ORDER.includes(p.role||''));
+    const tiered  = members.filter(p=>!_b2HasRole(p));
+    const roled   = members.filter(p=>_b2HasRole(p));
     const races={P:0,T:0,Z:0,N:0};
     members.forEach(p=>{
       const r=String(p.race||'').trim().toUpperCase();

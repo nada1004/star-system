@@ -269,6 +269,73 @@ function _setUdUnivBgTint(val){
   try{ _refreshOpenDetailModals(); }catch(e){}
   try{ _pdTouchPrefs(); }catch(e){}
 }
+/* ══════════════════════════════════════
+   대학 상세 팝업 안의 🎨 스타일 전환 버튼
+   (스트리머 상세 팝업의 _pdToggleStylePicker와 동일한 패턴)
+   총관리자로 로그인했을 때만 버튼이 보이고 동작합니다.
+══════════════════════════════════════ */
+function _udStylePickerOutsideClick(e){
+  const p=document.getElementById('udStylePicker');
+  if(!p) return;
+  if(e.target && e.target.closest && (e.target.closest('#udStylePicker') || e.target.closest('#univModalStyleBtn'))) return;
+  _udCloseStylePicker();
+}
+function _udCloseStylePicker(){
+  const p=document.getElementById('udStylePicker');
+  if(p) p.remove();
+  try{ document.removeEventListener('click', _udStylePickerOutsideClick, true); }catch(e){}
+}
+function _udToggleStylePicker(){
+  const existing = document.getElementById('udStylePicker');
+  if(existing){ _udCloseStylePicker(); return; }
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
+  const _validUdLayouts=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
+  const dm = _validUdModes.includes(s.design_mode) ? s.design_mode : 'classic';
+  const lm = _validUdLayouts.includes(s.layout_mode) ? s.layout_mode : 'default';
+  const designs = [
+    ['classic','클래식'],['editorial','매거진'],['pastel','파스텔'],['glass','글래스'],['dashboard','대시보드'],['mono','모노'],
+    ['sunset','선셋'],['botanical','보태니컬'],['neon','네온'],['terminal','터미널'],['paper','페이퍼'],['holo','홀로그램'],
+    ['arcade','아케이드'],['luxury','럭셔리'],['aurora','오로라'],['studio','스튜디오'],['blush','블러시'],['obsidian','옵시디언']
+  ];
+  const layouts = [
+    ['default','기본'],['photocard','포토카드'],['showcase','쇼케이스'],['stats','통계강조'],
+    ['split','스플릿'],['banner','배너'],['poster','포스터'],['timeline','타임라인'],['board','보드']
+  ];
+  const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_udRefreshStylePicker()"
+    style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
+    border:1.5px solid ${active?'#0f172a':'rgba(148,163,184,.32)'};
+    background:${active?'#0f172a':'#fff'};color:${active?'#fff':'#334155'}">${label}</button>`;
+  const panel=document.createElement('div');
+  panel.id='udStylePicker';
+  panel.style.cssText='position:absolute;top:100%;right:12px;margin-top:8px;z-index:100050;width:min(320px,90vw);max-height:min(60vh,480px);overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.18);padding:12px';
+  panel.innerHTML = `
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">디자인 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+      ${designs.map(([key,label])=>_chip(key,label,key===dm,'_setUdDesignMode')).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${layouts.map(([key,label])=>_chip(key,label,key===lm,'_setUdLayoutMode')).join('')}
+    </div>
+  `;
+  const head=document.getElementById('univModalHead');
+  if(head){
+    if(!head.style.position) head.style.position='relative';
+    head.appendChild(panel);
+  }else{
+    document.body.appendChild(panel);
+  }
+  setTimeout(()=>{ document.addEventListener('click', _udStylePickerOutsideClick, true); }, 0);
+}
+function _udRefreshStylePicker(){
+  if(!document.getElementById('udStylePicker')) return;
+  _udCloseStylePicker();
+  _udToggleStylePicker();
+}
+
 try{
   window._renderCfgUdSection = _renderCfgUdSection;
   window._setUdDesignMode = _setUdDesignMode;
@@ -279,4 +346,7 @@ try{
   window._setUdUnivBgScope = _setUdUnivBgScope;
   window._setUdUnivBgTint = _setUdUnivBgTint;
   window._setUdUnivBtnEnabled = _setUdUnivBtnEnabled;
+  window._udToggleStylePicker = _udToggleStylePicker;
+  window._udCloseStylePicker = _udCloseStylePicker;
+  window._udRefreshStylePicker = _udRefreshStylePicker;
 }catch(e){}

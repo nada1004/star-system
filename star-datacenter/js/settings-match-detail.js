@@ -63,8 +63,8 @@ function _renderCfgMatchDetailSection(){
   const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
-  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','clean','focus','broadcast','poster','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -84,15 +84,12 @@ function _renderCfgMatchDetailSection(){
           ['classic','클래식','기본 경기 상세 톤','linear-gradient(135deg,#dbeafe,#1d4ed8)'],
           ['glass','글래스','유리질감과 밝은 카드 강조','linear-gradient(135deg,#bfdbfe,#a5f3fc)'],
           ['editorial','에디토리얼','잡지형 대비와 차분한 면 분리','linear-gradient(135deg,#f8fafc,#e2e8f0)'],
-          ['neon','네온','보라/청록 계열의 강한 하이라이트','linear-gradient(135deg,#7c3aed,#06b6d4)'],
-          ['midnight','미드나잇','짙은 방송형 헤더와 어두운 대비','linear-gradient(135deg,#0f172a,#1e293b)'],
           ['sunset','선셋','오렌지/핑크 계열의 경기 포스터 톤','linear-gradient(135deg,#fb7185,#f59e0b)'],
           ['aurora','오로라','민트/라벤더 계열 몽환 톤','linear-gradient(135deg,#67e8f9,#a78bfa)'],
           ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)'],
           ['retro','레트로','80s 아케이드풍 원색 대비','linear-gradient(135deg,#fde047,#ef4444)'],
           ['paper','스크랩북','종이 질감의 다이어리 콜라주 톤','linear-gradient(135deg,#fef3c7,#fbcfe8)'],
-          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)'],
-          ['terminal','터미널','블랙 배경의 해커 콘솔 스타일','linear-gradient(135deg,#052e16,#166534)']
+          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdDesignMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailMode('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdDesignMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px;position:relative">
@@ -116,19 +113,17 @@ function _renderCfgMatchDetailSection(){
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
         ${[
           ['default','기본형','현재 구조 중심의 균형형','linear-gradient(180deg,#fff 0 38%,#eff6ff 38% 100%)'],
-          ['compact','컴팩트형','세트와 경기 카드를 촘촘하게','linear-gradient(180deg,#fff 0 38%,#f8fafc 38% 100%)'],
-          ['focus','포커스형','승자/핵심 경기 카드 존재감 확대','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
-          ['broadcast','브로드캐스트형','헤더와 스코어바를 방송형으로 강조','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
-          ['split','스플릿형','좌우 카드와 중간 스코어 분리감 강화','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
-          ['poster','포스터형','상단 배너와 경기행 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fff7ed 38% 100%)'],
-          ['timeline','타임라인형','세로 흐름의 연결선형 경기 목록','linear-gradient(180deg,#fff 0 38%,#f0fdfa 38% 100%)'],
-          ['arena','아레나형','대형 아바타와 중앙 VS 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)']
+          ['clean','클린형','넉넉한 여백 · 팀 컬러 포인트 바 · 라운드 카드로 새로 디자인','linear-gradient(180deg,#fff 0 38%,#f8fafc 38% 100%)'],
+          ['focus','포커스형','승자 카드를 크게, 패자는 축소·비대칭 스포트라이트','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
+          ['broadcast','브로드캐스트형','방송 스코어바 톤 강화, 상단 라이브 악센트 추가','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
+          ['poster','포스터형','화이트 베이스 · 각 팀 색상이 중앙으로 진해지는 그라디언트 · 원형 아바타','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
+          ['arena','아레나형','대형 아바타와 중앙 VS 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdLayoutMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailLayout('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdLayoutMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px">
             <span style="display:grid;grid-template-columns:1fr;gap:5px;height:100%">
               <span style="height:14px;border-radius:var(--r);background:rgba(99,102,241,.18)"></span>
-              <span style="display:grid;grid-template-columns:${key==='broadcast'?'1fr 42px 1fr':(key==='split'?'1fr 36px 1fr':'1fr 30px 1fr')};gap:4px">
+              <span style="display:grid;grid-template-columns:${key==='broadcast'?'1fr 42px 1fr':'1fr 30px 1fr'};gap:4px">
                 <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
                 <span style="height:18px;border-radius:8px;background:rgba(255,255,255,.92)"></span>
                 <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
@@ -337,7 +332,7 @@ function _refreshOpenMatchDetailModals(){
 }
 
 function cfgSetMatchDetailMode(mode){
-  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(mode)?mode:'classic'); }catch(e){}
+  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(mode)?mode:'classic'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -362,7 +357,7 @@ function cfgSetMatchDetailMode(mode){
 }
 
 function cfgSetMatchDetailLayout(mode){
-  try{ localStorage.setItem('su_md_layout_mode', ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(mode)?mode:'default'); }catch(e){}
+  try{ localStorage.setItem('su_md_layout_mode', ['default','clean','focus','broadcast','poster','arena'].includes(mode)?mode:'default'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -424,14 +419,14 @@ function _mdToggleStylePicker(evt){
   const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
   const lm = (localStorage.getItem('su_md_layout_mode')||'default').trim();
   const designs = [
-    ['classic','클래식'],['glass','글래스'],['editorial','에디토리얼'],['neon','네온'],
-    ['midnight','미드나잇'],['sunset','선셋'],['aurora','오로라'],['mono','모노'],
-    ['retro','레트로'],['paper','스크랩북'],['holo','홀로그램'],['terminal','터미널']
+    ['classic','클래식'],['glass','글래스'],['editorial','에디토리얼'],
+    ['sunset','선셋'],['aurora','오로라'],['mono','모노'],
+    ['retro','레트로'],['paper','스크랩북'],['holo','홀로그램']
   ];
   const layouts = [
-    ['default','기본'],['compact','컴팩트'],['focus','포커스'],
-    ['broadcast','방송형'],['split','스플릿'],['poster','포스터'],
-    ['timeline','타임라인'],['arena','아레나']
+    ['default','기본'],['clean','클린'],['focus','포커스'],
+    ['broadcast','방송형'],['poster','포스터'],
+    ['arena','아레나']
   ];
   const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_mdRefreshStylePicker()"
     style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;

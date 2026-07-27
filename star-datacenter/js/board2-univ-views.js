@@ -745,6 +745,7 @@ function _b2FemcoView() {
   };
 
   const rolePri = (p) => {
+    if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return p.roleOrder;
     const r = (p.role || '').trim();
     const order = ['이사장', '총장', '교수', '코치'];
     const i = order.indexOf(r);
@@ -1378,11 +1379,11 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   }
 
   // 직책 그룹
-  const roledMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const roledMembers = members.filter(p => _b2HasRole(p));
   roledMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
 
   // 티어 그룹
-  const tieredMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const tieredMembers = members.filter(p => !_b2HasRole(p));
   const tierGroups = {};
   tieredMembers.forEach(p => {
     const t = p.tier || '?';
@@ -1605,9 +1606,9 @@ function _b2FreeView() {
   });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
-  const roledFree   = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const roledFree   = freeMembers.filter(p => _b2HasRole(p));
   roledFree.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
-  const tieredFree  = freeMembers.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const tieredFree  = freeMembers.filter(p => !_b2HasRole(p));
 
   const tierGroups = {};
   tieredFree.forEach(p => {
@@ -1749,8 +1750,8 @@ function openB2MemberBreakdown(el, univName) {
   if (existing) { const wasEl = existing._forEl; existing.remove(); if (wasEl === el) return; }
   const col = gc(univName);
   const members = players.filter(p => String(p?.univ||'').trim() === String(univName||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
-  const roled = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
-  const tiered = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const roled = members.filter(p => _b2HasRole(p));
+  const tiered = members.filter(p => !_b2HasRole(p));
   const tierCounts = {};
   tiered.forEach(p => { const t = p.tier||'?'; tierCounts[t] = (tierCounts[t]||0)+1; });
   const orderedTiers = TIERS.filter(t => tierCounts[t]).concat(Object.keys(tierCounts).filter(t => !TIERS.includes(t)));
@@ -2285,11 +2286,11 @@ function _b2LineupPoster(univName, col, forExport=false) {
   }
 
   // 보직(임원) 그룹 — 큰 카드로 상단에 배치
-  const roleMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const roleMembers = members.filter(p => _b2HasRole(p));
   roleMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
 
   // 일반 멤버 — 티어순
-  const rosterMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const rosterMembers = members.filter(p => !_b2HasRole(p));
   rosterMembers.sort((a,b) => {
     const ta = TIERS.indexOf(a.tier||''), tb = TIERS.indexOf(b.tier||'');
     const ra = ta>=0?ta:99, rb = tb>=0?tb:99;

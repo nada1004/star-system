@@ -77,6 +77,29 @@ function bulkAddPlayers(){
     if(added>0)document.getElementById('bulk-player-input').value='';
   }
 }
+// 직책 버튼 다중선택: 클릭한 직책을 ed-role 입력값에 추가/제거 토글(& 로 연결)
+window._cfgToggleEdRole=function(btn){
+  const el=document.getElementById('ed-role'); if(!el||!btn) return;
+  const role=btn.dataset.role;
+  const parts=(el.value||'').split('&').map(s=>s.trim()).filter(Boolean);
+  const idx=parts.indexOf(role);
+  if(idx>=0) parts.splice(idx,1); else parts.push(role);
+  el.value=parts.join(' & ');
+  window._cfgSyncEdRoleBtns();
+};
+// ed-role 입력값(직접 입력 포함)에 맞춰 직책 버튼들의 선택 표시를 다시 그린다
+window._cfgSyncEdRoleBtns=function(){
+  const el=document.getElementById('ed-role'); const wrap=document.getElementById('ed-role-btns');
+  if(!el||!wrap) return;
+  const parts=(el.value||'').split('&').map(s=>s.trim()).filter(Boolean);
+  wrap.querySelectorAll('[data-role]').forEach(b=>{
+    const on=parts.includes(b.dataset.role);
+    const col=b.dataset.col||'#6b7280';
+    b.style.background=on?col+'22':'var(--white)';
+    const ic=(typeof ROLE_ICONS!=='undefined'&&ROLE_ICONS[b.dataset.role])||'🏷️';
+    b.textContent=`${ic} ${b.dataset.role}${on?' ✓':''}`;
+  });
+};
 window.openEP=function(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
@@ -197,12 +220,20 @@ window.openEP=function(name){
         <select id="ed-g"><option value="F"${(p.gender||'F')==='F'?' selected':''}>👩 여자</option><option value="M"${p.gender==='M'?' selected':''}>👨 남자</option></select>
       </div>
       <div style="grid-column:1 / -1;min-width:0">
-        <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/선장/동아리장/반장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용)</span></label>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
-          ${MAIN_ROLES.map(r=>{const ic=ROLE_ICONS[r]||'🏷️';const col=ROLE_COLORS[r]||'#6b7280';return `<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${r}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${col};background:${p.role===r?col+'22':'var(--white)'};color:${col};font-size:var(--fs-caption);font-weight:700;cursor:pointer">${ic} ${r}</button>`;}).join('')}
-          <button type="button" onclick="document.getElementById('ed-role').value=''" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:var(--fs-caption);font-weight:700;cursor:pointer">✕ 없음</button>
+        <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/선장/동아리장/반장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용 · 버튼은 여러 개 함께 선택 가능)</span></label>
+        <div id="ed-role-btns" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+          ${(()=>{const _cur=(p.role||'').split('&').map(s=>s.trim()).filter(Boolean);return MAIN_ROLES.map(r=>{const ic=ROLE_ICONS[r]||'🏷️';const col=ROLE_COLORS[r]||'#6b7280';const on=_cur.includes(r);return `<button type="button" onclick="_cfgToggleEdRole(this)" data-role="${r}" data-col="${col}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${col};background:${on?col+'22':'var(--white)'};color:${col};font-size:var(--fs-caption);font-weight:700;cursor:pointer">${ic} ${r}${on?' ✓':''}</button>`;}).join('');})()}
+          <button type="button" onclick="document.getElementById('ed-role').value='';_cfgSyncEdRoleBtns();" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:var(--fs-caption);font-weight:700;cursor:pointer">✕ 없음</button>
         </div>
-        <input type="text" id="ed-role" value="${p.role||''}" placeholder="직책 직접 입력 또는 위 버튼 클릭" style="width:100%">
+        <input type="text" id="ed-role" value="${p.role||''}" placeholder="직책 직접 입력 또는 위 버튼 클릭(여러 개 선택 시 & 로 연결됨)" oninput="_cfgSyncEdRoleBtns()" style="width:100%">
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-caption);color:var(--gray-l);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="ed-role-order-on" ${(typeof p.roleOrder==='number')?'checked':''} onchange="document.getElementById('ed-role-order').disabled=!this.checked;" style="width:auto">
+            현황판 표시 순서 직접 지정
+          </label>
+          <input type="number" id="ed-role-order" value="${(typeof p.roleOrder==='number')?p.roleOrder:''}" placeholder="숫자가 작을수록 앞에 표시" ${(typeof p.roleOrder==='number')?'':'disabled'} style="width:170px;flex-shrink:0">
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:3px">체크하지 않으면 위 직책 텍스트로 자동 정렬됩니다. 같은 순서 번호끼리는 티어 순으로 정렬됩니다.</div>
       </div>
       <div style="grid-column:1 / -1;min-width:0">
         <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
@@ -948,6 +979,13 @@ function savePlayer(){
   p.gender=document.getElementById('ed-g')?.value||p.gender||'F';
   const _rv=(document.getElementById('ed-role')?.value||'').trim();
   p.role=(!p.univ||p.univ==='무소속')?undefined:(_rv||undefined);
+  const _roleOrderOn=document.getElementById('ed-role-order-on')?.checked;
+  const _roleOrderRaw=document.getElementById('ed-role-order')?.value;
+  if(_roleOrderOn && _roleOrderRaw!==''&&_roleOrderRaw!=null && !isNaN(parseInt(_roleOrderRaw,10))){
+    p.roleOrder=parseInt(_roleOrderRaw,10);
+  }else{
+    delete p.roleOrder;
+  }
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
   if(_photo){
     if(_photo.startsWith('data:')){

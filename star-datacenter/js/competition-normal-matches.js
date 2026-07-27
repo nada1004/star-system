@@ -612,8 +612,8 @@ function nmSaveFromBuilder() {
 
 /* ── 일반 경기 상세 팝업 ── */
 function nmOpenDetailModal(tnId, idx) {
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono','retro','paper','holo','terminal'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','timeline','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId); if (!tn) return;
   const m = (tn.normalMatches || [])[idx]; if (!m) return;
   const caBase = gc(m.a || ''), cbBase = gc(m.b || '');

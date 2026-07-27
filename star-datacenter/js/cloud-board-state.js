@@ -586,7 +586,7 @@ function _getBoardPlayers(univName, includeRetired=false){
     }
     // 기본: MAIN_ROLES → 티어 → 포인트
     return [...univPlayers].sort((a,b)=>{
-      const ra=getRoleOrder(a.role),rb=getRoleOrder(b.role);
+      const ra=getRoleOrder(a.role,a),rb=getRoleOrder(b.role,b);
       if(ra!==rb)return ra-rb;
       return TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points;
     });

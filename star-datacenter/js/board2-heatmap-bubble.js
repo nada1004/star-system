@@ -507,7 +507,7 @@ function _b2BubbleView() {
   const tieredVis = players.filter(p =>
     !p.hidden && !p.retired && !p.hideFromBoard &&
     !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
+    !_b2HasRole(p)
   );
 
   const univData = univList.map(u => {

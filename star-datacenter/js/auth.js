@@ -733,6 +733,10 @@ function applyLoginState(){
   // 대학 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const univEditBtnEl=document.getElementById('univEditBtn');
   if(univEditBtnEl) univEditBtnEl.style.display=(isLoggedIn && !isSubAdmin)?'inline-flex':'none';
+  // 대학 상세 모달 스타일 전환 버튼 — 관리자로 로그인해야 노출
+  const univStyleBtnEl=document.getElementById('univModalStyleBtn');
+  if(univStyleBtnEl) univStyleBtnEl.style.display=(isLoggedIn && !isSubAdmin)?'inline-flex':'none';
+  if(!(isLoggedIn && !isSubAdmin)){ try{ if(typeof window._udCloseStylePicker==='function') window._udCloseStylePicker(); }catch(e){} }
   // 스트리머 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const playerEditBtnEl=document.getElementById('playerModalEditBtn');
   if(playerEditBtnEl) playerEditBtnEl.style.display=(isLoggedIn && !isSubAdmin)?'inline-flex':'none';

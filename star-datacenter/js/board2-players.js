@@ -121,8 +121,10 @@ function _b2PlayersView() {
     // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
     const roleOrder = ['이사장', '총장', '교수', '코치'];
     const roleOrderByLen = [...roleOrder].sort((a,b)=>b.length-a.length);
-    const _roleIdx = (role) => {
-      const r = role || '';
+    const _roleIdx = (p) => {
+      // 직책 편집에서 "표시 순서 직접 지정"(roleOrder 숫자)을 해뒀으면 자동 판정보다 우선한다.
+      if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return p.roleOrder;
+      const r = (p && p.role) || '';
       const exact = roleOrder.indexOf(r);
       if (exact >= 0) return exact;
       // 직책란에 두 직책을 함께 적어도(예: "이사장 & 회장") 알려진 키워드가 포함돼 있으면
@@ -134,8 +136,8 @@ function _b2PlayersView() {
 
     tierFilteredPlayers.sort((a, b) => {
       // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
-      const aRoleIdx = _roleIdx(a.role);
-      const bRoleIdx = _roleIdx(b.role);
+      const aRoleIdx = _roleIdx(a);
+      const bRoleIdx = _roleIdx(b);
       const aHasRole = aRoleIdx >= 0;
       const bHasRole = bRoleIdx >= 0;
 

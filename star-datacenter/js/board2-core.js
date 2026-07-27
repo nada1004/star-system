@@ -347,6 +347,8 @@ const _B2_ROLE_ORDER = ['이사장','동아리 회장','총장','부총장','교
 const _B2_ROLE_ORDER_BY_LEN = [..._B2_ROLE_ORDER].sort((a,b)=>b.length-a.length);
 
 function _b2RoleRank(p) {
+  // 직책 편집에서 "표시 순서 직접 지정"(roleOrder 숫자)을 해뒀으면 자동 판정보다 우선한다.
+  if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return p.roleOrder;
   const role = p.role || '';
   const exact = _B2_ROLE_ORDER.indexOf(role);
   if (exact >= 0) return exact;
@@ -358,6 +360,17 @@ function _b2RoleRank(p) {
     }
   }
   return 99;
+}
+
+// 직책자 여부 판정: 정확히 일치 / 두 직책이 "&"로 함께 적힌 경우(부분 문자열 포함) / 순서를
+// 수동으로 지정해둔 경우까지 모두 "직책자"로 인식한다. (기존에는 정확히 일치하는 경우만
+// 직책자로 분류돼, 직책 2개를 함께 선택하면 대학별/라인업 등에서 일반 명단으로 밀려나던 문제 수정)
+function _b2HasRole(p) {
+  if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return true;
+  const role = (p && p.role) || '';
+  if (!role) return false;
+  if (_B2_ROLE_ORDER.includes(role)) return true;
+  return _B2_ROLE_ORDER_BY_LEN.some(key => role.includes(key));
 }
 
 // 현황판 표시용 대학 리스트

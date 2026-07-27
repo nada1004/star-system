@@ -160,7 +160,7 @@ function rTotal(C,T){
   });
   const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
   const _photoCount = _visiblePlayers.filter(p=>String(p.photo||'').trim()).length;
-  const _roleCount = _visiblePlayers.filter(p=>p.role && MAIN_ROLES.includes(p.role)).length;
+  const _roleCount = _visiblePlayers.filter(p=>p.role && roleIsMain(p.role)).length;
   const _liveCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='hot').length;
   const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
@@ -494,10 +494,10 @@ function rTotal(C,T){
       </div>
     </td></tr>`;
     // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
-    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((b.points||0)-(a.points||0)));
+    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((b.points||0)-(a.points||0)));
     // 직책자와 일반 선수 분리
-    const _rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const _normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
+    const _rolePl = sorted.filter(p=>p.role&&roleIsMain(p.role));
+    const _normalPl = sorted.filter(p=>!p.role||!roleIsMain(p.role));
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
@@ -648,7 +648,7 @@ function _buildGalleryView(rankMap){
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     // 대학 헤더: 대학별 설정 적용
     const _gHdrBgImg = u.streamerHeaderBgImg || '';
     const _gHdrBgSize = u.streamerHeaderBgSize || 'cover';
@@ -819,7 +819,7 @@ function _buildSimpleView(rankMap){
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     html+=`<div class="streamer-simple-head" data-simple-univ-header="${u.name}" style="--c:${u.color||'#6366f1'}">
       <span class="streamer-simple-univ clickable-univ" onclick="openUnivModal('${_uSafe}')">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px'))}${u.name}</span>
@@ -1220,7 +1220,7 @@ function _buildFocusView(rankMap){
         <span style="display:inline-flex;align-items:center;gap:6px">${u.name && u.name!=='무소속' ? gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px')) : '🏷️'}<span class="${u.name&&u.name!=='무소속'?'clickable-univ':''}" ${u.name&&u.name!=='무소속'?`onclick="event.stopPropagation();openUnivModal('${u.name.replace(/'/g,"\\'")}')"`:''}>${u.name}</span></span>
         <span style="font-size:var(--fs-caption);color:rgba(255,255,255,.82)">${members.length}명</span>
       </div>`;
-    const sorted = [...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted = [...members].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     listHtml += `<div class="streamer-focus-card-grid">`;
     sorted.forEach(p=>{
       const win = Number(p.win||0);

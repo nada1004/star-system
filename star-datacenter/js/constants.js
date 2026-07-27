@@ -1141,7 +1141,23 @@ const _ROLE_ORDER_MAP = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'�
 // 긴 키워드부터 검사해야 "총장"이 "부총장" 안의 부분 문자열로 먼저 걸려서 우선순위가
 // 잘못 올라가는(부총장인데 총장 취급) 일을 막을 수 있다.
 const _ROLE_ORDER_KEYS = Object.keys(_ROLE_ORDER_MAP).sort((a,b)=>b.length-a.length);
-function getRoleOrder(role){
+// 직책란에 "이사장&총장"처럼 여러 직책을 함께 적었을 때, 그 안에 포함된 MAIN_ROLES
+// 키워드 중 하나를 찾아 반환한다(길이가 긴 키워드부터 검사). 아이콘/색상/직책자 여부 판정을
+// MAIN_ROLES.includes(role) 같은 완전일치가 아니라 이 함수로 통일해야, 직책을 함께 적어도
+// 뱃지 색상이 사라지거나 현황판에서 순서가 어긋나는 문제가 생기지 않는다.
+const _MAIN_ROLE_KEYS_BY_LEN = [...MAIN_ROLES].sort((a,b)=>b.length-a.length);
+function _roleMatchedMain(role){
+  if(!role) return null;
+  if(MAIN_ROLES.includes(role)) return role;
+  for(const key of _MAIN_ROLE_KEYS_BY_LEN){
+    if(role.includes(key)) return key;
+  }
+  return null;
+}
+function roleIsMain(role){ return !!_roleMatchedMain(role); }
+function getRoleOrder(role, player){
+  // player.roleOrder가 숫자로 지정돼 있으면(직책 편집에서 "표시 순서 직접 지정") 자동 판정보다 우선한다.
+  if(player && typeof player.roleOrder==='number' && !isNaN(player.roleOrder)) return player.roleOrder;
   // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
   if(!role) return 99;
   // 직책 필드에 "이사장 & 회장"처럼 두 직책을 함께 적어도, 그 안에 알려진 직책 키워드가
@@ -1154,10 +1170,11 @@ function getRoleOrder(role){
 }
 function getRoleBadgeHTML(role, size='11px'){
   if(!role) return '';
-  const icon = ROLE_ICONS[role]||'🏷️';
-  const col = ROLE_COLORS[role]||'#6b7280';
+  const _matched = _roleMatchedMain(role);
+  const icon = ROLE_ICONS[_matched]||'🏷️';
+  const col = ROLE_COLORS[_matched]||'#6b7280';
   // MAIN_ROLES는 진한 배경색, 그 외는 연한 배경
-  const isMain = MAIN_ROLES.includes(role);
+  const isMain = !!_matched;
   if(isMain){
     return `<span style="font-size:${size};padding:1px 5px;border-radius:5px;background:${col};color:#fff;font-weight:800;white-space:nowrap;flex-shrink:0;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.2)">${icon} ${role}</span>`;
   }
