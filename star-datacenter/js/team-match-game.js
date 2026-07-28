@@ -210,7 +210,7 @@ function _tmBuildTeamPool() {
     if (seenByUniv[u].has(name)) return; // 중복 인물 스킵
     seenByUniv[u].add(name);
     if (!pool[u]) pool[u] = [];
-    pool[u].push({ name, photo: p.photo });
+    pool[u].push({ name, photo: p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '' });
   });
   let teams = Object.keys(pool).map(u => ({
     univ: u,

@@ -1169,9 +1169,10 @@ function _gcSpin() {
       const iconSz = Math.round(window._GC_DOME * 0.36);
 
       let icon = '';
+      const _gcPhoto = p ? (p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '') : '';
       if (p) {
-        if (p.photo) {
-          icon = `<img src="${toHttpsUrl(p.photo)}" style="width:${iconSz}px;height:${iconSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
+        if (_gcPhoto) {
+          icon = `<img src="${toHttpsUrl(_gcPhoto)}" style="width:${iconSz}px;height:${iconSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
         } else {
           icon = p.race==='T'?'🤖':p.race==='Z'?'🐛':p.race==='P'?'💎':'🎮';
         }
@@ -1205,7 +1206,7 @@ function _gcSpin() {
       try{
         if(typeof window._rrShowPopup==='function'){
           window._rrShowPopup('🎉 결과', `<div style="text-align:center;padding:6px 4px">
-            <div style="font-size:46px;line-height:1;margin-bottom:10px">${(p && p.photo) ? '🎮' : (icon && !String(icon).startsWith('<') ? icon : '🎁')}</div>
+            <div style="font-size:46px;line-height:1;margin-bottom:10px">${_gcPhoto ? '🎮' : (icon && !String(icon).startsWith('<') ? icon : '🎁')}</div>
             <div style="font-size:22px;font-weight:1000;color:var(--text1)">${displayName}</div>
           </div>`);
         }

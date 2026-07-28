@@ -151,6 +151,11 @@ function _omEsc(s) {
 function _omUrl(u) {
   return (typeof toHttpsUrl === 'function') ? toHttpsUrl(u) : u;
 }
+// 돌/미니 아바타는 화면상 40px 안팎으로 작게 나오는데 원본 사진(수백KB~수MB)을 그대로 받으면
+// 매 수마다 새 이미지가 늦게 뜨는 원인이 됨 → toScaledUrl로 작은 webp 썸네일만 받도록 축소
+function _omThumbUrl(u) {
+  return (typeof toScaledUrl === 'function') ? toScaledUrl(u, 90) : _omUrl(u);
+}
 const _OM_SIZE = 13;
 const _OM_WIN_LEN = 5;
 const _OM_AXES = [[1, 0], [0, 1], [1, 1], [1, -1]];
@@ -192,7 +197,7 @@ function _omBuildTeamPool() {
     if (seenByUniv[u].has(name)) return;
     seenByUniv[u].add(name);
     if (!pool[u]) pool[u] = [];
-    pool[u].push({ name, photo: p.photo });
+    pool[u].push({ name, photo: p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '' });
   });
   let teams = Object.keys(pool).map(u => ({
     univ: u,
@@ -447,6 +452,16 @@ function _omSetDifficulty(key) {
 }
 window._omSetDifficulty = _omSetDifficulty;
 
+function _omPreloadTeamPhotos(team) {
+  try {
+    (team.players || []).forEach(p => {
+      if (!p.photo) return;
+      const im = new Image();
+      im.src = _omThumbUrl(p.photo);
+    });
+  } catch (e) {}
+}
+
 function _omStartGame() {
   const st = window._omState;
   const pool = _omEnsurePool();
@@ -467,6 +482,8 @@ function _omStartGame() {
   st.lastMove = null;
   st.thinking = false;
   st.running = true;
+  _omPreloadTeamPhotos(myTeam);
+  _omPreloadTeamPhotos(aiTeam);
   _omRenderRoot();
 }
 window._omStartGame = _omStartGame;
@@ -489,7 +506,7 @@ function _omMiniAvatarsHTML(team) {
   return `<div class="om-chip-avatars">${sample.map(p => {
     const initial = _omEsc(String(p.name || '?').trim().slice(0, 1));
     return p.photo
-      ? `<img src="${_omEsc(_omUrl(p.photo))}" alt="${_omEsc(p.name)}" loading="lazy" onerror="this.outerHTML='<div class=\\'om-mini-fallback\\' style=\\'background:${team.color}\\'>${initial}</div>'">`
+      ? `<img src="${_omEsc(_omThumbUrl(p.photo))}" alt="${_omEsc(p.name)}" loading="lazy" onerror="this.outerHTML='<div class=\\'om-mini-fallback\\' style=\\'background:${team.color}\\'>${initial}</div>'">`
       : `<div class="om-mini-fallback" style="background:${team.color}">${initial}</div>`;
   }).join('')}</div>`;
 }
@@ -584,7 +601,7 @@ function _omCellHTML(cell, r, c, winSet) {
   const ringColor = cell.side === 'me' ? (window._omState.myTeam && window._omState.myTeam.color) : (window._omState.aiTeam && window._omState.aiTeam.color);
   const stoneClass = `om-stone${isLast ? ' om-last' : ''}${isWin ? ' om-win' : ''}`;
   const img = cell.photo
-    ? `<img src="${_omEsc(_omUrl(cell.photo))}" alt="${_omEsc(cell.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img src="${_omEsc(_omThumbUrl(cell.photo))}" alt="${_omEsc(cell.name)}" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="om-stone-fallback" style="display:none;background:${cell.color}">${initial}</div>`
     : `<div class="om-stone-fallback" style="background:${cell.color}">${initial}</div>`;
   return `<div class="om-cell" onclick="_omCellClick(${r},${c})">

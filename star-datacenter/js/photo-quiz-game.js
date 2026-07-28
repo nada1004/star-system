@@ -222,7 +222,7 @@ function _pqBuildPool() {
     const name = String(p.name || '').trim();
     if (!name || seen.has(name)) return;
     seen.add(name);
-    pool.push({ name, photo: p.photo, gender: String(p.gender || '').trim() });
+    pool.push({ name, photo: p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '', gender: String(p.gender || '').trim() });
   });
   return pool;
 }

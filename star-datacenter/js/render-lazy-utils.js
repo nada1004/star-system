@@ -93,13 +93,13 @@ async function _ensureRouletteLoaded(){
   const scripts=[
     'js/wheel.js?v=20260717-ds03',
     'js/duck-race.js?v=20260717-ds03',
-    'js/roulette.js?v=20260717-ds03',
-    'js/team-match-game.js?v=20260717-ds03',
-    'js/tier-match-game.js?v=20260717-ds03',
-    'js/photo-quiz-game.js?v=20260717-ds03',
-    'js/memory-match-game.js?v=20260717-ds03',
-    'js/mole-whack-game.js?v=20260717-ds03',
-    'js/omok-game.js?v=20260728-om01',
+    'js/roulette.js?v=20260728-photofix1',
+    'js/team-match-game.js?v=20260728-photofix1',
+    'js/tier-match-game.js?v=20260728-photofix1',
+    'js/photo-quiz-game.js?v=20260728-photofix1',
+    'js/memory-match-game.js?v=20260728-photofix1',
+    'js/mole-whack-game.js?v=20260728-photofix1',
+    'js/omok-game.js?v=20260728-om-thumb1',
   ];
   // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
   // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.
