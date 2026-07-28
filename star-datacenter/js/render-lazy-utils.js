@@ -99,7 +99,7 @@ async function _ensureRouletteLoaded(){
     'js/photo-quiz-game.js?v=20260728-photofix1',
     'js/memory-match-game.js?v=20260728-photofix1',
     'js/mole-whack-game.js?v=20260728-photofix1',
-    'js/omok-game.js?v=20260728-om-thumb1',
+    'js/omok-game.js?v=20260728-om-diff5',
   ];
   // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
   // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.

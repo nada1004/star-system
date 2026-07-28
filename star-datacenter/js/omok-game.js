@@ -160,9 +160,11 @@ const _OM_SIZE = 13;
 const _OM_WIN_LEN = 5;
 const _OM_AXES = [[1, 0], [0, 1], [1, 1], [1, -1]];
 const _OM_DIFFS = {
-  easy:   { key: 'easy',   label: '쉬움', emoji: '🌱', defenseWeight: 0.45, lookahead: false, randomTop: 6 },
-  normal: { key: 'normal', label: '보통', emoji: '⚔️', defenseWeight: 0.9,  lookahead: false, randomTop: 2 },
-  hard:   { key: 'hard',   label: '고수', emoji: '🔥', defenseWeight: 1.05, lookahead: true,  randomTop: 1 },
+  beginner: { key: 'beginner', label: '입문',   emoji: '🐣', defenseWeight: 0.25, lookahead: false, lookaheadDepth: 0, randomTop: 10 },
+  easy:     { key: 'easy',     label: '쉬움',   emoji: '🌱', defenseWeight: 0.5,  lookahead: false, lookaheadDepth: 0, randomTop: 5 },
+  normal:   { key: 'normal',   label: '보통',   emoji: '⚔️', defenseWeight: 0.9,  lookahead: false, lookaheadDepth: 0, randomTop: 2 },
+  hard:     { key: 'hard',     label: '고수',   emoji: '🔥', defenseWeight: 1.05, lookahead: true,  lookaheadDepth: 1, randomTop: 1, lookaheadWidth: 6 },
+  master:   { key: 'master',   label: '마스터', emoji: '👑', defenseWeight: 1.2,  lookahead: true,  lookaheadDepth: 2, randomTop: 1, lookaheadWidth: 8 },
 };
 
 function _omReadStoredDifficulty() {
@@ -351,18 +353,33 @@ function _omComputeAiMove() {
   });
   scored.sort((a, b) => b.score - a.score);
 
-  if (diff.lookahead) {
-    const top = scored.slice(0, Math.min(6, scored.length));
+  const lookDepth = diff.lookahead ? (diff.lookaheadDepth || 1) : 0;
+  if (lookDepth >= 1) {
+    const width = diff.lookaheadWidth || 6;
+    const top = scored.slice(0, Math.min(width, scored.length));
     top.forEach(cand => {
       board[cand.r][cand.c] = { side: 'ai' };
       const nextCands = _omCollectCandidates(board, size);
-      let bestOpp = 0;
+      let bestOpp = 0, bestOppMove = null;
       nextCands.forEach(c2 => {
         const s = _omEvalPoint(board, size, c2.r, c2.c, 'me');
-        if (s > bestOpp) bestOpp = s;
+        if (s > bestOpp) { bestOpp = s; bestOppMove = c2; }
       });
+      let penalty = bestOpp * 0.3;
+      // 마스터(2수 앞내다보기): 상대의 최선 대응 이후, AI가 이어서 만회할 수 있는 정도를 반영
+      if (lookDepth >= 2 && bestOppMove) {
+        board[bestOppMove.r][bestOppMove.c] = { side: 'me' };
+        const next2 = _omCollectCandidates(board, size);
+        let bestFollow = 0;
+        next2.forEach(c3 => {
+          const s = _omEvalPoint(board, size, c3.r, c3.c, 'ai');
+          if (s > bestFollow) bestFollow = s;
+        });
+        board[bestOppMove.r][bestOppMove.c] = null;
+        penalty -= bestFollow * 0.15;
+      }
       board[cand.r][cand.c] = null;
-      cand.score2 = cand.score - bestOpp * 0.3;
+      cand.score2 = cand.score - penalty;
     });
     top.sort((a, b) => (b.score2 ?? b.score) - (a.score2 ?? a.score));
     scored = top;
