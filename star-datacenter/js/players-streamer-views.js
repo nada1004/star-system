@@ -923,9 +923,10 @@ function _buildSimpleView(rankMap){
   s.textContent=[
     // 심플형: 여백·장식·모션을 최소화한 담백한 한 줄 리스트. 그라디언트/그림자/회전 없이 정보 위주로 빠르게 훑을 수 있도록 구성
     '.streamer-simple-list{display:flex;flex-direction:column;gap:6px;font-family:inherit}',
-    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:16px;border-bottom:2px solid color-mix(in srgb, var(--c,#6366f1) 45%, transparent)}',
+    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:16px;border-radius:8px 8px 0 0;border-bottom:2px solid color-mix(in srgb, var(--c,#6366f1) 60%, transparent);background:linear-gradient(to right, color-mix(in srgb, var(--c,#6366f1) 78%, transparent) 0%, color-mix(in srgb, var(--c,#6366f1) 78%, transparent) 28%, color-mix(in srgb, var(--c,#6366f1) 34%, transparent) 62%, transparent 100%)}',
     '.streamer-simple-head:first-child{margin-top:0}',
-    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-base);font-weight:800;color:var(--c,#6366f1);cursor:pointer;letter-spacing:-.01em}',
+    'body.dark .streamer-simple-head{background:linear-gradient(to right, color-mix(in srgb, var(--c,#6366f1) 84%, transparent) 0%, color-mix(in srgb, var(--c,#6366f1) 84%, transparent) 28%, color-mix(in srgb, var(--c,#6366f1) 40%, transparent) 62%, transparent 100%)}',
+    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-base);font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5),0 0 1px rgba(0,0,0,.3);cursor:pointer;letter-spacing:-.01em}',
     '.streamer-simple-univ-count{margin-left:auto;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
     '.streamer-simple-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);border:1px solid rgba(148,163,184,.16);background:var(--panel,#fff);cursor:pointer;transition:background-color .12s ease,border-color .12s ease}',
     '@media (prefers-reduced-motion:reduce){.streamer-simple-row{transition:none}}',

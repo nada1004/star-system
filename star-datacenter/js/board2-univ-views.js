@@ -1691,8 +1691,24 @@ function _b2FreeView() {
     <div style="background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90));padding:16px">`;
 
   if (_fvMode === 'stat') {
-    const _allFree = roledFree.concat(orderedTierKeys.flatMap(t => tierGroups[t].slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}))));
-    h += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px">${_allFree.map(p => _b2LineupCard3(p, defCol)).join('')}</div>`;
+    let _statHtml = '';
+    if (roledFree.length) {
+      _statHtml += `<div style="display:flex;align-items:center;gap:8px;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid ${defCol}33">
+        <span style="font-size:var(--fs-md);font-weight:950;color:${defCol};letter-spacing:-.01em">👑 직책자</span>
+        <span style="font-size:10px;font-weight:800;color:var(--text3);background:${defCol}14;padding:2px 8px;border-radius:999px">${roledFree.length}명</span>
+      </div>`;
+      _statHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px">${roledFree.map(p => _b2LineupCard3(p, defCol)).join('')}</div>`;
+    }
+    orderedTierKeys.forEach((tier, tIdx) => {
+      const group = tierGroups[tier].slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}));
+      const tCol = getTierBtnColor(tier);
+      _statHtml += `<div style="display:flex;align-items:center;gap:8px;margin:${tIdx===0&&!roledFree.length?'0':'20px'} 0 10px;padding-bottom:6px;border-bottom:2px solid ${tCol}33">
+        <span style="font-size:var(--fs-md);font-weight:950;color:${tCol};letter-spacing:-.01em">${tier}</span>
+        <span style="font-size:10px;font-weight:800;color:var(--text3);background:${tCol}14;padding:2px 8px;border-radius:999px">${group.length}명</span>
+      </div>`;
+      _statHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px">${group.map(p => _b2LineupCard3(p, tCol)).join('')}</div>`;
+    });
+    h += _statHtml;
   } else if (_fvMode === 'table') {
     const _allFree = roledFree.concat(orderedTierKeys.flatMap(t => tierGroups[t].slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}))));
     h += _b2LineupTable(_allFree, defCol);
@@ -2150,8 +2166,9 @@ function _b2LineupCard3(p, col) {
     '.b2-lc4 thead th{position:sticky;top:0;text-align:left;padding:9px 12px;font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.05em;background:transparent!important;background-image:none!important;border-bottom:1px solid rgba(0,0,0,.08);white-space:nowrap}',
     '.b2-lc4 thead th:first-child{border-radius:14px 0 0 0}',
     '.b2-lc4 thead th:last-child{border-radius:0 14px 0 0;text-align:right}',
-    '.b2-lc4 tbody td{padding:7px 12px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle;background:transparent!important}',
+    '.b2-lc4 tbody td{padding:7px 12px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle;background:color-mix(in srgb, var(--tier-c,transparent) 7%, transparent)!important}',
     '.b2-lc4 tbody tr:last-child td{border-bottom:none}',
+    '.b2-lc4 tbody td:first-child{border-left:3px solid var(--tier-c,transparent)}',
     '.b2-lc4 tbody tr:hover td{background:var(--lc-col,#64748b)16!important}',
     '.b2-lc4 tbody tr{cursor:pointer;position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease;transform-origin:center center}',
     '.b2-lc4 tbody tr:hover{transform:scale(1.025);box-shadow:0 10px 22px rgba(15,23,42,.18);z-index:30}',
@@ -2185,7 +2202,7 @@ function _b2LineupTableRow(p, col) {
   const tierCol = (p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : col;
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-  return `<tr onclick="openPlayerModal('${safeName}')">
+  return `<tr onclick="openPlayerModal('${safeName}')" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
