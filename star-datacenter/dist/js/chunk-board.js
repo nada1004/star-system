@@ -4359,7 +4359,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
          MVP\uC640 \uC885\uD569 \uC804\uC801 \uCE74\uB4DC\uB9CC \uB530\uB85C 2\uCE78 \uADF8\uB9AC\uB4DC\uB85C \uBB36\uACE0 stretch\uC2DC\uCF1C \uC11C\uB85C \uB192\uC774\uB97C \uB9DE\uCD98\uB2E4.) */
       .b2w2-feature-row {
         display: grid;
-        grid-template-columns: minmax(220px, 300px) 1fr;
+        grid-template-columns: minmax(260px, 400px) 1fr;
         gap: 12px;
         margin-bottom: 20px;
         align-items: stretch;
@@ -4438,7 +4438,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       .b2w2-highlight-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-        align-items: start;
+        align-items: stretch;
         gap: 12px;
         margin-bottom: 20px;
       }
@@ -4906,7 +4906,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       /* \u2500\u2500 \uBC18\uC751\uD615 \u2500\u2500 */
       @media(min-width:1180px){
         /* MVP\xB7\uC885\uD569 \uC804\uC801 \uCE74\uB4DC\uB294 \uC704\uCABD b2w2-feature-row\uB85C \uBD84\uB9AC\uB410\uACE0, \uC5EC\uAE30 \uB0A8\uC740 6\uAC1C \uCE74\uB4DC\uB294
-           \uD0A4\uAC00 \uBE44\uC2B7\uD55C \uAC04\uB2E8\uD55C \uD1B5\uACC4 \uCE74\uB4DC\uB4E4\uC774\uB77C 6\uC5F4 \uD55C \uC904\uB85C \uB531 \uCC44\uC6B4\uB2E4. */
+           \uB0B4\uC6A9 \uAE38\uC774\uAC00 \uC11C\uB85C \uB2EC\uB77C\uB3C4 align-items:stretch\uB85C \uD55C \uC904 \uC548\uC5D0\uC11C \uB192\uC774\uB97C \uB9DE\uCD94\uACE0, 6\uC5F4\uB85C \uB531 \uCC44\uC6B4\uB2E4. */
         .b2w2-highlight-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
       }
       @media(max-width:900px){

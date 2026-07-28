@@ -49,6 +49,7 @@ function rRoulette(C, T) {
     else if (_gcTab === 'quiz') { setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'memory') { setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'mole') { setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'omok') { setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60); }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -86,6 +87,8 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'mole') {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'omok') {
+    setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
@@ -552,6 +555,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isQuiz = _gcTab === 'quiz';
   const isMemory = _gcTab === 'memory';
   const isMole = _gcTab === 'mole';
+  const isOmok = _gcTab === 'omok';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (_rLsGet(isPlayer ? 'su_gc_p' : 'su_gc_m', '') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
@@ -579,7 +583,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
     memory: { kicker:'PUZZLE GAME', icon:'🃏', accent:'linear-gradient(135deg,#818cf8,#a78bfa)', title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' },
-    mole: { kicker:'ACTION GAME', icon:'🐹', accent:'linear-gradient(135deg,#facc15,#f59e0b)', title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' }
+    mole: { kicker:'ACTION GAME', icon:'🐹', accent:'linear-gradient(135deg,#facc15,#f59e0b)', title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' },
+    omok: { kicker:'BOARD GAME', icon:'⚫⚪', accent:'linear-gradient(135deg,#334155,#0f172a)', title:'스타대학 오목', desc:'응원할 대학과 상대 대학을 골라 스트리머 프로필로 오목 대결을 펼칩니다.', badge1:'AI 대결', badge2:'대학 대항전' }
   }[_gcTab] || { kicker:'LUCKY STUDIO', icon:'🎰', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
   const _hero = `<section class="gc-hero" style="--gc-accent:${_tabMeta.accent}">
     <div class="gc-hero-main">
@@ -612,6 +617,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button class="pill${_gcTab==='quiz'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('quiz')">🖼️ 얼굴맞추기</button>
     <button class="pill${_gcTab==='memory'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('memory')">🃏 짝맞추기</button>
     <button class="pill${_gcTab==='mole'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('mole')">🐹 두더지</button>
+    <button class="pill${_gcTab==='omok'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('omok')">⚫⚪ 오목</button>
   </div>
   </div>`;
 
@@ -691,6 +697,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div id="mw-root"></div>
+</div>`;
+  }
+
+  // ⚫⚪ 오목 탭: 별도 레이아웃 (내용은 omok-game.js가 #om-root에 채움)
+  if (isOmok) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="om-root"></div>
 </div>`;
   }
 
@@ -956,6 +971,7 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'quiz' && tab !== 'quiz' && typeof _pqCleanup === 'function') _pqCleanup();
   if (_gcTab === 'memory' && tab !== 'memory' && typeof _mmCleanup === 'function') _mmCleanup();
   if (_gcTab === 'mole' && tab !== 'mole' && typeof _mwCleanup === 'function') _mwCleanup();
+  if (_gcTab === 'omok' && tab !== 'omok' && typeof _omCleanup === 'function') _omCleanup();
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
@@ -976,6 +992,8 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else if (tab === 'mole') {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
+  } else if (tab === 'omok') {
+    setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }

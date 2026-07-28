@@ -243,6 +243,7 @@ const LAZY_CHUNKS = {
     'js/team-match-game.js',
     'js/photo-quiz-game.js',
     'js/memory-match-game.js',
+    'js/omok-game.js',
   ],
   'lazy-calendar.js': [
     'js/calendar.js',

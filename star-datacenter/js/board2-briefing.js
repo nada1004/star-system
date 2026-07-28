@@ -1574,7 +1574,7 @@ function _b2WeeklyBriefingView() {
          MVP와 종합 전적 카드만 따로 2칸 그리드로 묶고 stretch시켜 서로 높이를 맞춘다.) */
       .b2w2-feature-row {
         display: grid;
-        grid-template-columns: minmax(220px, 300px) 1fr;
+        grid-template-columns: minmax(260px, 400px) 1fr;
         gap: 12px;
         margin-bottom: 20px;
         align-items: stretch;
@@ -1653,7 +1653,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-highlight-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-        align-items: start;
+        align-items: stretch;
         gap: 12px;
         margin-bottom: 20px;
       }
@@ -2121,7 +2121,7 @@ function _b2WeeklyBriefingView() {
       /* ── 반응형 ── */
       @media(min-width:1180px){
         /* MVP·종합 전적 카드는 위쪽 b2w2-feature-row로 분리됐고, 여기 남은 6개 카드는
-           키가 비슷한 간단한 통계 카드들이라 6열 한 줄로 딱 채운다. */
+           내용 길이가 서로 달라도 align-items:stretch로 한 줄 안에서 높이를 맞추고, 6열로 딱 채운다. */
         .b2w2-highlight-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
       }
       @media(max-width:900px){
