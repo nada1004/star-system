@@ -613,7 +613,7 @@ function nmSaveFromBuilder() {
 /* ── 일반 경기 상세 팝업 ── */
 function nmOpenDetailModal(tnId, idx) {
   const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId); if (!tn) return;
   const m = (tn.normalMatches || [])[idx]; if (!m) return;
   const caBase = gc(m.a || ''), cbBase = gc(m.b || '');
@@ -628,9 +628,10 @@ function nmOpenDetailModal(tnId, idx) {
     const bar = document.getElementById('cmdScoreBar');
     const headActions = document.getElementById('cmdHeadActions');
     const safe = (s) => String(s || '').replace(/[<>]/g, '');
-    if (titleEl) titleEl.textContent = `📊 ${tn.name || '대회'} · 일반 경기`;
+    const _nmScore = isDone ? `${m.sa}:${m.sb}` : '';
+    if (titleEl) titleEl.textContent = `📅 ${safe(m.a || 'A팀')}${_nmScore ? ` ${_nmScore}` : ''} VS ${safe(m.b || 'B팀')}`;
     const dStr = m.d ? String(m.d).slice(0, 10) : '';
-    if (subEl) subEl.textContent = dStr ? `📅 ${dStr}` : '';
+    if (subEl) subEl.textContent = [tn.name ? `📊 ${tn.name}` : '', dStr ? `📅 ${dStr}` : ''].filter(Boolean).join(' · ');
     if (bar) {
       if (isDone) {
         const loseA = bWin, loseB = aWin;

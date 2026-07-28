@@ -64,7 +64,7 @@ function _renderCfgMatchDetailSection(){
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
   const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','clean','focus','broadcast','poster','arena'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','focus','broadcast','poster','arena','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -113,11 +113,13 @@ function _renderCfgMatchDetailSection(){
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
         ${[
           ['default','기본형','현재 구조 중심의 균형형','linear-gradient(180deg,#fff 0 38%,#eff6ff 38% 100%)'],
-          ['clean','클린형','넉넉한 여백 · 팀 컬러 포인트 바 · 라운드 카드로 새로 디자인','linear-gradient(180deg,#fff 0 38%,#f8fafc 38% 100%)'],
           ['focus','포커스형','승자 카드를 크게, 패자는 축소·비대칭 스포트라이트','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
           ['broadcast','브로드캐스트형','방송 스코어바 톤 강화, 상단 라이브 악센트 추가','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
-          ['poster','포스터형','화이트 베이스 · 각 팀 색상이 중앙으로 진해지는 그라디언트 · 원형 아바타','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
-          ['arena','아레나형','대형 아바타와 중앙 VS 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)']
+          ['poster','포스터형','대전 헤드라인 포스터 — 대학명 vs 대학명 한 줄 타이틀 · 밝은 크림 골드 톤 · 골드 다이아몬드 VS','linear-gradient(180deg,#fffaf0 0 38%,#fdf3dd 38% 100%)'],
+          ['arena','아레나형','대형 아바타와 중앙 VS 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)'],
+          ['cute','큐트형','밝고 사랑스러운 파스텔 카드 · 동글동글 라운드 · 리본·별 장식','linear-gradient(180deg,#fff 0 38%,#ffe4f1 38% 100%)'],
+          ['magazine','매거진형','에디토리얼 매거진 커버 톤 · 큰 스코어 넘버 · 얇은 룰선','linear-gradient(180deg,#fdfcfa 0 38%,#f5f3ee 38% 100%)'],
+          ['nintendo','닌텐도형','팝한 원색 블록 · 두꺼운 외곽선 · 통통 튀는 3D 버튼감','linear-gradient(180deg,#fff 0 38%,#fee2e2 38% 100%)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdLayoutMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailLayout('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdLayoutMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px">
@@ -357,7 +359,7 @@ function cfgSetMatchDetailMode(mode){
 }
 
 function cfgSetMatchDetailLayout(mode){
-  try{ localStorage.setItem('su_md_layout_mode', ['default','clean','focus','broadcast','poster','arena'].includes(mode)?mode:'default'); }catch(e){}
+  try{ localStorage.setItem('su_md_layout_mode', ['default','focus','broadcast','poster','arena','cute','magazine','nintendo'].includes(mode)?mode:'default'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -424,9 +426,10 @@ function _mdToggleStylePicker(evt){
     ['retro','레트로'],['paper','스크랩북'],['holo','홀로그램']
   ];
   const layouts = [
-    ['default','기본'],['clean','클린'],['focus','포커스'],
+    ['default','기본'],['focus','포커스'],
     ['broadcast','방송형'],['poster','포스터'],
-    ['arena','아레나']
+    ['arena','아레나'],['cute','큐트'],
+    ['magazine','매거진'],['nintendo','닌텐도']
   ];
   const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_mdRefreshStylePicker()"
     style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;

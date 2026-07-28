@@ -821,131 +821,19 @@
 
 /* ══════════════════════════════════════════════════════════
    ★ 레이아웃 모드 (구조 자체를 변경 — 기본형/방송형 제외 전면 재설계)
-   data-md-layout: default(변경없음) / clean(완전 새 디자인) / focus / broadcast(소폭 개선) /
-                    poster(재설계 v2) / arena
-   ※ 기존 compact(컴팩트형)는 삭제되고 clean(클린형)으로 새로 디자인되었습니다.
+   data-md-layout: default(변경없음) / focus / broadcast(소폭 개선) /
+                    poster(v3 전면 재설계 — 대전 헤드라인 포스터) / arena
+   ※ 기존 compact(컴팩트형)는 삭제되고 clean(클린형)으로 새로 디자인되었다가,
+      이후 사용자 요청으로 clean(클린형) 자체가 완전히 삭제되었습니다.
    ※ split(스플릿형), scoreboard(스코어보드형)은 사용자 요청으로 제거되었습니다.
 ══════════════════════════════════════════════════════════ */
 
 /* ──────────────────────────────────────────────────────────
-   1. CLEAN — 미니멀 플랫 리스트형 (v2 전면 재설계)
-      기존 "카드+그림자" 문법을 완전히 걷어내고, 헤어라인 구분선과
-      여백만으로 구성한 텍스트 중심 레이아웃. 승자는 컬러 도트+굵은
-      글씨로, 패자는 흑백 사진+옅은 텍스트로만 구분합니다.
-      (기본형과는 배경/테두리/그림자를 전부 사용하지 않는다는 점에서
-       근본적으로 다른 톤입니다.)
-──────────────────────────────────────────────────────────── */
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-set-head{
-  margin:20px 0 2px !important;
-  padding:0 2px 9px !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  background:transparent !important;
-  border:none !important;
-  border-bottom:1px solid rgba(15,23,42,.1) !important;
-  font-size:10px !important; font-weight:800 !important; letter-spacing:1.2px;
-  text-transform:uppercase;
-  color:#94a3b8 !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game:first-of-type .cmd-set-head{
-  margin-top:0 !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game{
-  padding:0 !important;
-  border-bottom:1px solid rgba(15,23,42,.055);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game:last-of-type{
-  border-bottom:none;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-game-row{
-  gap:0;
-  align-items:center;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  border:none !important;
-  padding:13px 2px;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player{
-  position:relative;
-  min-width:0;
-  padding:0 8px !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  gap:10px !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player .cmd-photo{
-  width:32px !important; height:32px !important; margin:0 !important; transform:none !important;
-  flex-shrink:0;
-  border-radius:50% !important;
-  box-shadow:none !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player .cmd-photo *{
-  box-shadow:none !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-lose{
-  opacity:.62;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-lose .cmd-photo{
-  filter:grayscale(1) saturate(0);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player-name{
-  font-size:12.5px !important; font-weight:700 !important; gap:6px !important; min-width:0;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
-  font-weight:900 !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name__txt{
-  position:relative;
-  padding-left:12px;
-  color:#0f172a !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name__txt::before{
-  content:'';
-  position:absolute; left:0; top:50%; transform:translateY(-50%);
-  width:6px; height:6px; border-radius:50%;
-  background:var(--cmd-col,#2563eb);
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--cmd-col,#2563eb) 16%, transparent);
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right.is-win .cmd-player-name__txt{
-  padding-left:0; padding-right:12px;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-player.is-right.is-win .cmd-player-name__txt::before{
-  left:auto; right:0;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-midbox{
-  width:42px !important; flex-shrink:0; border-radius:0 !important; padding:0 4px !important;
-  background:transparent !important;
-  border:none !important; box-shadow:none !important;
-  border-left:1px solid rgba(15,23,42,.07) !important;
-  border-right:1px solid rgba(15,23,42,.07) !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-gno{
-  color:#94a3b8 !important; font-weight:800 !important; font-size:9.5px !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-win{
-  position:absolute !important;
-  background:transparent !important; color:var(--cmd-col,#2563eb) !important;
-  box-shadow:none !important; padding:0 !important;
-  font-size:9px !important; font-weight:950 !important; letter-spacing:.7px;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-single-summary,
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="clean"] .cmd-detail-shell .cmd-single-summary__row{
-  padding:13px 2px !important; border-radius:0 !important;
-  box-shadow:none !important;
-  border:none !important;
-  border-top:1px solid rgba(15,23,42,.09) !important;
-  background:transparent !important;
-}
-
-/* ──────────────────────────────────────────────────────────
-   2. FOCUS — 승자 스포트라이트 (v2 전면 재설계)
-      transform 확대만 쓰던 기존 방식과 달리, 실제 flex 비율(폭) 자체를
-      승자/패자에 다르게 배분해 구조적으로 비대칭을 만듭니다. 승자는
-      폭이 넓어지고 떠오르며 왕관 리본이 붙고, 패자는 폭이 줄고
-      그레이스케일로 가라앉습니다.
+   2. FOCUS — 승자 스포트라이트 (v3 UI 다듬기)
+      실제 flex 비율(폭) 자체를 승자/패자에 다르게 배분해 구조적으로
+      비대칭을 만듭니다. 승자는 살짝 넓어지고 떠오르며 왕관 뱃지가
+      붙고, 패자는 폭이 줄고 톤 다운됩니다. v3에서는 카드 배경 톤,
+      뱃지 디자인, 중앙 스코어 박스를 다듬어 완성도를 높였습니다.
 ──────────────────────────────────────────────────────────── */
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-game{
   padding:13px 0 !important;
@@ -953,54 +841,61 @@
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-game-row{
   align-items:stretch;
-  gap:6px;
+  gap:8px;
   overflow:visible;
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(148,163,184,.05),transparent);
+  padding:4px;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player{
-  flex:0.8 1 0% !important;
-  transition:flex-grow .25s cubic-bezier(.2,.8,.2,1), transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, opacity .25s ease, filter .25s ease;
+  flex:0.88 1 0% !important;
+  transition:flex-grow .25s cubic-bezier(.2,.8,.2,1), transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, opacity .25s ease, filter .25s ease, background .25s ease;
   position:relative;
   overflow:visible;
   border-radius:16px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win{
-  flex:1.4 1 0% !important;
-  transform:translateY(-4px) !important;
-  box-shadow:0 18px 34px color-mix(in srgb, var(--cmd-col,#2563eb) 26%, rgba(15,23,42,.12)) !important;
+  flex:1.2 1 0% !important;
+  transform:translateY(-3px) !important;
+  background:linear-gradient(160deg, color-mix(in srgb, var(--cmd-col,#2563eb) 10%, #fff), #fff) !important;
+  box-shadow:0 14px 26px color-mix(in srgb, var(--cmd-col,#2563eb) 22%, rgba(15,23,42,.1)) !important;
   border-width:2px !important;
   border-color:var(--cmd-col,#2563eb) !important;
-  padding:14px !important;
+  padding:12px !important;
   z-index:2;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-lose{
-  transform:translateY(3px) scale(.94) !important;
-  opacity:.5;
-  filter:grayscale(.75) saturate(.6);
+  transform:translateY(2px) scale(.97) !important;
+  opacity:.68;
+  filter:grayscale(.55) saturate(.75);
   box-shadow:none !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
-  width:46px !important; height:46px !important;
-  box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--cmd-col,#2563eb), 0 10px 20px rgba(15,23,42,.2) !important;
+  width:40px !important; height:40px !important;
+  box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--cmd-col,#2563eb), 0 8px 16px rgba(15,23,42,.16) !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-lose .cmd-photo{
-  width:28px !important; height:28px !important;
+  width:31px !important; height:31px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
-  font-size:14.5px !important; font-weight:950 !important;
+  font-size:13.5px !important; font-weight:950 !important;
+  color:color-mix(in srgb, var(--cmd-col,#2563eb) 72%, #0f172a) !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-player.is-win::before{
   content:'👑 WIN';
   position:absolute; top:-11px; left:50%; transform:translateX(-50%);
   font-size:9px; font-weight:950; letter-spacing:.4px; color:#fff;
-  background:var(--cmd-col,#2563eb); padding:3px 11px; border-radius:999px;
-  box-shadow:0 4px 10px rgba(0,0,0,.22); z-index:3;
+  background:linear-gradient(135deg, var(--cmd-col,#2563eb), color-mix(in srgb, var(--cmd-col,#2563eb) 60%, #7c3aed));
+  padding:3px 11px; border-radius:999px;
+  box-shadow:0 4px 10px rgba(0,0,0,.18); z-index:3;
   white-space:nowrap;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-win{
   display:none !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-midbox{
-  width:44px; flex:0 0 auto; border-radius:12px; opacity:.85; align-self:center;
+  width:42px; flex:0 0 auto; border-radius:999px; opacity:.9; align-self:center;
+  background:rgba(148,163,184,.08);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="focus"] .cmd-detail-shell .cmd-single-summary__row{
   padding:16px 18px; border-radius:20px;
@@ -1051,91 +946,239 @@
 }
 
 /* ──────────────────────────────────────────────────────────
-   4. POSTER — 대형 대전 포스터 (재설계 v2: 밝은 화이트 베이스 위에
-      각 진영 고유(대학) 색상이 중앙 VS를 향해 점점 진해지는 그라디언트.
-      고정 오렌지/다크 톤은 전혀 사용하지 않고, --cmd-col(각 카드에 이미
-      대학 색상이 실려 있음)만으로 색을 만듭니다.)
+   4. POSTER — 대전 헤드라인 포스터 (v4 라이트 톤 재설계: 어두운 무대
+      조명 컨셉을 걷어내고, 밝고 화사한 크림/골드 베이스의 "파이트카드"
+      포스터로 재조정했습니다.
+      - 상단 헤더 자체가 대전 헤드라인이 되도록 처음으로 손을 댐:
+        "대학명 vs 대학명" 매치업 타이틀(.cmd-title)이 어떤 화면 폭에서도
+        절대 두 줄로 줄바꿈되지 않고 한 줄로 표시되도록 강제(모바일 2줄
+        클램프 규칙보다 우선 적용).
+      - 팀 헤더는 각진 리본 형태로 깎아 중앙의 골드 다이아몬드 스코어
+        배지를 향해 맞부딪히는 구도로 재구성.
+      - 세트 목록은 밝은 크림 스테이지 배경 위에 육각 프레임 아바타,
+        모노스페이스 "ROUND" 라벨 등 기존 레이아웃과 겹치지 않는 톤으로
+        재설계.
 ──────────────────────────────────────────────────────────── */
+
+/* 4-1. 카드 전체 톤 — 밝은 크림/골드 포스터 배경 */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .mbox--matchdetail{
+  background:radial-gradient(120% 100% at 50% -10%, #fffaf0, #fdf3dd 62%) !important;
+  border:1px solid rgba(217,119,6,.2) !important;
+}
+
+/* 4-2. 헤더 — 대전 헤드라인 (기존 v2는 헤더를 전혀 건드리지 않았으나,
+        "대학명 vs 대학명"을 한 줄로 보여주는 것이 이번 재설계의 핵심이므로
+        헤더 전체를 포스터 타이틀로 새로 구성합니다) */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-head{
+  position:relative;
+  background:transparent !important;
+  border-bottom:none !important;
+  padding:24px 128px 16px 20px !important;
+  text-align:center;
+  overflow:visible;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-head::before{
+  content:'';
+  position:absolute; left:14%; right:14%; top:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(250,204,21,.6),transparent);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-head__txt{
+  width:100%;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-title{
+  display:block !important;
+  width:100%;
+  max-width:100%;
+  font-size:clamp(13px,4.4vw,21px) !important;
+  font-weight:950 !important;
+  letter-spacing:.01em !important;
+  text-transform:uppercase !important;
+  text-align:center !important;
+  /* ★ 요청사항: 포스터 모드에서는 대학명 vs 대학명이 항상 한 줄로 표시됨
+     (모바일 2줄 클램프 규칙보다 특이도가 높아 우선 적용됨) */
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  -webkit-line-clamp:1 !important;
+  -webkit-box-orient:horizontal !important;
+  color:#3a2a0a !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.6) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-sub{
+  display:block !important;
+  width:100%;
+  max-width:100%;
+  text-align:center !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  -webkit-line-clamp:1 !important;
+  -webkit-box-orient:horizontal !important;
+  color:#94734a !important;
+  text-transform:uppercase !important;
+  letter-spacing:.16em !important;
+  font-size:9.5px !important;
+  margin-top:7px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-close{
+  position:absolute; top:12px; right:8px; z-index:4;
+  width:26px !important; height:26px !important; font-size:12px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-head-actions{
+  position:absolute; top:13px; right:40px; z-index:3;
+  display:flex !important; align-items:center; gap:4px;
+  flex-wrap:nowrap; justify-content:flex-end; max-width:80px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-head-actions .cmd-hbtn{
+  width:24px !important; height:24px !important; font-size:11px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-hbtn,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-close{
+  background:rgba(217,119,6,.08) !important;
+  border:1px solid rgba(217,119,6,.28) !important;
+  color:#b45309 !important;
+}
+
+/* 4-3. 스코어바 — 각진 리본 두 장이 중앙 골드 다이아몬드를 향해 부딪히는 구도 */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-scorebar{
+  background:transparent !important;
+  animation:none !important;
+  padding:2px 22px 22px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-scorebar::before{
+  display:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-score{
+  gap:0 !important;
+  align-items:stretch;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team{
+  border-radius:0 !important;
+  border:none !important;
+  box-shadow:0 8px 18px rgba(180,83,9,.14) !important;
+  clip-path:polygon(0 0, 92% 0, 78% 100%, 0% 100%) !important;
+  padding:12px 30px 12px 16px !important;
+  margin-right:-16px;
+  min-height:0 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team:last-of-type{
+  clip-path:polygon(22% 0, 100% 0, 100% 100%, 8% 100%) !important;
+  padding:12px 16px 12px 30px !important;
+  margin-right:0; margin-left:-16px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team .cmd-team-text{
+  align-items:flex-start;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team:last-of-type .cmd-team-text{
+  align-items:flex-end;
+  text-align:right;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team .cmd-team-name{
+  text-transform:uppercase !important;
+  font-weight:950 !important;
+  letter-spacing:.02em !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-team.is-lose{
+  filter:grayscale(.35) brightness(.96) opacity(.8);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-mid{
+  position:relative; z-index:2;
+  flex-shrink:0;
+  width:60px; height:60px; min-height:0 !important;
+  margin:0 -16px;
+  border-radius:0 !important;
+  clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background:linear-gradient(135deg,#fde68a,#f59e0b) !important;
+  border:none !important;
+  box-shadow:0 8px 18px rgba(180,83,9,.28) !important;
+  padding:0 !important;
+  font-size:16px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-mid,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-mid *{
+  color:#1c1305 !important;
+  font-weight:950 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-mid .cmd-colon{
+  color:#1c1305 !important; opacity:.55 !important;
+}
+
+/* 4-4. 본문(세트 목록) — 밝은 크림 스테이지 위 육각 프레임 + 모노스페이스 라운드 라벨 */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-body{
+  background:linear-gradient(180deg,#fffdf8,#fdf3dd) !important;
+}
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-set-head{
   position:relative;
-  padding:7px 16px !important;
-  border-radius:999px !important;
-  font-size:11px !important; font-weight:900 !important; letter-spacing:.4px;
-  color:#475569 !important;
-  background:linear-gradient(180deg,#fff,#f8fafc) !important;
-  border:1px solid rgba(148,163,184,.22) !important;
-  box-shadow:0 8px 18px rgba(15,23,42,.06);
+  width:max-content;
+  margin:16px auto 10px !important;
+  padding:5px 20px !important;
+  border-radius:2px !important;
+  font-family:ui-monospace,'SFMono-Regular','Courier New',monospace !important;
+  font-size:10px !important; font-weight:900 !important; letter-spacing:2px;
+  text-transform:uppercase !important;
+  color:#b45309 !important;
+  background:#fff !important;
+  border:1px solid rgba(217,119,6,.3) !important;
+  box-shadow:0 2px 6px rgba(180,83,9,.08) !important;
+  clip-path:polygon(6% 0,94% 0,100% 100%,0% 100%);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-game:first-of-type .cmd-set-head{
+  margin-top:2px !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-game{
-  padding:12px 0;
+  padding:8px 0;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-game-row{
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr);
+  grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);
   align-items:stretch;
   gap:0;
-  border-radius:24px;
+  border-radius:10px;
   overflow:hidden;
-  background:#fff;
-  border:1px solid rgba(148,163,184,.16);
-  box-shadow:0 16px 36px rgba(15,23,42,.08);
+  background:linear-gradient(180deg,#ffffff,#fffaf0);
+  border:1px solid rgba(217,119,6,.14);
+  box-shadow:0 2px 8px rgba(180,83,9,.06);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player{
   position:relative; z-index:1;
   flex-direction:column;
   align-items:center !important;
   justify-content:center !important;
-  gap:9px;
-  padding:22px 12px !important;
+  gap:8px;
+  padding:16px 10px !important;
   border-radius:0 !important;
   border:none !important; box-shadow:none !important;
-  /* 바깥쪽(카드 가장자리)은 거의 흰색, 중앙(VS 쪽)으로 갈수록 본인 팀 색이 진해짐 */
-  background:linear-gradient(90deg,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 4%, #fff) 0%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 10%, #fff) 55%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 22%, #fff) 100%) !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-right{
-  background:linear-gradient(90deg,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 22%, #fff) 0%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 10%, #fff) 45%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 4%, #fff) 100%) !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-win{
-  background:linear-gradient(90deg,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 8%, #fff) 0%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 20%, #fff) 55%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 38%, #fff) 100%) !important;
-}
-:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-win.is-right{
-  background:linear-gradient(90deg,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 38%, #fff) 0%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 20%, #fff) 45%,
-    color-mix(in srgb, var(--cmd-col,#2563eb) 8%, #fff) 100%) !important;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--cmd-col,#2563eb) 18%, transparent) 0%, transparent 75%) !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-lose{
-  filter:saturate(.55);
-  opacity:.78;
+  filter:grayscale(.6) brightness(.98) opacity(.75);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player .cmd-photo{
-  width:58px !important; height:58px !important; margin:0 !important; transform:none !important;
-  border-radius:50% !important;
-  border:3px solid #fff !important;
-  box-shadow:0 0 0 2px color-mix(in srgb, var(--cmd-col,#2563eb) 55%, transparent), 0 10px 20px rgba(15,23,42,.16);
+  width:50px !important; height:50px !important; margin:0 !important; transform:none !important;
+  border-radius:0 !important;
+  clip-path:polygon(22% 0,100% 0,100% 78%,78% 100%,0 100%,0 22%);
+  border:none !important;
+  filter:drop-shadow(0 6px 10px rgba(180,83,9,.2));
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--cmd-col,#2563eb) 75%, transparent), 0 12px 26px rgba(15,23,42,.22);
+  filter:drop-shadow(0 0 0 2px var(--cmd-col,#d97706)) drop-shadow(0 6px 12px rgba(180,83,9,.22));
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player-name{
-  font-size:13.5px !important; font-weight:900 !important;
+  font-size:12.5px !important; font-weight:900 !important;
   justify-content:center !important; text-align:center !important;
-  color:#1e293b !important;
+  color:#57534e !important;
   white-space:normal !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
+  color:#3a2a0a !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-lose .cmd-player-name,
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player.is-lose .cmd-player-name__txt{
-  color:#64748b !important; opacity:.9 !important;
+  color:#a8a29e !important; opacity:.9 !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player-meta{
   align-items:center !important; text-align:center !important;
@@ -1145,31 +1188,42 @@
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-midbox{
   position:relative; z-index:1;
-  width:68px; border-radius:0;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
-  background:#fff !important;
-  border-left:1px solid rgba(148,163,184,.18) !important;
-  border-right:1px solid rgba(148,163,184,.18) !important;
+  width:58px; border-radius:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:#fffaf0 !important;
+  border-left:1px solid rgba(217,119,6,.24) !important;
+  border-right:1px solid rgba(217,119,6,.24) !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-midbox::before{
   content:'VS';
-  font-size:12px; font-weight:950; letter-spacing:.6px; color:#94a3b8;
+  font-size:10px; font-weight:950; letter-spacing:1px; color:#b45309;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-gno,
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-gmap{
-  color:#64748b !important;
+  color:#a8825a !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-win{
   position:static !important; transform:none; margin-top:1px;
-  background:var(--cmd-col,#2563eb) !important; color:#fff !important;
-  box-shadow:0 6px 14px color-mix(in srgb, var(--cmd-col,#2563eb) 40%, transparent);
+  background:transparent !important; color:#b45309 !important;
+  box-shadow:none !important; padding:0 !important;
+  font-size:9px !important; font-weight:950 !important; letter-spacing:1px;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-single-summary,
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-single-summary__row{
-  border-radius:24px !important;
-  background:#fff !important;
-  border:1px solid rgba(148,163,184,.16) !important;
-  box-shadow:0 16px 36px rgba(15,23,42,.08) !important;
+  border-radius:10px !important;
+  background:linear-gradient(180deg,#ffffff,#fffaf0) !important;
+  border:1px solid rgba(217,119,6,.14) !important;
+  box-shadow:0 2px 8px rgba(180,83,9,.06) !important;
+  color:#44403c !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-actions{
+  background:#fffaf0 !important;
+  border-top:1px solid rgba(217,119,6,.2) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-actions .btn{
+  background:#ffffff !important;
+  border:1px solid rgba(217,119,6,.28) !important;
+  color:#b45309 !important;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -1206,6 +1260,470 @@
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="arena"] .cmd-detail-shell .cmd-single-summary__row{
   padding:20px 18px !important; border-radius:24px !important;
+}
+
+/* ──────────────────────────────────────────────────────────
+   7. CUTE — 파스텔 큐트 스타일 (신규)
+      플레이어/대학 상세의 파스텔 큐트 모드와 톤을 맞춘 신규 레이아웃.
+      핑크·라벤더 그라데이션, 점선 테두리, 동글동글한 알약형/스티커
+      뱃지, 별·리본 장식으로 밝고 귀여운 느낌을 줍니다.
+──────────────────────────────────────────────────────────── */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .mbox--matchdetail{
+  background:linear-gradient(160deg,#fff5fa,#f3f0ff) !important;
+  border:1.5px solid #f3d5e8 !important;
+  border-radius:26px !important;
+  box-shadow:0 24px 60px rgba(244,114,182,.16) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-head{
+  background:transparent !important;
+  border-bottom:1.5px dashed #f3c6de !important;
+  padding:18px 20px 14px !important;
+  position:relative;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-title{
+  color:#a3489b !important;
+  font-weight:900 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  max-width:100%;
+  display:block;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-sub{
+  color:#c084bd !important;
+  font-weight:700 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-hbtn,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-close{
+  background:#fff !important;
+  border:1.5px solid #f3c6de !important;
+  border-radius:999px !important;
+  color:#ec4899 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-scorebar{
+  background:transparent !important;
+  animation:none !important;
+  padding:4px 16px 18px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-scorebar::before{
+  display:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-score{
+  gap:8px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-team{
+  border-radius:20px !important;
+  border:1.5px dashed #f3c6de !important;
+  background:#fff !important;
+  box-shadow:0 6px 14px rgba(244,114,182,.1) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-team.is-lose{
+  filter:saturate(.7) opacity(.75);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-mid{
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#fbcfe8,#ddd6fe) !important;
+  border:1.5px solid #fff !important;
+  box-shadow:0 6px 14px rgba(167,139,250,.24) !important;
+  width:52px; height:52px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-mid,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-mid *{
+  color:#831843 !important; font-weight:950 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-body{
+  background:transparent !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-set-head{
+  width:max-content;
+  margin:14px auto 8px !important;
+  padding:4px 16px !important;
+  border-radius:999px !important;
+  font-size:10px !important; font-weight:900 !important; letter-spacing:1px;
+  color:#a3489b !important;
+  background:#fff !important;
+  border:1.5px dashed #f3c6de !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-set-head::before{
+  content:'⭐ ';
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-game-row{
+  border-radius:20px !important;
+  background:#fff !important;
+  border:1.5px solid #fbe1ef !important;
+  box-shadow:0 6px 14px rgba(244,114,182,.08) !important;
+  overflow:hidden;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player{
+  border-radius:18px !important;
+  border:none !important;
+  transition:transform .2s ease;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player.is-win{
+  background:linear-gradient(180deg,rgba(251,207,232,.4),transparent) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player.is-lose{
+  filter:saturate(.55) opacity(.7);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-photo{
+  border-radius:50% !important;
+  border:2.5px dashed #f9a8d4 !important;
+  padding:2px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
+  border-color:#a78bfa !important;
+  box-shadow:0 0 0 3px #fff, 0 6px 14px rgba(167,139,250,.3) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player-name{
+  color:#7c3aed !important;
+  font-weight:800 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name{
+  color:#a3489b !important;
+  font-weight:950 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-player-meta{
+  color:#c084bd !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-midbox{
+  background:transparent !important;
+  border:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-midbox::before{
+  content:'💗';
+  font-size:13px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-win{
+  background:linear-gradient(90deg,#f472b6,#a78bfa) !important;
+  color:#fff !important;
+  border-radius:999px !important;
+  padding:2px 9px !important;
+  font-size:9px !important; font-weight:900 !important;
+  box-shadow:0 4px 10px rgba(167,139,250,.28) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-single-summary,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-single-summary__row{
+  border-radius:20px !important;
+  background:#fff !important;
+  border:1.5px solid #fbe1ef !important;
+  box-shadow:0 6px 14px rgba(244,114,182,.08) !important;
+  color:#831843 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-actions{
+  background:transparent !important;
+  border-top:1.5px dashed #f3c6de !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-actions .btn{
+  border-radius:999px !important;
+  background:#fff !important;
+  border:1.5px solid #f3c6de !important;
+  color:#ec4899 !important;
+  font-weight:800 !important;
+}
+
+/* ──────────────────────────────────────────────────────────
+   8. MAGAZINE — 에디토리얼 매거진 커버 스타일 (신규)
+      두꺼운 카드/그림자를 걷어내고 종이 질감의 여백, 얇은 룰선,
+      세리프 헤드라인, 크림슨 포인트 컬러로 잡지 커버 기사 느낌을
+      냅니다.
+──────────────────────────────────────────────────────────── */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .mbox--matchdetail{
+  background:#fdfcfa !important;
+  border:none !important;
+  border-radius:4px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-head{
+  background:transparent !important;
+  border-bottom:3px double #1f2937 !important;
+  padding:22px 24px 14px !important;
+  text-align:left;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-head::before{
+  content:'MATCH REPORT';
+  display:block;
+  font-size:9.5px; font-weight:800; letter-spacing:.3em;
+  color:#dc2626; margin-bottom:6px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-title{
+  font-family:Georgia,'Nanum Myeongjo','Times New Roman',serif !important;
+  color:#1c1917 !important;
+  font-weight:700 !important;
+  font-size:clamp(15px,4.8vw,23px) !important;
+  letter-spacing:-.01em !important;
+  text-transform:none !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  display:block; max-width:100%;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-sub{
+  font-style:italic;
+  color:#78716c !important;
+  font-size:11px !important;
+  letter-spacing:.02em !important;
+  margin-top:5px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-hbtn,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-close{
+  background:transparent !important;
+  border:1px solid #1f2937 !important;
+  border-radius:0 !important;
+  color:#1f2937 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-scorebar{
+  background:transparent !important;
+  animation:none !important;
+  padding:18px 24px !important;
+  border-bottom:1px solid #e7e5e4 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-team{
+  background:transparent !important;
+  border:none !important;
+  border-bottom:2px solid var(--cmd-col,#1f2937) !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  color:#1c1917 !important;
+  padding:4px 6px 10px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-team .cmd-team-name{
+  font-family:Georgia,'Nanum Myeongjo',serif !important;
+  text-transform:uppercase !important;
+  letter-spacing:.03em !important;
+  color:#1c1917 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-team.is-lose{
+  opacity:.5;
+  border-bottom-color:#d6d3d1 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-mid{
+  background:transparent !important;
+  border:none !important;
+  border-left:1px solid #d6d3d1 !important;
+  border-right:1px solid #d6d3d1 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  width:64px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-mid,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-mid *{
+  font-family:Georgia,'Nanum Myeongjo',serif !important;
+  color:#1c1917 !important;
+  font-weight:700 !important;
+  font-size:19px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-body{
+  background:#fdfcfa !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-set-head{
+  width:auto;
+  text-align:left;
+  margin:16px 24px 8px !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  font-family:Georgia,'Nanum Myeongjo',serif !important;
+  font-style:italic;
+  font-size:11px !important; font-weight:700 !important; letter-spacing:.04em;
+  color:#dc2626 !important;
+  background:transparent !important;
+  border:none !important;
+  border-bottom:1px solid #e7e5e4 !important;
+  padding-bottom:6px !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-game{
+  padding:0 24px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-game-row{
+  border-radius:0 !important;
+  background:transparent !important;
+  border:none !important;
+  border-bottom:1px solid #e7e5e4 !important;
+  box-shadow:none !important;
+  padding:10px 0 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-game:last-of-type .cmd-game-row{
+  border-bottom:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-player{
+  border:none !important; box-shadow:none !important; background:transparent !important;
+  border-radius:0 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-photo{
+  border-radius:2px !important;
+  filter:grayscale(.25);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
+  filter:none;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-player-name{
+  font-weight:700 !important;
+  color:#1c1917 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-player.is-lose .cmd-player-name{
+  color:#a8a29e !important; font-weight:600 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-win{
+  background:#dc2626 !important; color:#fff !important;
+  border-radius:0 !important; padding:1px 7px !important;
+  font-size:9px !important; font-weight:800 !important; letter-spacing:.1em;
+  text-transform:uppercase;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-single-summary,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-single-summary__row{
+  border-radius:0 !important;
+  background:transparent !important;
+  border:1px solid #e7e5e4 !important;
+  box-shadow:none !important;
+  color:#1c1917 !important;
+  margin:0 24px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-actions{
+  background:#fdfcfa !important;
+  border-top:1px solid #1f2937 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-actions .btn{
+  border-radius:0 !important;
+  background:transparent !important;
+  border:1px solid #1f2937 !important;
+  color:#1c1917 !important;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  font-size:11px !important;
+}
+
+/* ──────────────────────────────────────────────────────────
+   9. NINTENDO — 팝한 원색 블록 스타일 (신규)
+      두꺼운 다크 아웃라인 + 오프셋(블러 없는) 드롭섀도로 게임기 UI/
+      스티커 느낌을 냅니다. 통통 튀는 라운드 뱃지와 원색 포인트가
+      특징입니다.
+──────────────────────────────────────────────────────────── */
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .mbox--matchdetail{
+  background:#fff !important;
+  border:3px solid #1f2937 !important;
+  border-radius:22px !important;
+  box-shadow:6px 6px 0 rgba(31,41,55,.14) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-head{
+  background:linear-gradient(135deg,#4cc3ff,#2f8fe0) !important;
+  border-bottom:3px solid #1f2937 !important;
+  padding:18px 20px 14px !important;
+  border-radius:19px 19px 0 0 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-title{
+  color:#fff !important;
+  font-weight:950 !important;
+  -webkit-text-stroke:.4px #1f2937;
+  text-shadow:2px 2px 0 rgba(31,41,55,.35) !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  display:block; max-width:100%;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-sub{
+  color:rgba(255,255,255,.9) !important;
+  font-weight:800 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-hbtn,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-close{
+  background:#fff !important;
+  border:2.5px solid #1f2937 !important;
+  border-radius:999px !important;
+  color:#1f2937 !important;
+  box-shadow:2px 2px 0 rgba(31,41,55,.3) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-scorebar{
+  background:#fef9c3 !important;
+  animation:none !important;
+  padding:16px !important;
+  border-bottom:3px solid #1f2937 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-team{
+  border-radius:16px !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:3px 3px 0 rgba(31,41,55,.28) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-team.is-lose{
+  filter:saturate(.7) opacity(.8);
+  box-shadow:2px 2px 0 rgba(31,41,55,.18) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-mid{
+  border-radius:999px !important;
+  background:#fbbf24 !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:3px 3px 0 rgba(31,41,55,.28) !important;
+  width:54px; height:54px;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-mid,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-mid *{
+  color:#1f2937 !important; font-weight:950 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-body{
+  background:#fff !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-set-head{
+  width:max-content;
+  margin:16px auto 10px !important;
+  padding:5px 16px !important;
+  border-radius:999px !important;
+  font-size:10px !important; font-weight:950 !important; letter-spacing:.5px;
+  text-transform:uppercase;
+  color:#fff !important;
+  background:#ef4444 !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:2px 2px 0 rgba(31,41,55,.3) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-game-row{
+  border-radius:16px !important;
+  background:#fff !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:3px 3px 0 rgba(31,41,55,.22) !important;
+  overflow:hidden;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-player{
+  border-radius:12px !important;
+  border:none !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-player.is-win{
+  background:rgba(251,191,36,.16) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-player.is-lose{
+  filter:saturate(.55) opacity(.75);
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-photo{
+  border-radius:50% !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:2px 2px 0 rgba(31,41,55,.28) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-player-name{
+  color:#1f2937 !important;
+  font-weight:900 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-win{
+  background:#ef4444 !important; color:#fff !important;
+  border-radius:999px !important;
+  border:2px solid #1f2937 !important;
+  padding:1px 8px !important;
+  font-size:9px !important; font-weight:950 !important;
+  box-shadow:2px 2px 0 rgba(31,41,55,.28) !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-single-summary,
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-single-summary__row{
+  border-radius:16px !important;
+  background:#fff !important;
+  border:2.5px solid #1f2937 !important;
+  box-shadow:3px 3px 0 rgba(31,41,55,.22) !important;
+  color:#1f2937 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-actions{
+  background:#fef9c3 !important;
+  border-top:3px solid #1f2937 !important;
+}
+:is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-actions .btn{
+  border-radius:999px !important;
+  background:#fff !important;
+  border:2.5px solid #1f2937 !important;
+  color:#1f2937 !important;
+  font-weight:900 !important;
+  box-shadow:2px 2px 0 rgba(31,41,55,.28) !important;
 }
 
 

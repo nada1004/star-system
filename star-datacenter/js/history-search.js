@@ -909,7 +909,7 @@ function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
   const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{
     window._lastHistDetailState = {
       key,
@@ -1059,7 +1059,7 @@ function openHistDetailModal(key){
   const score=isDone ? `${match.sa}:${match.sb}` : '';
 
   // 헤더 텍스트
-  if(titleEl) titleEl.textContent = `📅 ${labelA} vs ${labelB}${score?` (${score})`:''}`;
+  if(titleEl) titleEl.textContent = isDone ? `📅 ${labelA} ${match.sa} VS ${match.sb} ${labelB}` : `📅 ${labelA} VS ${labelB}`;
   if(subEl){
     const parts=[];
     if(match.d) parts.push(`📅 ${String(match.d).slice(0,10)}`);

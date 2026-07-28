@@ -3,7 +3,7 @@
 function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   try{ window.__detailCtx = 'compModal'; }catch(_){}
   const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn=tourneys.find(t=>t.id===tnId);
   if(!tn)return;
   let m;
@@ -32,9 +32,9 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
     const label = (gi!=null && (rnd==null || rnd===undefined) && !isManual)
       ? `${(m.grpName||('GROUP '+(m.grpLetter||''))).trim()} · ${((m.matchNum!=null)?(m.matchNum+'경기'):'경기')}`
       : (isManual ? (m.rndLabel||'토너먼트 경기') : ((rnd!=null)?`${(m.rndLabel||'')} `.trim()+'' : '토너먼트'));
-    if(titleEl) titleEl.textContent = `📊 ${tn.name || '대회'} · ${label || '경기 상세'}`;
+    if(titleEl) titleEl.textContent = isDone ? `📅 ${safe(m.a || 'A팀')} ${m.sa} VS ${m.sb} ${safe(m.b || 'B팀')}` : `📅 ${safe(m.a || 'A팀')} VS ${safe(m.b || 'B팀')}`;
     const dStr = m.d ? String(m.d).slice(0,10) : '';
-    if(subEl) subEl.textContent = dStr ? `📅 ${dStr}` : '';
+    if(subEl) subEl.textContent = [tn.name ? `📊 ${tn.name}` : '', label || '', dStr ? `📅 ${dStr}` : ''].filter(Boolean).join(' · ');
 
     if(bar){
       if(isDone){

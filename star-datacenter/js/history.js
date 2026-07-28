@@ -3552,7 +3552,7 @@ function openHistDetailModal(key){
   const score=isDone ? `${match.sa}:${match.sb}` : '';
 
   // 헤더 텍스트
-  if(titleEl) titleEl.textContent = `📅 ${labelA} vs ${labelB}${score?` (${score})`:''}`;
+  if(titleEl) titleEl.textContent = isDone ? `📅 ${labelA} ${match.sa} VS ${match.sb} ${labelB}` : `📅 ${labelA} VS ${labelB}`;
   if(subEl){
     const parts=[];
     if(match.d) parts.push(`📅 ${String(match.d).slice(0,10)}`);
