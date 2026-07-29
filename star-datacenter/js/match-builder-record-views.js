@@ -530,8 +530,8 @@ function _h2hPillCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const av = (pName, col)=>{
     const p = players.find(x=>x.name===pName)||{};
     const sz = isMb ? 26 : 30;
-    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:999px;object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
-    return `<div style="width:${sz}px;height:${sz}px;border-radius:999px;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,999px);clip-path:var(--su_profile_clip,none);object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,999px);clip-path:var(--su_profile_clip,none);background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
   };
   return `<div style="padding:${isMb?'12px 12px 14px':'14px 14px 16px'}">
     <div style="border-radius:999px;border:1.5px solid var(--border);background:linear-gradient(90deg,${p1col}12,rgba(255,255,255,.92),${p2col}12);box-shadow:0 10px 24px rgba(15,23,42,.08);display:flex;align-items:center;gap:10px;padding:${isMb?'10px 12px':'12px 14px'}">

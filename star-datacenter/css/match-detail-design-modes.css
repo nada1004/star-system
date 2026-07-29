@@ -1159,8 +1159,8 @@
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="poster"] .cmd-detail-shell .cmd-player .cmd-photo{
   width:50px !important; height:50px !important; margin:0 !important; transform:none !important;
-  border-radius:0 !important;
-  clip-path:polygon(22% 0,100% 0,100% 78%,78% 100%,0 100%,0 22%);
+  border-radius:var(--su_profile_radius,0) !important;
+  clip-path:var(--su_profile_clip,polygon(22% 0,100% 0,100% 78%,78% 100%,0 100%,0 22%)) !important;
   border:none !important;
   filter:drop-shadow(0 6px 10px rgba(180,83,9,.2));
 }
@@ -1366,7 +1366,8 @@
   filter:saturate(.55) opacity(.7);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-photo{
-  border-radius:50% !important;
+  border-radius:var(--su_profile_radius,50%) !important;
+  clip-path:var(--su_profile_clip,none) !important;
   border:2.5px dashed #f9a8d4 !important;
   padding:2px;
 }
@@ -1548,7 +1549,8 @@
   border-radius:0 !important;
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-photo{
-  border-radius:2px !important;
+  border-radius:var(--su_profile_radius,2px) !important;
+  clip-path:var(--su_profile_clip,none) !important;
   filter:grayscale(.25);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-detail-shell .cmd-player.is-win .cmd-photo{
@@ -1689,7 +1691,8 @@
   filter:saturate(.55) opacity(.75);
 }
 :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-photo{
-  border-radius:50% !important;
+  border-radius:var(--su_profile_radius,50%) !important;
+  clip-path:var(--su_profile_clip,none) !important;
   border:2.5px solid #1f2937 !important;
   box-shadow:2px 2px 0 rgba(31,41,55,.28) !important;
 }

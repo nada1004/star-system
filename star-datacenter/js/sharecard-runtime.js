@@ -111,7 +111,7 @@
         logo_size: localStorage.getItem('su_sc_logo_size')||'100',
         logo_fit: localStorage.getItem('su_sc_logo_fit')||'contain',
         surface: localStorage.getItem('su_sc_surface')||'glass',
-        radius: localStorage.getItem('su_profile_radius')||'50%'
+        radius: localStorage.getItem('su_profile_shape')||localStorage.getItem('su_bcp_shape')||'circle'
       });
     }catch(e){ return 'default'; }
   }

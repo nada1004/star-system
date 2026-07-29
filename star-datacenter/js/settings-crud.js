@@ -1337,6 +1337,16 @@ window.edBindCardPosDrag = function(){ _edBindPosDrag('cardpos', 50, 22); };
    §4  경기 기록 수정 (openRE / saveRow)
 ════════════════════════════════════════════════════════ */
 // 팀 경기(mini/civil/univm/ck/pro/tt)에서 A팀/B팀 멤버를 수정하는 섹션 HTML 반환
+// 끝장전/프로리그 끝장전/개인전 수정창의 승자·패자 입력에 쓰는 스트리머 목록 datalist
+// (자유 텍스트 입력은 유지하되, 등록된 스트리머 중에서 바로 골라 다른 사람으로 변경할 수 있게 함)
+function _gjPlayerDatalistHTML(){
+  const allNames = (typeof players !== 'undefined' && Array.isArray(players))
+    ? players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'))
+    : [];
+  const dlOpts = allNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+  return `<datalist id="re-gjind-player-dl">${dlOpts}</datalist>`;
+}
+
 function _buildMemberEditHTML(members, side, label){
   const allNames = (typeof players !== 'undefined' && Array.isArray(players))
     ? players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'))
@@ -1528,23 +1538,23 @@ function openRE(mode,idx){
       <div style="margin-top:10px;font-size:var(--fs-caption);color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='progj'){
     const m=gjM[idx];tit='🏅 프로리그 끝장전 수정';
-    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
-      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
-      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+    body=`${_gjPlayerDatalistHTML()}<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" list="re-gjind-player-dl" id="re-gj-w" value="${m.wName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
+      <label>패자</label><input type="text" list="re-gjind-player-dl" id="re-gj-l" value="${m.lName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
       <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
       <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='gj'){
     const m=gjM[idx];tit='⚔️ 끝장전 수정';
-    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
-      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
-      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+    body=`${_gjPlayerDatalistHTML()}<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" list="re-gjind-player-dl" id="re-gj-w" value="${m.wName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
+      <label>패자</label><input type="text" list="re-gjind-player-dl" id="re-gj-l" value="${m.lName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
       <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
       <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='ind'){
     const m=indM[idx];tit='🎮 개인전 수정';
-    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
-      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
-      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+    body=`${_gjPlayerDatalistHTML()}<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" list="re-gjind-player-dl" id="re-gj-w" value="${m.wName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
+      <label>패자</label><input type="text" list="re-gjind-player-dl" id="re-gj-l" value="${m.lName||''}" placeholder="스트리머 이름 (다른 사람으로 변경 가능)">
       <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
       <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   }

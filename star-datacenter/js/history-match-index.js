@@ -164,7 +164,22 @@ window._openMatchDetailByMatchId = function(matchId, modeLabel, silent){
       if(g){
         const sid = g.sid || g.matchId || '';
         if(sid){
-          const group = arr.filter(x=>x && (x.sid===sid || x.matchId===sid));
+          // (버그픽스) sid는 "같은 날 붙여넣기 배치" 단위로 부여되어 서로 다른 선수쌍이
+          // 같은 sid를 공유할 수 있음. sid만으로 묶으면 배치 내 다른 쌍(예: A vs B)의 경기가
+          // 지금 클릭한 쌍(C vs D)의 상세팝업/공유카드에 섞여 나오는 문제가 있었음.
+          // -> sid가 같아도 실제 선수쌍(and 프로/일반 구분)이 일치하는 경기만 묶는다.
+          const _sidPairKey = [g.wName||'', g.lName||''].map(s=>String(s).trim()).sort().join('||');
+          const _sidIsProGJ = (lbl==='프로리그끝장전');
+          const group = arr.filter(x=>{
+            if(!x || (x.sid!==sid && x.matchId!==sid)) return false;
+            const pk = [x.wName||'', x.lName||''].map(s=>String(s).trim()).sort().join('||');
+            if(pk !== _sidPairKey) return false;
+            if(typeof x._proLabel !== 'undefined'){
+              if(_sidIsProGJ && !x._proLabel) return false;
+              if(!_sidIsProGJ && x._proLabel) return false;
+            }
+            return true;
+          });
           if(group.length>=2){
             const names=[]; const seen=new Set();
             group.forEach(it=>{ [it.wName,it.lName].forEach(n=>{ if(n && !seen.has(n)){ seen.add(n); names.push(n);} }); });
