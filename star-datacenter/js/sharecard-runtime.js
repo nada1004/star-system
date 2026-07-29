@@ -220,6 +220,158 @@
     }catch(e){}
   }
 
+  // ── 공유카드 스타일 전환(모드) 칩 : 관리자 로그인 시에만 노출 ──
+  var SC_MODE_LIST = [
+    ['campus','캠퍼스'],
+    ['vivid','비비드'],
+    ['soft','소프트'],
+    ['dark','다크'],
+    ['minimal','미니멀'],
+    ['aurora','오로라'],
+    ['poster','포스터'],
+    ['mono','모노']
+  ];
+
+  function _scCanEditStyle(){
+    try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin); }catch(e){ return false; }
+  }
+
+  function _scModeChipsHTML(){
+    let cur='campus';
+    try{ cur=(localStorage.getItem('su_sc_mode')||'campus').trim(); }catch(e){}
+    return SC_MODE_LIST.map(([key,label])=>{
+      const on = cur===key;
+      return `<button type="button" class="sc-mode-chip" data-mode="${key}" onclick="_scSwitchMode('${key}')"
+        style="font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;
+        border:1.5px solid ${on?'#0f172a':'rgba(148,163,184,.32)'};
+        background:${on?'#0f172a':'#fff'};color:${on?'#fff':'#334155'}">${label}${on?' ✓':''}</button>`;
+    }).join('');
+  }
+
+  function _shareCardRerenderCurrent(){
+    try{
+      if(window._shareMode==='match' && window._shareMatchObj && typeof renderShareCardByMatchObj==='function'){
+        renderShareCardByMatchObj(window._shareMatchObj);
+      }else if(window._shareMode==='player' && typeof window.renderShareCardByPlayer==='function'){
+        window.renderShareCardByPlayer(window._sharePlayerSearch||'');
+      }else if(window._shareMode==='univ' && typeof window.renderShareCardByUniv==='function'){
+        window.renderShareCardByUniv(window._shareUnivSearch||'');
+      }
+    }catch(e){}
+  }
+
+  function _scSwitchMode(mode){
+    try{
+      const valid = SC_MODE_LIST.some(([key])=>key===mode);
+      localStorage.setItem('su_sc_mode', valid?mode:'campus');
+      const panel=document.getElementById('scStylePicker');
+      if(panel) panel.innerHTML=_scStylePickerBodyHTML();
+      _shareCardRerenderCurrent();
+    }catch(e){}
+  }
+
+  function _scStylePickerBodyHTML(){
+    const layoutSection = (window._shareMode==='match') ? `
+      <div style="height:1px;background:rgba(148,163,184,.22);margin:10px 0"></div>
+      ${_scLayoutPickerBodyHTML()}` : '';
+    return `<div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">스타일 전환</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${_scModeChipsHTML()}</div>${layoutSection}`;
+  }
+
+  function _scStylePickerOutsideClick(e){
+    const p=document.getElementById('scStylePicker');
+    if(!p) return;
+    if(e.target && e.target.closest && (e.target.closest('#scStylePicker') || e.target.closest('#sc-style-btn'))) return;
+    _scCloseStylePicker();
+  }
+  function _scStylePickerReposition(){
+    const p=document.getElementById('scStylePicker');
+    if(!p) return;
+    const anchor=p._scAnchor;
+    if(!anchor || !anchor.isConnected){ _scCloseStylePicker(); return; }
+    const r=anchor.getBoundingClientRect();
+    const w=Math.min(280, window.innerWidth-24);
+    let left=r.right-w;
+    left=Math.max(12, Math.min(left, window.innerWidth-w-12));
+    let top=r.bottom+8;
+    const maxH=Math.min(window.innerHeight*0.6, 420);
+    if(top+maxH>window.innerHeight-12){ top=Math.max(12, r.top-maxH-8); }
+    p.style.left=left+'px';
+    p.style.top=top+'px';
+    p.style.width=w+'px';
+    p.style.maxHeight=maxH+'px';
+  }
+  function _scCloseStylePicker(){
+    const p=document.getElementById('scStylePicker');
+    if(p) p.remove();
+    try{ document.removeEventListener('click', _scStylePickerOutsideClick, true); }catch(e){}
+    try{ window.removeEventListener('resize', _scStylePickerReposition); }catch(e){}
+    try{ window.removeEventListener('scroll', _scStylePickerReposition, true); }catch(e){}
+  }
+  function _scToggleStylePicker(evt){
+    const existing=document.getElementById('scStylePicker');
+    if(existing){ _scCloseStylePicker(); return; }
+    if(!_scCanEditStyle()) return;
+    const panel=document.createElement('div');
+    panel.id='scStylePicker';
+    panel.style.cssText='position:fixed;z-index:100050;overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.24);padding:12px';
+    panel.innerHTML=_scStylePickerBodyHTML();
+    const anchor=(evt && evt.currentTarget) || document.getElementById('sc-style-btn');
+    panel._scAnchor=anchor || document.body;
+    document.body.appendChild(panel);
+    _scStylePickerReposition();
+    setTimeout(()=>{
+      document.addEventListener('click', _scStylePickerOutsideClick, true);
+      window.addEventListener('resize', _scStylePickerReposition);
+      window.addEventListener('scroll', _scStylePickerReposition, true);
+    },0);
+  }
+
+  window._scModeChipsHTML = _scModeChipsHTML;
+  window._scSwitchMode = _scSwitchMode;
+  window._shareCardRerenderCurrent = _shareCardRerenderCurrent;
+  window._scToggleStylePicker = _scToggleStylePicker;
+  window._scCloseStylePicker = _scCloseStylePicker;
+  window._scCanEditStyle = _scCanEditStyle;
+
+  // ── 경기 공유카드 레이아웃 전환 칩 (스타일 전환과 별개 축) : 관리자 로그인 시에만 노출 ──
+  var SC_MATCH_LAYOUT_LIST = [
+    ['default','기본형'],
+    ['spotlight','스포트라이트형'],
+    ['broadcast','브로드캐스트형'],
+    ['compact','컴팩트형']
+  ];
+
+  function _scMatchLayoutChipsHTML(){
+    let cur='default';
+    try{ cur=(localStorage.getItem('su_sc_match_layout')||'default').trim(); }catch(e){}
+    return SC_MATCH_LAYOUT_LIST.map(([key,label])=>{
+      const on = cur===key;
+      return `<button type="button" class="sc-layout-chip" data-layout="${key}" onclick="_scSwitchMatchLayout('${key}')"
+        style="font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;
+        border:1.5px solid ${on?'#0f172a':'rgba(148,163,184,.32)'};
+        background:${on?'#0f172a':'#fff'};color:${on?'#fff':'#334155'}">${label}${on?' ✓':''}</button>`;
+    }).join('');
+  }
+
+  function _scSwitchMatchLayout(layout){
+    try{
+      const valid = SC_MATCH_LAYOUT_LIST.some(([key])=>key===layout);
+      localStorage.setItem('su_sc_match_layout', valid?layout:'default');
+      const panel=document.getElementById('scStylePicker');
+      if(panel) panel.innerHTML=_scStylePickerBodyHTML();
+      _shareCardRerenderCurrent();
+    }catch(e){}
+  }
+
+  function _scLayoutPickerBodyHTML(){
+    return `<div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 전환</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${_scMatchLayoutChipsHTML()}</div>`;
+  }
+
+  window._scMatchLayoutChipsHTML = _scMatchLayoutChipsHTML;
+  window._scSwitchMatchLayout = _scSwitchMatchLayout;
+
   function openShareCardModal(){
     const existing=document.getElementById('sharecard-overlay');
     if(existing){
@@ -229,6 +381,7 @@
       try{ window.__sharecardSlideIdx={}; }catch(e){}
       existing.remove();
     }
+    try{ _scCloseStylePicker(); }catch(e){}
 
     const overlay=document.createElement('div');
     overlay.id='sharecard-overlay';
@@ -236,7 +389,10 @@
     overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:490px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:var(--r2)">
     <div class="sharecard-modal-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;cursor:move;user-select:none">
       <div style="font-weight:700;font-size:14px;color:var(--blue);padding-right:8px">🎴 공유 카드</div>
-      <button type="button" class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2;position:static;flex-shrink:0">✕</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${_scCanEditStyle() ? `<button type="button" id="sc-style-btn" class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;font-weight:700" title="스타일 전환" onclick="event.stopPropagation();try{_scToggleStylePicker(event);}catch(e){console.error('[scStyleBtn]',e);}">🎨 스타일 전환</button>` : ''}
+        <button type="button" class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2;position:static;flex-shrink:0">✕</button>
+      </div>
     </div>
     <div id="modal-share-card" class="sharecard-stage" style="display:flex;justify-content:center;overflow:visible;max-height:none;padding-bottom:2px">
       <div id="share-card" class="share-card-host" style="width:100%;max-width:472px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:'Noto Sans KR',sans-serif;display:block">
@@ -244,8 +400,7 @@
       </div>
     </div>
     <div class="sharecard-modal-actions" style="margin-top:10px">
-      <button class="btn btn-p" onclick="downloadShareCardJpg()">📷 JPG 저장</button>
-      <button class="btn btn-w" onclick="downloadShareCard()">🖼 PNG 저장</button>
+      <button class="btn btn-p" onclick="downloadShareCardJpg()">🖼 이미지저장</button>
       <button class="btn btn-w" onclick="document.getElementById('sharecard-overlay').remove()">닫기</button>
     </div>
   </div>`;

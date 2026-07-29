@@ -4470,47 +4470,258 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   gap:6px !important;
 }
 
-.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-grid{
-  grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) !important;
+/* ============================================================
+   경기 공유카드 레이아웃 모드 — 스포트라이트 / 브로드캐스트 / 컴팩트
+   (색상/스타일 전환과는 별개 축. 구성 자체가 서로 다르게 재설계됨.
+   기본형(default)은 변경 없음) */
+
+/* ---------- 스포트라이트형: 승자 중심 시네마틱 레이아웃 ---------- */
+.share-shell--match[data-sc-match-layout="spotlight"] .share-match-header,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-header{
+  background-image:radial-gradient(90% 140% at 50% -20%, rgba(255,255,255,.16), transparent 60%) !important;
 }
-.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side,
-.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side{
-  border-radius:24px !important;
-  box-shadow:0 18px 34px rgba(15,23,42,.16) !important;
+.share-shell--match[data-sc-match-layout="spotlight"] .share-match-versus-row,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-grid{
+  display:flex !important;
+  align-items:stretch !important;
+  gap:12px !important;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side + *{
+  order:2 !important;
+  align-self:center;
+  flex:0 0 auto !important;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-win,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-win,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-team-poster-side.is-win{
+  order:1 !important;
+  flex:2.3 1 0% !important;
+  height:auto !important;
+  min-height:220px;
+  transform:none !important;
+  position:relative;
+  z-index:2;
+  border-radius:28px !important;
+  box-shadow:0 24px 48px rgba(2,6,23,.34), 0 0 0 2px rgba(255,255,255,.55) inset !important;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-lose,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-lose,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-team-poster-side.is-lose{
+  order:3 !important;
+  flex:0.62 1 0% !important;
+  height:auto !important;
+  min-height:150px;
+  align-self:flex-end;
+  transform:none !important;
+  opacity:.86;
+  filter:saturate(.55) brightness(.9) !important;
+  border-radius:18px !important;
+  box-shadow:0 8px 18px rgba(2,6,23,.16) !important;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-win::before,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-win::before,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-team-poster-side.is-win::before{
+  content:"";
+  position:absolute;
+  inset:-24px;
+  z-index:-1;
+  border-radius:inherit;
+  background:radial-gradient(60% 60% at 50% 22%, rgba(255,255,255,.42), transparent 72%);
+  pointer-events:none;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-win::after,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-win::after,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-team-poster-side.is-win::after{
+  content:"★ WIN";
+  position:absolute;
+  top:10px; left:10px;
+  z-index:3;
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:1.5px;
+  color:#1e1b0e;
+  background:linear-gradient(135deg,#fef3c7,#fbbf24);
+  padding:4px 10px 4px 8px;
+  border-radius:999px;
+  box-shadow:0 4px 10px rgba(0,0,0,.28);
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-win .share-poster-name,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-win .share-poster-name{
+  font-size:33px !important;
+  letter-spacing:-.5px !important;
+  text-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-hero-side.is-lose .share-poster-name,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-lose .share-poster-name{
+  font-size:13px !important;
+  opacity:.92;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-side.is-lose .share-poster-media,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-team-poster-side.is-lose .share-poster-media{
+  filter:grayscale(.85) brightness(.68) contrast(.96) !important;
+}
+.share-shell--match[data-sc-match-layout="spotlight"] .share-match-header,
+.share-shell--match[data-sc-match-layout="spotlight"] .share-personal-header{
+  padding-bottom:26px !important;
 }
 .share-shell--match[data-sc-match-layout="spotlight"] .share-score-inline{
-  font-size:20px !important;
+  font-size:23px !important;
+  font-weight:1000 !important;
+  text-shadow:0 2px 14px rgba(0,0,0,.4);
+  background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.06)) !important;
+  padding:4px 14px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(255,255,255,.35) !important;
 }
 
+/* ---------- 브로드캐스트형: 중계 화면 스코어보드 오버레이 ---------- */
+.share-shell--match[data-sc-match-layout="broadcast"] .share-match-header,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-header{
+  padding-left:0 !important;
+  padding-right:0 !important;
+  position:relative;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-match-header::before,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-header::before{
+  content:"● LIVE";
+  position:absolute;
+  top:14px; left:18px;
+  z-index:4;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:1.5px;
+  color:#fca5a5;
+  text-shadow:0 0 8px rgba(248,113,113,.7);
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-surface{
+  border-radius:0 !important;
+  background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.24)) !important;
+  border-left:none !important;
+  border-right:none !important;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-match-versus-row,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-grid{
+  display:flex !important;
+  align-items:stretch !important;
+  gap:0 !important;
+  position:relative;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-side,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-team-poster-side{
+  border-radius:0 !important;
+  transform:none !important;
+  filter:none !important;
+  opacity:1 !important;
+  flex:1 1 0% !important;
+  height:auto !important;
+  min-height:198px;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side:first-child,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-side:first-child,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-team-poster-side:first-child{
+  clip-path:polygon(0 0,100% 0,92% 100%,0 100%) !important;
+  margin-right:-16px !important;
+  padding-right:22px !important;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side:last-child,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-side:last-child,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-team-poster-side:last-child{
+  clip-path:polygon(8% 0,100% 0,100% 100%,0 100%) !important;
+  padding-left:22px !important;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side.is-win,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-side.is-win,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-team-poster-side.is-win{
+  box-shadow:inset 0 0 0 3px rgba(251,191,36,.85) !important;
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side + *{
+  order:2 !important;
+  z-index:3;
+  align-self:center;
+  transform:scale(1.16) !important;
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.55));
+}
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side.is-win{ order:1 !important; }
+.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side.is-lose{ order:3 !important; }
+.share-shell--match[data-sc-match-layout="broadcast"] .share-score-inline{
+  font-size:25px !important;
+  font-weight:1000 !important;
+  letter-spacing:.5px !important;
+  padding:9px 20px !important;
+  border-radius:6px !important;
+  background:linear-gradient(180deg,rgba(20,20,26,.78),rgba(0,0,0,.55)) !important;
+  border:2px solid rgba(251,191,36,.65) !important;
+  box-shadow:0 10px 22px rgba(0,0,0,.4), 0 0 18px rgba(251,191,36,.18);
+}
 .share-shell--match[data-sc-match-layout="broadcast"] .share-personal-meta,
 .share-shell--match[data-sc-match-layout="broadcast"] .share-personal-meta-left{
   justify-content:center !important;
 }
-.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side{
-  padding:14px 12px 16px !important;
-}
-.share-shell--match[data-sc-match-layout="broadcast"] .share-hero-side.is-win{
-  transform:translateY(-2px) scale(1.02) !important;
-}
-.share-shell--match[data-sc-match-layout="broadcast"] .share-score-inline{
-  padding:6px 12px !important;
-  border-radius:999px !important;
-  background:rgba(255,255,255,.12) !important;
+.share-shell--match[data-sc-match-layout="broadcast"] .share-match-header::after,
+.share-shell--match[data-sc-match-layout="broadcast"] .share-personal-header::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:4px;
+  background:repeating-linear-gradient(90deg, rgba(251,191,36,.65) 0 18px, transparent 18px 26px);
+  pointer-events:none;
 }
 
-.share-shell--match[data-sc-match-layout="compact"] .share-personal-header,
-.share-shell--match[data-sc-match-layout="compact"] > div:first-child{
+/* ---------- 컴팩트형: 한눈에 보는 초압축 카드 ---------- */
+.share-shell--match[data-sc-match-layout="compact"] .share-match-header,
+.share-shell--match[data-sc-match-layout="compact"] .share-personal-header{
   padding:14px !important;
 }
 .share-shell--match[data-sc-match-layout="compact"] .share-personal-surface{
-  padding:14px !important;
+  padding:10px !important;
+  border-radius:16px !important;
 }
+.share-shell--match[data-sc-match-layout="compact"] .share-match-versus-row,
 .share-shell--match[data-sc-match-layout="compact"] .share-personal-grid{
-  gap:8px !important;
+  gap:9px !important;
 }
 .share-shell--match[data-sc-match-layout="compact"] .share-hero-side,
-.share-shell--match[data-sc-match-layout="compact"] .share-personal-side{
-  border-radius:18px !important;
+.share-shell--match[data-sc-match-layout="compact"] .share-personal-side,
+.share-shell--match[data-sc-match-layout="compact"] .share-team-poster-side{
+  border-radius:16px !important;
+  transform:none !important;
+  filter:none !important;
+  opacity:1 !important;
+  box-shadow:0 6px 14px rgba(2,6,23,.14) !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-hero-side.is-win,
+.share-shell--match[data-sc-match-layout="compact"] .share-personal-side.is-win,
+.share-shell--match[data-sc-match-layout="compact"] .share-team-poster-side.is-win{
+  box-shadow:0 8px 18px rgba(2,6,23,.2), 0 0 0 2px rgba(255,255,255,.65) inset !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-personal-side,
+.share-shell--match[data-sc-match-layout="compact"] .share-team-poster-side{
+  height:154px !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-poster-name{
+  font-size:16px !important;
+  letter-spacing:-.2px !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-poster-summary{
+  display:none !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-match-summary-grid,
+.share-shell--match[data-sc-match-layout="compact"] .share-match-sets-wrap,
+.share-shell--match[data-sc-match-layout="compact"] .share-match-tally{
+  display:none !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-match-body,
+.share-shell--match[data-sc-match-layout="compact"] .share-personal-body{
+  padding:9px 12px 12px !important;
+}
+.share-shell--match[data-sc-match-layout="compact"] .share-score-inline{
+  font-size:14px !important;
+  font-weight:900 !important;
+  padding:3px 12px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.18) !important;
+  border:1px solid rgba(255,255,255,.3) !important;
 }
 
 .share-shell[data-sc-mode="glacier"] .share-surface{
