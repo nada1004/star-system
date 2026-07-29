@@ -218,6 +218,25 @@
         }
         return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:var(--r2);background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
       };
+      // (요청사항) 소속 팀의 승패와 무관하게, 특정 선수 개인의 이번 경기 승/패 결과를 조회
+      // -> 'win' | 'lose' | null(개인 전적 데이터 없음, 팀 승패로 대체 처리)
+      const personalRecordForName = (name)=>{
+        const n = String(name||'').trim();
+        if(!n) return null;
+        let _pw=0, _pl=0;
+        try{
+          (Array.isArray(m && m.sets) ? m.sets : []).forEach(s=>{
+            (Array.isArray(s && s.games) ? s.games : []).forEach(g=>{
+              if(!g) return;
+              const isA = g.playerA===n, isB = g.playerB===n;
+              if(!isA && !isB) return;
+              if((isA && g.winner==='A') || (isB && g.winner==='B')) _pw++;
+              else if((isA && g.winner==='B') || (isB && g.winner==='A')) _pl++;
+            });
+          });
+        }catch(e){}
+        return _pw>_pl ? 'win' : (_pl>_pw ? 'lose' : null);
+      };
       const teamMiniMemberCell = (side, mem, idx, sz)=>{
         const p = hydratePlayer(mem&&mem.name, mem);
         const rgb = side==='A' ? caRgb : cbRgb;
@@ -225,39 +244,54 @@
         const race = String((p && p.race) || '').trim();
         const univ = String((p && p.univ) || '').trim();
         let icon = '';
-        const size = Math.max(28, Math.min(60, parseInt(sz||46,10)||46));
+        const baseSize = Math.max(28, Math.min(60, parseInt(sz||46,10)||46));
+        // (요청사항) 팀 전체 승패와 무관하게, 이 선수 개인의 이번 경기 승/패에 따라 아이콘 크기·밝기를 차등 적용
+        const personalRec = personalRecordForName(name);
+        // 소속 팀의 승패와 무관하게: 개인 승 -> "이긴 사람" 크기, 개인 패 -> "진 사람" 크기로 고정
+        const size = personalRec==='win' ? Math.round(baseSize*1.20) : (personalRec==='lose' ? Math.round(baseSize*0.76) : baseSize);
+        // 원본 프로필 이미지에서 아주 살짝만 회색 처리 (과하게 어둡거나 탁해지지 않도록)
+        const loseFilter = personalRec==='lose' ? 'filter:grayscale(22%) brightness(.97);opacity:.94;' : '';
+        const winRing = personalRec==='win' ? '0 6px 16px rgba(0,0,0,.30),0 0 0 2px rgba(255,255,255,.92)' : '0 5px 16px rgba(0,0,0,.24)';
         const logoSz = Math.max(16, Math.round(size * 0.52));
         if(p && p.photo){
           const _2ndHtml = (p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:999px'}) : '';
           const _swapCls = _2ndHtml ? ' ph-swap' : '';
-          icon = `<div class="${_swapCls.trim()}" style="position:relative;width:${size}px;height:${size}px"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:${size}px;height:${size}px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:0 5px 16px rgba(0,0,0,.24)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_2ndHtml}<div style="display:none;width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,logoSz+'px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
+          icon = `<div class="${_swapCls.trim()}" style="position:relative;width:${size}px;height:${size}px"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:${size}px;height:${size}px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:${winRing};${loseFilter}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">${_2ndHtml}<div style="display:none;width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,logoSz+'px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }else{
-          icon = `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18)">${univ ? univIconHTML(univ,logoSz+'px') : `<span style="color:#fff;font-weight:1000;font-size:${Math.max(12,Math.round(size*0.33))}px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
+          icon = `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:${winRing};${loseFilter}">${univ ? univIconHTML(univ,logoSz+'px') : `<span style="color:#fff;font-weight:1000;font-size:${Math.max(12,Math.round(size*0.33))}px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }
         return `<div onclick="openPlayerModal('${String(name).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="min-width:0;padding:2px 1px;border-radius:14px;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:center">${icon}</div>
         </div>`;
       };
+      // 두 팀 중 인원이 더 많은 쪽 기준으로 기본 아이콘 크기를 통일 — 팀이 달라도
+      // "개인 승"은 항상 같은 확대 크기, "개인 패"는 항상 같은 축소 크기가 되도록 함
+      const _sharedRosterN = Math.max(membersA.length, membersB.length, 1);
+      const _sharedIconBase = _sharedRosterN>18?30:_sharedRosterN>12?34:_sharedRosterN>8?38:46;
       const teamRosterPanel = (side, win)=>{
         const rgb = side==='A' ? caRgb : cbRgb;
         const arr = (side==='A' ? membersA : membersB) || [];
-        // 인원이 많아도 전부 보이도록: 인원 수에 따라 아이콘 크기/열 수 자동 조정
+        // 인원이 많아도 전부 보이도록: 인원 수에 따라 열 수는 이 팀 인원 기준으로 조정하되, 아이콘 기준 크기는 양 팀 공통
         const n = arr.length;
         const cols = n>18?6:n>12?5:n>8?4:3;
-        const iconSz = n>18?30:n>12?34:n>8?38:46;
         return `<div style="flex:1;min-width:0;padding:6px 6px 5px;border-radius:18px;background:${win?`rgba(${rgb},.18)`:'rgba(255,255,255,.10)'};border:1px solid ${win?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};box-shadow:${win?'0 10px 24px rgba(0,0,0,.14)':'none'}">
           <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:6px">
-            ${arr.map((mem,idx)=>teamMiniMemberCell(side, mem, idx, iconSz)).join('')}
+            ${arr.map((mem,idx)=>teamMiniMemberCell(side, mem, idx, _sharedIconBase)).join('')}
           </div>
         </div>`;
       };
       const teamPosterSide = (side)=>{
         const isA = side==='A';
-        const isWin = isA ? aWin : bWin;
+        const teamWin = isA ? aWin : bWin;
         const col = isA ? ca : cb;
         const rgb = isA ? caRgb : cbRgb;
         const rep = pickRep(side);
         const repPlayer = hydratePlayer(rep&&rep.name, rep);
+        // (요청사항) 소속 팀의 승패와 무관하게, 카드에 표시되는 선수 개인이 이번 경기에서
+        // 이겼는지/졌는지에 따라 카드 크기·프로필 이미지 크기·회색 처리를 결정한다.
+        // 개인 전적 데이터가 없으면(예: 팀 요약만 있는 경우) 팀 승패로 대체한다.
+        const _repPersonalRec = personalRecordForName(repPlayer && repPlayer.name);
+        const isWin = _repPersonalRec ? (_repPersonalRec==='win') : teamWin;
         const title = isA ? _dispA : _dispB;
         const sideMembers = (isA ? membersA : membersB) || [];
         const logoUniv = resolveSideLogoUniv(side, repPlayer);
@@ -288,7 +322,6 @@
         return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'248px':'201px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 20px rgba(2,6,23,.10);transform:translateY(${isWin?'-3':'2'}px) scale(${isWin?'1.043':'.971'});transform-origin:center center">
           ${media}
           <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,.05),rgba(15,23,42,.10) 24%,rgba(15,23,42,.42));pointer-events:none"></div>
-          ${isWin?`<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
           <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:4px">
             <div class="share-poster-name" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${titleStack?logoTitleGap:4}px;min-width:0;font-size:${Math.round((isWin?'28':'20')*(scp.titleScale||1))}px;font-weight:${isWin?1000:900};color:${titleColor};line-height:1.05;text-shadow:0 5px 18px rgba(0,0,0,.54),0 1px 0 rgba(0,0,0,.22);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${titleStack?`<span style="display:inline-flex;align-items:flex-end;justify-content:center;width:${logoBox}px;height:${logoBox}px;flex-shrink:0;background:transparent;border:none;box-shadow:none;line-height:1;${repLogoTone}">${logoMarkup}</span>`:''}<span style="min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${title}</span></div>
             ${showRepSummary&&repSummary?`<div class="share-poster-summary" style="font-size:${isWin?12:11}px;font-weight:800;color:${summaryColor};line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.22)">${repSummary}</div>`:''}

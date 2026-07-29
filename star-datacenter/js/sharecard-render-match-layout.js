@@ -153,7 +153,8 @@
         return false;
       }
     };
-    const hideTeamUnivOnTop = ['progj'].includes(String(args?.m?._matchType||''));
+    // (요청사항) 개인전끝장전/프로리그끝장전 공유카드 모두 소속대학 로고를 대학 이름 옆에 표시
+    const hideTeamUnivOnTop = false;
     const sideColor = isA ? ca : cb;
     const rgb = isA ? caRgb : cbRgb;
     const title = String(player?.name || (isA ? _dispA : _dispB) || '').trim() || (isA ? 'A PLAYER' : 'B PLAYER');
@@ -175,7 +176,6 @@
     return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 24px rgba(2,6,23,.12);transform:translateY(${isWin?'-1':'2'}px) scale(${isWin?'1.005':'.992'});transform-origin:center center">
       ${media}
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.04) 18%,rgba(15,23,42,.34));pointer-events:none"></div>
-      ${isWin?`<div class="share-personal-winmark" style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
       <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap">
           ${race?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)">${race}</span>`:''}
