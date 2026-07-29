@@ -2,6 +2,17 @@
    Match Builder Record Views
 ══════════════════════════════════════ */
 
+// 세션 키 충돌 방지용 짧은 해시 (FNV-1a 32bit 간이)
+function _sessHashKey(v){
+  const str = String(v||'');
+  let h = 2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h>>>0).toString(36);
+}
+
 function _safeHeadToHeadSideFx(leftHex, rightHex){
   try{
     if(typeof _getRecSideFxCfg!=='function') return '';
@@ -995,7 +1006,9 @@ function indRecordsHTML(){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const _indSessKey = ('inds_' + String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
+    // 세션 키 충돌 방지: 사람이 읽을 수 있는 일부 + 짧은 해시를 함께 사용
+    const _indRawKey = String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`);
+    const _indSessKey = (`inds_${_sessHashKey(_indRawKey)}_${_indRawKey.replace(/[^\w\-]/g,'_')}`).slice(0,120);
     window._indSessCache = window._indSessCache || {};
     window._indSessCache[_indSessKey] = {...s};
     const actionOpts = [];
@@ -1179,7 +1192,8 @@ function gjRecordsHTML(proOnly){
     // 상세 팝업/공유카드가 열리는 문제가 있었음. sid에 선수쌍을 함께 포함시켜 고유화.
     const _sidBase = (s.games.find(x=>x && x.sid)?.sid) || '';
     const _sidRaw = _sidBase ? `${_sidBase}|${s.p1||''}|${s.p2||''}` : (s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`);
-    const _gjSessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
+    // ✅ 버그픽스(추가 보강): 세션 키 충돌(특히 자동인식 배치 저장 시 sid 공유) 방지
+    const _gjSessKey = (`gjs_${_sessHashKey(_sidRaw)}_${String(_sidRaw).replace(/[^\w\-]/g,'_')}`).slice(0,120);
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);

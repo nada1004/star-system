@@ -247,8 +247,9 @@
         const baseSize = Math.max(28, Math.min(60, parseInt(sz||46,10)||46));
         // (요청사항) 팀 전체 승패와 무관하게, 이 선수 개인의 이번 경기 승/패에 따라 아이콘 크기·밝기를 차등 적용
         const personalRec = personalRecordForName(name);
-        // 소속 팀의 승패와 무관하게: 개인 승 -> "이긴 사람" 크기, 개인 패 -> "진 사람" 크기로 고정
-        const size = personalRec==='win' ? Math.round(baseSize*1.20) : (personalRec==='lose' ? Math.round(baseSize*0.76) : baseSize);
+        // (요청사항) 참여자 프로필 이미지는 항상 같은 크기로 고정
+        // - 승/패는 링/톤(색감/그레이)으로만 표현하고, 크기(가로·세로)는 바꾸지 않는다.
+        const size = baseSize;
         // 원본 프로필 이미지에서 아주 살짝만 회색 처리 (과하게 어둡거나 탁해지지 않도록)
         const loseFilter = personalRec==='lose' ? 'filter:grayscale(22%) brightness(.97);opacity:.94;' : '';
         const winRing = personalRec==='win' ? '0 6px 16px rgba(0,0,0,.30),0 0 0 2px rgba(255,255,255,.92)' : '0 5px 16px rgba(0,0,0,.24)';
