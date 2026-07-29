@@ -82,21 +82,56 @@
       };
       const membersA = buildMembers('A');
       const membersB = buildMembers('B');
-      // 슬라이드쇼: 1경기부터 순서대로 5초마다 순환 (랜덤 아님)
+      // 슬라이드쇼: 경기(게임) 1번부터 마지막 경기까지 순서대로 5초마다 순환 (랜덤 아님)
       const _slideKey = String(m?._id||m?.d||'share');
       window.__sharecardSlideIdx = window.__sharecardSlideIdx || {};
       if(window.__sharecardSlideIdx[_slideKey] === undefined) window.__sharecardSlideIdx[_slideKey] = 0;
+      const buildGameFrames = ()=>{
+        try{
+          const out = [];
+          (Array.isArray(m && m.sets) ? m.sets : []).forEach((s)=>{
+            (Array.isArray(s && s.games) ? s.games : []).forEach((g)=>{
+              if(!g) return;
+              const pA = String(g.playerA||'').trim();
+              const pB = String(g.playerB||'').trim();
+              if(!pA && !pB) return;
+              out.push({
+                playerA: pA,
+                playerB: pB,
+                winner: String(g.winner||'').trim(), // 'A' | 'B' | ''
+                map: String(g.map||'').trim()
+              });
+            });
+          });
+          return out;
+        }catch(e){
+          return [];
+        }
+      };
+      const _gameFrames = buildGameFrames();
       const pickSequential = (arr, key)=>{
         if(!Array.isArray(arr) || !arr.length) return null;
         if(arr.length===1) return arr[0] || null;
         const seqIdx = window.__sharecardSlideIdx[key] % arr.length;
         return arr[seqIdx] || arr[0] || null;
       };
+      const pickGameFrame = ()=>{
+        if(!_gameFrames.length) return null;
+        const idx = window.__sharecardSlideIdx[_slideKey] % _gameFrames.length;
+        return _gameFrames[idx] || _gameFrames[0] || null;
+      };
       const preA = null;
       const preB = null;
       const pickRep = (side)=>{
         const pre = side==='A' ? preA : preB;
         if(pre) return pre;
+        // 우선: 경기 프레임에서 현재 경기의 선수로 표시
+        const gf = pickGameFrame();
+        if(gf){
+          const nm = side==='A' ? gf.playerA : gf.playerB;
+          if(nm) return { name: nm, __fromGameFrame: true, __winner: gf.winner, __opponent: side==='A' ? gf.playerB : gf.playerA, __map: gf.map };
+        }
+        // fallback: 선수 목록 순환 (데이터가 팀 로스터만 있는 경우)
         const arr = side==='A' ? membersA : membersB;
         if(!arr.length) return null;
         const photoArr = arr.filter(x=>x && x.photo);
@@ -224,18 +259,26 @@
         const n = String(name||'').trim();
         if(!n) return null;
         let _pw=0, _pl=0;
+        // 동률(예: 1승 1패)인 경우에도 "최근 경기" 기준으로 승/패를 반환해
+        // 팀 승패 fallback 때문에 프로필 크기가 뒤집히는 케이스를 방지한다.
+        // - 개인 전적 데이터가 아예 없을 때만 null을 반환하여 팀 승패로 대체
+        let _last = null; // 'win' | 'lose' | null
         try{
           (Array.isArray(m && m.sets) ? m.sets : []).forEach(s=>{
             (Array.isArray(s && s.games) ? s.games : []).forEach(g=>{
               if(!g) return;
               const isA = g.playerA===n, isB = g.playerB===n;
               if(!isA && !isB) return;
-              if((isA && g.winner==='A') || (isB && g.winner==='B')) _pw++;
-              else if((isA && g.winner==='B') || (isB && g.winner==='A')) _pl++;
+              if((isA && g.winner==='A') || (isB && g.winner==='B')){ _pw++; _last = 'win'; }
+              else if((isA && g.winner==='B') || (isB && g.winner==='A')){ _pl++; _last = 'lose'; }
             });
           });
         }catch(e){}
-        return _pw>_pl ? 'win' : (_pl>_pw ? 'lose' : null);
+        if(_pw>_pl) return 'win';
+        if(_pl>_pw) return 'lose';
+        // 동률이어도 실제로 경기 데이터가 있으면 "최근 경기"로 판단
+        if((_pw+_pl)>0) return _last;
+        return null;
       };
       const teamMiniMemberCell = (side, mem, idx, sz)=>{
         const p = hydratePlayer(mem&&mem.name, mem);
@@ -288,24 +331,46 @@
         const rgb = isA ? caRgb : cbRgb;
         const rep = pickRep(side);
         const repPlayer = hydratePlayer(rep&&rep.name, rep);
-        // (요청사항) 소속 팀의 승패와 무관하게, 카드에 표시되는 선수 개인이 이번 경기에서
-        // 이겼는지/졌는지에 따라 카드 크기·프로필 이미지 크기·회색 처리를 결정한다.
-        // 개인 전적 데이터가 없으면(예: 팀 요약만 있는 경우) 팀 승패로 대체한다.
-        const _repPersonalRec = personalRecordForName(repPlayer && repPlayer.name);
-        const isWin = _repPersonalRec ? (_repPersonalRec==='win') : teamWin;
+        // 경기(게임) 단위 승패:
+        // - 승리한 경기면 프로필 크게, 패배한 경기면 작게
+        // - 팀 전체 승패와 조합에 따라 회색/밝기 강도를 다르게 적용
+        const repWinnerSide = String(rep && rep.__winner || '').trim(); // 'A'|'B'|''
+        const hasGameWinner = repWinnerSide==='A' || repWinnerSide==='B';
+        const gameWin = hasGameWinner ? (repWinnerSide === side) : teamWin;
+        const isWin = !!gameWin;
+        const overallTeamWin = !!teamWin;
         const title = isA ? _dispA : _dispB;
         const sideMembers = (isA ? membersA : membersB) || [];
         const logoUniv = resolveSideLogoUniv(side, repPlayer);
         const safeRepName = escName((repPlayer&&repPlayer.name)||'');
         const repUnivColor = logoUniv && typeof window.gc==='function' ? (window.gc(logoUniv) || col) : col;
-        const loseGray = Math.round((scp.loserGray||.55)*100);
+        const baseGray = Math.round((scp.loserGray||.55)*100);
+        const grayWinTeamLose = Math.max(10, Math.round(baseGray*0.40));   // 이긴 팀에서 개인 패배 (약한 회색)
+        const grayLoseTeamWin = Math.max(14, Math.round(baseGray*0.55));   // 진 팀에서 개인 승리 (약한 회색, 밝기 다르게)
+        const grayLoseTeamLose = baseGray;                                 // 진 팀에서 개인 패배 (강한 회색)
+        const bHero = (scp.heroBrightness||1);
+        const bLose = (scp.loserPhotoBrightness||.92);
+        const _filterByState = ()=>{
+          // 4가지 조합:
+          // 1) 팀승 + 개인승: 거의 원본 (밝게)
+          // 2) 팀승 + 개인패: 약간 회색 + 조금 더 어둡게
+          // 3) 팀패 + 개인승: 약간 회색 + (2)와 다른 밝기
+          // 4) 팀패 + 개인패: 강한 회색 + 패배 밝기
+          if(overallTeamWin && isWin) return `brightness(${bHero})`;
+          if(overallTeamWin && !isWin) return `grayscale(${grayWinTeamLose}%) brightness(${Math.max(.86, Math.min(1.05, bLose+0.02))})`;
+          if(!overallTeamWin && isWin) return `grayscale(${grayLoseTeamWin}%) brightness(${Math.max(.90, Math.min(1.08, bHero-0.02))})`;
+          return `grayscale(${grayLoseTeamLose}%) brightness(${bLose})`;
+        };
         const repLogoTone = isWin ? '' : 'filter:grayscale(1) brightness(.82) contrast(.9);opacity:.82;';
         const repName = String((repPlayer&&repPlayer.name) || (sideMembers[0]&&sideMembers[0].name) || '').trim();
         const memberNames = sideMembers.map(x=>String((x&&x.name)||'').trim()).filter(Boolean);
         const remainCount = Math.max(0, memberNames.filter(n=>n!==repName).length);
-        const repSummary = repName ? `${repName}${remainCount>0?` 외 ${remainCount}명`:''}` : (memberNames.length?`참가자 ${memberNames.length}명`:'');
+        const opp = String(rep && rep.__opponent || '').trim();
+        const repSummary = repName
+          ? (rep && rep.__fromGameFrame ? `${repName}${opp?` vs ${opp}`:''}` : `${repName}${remainCount>0?` 외 ${remainCount}명`:''}`)
+          : (memberNames.length?`참가자 ${memberNames.length}명`:'');
         const showRepSummary = !['procomp-team','procomp-bkt'].includes(matchType);
-        const _posterImgStyle=`width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}`;
+        const _posterImgStyle=`width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${_filterByState()}`;
         const _posterSecondHtml = (repPlayer?.photo && repPlayer?.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(repPlayer.secondProfileFile, {style:'object-fit:cover'}) : '';
         const media = repPlayer?.photo
           ? (_posterSecondHtml
@@ -330,10 +395,10 @@
           </div>
         </div>`;
       };
-      // 슬라이드쇼 최대 인원 수 (A팀/B팀 중 큰 쪽)
+      // 슬라이드쇼 프레임 수: 경기 수 우선, 없으면(요약 데이터만 있는 경우) 기존 로스터 기반으로 대체
       const _slideMaxA = (() => { const arr = membersA.filter(x=>x&&x.photo); return (arr.length ? arr : membersA).length; })();
       const _slideMaxB = (() => { const arr = membersB.filter(x=>x&&x.photo); return (arr.length ? arr : membersB).length; })();
-      const _slideTotalFrames = Math.max(_slideMaxA, _slideMaxB, 1);
+      const _slideTotalFrames = Math.max(_gameFrames.length || 0, _slideMaxA, _slideMaxB, 1);
       const _slideId = 'scSlide_' + _slideKey.replace(/[^a-zA-Z0-9]/g,'_');
       const _curDotIdx = _slideTotalFrames > 1 ? (window.__sharecardSlideIdx[_slideKey] % _slideTotalFrames) : 0;
       const headerHTML = `<div id="${_slideId}" style="position:relative">
