@@ -9,7 +9,6 @@ function buildUnivDetailHTML(univName){
   const _logoSizeEff = _style?.logoSizeEff || 'var(--su_univ_logo_size_detail,46px)';
   const _hdrBg = _style?.hdrBg || `linear-gradient(135deg,${col},${col}cc)`;
   const _hdrBgLayer = _style?.hdrBgLayer || null;
-  const _layoutMode = _style?.layoutMode || 'default';
   const _univComputed = (typeof prepareUnivDetailComputedData==='function')
     ? prepareUnivDetailComputedData({ univName, members })
     : null;
@@ -35,8 +34,7 @@ function buildUnivDetailHTML(univName){
         hdrBgLayer:_hdrBgLayer,
         isMobile:_isMobile,
         isTablet:_isTablet,
-        logoSizeEff:_logoSizeEff,
-        layoutMode:_layoutMode
+        logoSizeEff:_logoSizeEff
       })
     : '';
 
@@ -62,58 +60,7 @@ function buildUnivDetailHTML(univName){
     ? buildUnivAceCardsHTML({ members, col })
     : '';
 
-  let h='';
-  if(_layoutMode==='poster'){
-    // 포스터형 — 대형 히어로 + 풀와이드 스택 (좌우 분할 없음)
-    h = `<div class="ud-layout ud-layout--poster">
-      <div class="ud-poster-frame">${_secHeader}</div>
-      <div class="ud-poster-stack">${_secMembers}${_secOpp}${_secRecent}${_secAce}</div>
-    </div>`;
-  }else if(_layoutMode==='photocard'){
-    // 포토카드형 — 폭이 좁은 중앙 정렬 카드 한 장
-    h = `<div class="ud-layout ud-layout--photocard">
-      <div class="ud-photocard-card">
-        ${_secHeader}
-        ${_secAce ? `<div class="ud-photocard-spotlight">${_secAce}</div>` : ''}
-        ${_secMembers}${_secOpp}${_secRecent}
-      </div>
-    </div>`;
-  }else if(_layoutMode==='split'){
-    // 매거진형 — 좌측 고정(sticky) 레일 + 우측 기사 흐름
-    h = `<div class="ud-layout ud-layout--split">
-      <div class="ud-split-left">${_secHeader}${_secOpp}${_secAce}</div>
-      <div class="ud-split-right">${_secMembers}${_secRecent}</div>
-    </div>`;
-  }else if(_layoutMode==='banner'){
-    // 신문형 — 마스트헤드 + 다단(newspaper column) 본문
-    h = `<div class="ud-layout ud-layout--banner">
-      <div class="ud-banner-masthead">${_secHeader}</div>
-      <div class="ud-banner-columns">${_secMembers}${_secOpp}${_secRecent}${_secAce}</div>
-    </div>`;
-  }else if(_layoutMode==='board'){
-    // 보드형 — 가로 스크롤 칸반 레인
-    h = `<div class="ud-layout ud-layout--board">
-      <div class="ud-board-top">${_secHeader}</div>
-      <div class="ud-board-lanes">
-        <div class="ud-board-lane">${_secMembers}</div>
-        <div class="ud-board-lane">${_secOpp}${_secAce}</div>
-        <div class="ud-board-lane">${_secRecent}</div>
-      </div>
-    </div>`;
-  }else if(_layoutMode==='showcase'){
-    // 쇼케이스형 — 비대칭 벤토(bento) 그리드
-    h = `<div class="ud-layout ud-layout--showcase">
-      <div class="ud-layout-top">${_secHeader}</div>
-      <div class="ud-bento-grid">
-        <div class="ud-bento-cell ud-bento-cell--members">${_secMembers}</div>
-        <div class="ud-bento-cell ud-bento-cell--ace">${_secAce}</div>
-        <div class="ud-bento-cell ud-bento-cell--opp">${_secOpp}</div>
-        <div class="ud-bento-cell ud-bento-cell--recent">${_secRecent}</div>
-      </div>
-    </div>`;
-  }else{
-    h = `${_secHeader}${_secMembers}${_secOpp}${_secRecent}${_secAce}`;
-  }
+  const h = `${_secHeader}${_secMembers}${_secOpp}${_secRecent}${_secAce}`;
 
   const _udMode = _style?.designMode || 'classic';
   const _udDecor = (typeof buildUnivDetailModeDecorHTML==='function') ? buildUnivDetailModeDecorHTML(_udMode) : '';
@@ -121,7 +68,6 @@ function buildUnivDetailHTML(univName){
     const _um = document.getElementById('univModal');
     if(_um){
       _um.setAttribute('data-ud-mode', _udMode);
-      _um.setAttribute('data-ud-layout', _layoutMode);
       _um.setAttribute('data-ud-univbg-enabled', _style?.modalBgVars ? '1' : '0');
       _um.setAttribute('data-ud-univbg-scope', _style?.bgScope || 'body');
       _um.setAttribute('data-ud-univbtn-enabled', (_style?.modalBgVars && _style?.univBtnEnabled) ? '1' : '0');
@@ -147,7 +93,7 @@ function buildUnivDetailHTML(univName){
       }
     }
   }catch(e){}
-  return `<div class="ud-premium-shell" data-ud-mode="${_udMode}" data-ud-layout="${_layoutMode}">${_udDecor}${h}</div>`;
+  return `<div class="ud-premium-shell" data-ud-mode="${_udMode}">${_udDecor}${h}</div>`;
 }
 
 try{

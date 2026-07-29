@@ -1,14 +1,13 @@
 /* ══════════════════════════════════════
    설정 분리: 대학 상세(팝업) 디자인 설정
+   (레이아웃 모드는 폐지 — 기본형 하나만 사용)
 ══════════════════════════════════════ */
 function _renderCfgUdSection(){
   const body=document.getElementById('cfg-ud-body');
   if(!body) return;
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validUdLayouts=['default','photocard','showcase','split','banner','poster','board'];
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const dm = _validUdModes.includes(s.design_mode) ? s.design_mode : 'classic';
-  const lm = _validUdLayouts.includes(s.layout_mode) ? s.layout_mode : 'default';
   const udUnivBgEnabled=s.univ_bg_enabled!==undefined?!!s.univ_bg_enabled:false;
   const udUnivBgPastel=s.univ_bg_pastel!==undefined?!!s.univ_bg_pastel:true;
   const udUnivBgTint=(()=>{ const n=parseInt(s.univ_bg_tint??'18',10); return isNaN(n)?18:Math.max(0,Math.min(60,n)); })();
@@ -44,34 +43,6 @@ function _renderCfgUdSection(){
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
-  const lmCards = [
-    ['default','기본형','지금 구조 그대로 안정적인 기본 배치','linear-gradient(180deg,#ffffff 0 38%,#eef2ff 38% 100%)','grid-template-columns:32px 1fr;'],
-    ['photocard','포토카드형','로고/헤더 비주얼 비중을 키우는 타입','linear-gradient(180deg,#fdf2f8 0 55%,#ffffff 55% 100%)','grid-template-columns:1fr;'],
-    ['showcase','쇼케이스형','비대칭 벤토 그리드로 멤버를 크게 보여주는 타입','linear-gradient(180deg,#eff6ff 0 48%,#ffffff 48% 100%)','grid-template-columns:32px 1fr 18px;'],
-    ['split','매거진형','좌측 고정 레일 + 우측 기사 흐름의 잡지 스타일','linear-gradient(180deg,#eef2ff 0 46%,#ffffff 46% 100%)','grid-template-columns:24px 1fr;'],
-    ['banner','신문형','마스트헤드 + 다단 신문 컬럼으로 흘러가는 구조','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:20px 1fr 26px;'],
-    ['poster','포스터형','대형 히어로 + 풀와이드 스택의 임팩트 포스터형','linear-gradient(180deg,#fff7ed 0 48%,#ffffff 48% 100%)','grid-template-columns:1fr;'],
-    ['board','보드형','가로 스크롤 칸반 레인으로 나눠 보는 타입','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:repeat(2,1fr);']
-  ].map(([key,label,desc,bg,grid])=>`
-    <button class="btn btn-xs ${lm===key?'btn-b':'btn-w'}" onclick="_setUdLayoutMode('${key}')"
-      style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${lm===key?'2px':'1px'}">
-      <span style="display:block;height:56px;background:${bg};padding:8px">
-        <span style="display:grid;gap:5px;height:100%">
-          <span style="display:grid;${grid}gap:4px;align-items:center">
-            <span style="height:${key==='photocard'?'24px':'20px'};border-radius:12px;background:rgba(79,70,229,.24);display:block"></span>
-            <span style="height:8px;border-radius:999px;background:rgba(15,23,42,.15);display:block"></span>
-            ${key==='showcase'?'<span style="width:18px;height:18px;border-radius:999px;background:rgba(236,72,153,.18);display:block"></span>':''}
-          </span>
-          <span style="display:grid;grid-template-columns:${key==='banner'?'repeat(4,1fr)':'repeat(3,1fr)'};gap:4px">
-            ${Array.from({length:key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
-          </span>
-        </span>
-      </span>
-      <span style="padding:7px 9px;background:var(--white)">
-        <span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
-        <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
-      </span>
-    </button>`).join('');
   const _udPreviewSkinMap = {
     classic:{bg:'linear-gradient(135deg,#eef2ff,#dbeafe)',fg:'#312e81',chip:'rgba(255,255,255,.82)'},
     editorial:{bg:'linear-gradient(135deg,#fdfcf9,#f5f2ea)',fg:'#1a1a1a',chip:'rgba(255,255,255,.96)'},
@@ -93,73 +64,38 @@ function _renderCfgUdSection(){
     obsidian:{bg:'linear-gradient(135deg,#f5f3ff,#e9d5ff,#c4b5fd)',fg:'#4c1d95',chip:'rgba(255,255,255,.92)'}
   };
   const _udPreviewSkin = _udPreviewSkinMap[dm] || _udPreviewSkinMap.classic;
-  const _udPreviewLayout = (lm==='photocard' || lm==='poster')
-    ? 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center'
-    : (lm==='split'
-      ? 'display:grid;grid-template-columns:36px 1fr;align-items:center;gap:10px'
-      : 'display:flex;align-items:center;justify-content:space-between;gap:10px');
-  const _udPreviewStatsCols = (lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : (lm==='split' ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
-  const _udUiPreset = `
-    <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:12px">
-      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-        <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('photocard')">포토카드형</button>
-        <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('studio')">방송형</button>
-        <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('dark')">라이트 프리미엄</button>
-      </div>
-      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
-    </div>`;
   const _udPreviewCard = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.06);margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
-        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${dm} × ${lm}</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">👀 현재 디자인 미리보기</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${dm}</div>
       </div>
-      <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:12px;align-items:stretch">
-        <div style="min-width:0;border-radius:20px;overflow:hidden;border:1px solid rgba(99,102,241,.14);box-shadow:0 14px 30px rgba(15,23,42,.10);background:#fff">
-          <div style="background:${_udPreviewSkin.bg};padding:14px;${_udPreviewLayout};min-height:98px;position:relative">
-            <span style="position:absolute;top:10px;right:10px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16)"></span>
-            <span style="width:${lm==='photocard'?'58px':'42px'};height:${lm==='photocard'?'58px':'42px'};border-radius:${lm==='photocard'?'18px':'14px'};background:${_udPreviewSkin.chip};border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 18px rgba(15,23,42,.12);display:block;z-index:1"></span>
-            <span style="display:block;min-width:0;flex:1;text-align:${lm==='photocard'?'center':'left'};z-index:1">
-              <span style="display:block;font-size:${lm==='showcase'?'16px':'14px'};font-weight:1000;color:${_udPreviewSkin.fg};line-height:1.08">늪지대</span>
-              <span style="display:flex;justify-content:${lm==='photocard'?'center':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:6px">
-                <span style="padding:3px 7px;border-radius:999px;background:${_udPreviewSkin.chip};font-size:9px;font-weight:800;color:${_udPreviewSkin.fg}">승률 68%</span>
-                <span style="padding:3px 7px;border-radius:999px;background:${_udPreviewSkin.chip};font-size:9px;font-weight:800;color:${_udPreviewSkin.fg}">4명</span>
-              </span>
+      <div style="min-width:0;border-radius:20px;overflow:hidden;border:1px solid rgba(99,102,241,.14);box-shadow:0 14px 30px rgba(15,23,42,.10);background:#fff">
+        <div style="background:${_udPreviewSkin.bg};padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:98px;position:relative">
+          <span style="position:absolute;top:10px;right:10px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16)"></span>
+          <span style="width:42px;height:42px;border-radius:14px;background:${_udPreviewSkin.chip};border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 18px rgba(15,23,42,.12);display:block;z-index:1"></span>
+          <span style="display:block;min-width:0;flex:1;text-align:left;z-index:1">
+            <span style="display:block;font-size:14px;font-weight:1000;color:${_udPreviewSkin.fg};line-height:1.08">늪지대</span>
+            <span style="display:flex;justify-content:flex-start;gap:4px;flex-wrap:wrap;margin-top:6px">
+              <span style="padding:3px 7px;border-radius:999px;background:${_udPreviewSkin.chip};font-size:9px;font-weight:800;color:${_udPreviewSkin.fg}">승률 68%</span>
+              <span style="padding:3px 7px;border-radius:999px;background:${_udPreviewSkin.chip};font-size:9px;font-weight:800;color:${_udPreviewSkin.fg}">4명</span>
             </span>
-            ${lm==='showcase'?'<span style="display:flex;gap:4px;z-index:1"><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.88);display:block"></span><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.7);display:block"></span><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.5);display:block"></span></span>':''}
-          </div>
-          <div style="display:grid;grid-template-columns:${_udPreviewStatsCols};gap:7px;padding:10px;background:linear-gradient(180deg,#fff,rgba(99,102,241,.04))">
-            ${Array.from({length: lm==='board'?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
-              <span style="display:block;font-size:8px;font-weight:900;color:#94a3b8;letter-spacing:.08em">${idx===0?'전적':idx===1?'승률':idx===2?'포인트':'멤버'}</span>
-              <span style="display:block;font-size:${lm==='board'?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'24승 11패':idx===1?'68%':idx===2?'+41':'4명'}</span>
-            </span>`).join('')}
-          </div>
+          </span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
-          <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'폭이 좁은 중앙 정렬 폴라로이드 카드형':lm==='showcase'?'비대칭 벤토 그리드로 멤버 존재감이 큼':lm==='poster'?'대형 히어로 + 풀와이드 스택의 임팩트형':lm==='split'?'좌측 고정 레일 + 우측 매거진 기사 흐름':lm==='banner'?'마스트헤드 + 신문 다단 컬럼 흐름':lm==='board'?'가로 스크롤 칸반 레인으로 빠르게 스캔':'가장 범용적이고 안정적인 균형형'}</div>
-          </div>
-          <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'aurora / pastel / glass':lm==='showcase'?'luxury / editorial / classic':lm==='poster'?'sunset / blush / aurora':lm==='split'?'editorial / paper / classic':lm==='banner'?'mono / editorial / classic':lm==='board'?'dashboard / mono / classic':'classic / botanical / sunset'}</div>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;padding:10px;background:linear-gradient(180deg,#fff,rgba(99,102,241,.04))">
+          ${Array.from({length:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
+            <span style="display:block;font-size:8px;font-weight:900;color:#94a3b8;letter-spacing:.08em">${idx===0?'전적':'승률'}</span>
+            <span style="display:block;font-size:11px;font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'24승 11패':'68%'}</span>
+          </span>`).join('')}
         </div>
       </div>
     </div>`;
   body.innerHTML=`
     ${_udPreviewCard}
-    ${_udUiPreset}
     <div style="margin-bottom:6px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">대학 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 스트리머 상세 팝업과 같은 컨셉을 공유해 앱 전체의 통일감을 유지합니다.</div>
-    </div>
-    <div style="margin-bottom:10px">
-      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
-      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 대학 상세 팝업 레이아웃이 바로 바뀝니다.</div>
     </div>
     <div style="margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
@@ -201,26 +137,14 @@ function _setUdDesignMode(mode){
   try{ _refreshOpenDetailModals(); }catch(e){}
   try{ _pdTouchPrefs(); }catch(e){}
 }
-function _setUdLayoutMode(mode){
-  const valid=['default','photocard','showcase','split','banner','poster','board'];
-  const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
-  s.layout_mode=valid.includes(mode)?mode:'default';
-  localStorage.setItem('su_ud_style',JSON.stringify(s));
-  _renderCfgUdSection();
-  try{ _refreshOpenDetailModals(); }catch(e){}
-  try{ _pdTouchPrefs(); }catch(e){}
-}
 function _applyUdUiPreset(preset){
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   if(preset==='photocard'){
     s.design_mode='blush';
-    s.layout_mode='photocard';
   }else if(preset==='studio'){
     s.design_mode='studio';
-    s.layout_mode='banner';
   }else if(preset==='dark'){
     s.design_mode='obsidian';
-    s.layout_mode='split';
   }
   localStorage.setItem('su_ud_style',JSON.stringify(s));
   _renderCfgUdSection();
@@ -269,7 +193,7 @@ function _setUdUnivBgTint(val){
 }
 /* ══════════════════════════════════════
    대학 상세 팝업 안의 🎨 스타일 전환 버튼
-   (스트리머 상세 팝업의 _pdToggleStylePicker와 동일한 패턴)
+   (레이아웃 모드는 폐지 — 디자인 모드만 전환)
    총관리자로 로그인했을 때만 버튼이 보이고 동작합니다.
 ══════════════════════════════════════ */
 function _udStylePickerOutsideClick(e){
@@ -289,18 +213,12 @@ function _udToggleStylePicker(){
   const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
   if(!canEdit) return;
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validUdLayouts=['default','photocard','showcase','split','banner','poster','board'];
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const dm = _validUdModes.includes(s.design_mode) ? s.design_mode : 'classic';
-  const lm = _validUdLayouts.includes(s.layout_mode) ? s.layout_mode : 'default';
   const designs = [
     ['classic','클래식'],['editorial','매거진'],['pastel','파스텔'],['glass','글래스'],['dashboard','대시보드'],['mono','모노'],
     ['sunset','선셋'],['botanical','보태니컬'],['neon','네온'],['terminal','터미널'],['paper','페이퍼'],['holo','홀로그램'],
     ['arcade','아케이드'],['luxury','럭셔리'],['aurora','오로라'],['studio','스튜디오'],['blush','블러시'],['obsidian','옵시디언']
-  ];
-  const layouts = [
-    ['default','기본'],['photocard','포토카드'],['showcase','쇼케이스'],
-    ['split','매거진'],['banner','신문'],['poster','포스터'],['board','보드']
   ];
   const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_udRefreshStylePicker()"
     style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
@@ -311,12 +229,8 @@ function _udToggleStylePicker(){
   panel.style.cssText='position:absolute;top:100%;right:12px;margin-top:8px;z-index:100050;width:min(320px,90vw);max-height:min(60vh,480px);overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.18);padding:12px';
   panel.innerHTML = `
     <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">디자인 모드</div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
-      ${designs.map(([key,label])=>_chip(key,label,key===dm,'_setUdDesignMode')).join('')}
-    </div>
-    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 모드</div>
     <div style="display:flex;flex-wrap:wrap;gap:5px">
-      ${layouts.map(([key,label])=>_chip(key,label,key===lm,'_setUdLayoutMode')).join('')}
+      ${designs.map(([key,label])=>_chip(key,label,key===dm,'_setUdDesignMode')).join('')}
     </div>
   `;
   const head=document.getElementById('univModalHead');
@@ -337,7 +251,6 @@ function _udRefreshStylePicker(){
 try{
   window._renderCfgUdSection = _renderCfgUdSection;
   window._setUdDesignMode = _setUdDesignMode;
-  window._setUdLayoutMode = _setUdLayoutMode;
   window._applyUdUiPreset = _applyUdUiPreset;
   window._setUdUnivBgEnabled = _setUdUnivBgEnabled;
   window._setUdUnivBgPastel = _setUdUnivBgPastel;
