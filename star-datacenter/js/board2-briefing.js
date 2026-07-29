@@ -433,7 +433,6 @@ function _b2WeeklyBriefingView() {
       }
       if (hotPlayer && hotPlayer.wrDelta > 0) parts.push(`${_bfEsc(hotPlayer.p?.name || '-')} 승률 변동 ${hotPlayer.wrDelta > 0 ? '+' : ''}${hotPlayer.wrDelta}%p`);
       if (_isMonthly && monthlyAceSpotlight) parts.push(`${_bfEsc(monthlyAceSpotlight.u.name)} 에이스 ${_bfEsc(monthlyAceSpotlight.ace.p?.name || '-')}`);
-      if (silentUnivs.length) parts.push(`기록 없는 대학 ${silentUnivs.length}곳`);
       return parts.length ? `${parts.join(' · ')}.` : '선택 기간 활동량과 비교 지표를 정리했습니다.';
     })();
     const _heroSpotlight = (() => {
@@ -2825,13 +2824,7 @@ function _b2WeeklyBriefingView() {
       </section>`;
     }
 
-    if (silentUnivs.length) {
-      h += `<div class="b2w2-note-row">
-        <span style="font-size:var(--fs-caption);font-weight:900;color:var(--text3)">기록 없는 대학</span>
-        ${silentUnivs.slice(0, 8).map(name => `<span class="b2w2-note-chip">${name}</span>`).join('')}
-        ${silentUnivs.length > 8 ? `<span style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">외 ${silentUnivs.length - 8}곳</span>` : ''}
-      </div>`;
-    }
+    // ── (기록 없는 대학 안내 섹션 삭제됨)
 
     // ── MVP 트리플 배너 (MVP + 2위 + 이번주 최악) — 제거됨: 위쪽 하이라이트 카드와 중복되어 삭제
 

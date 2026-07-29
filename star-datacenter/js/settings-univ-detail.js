@@ -5,7 +5,7 @@ function _renderCfgUdSection(){
   const body=document.getElementById('cfg-ud-body');
   if(!body) return;
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validUdLayouts=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const _validUdLayouts=['default','photocard','showcase','split','banner','poster','board'];
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const dm = _validUdModes.includes(s.design_mode) ? s.design_mode : 'classic';
   const lm = _validUdLayouts.includes(s.layout_mode) ? s.layout_mode : 'default';
@@ -47,25 +47,23 @@ function _renderCfgUdSection(){
   const lmCards = [
     ['default','기본형','지금 구조 그대로 안정적인 기본 배치','linear-gradient(180deg,#ffffff 0 38%,#eef2ff 38% 100%)','grid-template-columns:32px 1fr;'],
     ['photocard','포토카드형','로고/헤더 비주얼 비중을 키우는 타입','linear-gradient(180deg,#fdf2f8 0 55%,#ffffff 55% 100%)','grid-template-columns:1fr;'],
-    ['showcase','쇼케이스형','대학명과 상위 멤버를 크게 보여주는 타입','linear-gradient(180deg,#eff6ff 0 48%,#ffffff 48% 100%)','grid-template-columns:32px 1fr 18px;'],
-    ['stats','통계강조형','승률과 핵심 지표를 상단에서 먼저 노출','linear-gradient(180deg,#ecfeff 0 40%,#ffffff 40% 100%)','grid-template-columns:repeat(2,1fr);'],
-    ['split','스플릿형','로고/대학명과 요약 영역을 좌우 분할','linear-gradient(180deg,#eef2ff 0 46%,#ffffff 46% 100%)','grid-template-columns:24px 1fr;'],
-    ['banner','배너형','상단을 슬림하게 다듬은 방송 배너 타입','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:20px 1fr 26px;'],
-    ['poster','포스터형','큰 배너/포스터 느낌으로 완전 다른 상단','linear-gradient(180deg,#fff7ed 0 48%,#ffffff 48% 100%)','grid-template-columns:1fr;'],
-    ['timeline','타임라인형','최근 경기/이벤트를 메인 스트림으로 배치','linear-gradient(180deg,#ecfeff 0 44%,#ffffff 44% 100%)','grid-template-columns:26px 1fr 18px;'],
-    ['board','보드형','상단 KPI 보드 + 카드 그리드 중심','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:repeat(2,1fr);']
+    ['showcase','쇼케이스형','비대칭 벤토 그리드로 멤버를 크게 보여주는 타입','linear-gradient(180deg,#eff6ff 0 48%,#ffffff 48% 100%)','grid-template-columns:32px 1fr 18px;'],
+    ['split','매거진형','좌측 고정 레일 + 우측 기사 흐름의 잡지 스타일','linear-gradient(180deg,#eef2ff 0 46%,#ffffff 46% 100%)','grid-template-columns:24px 1fr;'],
+    ['banner','신문형','마스트헤드 + 다단 신문 컬럼으로 흘러가는 구조','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:20px 1fr 26px;'],
+    ['poster','포스터형','대형 히어로 + 풀와이드 스택의 임팩트 포스터형','linear-gradient(180deg,#fff7ed 0 48%,#ffffff 48% 100%)','grid-template-columns:1fr;'],
+    ['board','보드형','가로 스크롤 칸반 레인으로 나눠 보는 타입','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:repeat(2,1fr);']
   ].map(([key,label,desc,bg,grid])=>`
     <button class="btn btn-xs ${lm===key?'btn-b':'btn-w'}" onclick="_setUdLayoutMode('${key}')"
       style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${lm===key?'2px':'1px'}">
       <span style="display:block;height:56px;background:${bg};padding:8px">
         <span style="display:grid;gap:5px;height:100%">
           <span style="display:grid;${grid}gap:4px;align-items:center">
-            <span style="height:${key==='photocard'?'24px':'20px'};border-radius:${key==='stats'?'8px':'12px'};background:rgba(79,70,229,.24);display:block"></span>
+            <span style="height:${key==='photocard'?'24px':'20px'};border-radius:12px;background:rgba(79,70,229,.24);display:block"></span>
             <span style="height:8px;border-radius:999px;background:rgba(15,23,42,.15);display:block"></span>
             ${key==='showcase'?'<span style="width:18px;height:18px;border-radius:999px;background:rgba(236,72,153,.18);display:block"></span>':''}
           </span>
-          <span style="display:grid;grid-template-columns:${key==='stats'||key==='banner'?'repeat(4,1fr)':'repeat(3,1fr)'};gap:4px">
-            ${Array.from({length:key==='stats'||key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
+          <span style="display:grid;grid-template-columns:${key==='banner'?'repeat(4,1fr)':'repeat(3,1fr)'};gap:4px">
+            ${Array.from({length:key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
           </span>
         </span>
       </span>
@@ -100,7 +98,7 @@ function _renderCfgUdSection(){
     : (lm==='split'
       ? 'display:grid;grid-template-columns:36px 1fr;align-items:center;gap:10px'
       : 'display:flex;align-items:center;justify-content:space-between;gap:10px');
-  const _udPreviewStatsCols = (lm==='stats' || lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : (lm==='split' ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
+  const _udPreviewStatsCols = (lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : (lm==='split' ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
   const _udUiPreset = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:12px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
@@ -132,20 +130,20 @@ function _renderCfgUdSection(){
             ${lm==='showcase'?'<span style="display:flex;gap:4px;z-index:1"><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.88);display:block"></span><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.7);display:block"></span><span style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.5);display:block"></span></span>':''}
           </div>
           <div style="display:grid;grid-template-columns:${_udPreviewStatsCols};gap:7px;padding:10px;background:linear-gradient(180deg,#fff,rgba(99,102,241,.04))">
-            ${Array.from({length: (lm==='stats' || lm==='board')?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
+            ${Array.from({length: lm==='board'?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
               <span style="display:block;font-size:8px;font-weight:900;color:#94a3b8;letter-spacing:.08em">${idx===0?'전적':idx===1?'승률':idx===2?'포인트':'멤버'}</span>
-              <span style="display:block;font-size:${(lm==='stats' || lm==='board')?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'24승 11패':idx===1?'68%':idx===2?'+41':'4명'}</span>
+              <span style="display:block;font-size:${lm==='board'?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'24승 11패':idx===1?'68%':idx===2?'+41':'4명'}</span>
             </span>`).join('')}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'로고와 컬러 헤더를 감성적으로 강조':lm==='showcase'?'대학명과 상위 멤버 존재감이 큼':lm==='stats'?'승률/전적 중심으로 빠르게 읽힘':lm==='poster'?'대학을 ‘포스터’처럼 크게 보여주는 비주얼형':lm==='timeline'?'최근 흐름(경기 스트림)을 메인으로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'가장 범용적이고 안정적인 균형형'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'폭이 좁은 중앙 정렬 폴라로이드 카드형':lm==='showcase'?'비대칭 벤토 그리드로 멤버 존재감이 큼':lm==='poster'?'대형 히어로 + 풀와이드 스택의 임팩트형':lm==='split'?'좌측 고정 레일 + 우측 매거진 기사 흐름':lm==='banner'?'마스트헤드 + 신문 다단 컬럼 흐름':lm==='board'?'가로 스크롤 칸반 레인으로 빠르게 스캔':'가장 범용적이고 안정적인 균형형'}</div>
           </div>
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
-            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'aurora / pastel / glass':lm==='showcase'?'luxury / editorial / classic':lm==='stats'?'dashboard / mono / terminal':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / sunset'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'aurora / pastel / glass':lm==='showcase'?'luxury / editorial / classic':lm==='poster'?'sunset / blush / aurora':lm==='split'?'editorial / paper / classic':lm==='banner'?'mono / editorial / classic':lm==='board'?'dashboard / mono / classic':'classic / botanical / sunset'}</div>
           </div>
         </div>
       </div>
@@ -204,7 +202,7 @@ function _setUdDesignMode(mode){
   try{ _pdTouchPrefs(); }catch(e){}
 }
 function _setUdLayoutMode(mode){
-  const valid=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const valid=['default','photocard','showcase','split','banner','poster','board'];
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   s.layout_mode=valid.includes(mode)?mode:'default';
   localStorage.setItem('su_ud_style',JSON.stringify(s));
@@ -291,7 +289,7 @@ function _udToggleStylePicker(){
   const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
   if(!canEdit) return;
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validUdLayouts=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const _validUdLayouts=['default','photocard','showcase','split','banner','poster','board'];
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const dm = _validUdModes.includes(s.design_mode) ? s.design_mode : 'classic';
   const lm = _validUdLayouts.includes(s.layout_mode) ? s.layout_mode : 'default';
@@ -301,8 +299,8 @@ function _udToggleStylePicker(){
     ['arcade','아케이드'],['luxury','럭셔리'],['aurora','오로라'],['studio','스튜디오'],['blush','블러시'],['obsidian','옵시디언']
   ];
   const layouts = [
-    ['default','기본'],['photocard','포토카드'],['showcase','쇼케이스'],['stats','통계강조'],
-    ['split','스플릿'],['banner','배너'],['poster','포스터'],['timeline','타임라인'],['board','보드']
+    ['default','기본'],['photocard','포토카드'],['showcase','쇼케이스'],
+    ['split','매거진'],['banner','신문'],['poster','포스터'],['board','보드']
   ];
   const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_udRefreshStylePicker()"
     style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
