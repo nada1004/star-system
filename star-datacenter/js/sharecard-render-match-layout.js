@@ -105,7 +105,7 @@
       : '';
     const photoHTML = !m._noUnivIcon ? (_usePlayerPhoto
       ? (_faceUrl
-        ? `<div class="${_face2nd?'ph-swap':''}" style="width:100%;height:${heroCoverH}px;border-radius:18px;overflow:hidden;margin:0 0 12px;position:relative;${_isPersonalScoreCard?'box-shadow:0 6px 18px rgba(15,23,42,.12);border:1px solid rgba(255,255,255,.22);':(isWin?`box-shadow:0 10px 22px rgba(0,0,0,.18), 0 0 0 2px ${univColor}aa`:`opacity:.98;box-shadow:0 6px 16px rgba(2,6,23,.14), 0 0 0 1px ${univColor}66`)}">
+        ? `<div class="${_face2nd?'ph-swap':''}" style="width:100%;height:${heroCoverH}px;border-radius:var(--su_profile_radius,18px);overflow:hidden;margin:0 0 12px;position:relative;${_isPersonalScoreCard?'box-shadow:0 6px 18px rgba(15,23,42,.12);border:1px solid rgba(255,255,255,.22);':(isWin?`box-shadow:0 10px 22px rgba(0,0,0,.18), 0 0 0 2px ${univColor}aa`:`opacity:.98;box-shadow:0 6px 16px rgba(2,6,23,.14), 0 0 0 1px ${univColor}66`)}">
             <img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(_faceUrl)}" style="width:100%;height:100%;object-fit:cover;object-position:${_facePos};display:block;cursor:pointer;filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${Math.round((scp.loserGray||.55)*100)}%) brightness(${scp.loserPhotoBrightness||.92})`};">
             ${_face2nd}
             <div style="position:absolute;inset:0;background:${_isPersonalScoreCard?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.08))':(isWin?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.14))':'linear-gradient(180deg,rgba(15,23,42,.03),rgba(15,23,42,.18))')};pointer-events:none"></div>
@@ -165,7 +165,10 @@
     const race = player?.race ? `<span class="rbadge r${player.race}" style="font-size:9px;padding:1px 6px;${isWin?'':'filter:grayscale(1);opacity:.72;color:'+loserInfoTone}">${_raceLabel(player.race)}</span>` : '';
     const loseTone = Math.max(.44, 1-_loserGray*0.78);
     const univTextColor = isWin ? univColor : `rgba(203,213,225,${Math.max(.40, loseTone-.06).toFixed(2)})`;
-    const univ = (!hideTeamUnivOnTop && player?.univ) ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;max-width:100%;text-align:center">${hasUnivLogo(player.univ)?`<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'', '30px')}</span>`:''}<span style="font-size:${Math.round(12*(args?.scp?.fontScale||1)*(args?.scp?.univScale||1))}px;font-weight:900;color:${univTextColor};line-height:1.2;word-break:keep-all;white-space:normal;overflow-wrap:anywhere">${player.univ}</span></div>` : '';
+    const raceTierHTML = (race || tier) ? `<span style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0">${race}${tier}</span>` : '';
+    const univ = (!hideTeamUnivOnTop && player?.univ)
+      ? `<div style="display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;flex-wrap:wrap;text-align:center">${raceTierHTML}${hasUnivLogo(player.univ)?`<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'', '22px')}</span>`:''}<span style="font-size:${Math.round(12*(args?.scp?.fontScale||1)*(args?.scp?.univScale||1))}px;font-weight:900;color:${univTextColor};line-height:1.2;word-break:keep-all;white-space:normal;overflow-wrap:anywhere">${player.univ}</span></div>`
+      : (raceTierHTML ? `<div style="display:flex;align-items:center;justify-content:center;gap:6px">${raceTierHTML}</div>` : '');
     const titleLogo = (!hideTeamUnivOnTop && player?.univ && hasUnivLogo(player.univ)) ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'', '22px')}</span>` : '';
     const safeName = String(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const _faceUrl = _scResolvePersonalFaceUrl(player);
@@ -173,14 +176,10 @@
     const media = _faceUrl
       ? `<img class="share-poster-media" onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(_faceUrl)}" style="width:100%;height:100%;object-fit:cover;object-position:${_facePos};display:block;cursor:pointer;filter:${isWin?`brightness(${args?.scp?.heroBrightness||1})`:`grayscale(${Math.round(_loserGray*100)}%) brightness(${args?.scp?.loserPhotoBrightness||.92})`};">`
       : `<div onclick="openPlayerModal('${safeName}')" title="스트리머 상세" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:${isWin?`linear-gradient(135deg,rgba(${rgb},.58),rgba(15,23,42,.92))`:'linear-gradient(135deg,rgba(100,116,139,.46),rgba(15,23,42,.96))'};">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
-    return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 24px rgba(2,6,23,.12);transform:translateY(${isWin?'-1':'2'}px) scale(${isWin?'1.005':'.992'});transform-origin:center center">
+    return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:var(--su_profile_radius,22px);overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 24px rgba(2,6,23,.12);transform:translateY(${isWin?'-1':'2'}px) scale(${isWin?'1.005':'.992'});transform-origin:center center">
       ${media}
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.04) 18%,rgba(15,23,42,.34));pointer-events:none"></div>
-      <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap">
-          ${race?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)">${race}</span>`:''}
-          ${tier?`<span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:0;backdrop-filter:blur(8px)">${tier}</span>`:''}
-        </div>
+      <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:6px">
         <div class="share-poster-name" style="font-size:${Math.round((isWin?28:24)*(args?.scp?.titleScale||1))}px;font-weight:${isWin?1000:900};color:${isWin?'#fff':loserInfoTone};line-height:1.08;text-shadow:0 4px 18px rgba(0,0,0,.28);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${title}</div>
         <div>${univ}</div>
       </div>

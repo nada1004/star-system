@@ -33,6 +33,7 @@
   function buildShareMatchCacheKey(args){
     const { m, teamMode } = args || {};
     return `match:${JSON.stringify({
+      id:m&&(m._id||m.sid||m.matchId||''),
       a:m&&m.a,b:m&&m.b,sa:m&&m.sa,sb:m&&m.sb,d:m&&m.d,n:m&&m.n,t:m&&m._matchType,sub:m&&m._subLabel,
       sets:m&&m.sets,teamA:m&&m.teamAMembers,teamB:m&&m.teamBMembers,
       view:teamMode?`${Date.now()}-${Math.random().toString(36).slice(2,8)}`:''

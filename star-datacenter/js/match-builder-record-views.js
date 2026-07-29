@@ -1173,7 +1173,12 @@ function gjRecordsHTML(proOnly){
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const _gjActionBtnId = `_gjActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     // ✅ 버그픽스: 캐시 저장 키와 수정 버튼에 전달하는 키를 동일하게 생성
-    const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;
+    // ✅ 버그픽스: raw sid만 쓰면 "여러 명 경기를 한번에 자동인식 등록"처럼
+    // 서로 다른 선수쌍이 같은 sid(같은 붙여넣기 배치)를 공유하는 경우
+    // 세션 키가 충돌해서(마지막에 렌더된 세션이 캐시를 덮어써서) 엉뚱한 경기의
+    // 상세 팝업/공유카드가 열리는 문제가 있었음. sid에 선수쌍을 함께 포함시켜 고유화.
+    const _sidBase = (s.games.find(x=>x && x.sid)?.sid) || '';
+    const _sidRaw = _sidBase ? `${_sidBase}|${s.p1||''}|${s.p2||''}` : (s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`);
     const _gjSessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
