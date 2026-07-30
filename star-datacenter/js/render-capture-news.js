@@ -1,0 +1,553 @@
+/* ══════════════════════════════════════════════════════════════
+   렌더캡처 - 신문(뉴스) 스타일 브리핑 레이아웃 빌더 (render-capture-utils.js 에서 분리, 2026-07-30)
+   ══════════════════════════════════════════════════════════════ */
+
+function _esc(v){
+  try{ return typeof esc==='function' ? esc(v) : String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  catch(e){ return String(v==null?'':v); }
+}
+function _newsPhotoUrl(p){
+  try{ return p && p.photo ? (typeof toHttpsUrl==='function' ? toHttpsUrl(p.photo) : p.photo) : ''; }
+  catch(e){ return ''; }
+}
+function _newsRankDeltaBadge(rankDelta){
+  if(rankDelta===null || rankDelta===undefined) return '<span class="b2n-rd new">신규</span>';
+  if(rankDelta>0) return `<span class="b2n-rd up">▲${rankDelta}</span>`;
+  if(rankDelta<0) return `<span class="b2n-rd down">▼${Math.abs(rankDelta)}</span>`;
+  return '<span class="b2n-rd same">-</span>';
+}
+function _newsHeadline(ctx){
+  const info = ctx.briefingInfo || {};
+  const leader = (ctx.isMonthly && ctx.rankedUnivs && ctx.rankedUnivs[0]) ? ctx.rankedUnivs[0] : null;
+  const topUniv = (ctx.topUnivs && ctx.topUnivs[0]) || null;
+  const mvpName = ctx.mvp && ctx.mvp.p ? ctx.mvp.p.name : null;
+  if(leader){
+    return `${_esc(leader.u.name)}, ${info.short||''} 선두 질주! ${leader.tw}승 ${leader.tl}패 · 승률 ${leader.wr??0}%`;
+  }
+  if(topUniv){
+    return `${_esc(topUniv.u.name)}, ${info.short||''} 최다 출전 화력 과시!`;
+  }
+  if(mvpName){
+    return `${_esc(mvpName)}, ${info.short||''} 최고의 활약 펼쳐`;
+  }
+  return `${info.title||'브리핑'} 주요 소식`;
+}
+function _newsWorstLabel(ctx){
+  const map={ thisWeek:'이번주의 아쉬움', lastWeek:'지난주의 아쉬움', thisMonth:'이번달의 아쉬움', lastMonth:'지난달의 아쉬움', custom:'이 기간의 아쉬움' };
+  return map[ctx && ctx.preset] || '오늘의 아쉬움';
+}
+function _newsAnalysisParagraph(ctx){
+  const periodWord = ctx.isMonthly ? '한 달' : '한 주';
+  const sentences=[];
+  if(ctx.totalGames){
+    sentences.push(`이번 ${periodWord} 동안 총 <b>${ctx.totalGames}경기</b>가 열렸고, <b>${ctx.activeUnivs}개 대학</b>이 활동을 이어갔습니다.`);
+  }
+  if(ctx.mvp && ctx.mvp.p){
+    sentences.push(`<b>${_esc(ctx.mvp.p.name)}</b>(${_esc(ctx.mvp.p.univ||'무소속')}) 선수가 ${ctx.mvp.wins ?? 0}승 ${ctx.mvp.losses ?? 0}패, 승률 ${ctx.mvp.winRate ?? 0}%로 ${_esc(ctx.mvpLabel||'MVP')}에 올랐습니다.`);
+  }
+  if(ctx.topUnivs && ctx.topUnivs[0]){
+    const tu=ctx.topUnivs[0];
+    sentences.push(`대학 중에서는 <b>${_esc(tu.u.name)}</b>이 ${tu.tg}전으로 가장 많은 경기를 치르며 가장 활발한 움직임을 보였습니다.`);
+  }
+  if(ctx.hotPlayer && ctx.hotPlayer.p && ctx.hotPlayer.wrDelta>0){
+    sentences.push(`<b>${_esc(ctx.hotPlayer.p.name)}</b> 선수는 승률이 전 기간 대비 ▲${ctx.hotPlayer.wrDelta}%p 오르며 뚜렷한 상승세를 탔습니다.`);
+  }
+  if(ctx.streakPlayer && ctx.streakPlayer.p){
+    sentences.push(`<b>${_esc(ctx.streakPlayer.p.name)}</b> 선수는 ${ctx.streakPlayer.streak}연승 행진을 이어가는 중입니다.`);
+  }
+  if(ctx.coldPlayer && ctx.coldPlayer.p){
+    sentences.push(`반면 <b>${_esc(ctx.coldPlayer.p.name)}</b> 선수는 승률이 ${ctx.coldPlayer.wrDelta}%p 떨어지며 다소 아쉬운 흐름을 보였습니다.`);
+  }
+  if(ctx.silentUnivs && ctx.silentUnivs.length){
+    const list=ctx.silentUnivs.slice(0,5).map(_esc).join(', ');
+    sentences.push(`${list}${ctx.silentUnivs.length>5?' 등':''}은 이번 ${periodWord} 동안 별다른 경기 활동이 없었습니다.`);
+  }
+  return sentences.join(' ');
+}
+function _newsStatRow(label, s, extra){
+  if(!s || !s.p) return '';
+  const p=s.p;
+  return `<div class="b2n-row">
+    <div class="b2n-row-tag">${_esc(label)}</div>
+    <div class="b2n-row-body">
+      <b>${_esc(p.name||'-')}</b><span class="b2n-row-univ">${_esc(p.univ||'무소속')}</span>
+      <span class="b2n-row-stat">${s.wins ?? 0}승 ${s.losses ?? 0}패</span>
+      <span class="b2n-row-wr">승률 ${s.winRate ?? 0}%</span>
+      ${extra?`<span class="b2n-row-extra">${extra}</span>`:''}
+    </div>
+  </div>`;
+}
+function _newsMvpFeatureHtml(ctx){
+  const s = ctx.mvp;
+  if(!s || !s.p) return `<div class="b2n-feature b2n-feature-empty">이번 기간에는 MVP 조건을 충족한 선수가 없습니다.</div>`;
+  const p=s.p;
+  const photo=_newsPhotoUrl(p);
+  const initial=String(p.name||'-').trim().slice(0,1);
+  // 승패·연승 기록이 승률보다 우선 노출되도록: 승/패는 크게, 연승은 있으면 함께,
+  // 승률은 참고 수치로 작게 붙임 (뉴스 기사는 "몇 승 몇 패"가 먼저 눈에 들어와야 함)
+  const mvpStreak = (s.hist && typeof _b2CalcStreak==='function') ? _b2CalcStreak(s.hist, '승') : 0;
+  return `<div class="b2n-feature">
+    <div class="b2n-feature-photo">
+      ${photo?`<img src="${photo}" alt="${_esc(p.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+      <div class="b2n-feature-fallback" style="${photo?'display:none':''}">${_esc(initial)}</div>
+      <div class="b2n-feature-ribbon">🏆 ${_esc(ctx.mvpLabel||'MVP')}</div>
+    </div>
+    <div class="b2n-feature-body">
+      <div class="b2n-feature-name">${_esc(p.name||'-')}</div>
+      <div class="b2n-feature-univ">${_esc(p.univ||'무소속')}${p.tier?` · ${_esc(p.tier)}`:''}</div>
+      <div class="b2n-feature-stats">
+        <div class="b2n-fstat"><b>${s.wins ?? 0}</b><i>승</i></div>
+        <div class="b2n-fstat"><b>${s.losses ?? 0}</b><i>패</i></div>
+        ${mvpStreak>=2?`<div class="b2n-fstat b2n-fstat-streak"><b>${mvpStreak}</b><i>연승</i></div>`:''}
+        <div class="b2n-fstat b2n-fstat-sub"><b>${s.winRate ?? 0}%</b><i>승률</i></div>
+      </div>
+    </div>
+  </div>
+  ${_newsStatRow('MVP 2위', ctx.mvp2, '')}`;
+}
+function _newsStandingsHtml(ctx){
+  const list = (ctx.rankedUnivs && ctx.rankedUnivs.length ? ctx.rankedUnivs : ctx.topUnivs) || [];
+  if(!list.length) return `<div class="b2n-empty">집계된 대학 활동이 없습니다.</div>`;
+  const rows = list.map((ud, idx)=>{
+    const rank = ud.rank || (idx+1);
+    const rankCls = rank===1?' r1':rank===2?' r2':rank===3?' r3':'';
+    return `<div class="b2n-stline">
+      <span class="b2n-stline-rank${rankCls}">${rank}</span>
+      <span class="b2n-stline-name">${_esc(ud.u.name)}</span>
+      <span class="b2n-stline-rec">${ud.tw}승 ${ud.tl}패</span>
+      <span class="b2n-stline-wr">${ud.wr??0}%</span>
+      ${_newsRankDeltaBadge(ud.rankDelta)}
+    </div>`;
+  }).join('');
+  return `<div class="b2n-standings">${rows}</div>`;
+}
+function _newsSilentUnivsHtml(ctx){
+  const list = ctx.silentUnivs || [];
+  if(!list.length) return '';
+  const shown = list.slice(0, 10);
+  const rest = list.length - shown.length;
+  return `<div class="b2n-silent-row">
+    <span class="b2n-silent-label">기록 없는 대학</span>
+    ${shown.map(name=>`<span class="b2n-silent-chip">${_esc(name)}</span>`).join('')}
+    ${rest>0?`<span class="b2n-silent-more">외 ${rest}곳</span>`:''}
+  </div>`;
+}
+function _newsHighlightRows(ctx){
+  const rows = [
+    _newsStatRow('연승가도', ctx.streakPlayer, ctx.streakPlayer ? `${ctx.streakPlayer.streak}연승` : ''),
+    _newsStatRow('연패탈출 시급', ctx.loseStreakPlayer, ctx.loseStreakPlayer ? `${ctx.loseStreakPlayer.streak}연패` : ''),
+    _newsStatRow('최다승', ctx.mostWinsPlayer, ''),
+    _newsStatRow('최다출전', ctx.mostActivePlayer, `${ctx.mostActivePlayer?ctx.mostActivePlayer.total:0}전`),
+    _newsStatRow('급상승', ctx.hotPlayer, ctx.hotPlayer && ctx.hotPlayer.wrDelta>0 ? `승률 ▲${ctx.hotPlayer.wrDelta}%p` : ''),
+    _newsStatRow('최고 승률', ctx.bestWrPlayer, ''),
+    _newsStatRow('하락세', ctx.coldPlayer, ctx.coldPlayer && ctx.coldPlayer.wrDelta<0 ? `승률 ▼${Math.abs(ctx.coldPlayer.wrDelta)}%p` : '')
+  ].filter(Boolean).join('');
+  return rows || `<div class="b2n-empty">집계된 기록이 없습니다.</div>`;
+}
+function _newsRaceStatsHtml(ctx){
+  const rc = ctx.raceCountGlobal;
+  if(!rc) return '';
+  const mc = ctx.mirrorRaceCountGlobal || {};
+  const races = [
+    { key:'P', label:'프로토스', ico:'🔮' },
+    { key:'T', label:'테란',     ico:'⚔️' },
+    { key:'Z', label:'저그',     ico:'🦎' }
+  ];
+  const hasAny = races.some(({key})=> (rc[key].w + rc[key].l) > 0);
+  if(!hasAny) return '';
+  const rows = races.map(({key,label,ico})=>{
+    const { w, l } = rc[key];
+    const t = w + l;
+    const wr = t ? Math.round(w/t*100) : null;
+    const wrCol = wr===null ? '#a8a29e' : wr>=60 ? '#15803d' : wr>=50 ? '#9f1d1d' : '#a8a29e';
+    const mm = mc[key] || { w:0, l:0 };
+    return `<div class="b2n-stline" style="flex-wrap:wrap">
+      <span class="b2n-stline-name">${ico} ${_esc(label)} 상대</span>
+      <span class="b2n-stline-rec">${w}승 ${l}패</span>
+      <span class="b2n-stline-wr" style="color:${wrCol}">${wr!==null?`${wr}%`:'-'}</span>
+      <span style="flex-basis:100%;height:4px;border-radius:2px;background:rgba(28,25,23,.08);overflow:hidden;margin-top:4px">
+        <span style="display:block;height:100%;width:${wr!==null?wr:0}%;background:${wrCol};border-radius:2px"></span>
+      </span>
+      <span style="flex-basis:100%;font-size:9px;color:#a8a29e;margin-top:2px">└ 동족전(${_esc(label)} vs ${_esc(label)}) ${mm.w}승 ${mm.l}패</span>
+    </div>`;
+  }).join('');
+  return `<div class="b2n-col-title"><i></i>종족별 상대 전적 <span style="font-size:9px;font-weight:700;color:#78716c">(동족전 포함)</span></div><div class="b2n-standings">${rows}</div>`;
+}
+function _newsUnivAceCardHtml(item){
+  const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
+  const ace = item.ace;
+  if(!ace || !ace.p){
+    return `<div class="b2n-ace-card" style="--_c:${col}">
+      <div class="b2n-ace-univ"><span class="b2n-ace-dot" style="background:${col}"></span>${_esc(item.u.name)}</div>
+      <div class="b2n-ace-empty">확실한 에이스 없음</div>
+    </div>`;
+  }
+  const wrCol = (ace.winRate ?? 0) >= 60 ? '#15803d' : (ace.winRate ?? 0) >= 50 ? '#9f1d1d' : '#78716c';
+  const photo = _newsPhotoUrl(ace.p);
+  const initial = String(ace.p.name||'-').trim().slice(0,1);
+  return `<div class="b2n-ace-card" style="--_c:${col}">
+    <div class="b2n-ace-univ"><span class="b2n-ace-dot" style="background:${col}"></span>${_esc(item.u.name)}</div>
+    <div class="b2n-ace-main">
+      <div class="b2n-ace-photo" style="--_c:${col}">
+        ${photo?`<img src="${photo}" alt="${_esc(ace.p.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+        <div class="b2n-ace-photo-fallback" style="${photo?'display:none':''}">${_esc(initial)}</div>
+      </div>
+      <div class="b2n-ace-info">
+        <div class="b2n-ace-name">${_esc(ace.p.name||'-')}</div>
+        <div class="b2n-ace-rec">${ace.wins ?? 0}승 ${ace.losses ?? 0}패 · <span style="color:${wrCol};font-weight:800">승률 ${ace.winRate ?? 0}%</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function _newsUnivRosterCardHtml(item){
+  const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
+  const roster = [...(item.active||[])].sort((a,b)=> (b.wins - a.wins) || (b.total - a.total) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
+  const head = `<div class="b2n-roster-head" style="background:${col}1a;border-top:3px solid ${col}">
+      <span class="b2n-ace-dot" style="background:${col}"></span>
+      <span style="font-size:11px;font-weight:900;color:#292524;text-transform:uppercase;letter-spacing:.02em">${_esc(item.u.name)}</span>
+      <span class="b2n-roster-count">${roster.length}명</span>
+    </div>`;
+  if(!roster.length){
+    return `<div class="b2n-roster-card">${head}<div class="b2n-ace-empty" style="padding:10px 13px">활동 기록 없음</div></div>`;
+  }
+  const rows = roster.map(s=>{
+    const wrCol = (s.winRate ?? 0) >= 60 ? '#15803d' : (s.winRate ?? 0) >= 50 ? '#9f1d1d' : '#a8a29e';
+    return `<div class="b2n-roster-row">
+      <span class="b2n-roster-name">${_esc(s.p && s.p.name || '-')}</span>
+      <span class="b2n-roster-rec">${s.wins ?? 0}승 ${s.losses ?? 0}패</span>
+      <span class="b2n-roster-wr" style="color:${wrCol}">${s.winRate ?? 0}%</span>
+    </div>`;
+  }).join('');
+  return `<div class="b2n-roster-card">${head}<div class="b2n-roster-list">${rows}</div></div>`;
+}
+function _newsUnivRostersHtml(ctx){
+  const list = (ctx.univAces || []).filter(item => item && item.u).slice(0, 30);
+  if(!list.length) return '';
+  // 카드 높이가 팀마다 크게 달라(스트리머 20명 vs 3명) 2열 그리드에 그대로 넣으면
+  // 짝이 된 카드끼리 높이가 맞춰지며 아래쪽에 큰 여백이 남는 문제가 있었다.
+  // → 로스터 크기 기준으로 내림차순 정렬 후, 매번 "누적 인원이 더 적은 열"에
+  //   카드를 채우는 그리디 방식으로 두 열의 높이를 최대한 맞춘다(신문 다단 편집과 동일한 방식).
+  const withWeight = list.map(item => ({ item, weight: Math.max(1, (item.active||[]).length) }))
+    .sort((a,b)=> b.weight - a.weight);
+  const cols = [ { items:[], total:0 }, { items:[], total:0 } ];
+  withWeight.forEach(({item, weight})=>{
+    const target = cols[0].total <= cols[1].total ? cols[0] : cols[1];
+    target.items.push(item);
+    target.total += weight;
+  });
+  const colHtml = cols.map(c => `<div class="b2n-roster-col">${c.items.map(_newsUnivRosterCardHtml).join('')}</div>`).join('');
+  return `<div class="b2n-aces-section">
+    <div class="b2n-aces-title"><i></i>대학별 스트리머 성적</div>
+    <div class="b2n-roster-grid">${colHtml}</div>
+  </div>`;
+}
+function _newsUnivAcesHtml(ctx){
+  const list = (ctx.univAces || []).filter(item => item && item.u);
+  if(!list.length) return '';
+  const cards = list.slice(0, 30).map(_newsUnivAceCardHtml).join('');
+  return `<div class="b2n-aces-section">
+    <div class="b2n-aces-title"><i></i>대학별 우수 스트리머</div>
+    <div class="b2n-aces-grid">${cards}</div>
+  </div>`;
+}
+function _newsCss(){
+  return `
+    .b2n-sheet{
+      --ink:#1c1917; --ink2:#6b6a63; --accent:#9f1d1d;
+      width:1280px; margin:0 auto; padding:0 0 40px;
+      font-family:'Noto Sans KR', -apple-system, sans-serif;
+      background:radial-gradient(140% 100% at 50% 0%, #f3efe4 0%, #ece7da 55%, #e6e0d0 100%);
+      color:var(--ink);
+      border-radius:14px; overflow:hidden;
+      box-shadow:0 24px 60px rgba(15,23,42,.20), 0 2px 8px rgba(15,23,42,.08);
+    }
+    .b2n-sheet *, .b2n-sheet *::before, .b2n-sheet *::after{ box-sizing:border-box }
+    .b2n-topband{ height:6px; background:linear-gradient(90deg,#7f1414 0%,#9f1d1d 22%,#c2761f 50%,#9f1d1d 78%,#57534e 100%); background-size:200% 100%; }
+    .b2n-topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      background:#ece7da; color:#57534e; padding:7px 26px; font-size:10px; font-weight:800;
+      letter-spacing:.14em; text-transform:uppercase; border-bottom:1px solid rgba(28,25,23,.35);
+    }
+    .b2n-topbar span:nth-child(2){ color:#9f1d1d }
+    .b2n-masthead{ padding:18px 26px 0; background:#ece7da; }
+    .b2n-masthead-top{
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:var(--fs-caption); font-weight:700; color:var(--ink2); letter-spacing:.04em; margin-bottom:10px;
+    }
+    .b2n-masthead-brand{
+      display:flex; align-items:center; justify-content:center; gap:12px; text-align:center;
+    }
+    .b2n-brand-name{
+      font-family:'Noto Serif KR', Georgia, serif; font-size:26px; font-weight:900;
+      letter-spacing:.05em; color:var(--ink2);
+    }
+    .b2n-brand-name b{ color:var(--ink) }
+    .b2n-edition{
+      margin-top:7px; text-align:center; font-size:var(--fs-caption); font-weight:800; color:var(--ink2);
+      letter-spacing:.12em; padding-bottom:15px;
+    }
+    .b2n-rule-double{ border-top:3px solid #1c1917; margin-top:0; }
+    .b2n-rule-double-thin{ border-top:1px solid #1c1917; margin-top:3px; }
+    .b2n-headline-wrap{ padding:22px 26px 0; background:linear-gradient(180deg,#faf7f0 0%,#f8f5ee 100%); }
+    .b2n-headline{
+      font-family:'Noto Serif KR', Georgia, serif;
+      font-size:44px; font-weight:900; line-height:1.18; letter-spacing:-.02em; color:var(--ink);
+    }
+    .b2n-dek{
+      margin-top:10px; font-size:14px; line-height:1.7; color:var(--ink2); max-width:1100px;
+      border-left:4px solid var(--accent); padding-left:12px;
+    }
+    .b2n-analysis{
+      margin-top:14px; font-size:12.5px; line-height:1.8; color:var(--ink); max-width:1180px;
+      background:#faf9f6; border:1px solid rgba(28,25,23,.14); border-radius:8px; padding:12px 16px;
+      column-gap:22px;
+    }
+    .b2n-analysis b{ color:var(--ink); font-weight:900 }
+    .b2n-bylinebar{
+      display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; padding-top:10px; padding-bottom:16px;
+      border-top:1px dashed rgba(28,25,23,.3); font-size:var(--fs-caption); font-weight:700; color:var(--ink2);
+    }
+    .b2n-body{ display:flex; gap:26px; padding:26px 30px 0 }
+    .b2n-body > .b2n-col:first-child{ width:785px; flex-shrink:0 }
+    .b2n-body > .b2n-col:last-child{ flex:1; min-width:0 }
+    .b2n-col-title{
+      display:flex; align-items:center; gap:7px;
+      font-size:var(--fs-sm); font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--ink2); margin:18px 0 10px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
+    }
+    .b2n-col-title:first-child{ margin-top:0 }
+    .b2n-col-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:var(--accent); flex-shrink:0; font-style:normal }
+    .b2n-feature{
+      display:flex; gap:18px; background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 65%,#f5efe1 100%);
+      border:1px solid rgba(28,25,23,.14); border-top:3px solid #d4af37;
+      border-radius:var(--r2); padding:16px; box-shadow:0 12px 30px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.6); margin-bottom:16px;
+    }
+    .b2n-feature-empty{
+      background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:20px;
+      text-align:center; color:var(--ink2); font-size:var(--fs-sm); margin-bottom:16px;
+    }
+    .b2n-feature-photo{
+      position:relative; width:158px; height:192px; flex-shrink:0; border-radius:14px; overflow:hidden;
+      background:linear-gradient(160deg,#3f3a33,#171512);
+      box-shadow:inset 0 0 0 3px #fefcf8, inset 0 0 0 5px #d4af37, 0 12px 28px rgba(15,23,42,.22);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .b2n-feature-photo::after{
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(185deg,rgba(0,0,0,0) 58%,rgba(0,0,0,.34) 100%);
+    }
+    .b2n-feature-photo img{ width:100%; height:100%; object-fit:cover; display:block }
+    .b2n-feature-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:50px; font-weight:900; color:#fff }
+    .b2n-feature-ribbon{
+      position:absolute; left:0; top:12px; z-index:1; background:linear-gradient(135deg,#dca02f,#9f1d1d); color:#fff; font-size:10.5px; font-weight:900;
+      padding:4px 12px 4px 9px; border-radius:0 8px 8px 0; letter-spacing:.03em;
+      box-shadow:0 3px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .b2n-feature-body{ display:flex; flex-direction:column; justify-content:center; gap:7px; min-width:0 }
+    .b2n-feature-name{ font-family:'Noto Serif KR', Georgia, serif; font-size:24px; font-weight:900; color:#111827 }
+    .b2n-feature-univ{ font-size:12.5px; font-weight:700; color:var(--ink2) }
+    .b2n-feature-stats{ display:flex; gap:14px; margin-top:6px }
+    .b2n-fstat{ display:flex; flex-direction:column; align-items:center; }
+    .b2n-fstat b{ font-size:19px; font-weight:900; color:var(--ink) }
+    .b2n-fstat i{ font-style:normal; font-size:10px; font-weight:700; color:var(--ink2) }
+    .b2n-fstat-streak b{ color:#b45309 }
+    .b2n-fstat-sub{ margin-left:2px; padding-left:12px; border-left:1px dashed rgba(28,25,23,.2) }
+    .b2n-fstat-sub b{ font-size:var(--fs-base); color:#8a8578; font-weight:800 }
+    .b2n-row{
+      display:flex; gap:10px; align-items:flex-start; background:#fbf8f2; border:1px solid rgba(28,25,23,.12);
+      border-radius:var(--r); padding:9px 12px; margin-bottom:8px;
+    }
+    .b2n-row-tag{
+      flex-shrink:0; font-size:10px; font-weight:900; color:#fff; background:#111827;
+      border-radius:6px; padding:4px 8px; letter-spacing:.02em; white-space:nowrap;
+    }
+    .b2n-row-body{ font-size:var(--fs-sm); color:var(--ink2); display:flex; flex-wrap:wrap; gap:6px; align-items:baseline }
+    .b2n-row-body b{ font-size:var(--fs-base); color:var(--ink) }
+    .b2n-row-univ{ color:var(--ink2); font-size:var(--fs-caption) }
+    .b2n-row-stat{ color:var(--ink); font-weight:900; font-size:11.5px }
+    .b2n-row-wr{ color:var(--ink2); font-weight:700; font-size:10.5px }
+    .b2n-row-extra{ color:var(--ink); font-weight:800; font-size:var(--fs-caption) }
+    .b2n-standings{ background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-radius:14px; overflow:hidden; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.05) }
+    .b2n-stline{
+      display:flex; gap:9px; align-items:center;
+      padding:9px 12px; font-size:var(--fs-sm); border-bottom:1px solid rgba(28,25,23,.08);
+    }
+    .b2n-stline:nth-child(even){ background:rgba(28,25,23,.025) }
+    .b2n-stline:last-child{ border-bottom:none }
+    .b2n-stline-rank{
+      width:22px; height:22px; line-height:22px; flex-shrink:0; font-weight:900; font-size:var(--fs-caption);
+      color:var(--ink2); text-align:center; border-radius:50%; background:rgba(28,25,23,.06);
+    }
+    .b2n-stline-rank.r1{ background:linear-gradient(160deg,#fde68a,#d97706); color:#78350f; box-shadow:0 2px 6px rgba(217,119,6,.35) }
+    .b2n-stline-rank.r2{ background:linear-gradient(160deg,#e7e5e4,#a8a29e); color:#292524; box-shadow:0 2px 6px rgba(120,113,108,.3) }
+    .b2n-stline-rank.r3{ background:linear-gradient(160deg,#e7bfa3,#b4623a); color:#431407; box-shadow:0 2px 6px rgba(180,98,58,.3) }
+    .b2n-stline-name{ flex:1; min-width:0; font-weight:800; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .b2n-stline-rec{ flex-shrink:0; color:var(--ink); font-weight:800; font-size:11.5px; white-space:nowrap }
+    .b2n-stline-wr{ flex-shrink:0; font-weight:600; color:var(--ink2); font-size:var(--fs-caption); white-space:nowrap }
+    .b2n-rd{ font-size:10px; font-weight:800; border-radius:6px; padding:2px 6px; text-align:center; white-space:nowrap }
+    .b2n-rd.up{ background:#f0fdf4; color:#15803d }
+    .b2n-rd.down{ background:#fef2f2; color:#b91c1c }
+    .b2n-rd.same{ background:#f8fafc; color:#64748b }
+    .b2n-rd.new{ background:#f5f3ff; color:#5b21b6 }
+    .b2n-kpis{ display:flex; gap:10px; margin-bottom:16px }
+    .b2n-kpi{
+      position:relative; flex:1; min-width:0; color:var(--ink); border-radius:12px; padding:13px 14px 13px 50px;
+      background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 60%,#f5efe1 100%);
+      border:1px solid rgba(28,25,23,.1); border-top:3px solid rgba(28,25,23,.22);
+      box-shadow:0 6px 16px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .b2n-kpi-ico{
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      width:26px; height:26px; border-radius:50%; font-size:var(--fs-base);
+      display:flex; align-items:center; justify-content:center;
+      background:radial-gradient(120% 120% at 30% 25%, #fff 0%, #ede4cf 100%);
+      box-shadow:0 2px 6px rgba(15,23,42,.14), inset 0 0 0 1px rgba(28,25,23,.08);
+    }
+    .b2n-kpi b{ display:block; font-size:23px; font-weight:900; color:var(--ink); line-height:1.2 }
+    .b2n-kpi i{ font-style:normal; font-size:10px; font-weight:800; color:var(--ink2); letter-spacing:.02em }
+    .b2n-silent-row{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--rule2,#d6d0c4) }
+    .b2n-silent-label{ font-size:9px; font-weight:900; color:var(--ink2); margin-right:2px }
+    .b2n-silent-chip{ font-size:10px; font-weight:700; color:var(--ink2); background:var(--paper2,#f4f1ea); border:1px solid var(--rule2,#d6d0c4); border-radius:999px; padding:3px 9px }
+    .b2n-silent-more{ font-size:10px; font-weight:700; color:var(--ink2) }
+    .b2n-worst{ background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:12px; margin-top:16px }
+    .b2n-worst-title{ font-size:var(--fs-caption); font-weight:900; color:var(--ink2); margin-bottom:6px }
+    .b2n-empty{ font-size:var(--fs-sm); color:var(--ink2); padding:10px 0 }
+    .b2n-aces-section{ padding:4px 26px 22px }
+    .b2n-aces-title{
+      display:flex; align-items:center; gap:7px;
+      font-size:var(--fs-sm); font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--ink2); margin:6px 0 12px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
+    }
+    .b2n-aces-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:var(--accent); flex-shrink:0; font-style:normal }
+    .b2n-aces-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
+    .b2n-roster-grid{ display:flex; align-items:flex-start; gap:12px }
+    .b2n-roster-col{ flex:1; min-width:0; display:flex; flex-direction:column; gap:12px }
+    .b2n-roster-card{
+      --_c:#9f1d1d;
+      background:#fff; border:1px solid rgba(28,25,23,.12); border-radius:14px;
+      padding:0 0 6px; box-shadow:0 4px 12px rgba(15,23,42,.05); overflow:hidden;
+    }
+    .b2n-roster-head{
+      display:flex; align-items:center; gap:6px; padding:9px 13px;
+      background:rgba(28,25,23,.035);
+      border-bottom:1px solid rgba(28,25,23,.1);
+    }
+    .b2n-roster-count{ font-size:10px; font-weight:700; color:var(--ink2); margin-left:auto }
+    .b2n-roster-list{ display:flex; flex-direction:column; padding:2px 13px 0 }
+    .b2n-roster-row{
+      display:flex; align-items:center; gap:8px; padding:5.5px 0;
+      border-bottom:1px solid rgba(28,25,23,.06); font-size:var(--fs-caption);
+    }
+    .b2n-roster-row:nth-child(even){ background:rgba(28,25,23,.022); margin:0 -13px; padding-left:13px; padding-right:13px }
+    .b2n-roster-row:last-child{ border-bottom:none }
+    .b2n-roster-name{ flex:1; min-width:0; font-weight:800; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .b2n-roster-rec{ flex-shrink:0; color:var(--ink2); font-weight:700; white-space:nowrap }
+    .b2n-roster-wr{ flex-shrink:0; font-weight:900; min-width:34px; text-align:right; white-space:nowrap }
+    .b2n-ace-card{
+      background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-top:3px solid var(--_c,#9f1d1d);
+      border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:6px; min-width:0;
+      box-shadow:0 4px 12px rgba(15,23,42,.05);
+    }
+    .b2n-ace-main{ display:flex; align-items:center; gap:9px; margin-top:1px }
+    .b2n-ace-photo{
+      position:relative; width:40px; height:40px; border-radius:var(--su_profile_radius,50%); clip-path:var(--su_profile_clip,none); overflow:hidden; flex-shrink:0;
+      background:linear-gradient(160deg,#3f3a33,#171512);
+      border:2.5px solid var(--_c,#9f1d1d);
+      filter:drop-shadow(0 3px 7px rgba(15,23,42,.22));
+      display:flex; align-items:center; justify-content:center;
+    }
+    .b2n-ace-photo img{ width:100%; height:100%; object-fit:cover; display:block }
+    .b2n-ace-photo-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:16px; font-weight:900; color:#fff }
+    .b2n-ace-info{ min-width:0; flex:1 }
+    .b2n-ace-univ{
+      display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; color:var(--ink2);
+      text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .b2n-ace-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0 }
+    .b2n-ace-name{ font-size:14px; font-weight:900; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-rec{ font-size:var(--fs-caption); font-weight:700; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-empty{ font-size:var(--fs-caption); color:var(--ink2); font-weight:600 }
+    .b2n-footer{
+      margin-top:22px; padding:14px 26px 0; border-top:3px double rgba(28,25,23,.5);
+      display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:700; color:var(--ink2);
+    }
+    .b2n-footer-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-right:6px; vertical-align:middle }
+  `;
+}
+function _newsBuildHtml(ctx, meta){
+  const info = ctx.briefingInfo || {};
+  const headline = _newsHeadline(ctx);
+  const editionLabel = ctx.isMonthly ? 'MONTHLY EDITION' : 'WEEKLY EDITION';
+  const analysis = _newsAnalysisParagraph(ctx);
+  const worstLabel = _newsWorstLabel(ctx);
+  return `<style>${_newsCss()}</style>
+  <div class="b2n-sheet">
+    <div class="b2n-topband"></div>
+    <div class="b2n-topbar"><span>STAR DATACENTER SPORTS</span><span>${_esc(editionLabel)}</span><span>ISSUE ${_esc(meta.issueDateFull||meta.issueDate)}</span></div>
+    <div class="b2n-masthead">
+      <div class="b2n-masthead-top">
+        <span>${_esc(info.kicker||'BRIEFING')}</span>
+        <span>필터 ${_esc(meta.univ)} · 활동 선수 ${ctx.activePlayerCount||0}명</span>
+      </div>
+      <div class="b2n-masthead-brand">
+        <div class="b2n-brand-name">STAR <b>DATACENTER</b></div>
+      </div>
+      <div class="b2n-edition">${_esc(info.title||'BRIEFING')} · ${_esc(meta.from)} - ${_esc(meta.to)}</div>
+      <div class="b2n-rule-double"></div>
+      <div class="b2n-rule-double-thin"></div>
+    </div>
+    <div class="b2n-headline-wrap">
+      <div class="b2n-headline">${headline}</div>
+      <div class="b2n-dek">${_esc(ctx.heroSummary||'')}</div>
+      ${analysis ? `<div class="b2n-analysis">${analysis}</div>` : ''}
+      <div class="b2n-bylinebar">
+        <span>발행 ${_esc(meta.issueDateFull||meta.issueDate)}</span>
+        <span>집계 ${_esc(meta.from)} ~ ${_esc(meta.to)}</span>
+        <span>필터 ${_esc(meta.univ)}</span>
+        <span>활동 선수 ${ctx.activePlayerCount||0}명</span>
+      </div>
+    </div>
+    <div class="b2n-body">
+      <div class="b2n-col">
+        <div class="b2n-col-title"><i></i>${_esc(ctx.mvpLabel||'오늘의 MVP')}</div>
+        ${_newsMvpFeatureHtml(ctx)}
+        <div class="b2n-col-title"><i></i>이 주의 기록</div>
+        ${_newsHighlightRows(ctx)}
+        ${_newsRaceStatsHtml(ctx)}
+        ${ctx.worstPlayer && ctx.worstPlayer.p ? `<div class="b2n-worst">
+          <div class="b2n-worst-title">💧 ${_esc(worstLabel)}</div>
+          ${_newsStatRow('최다패', ctx.worstPlayer, '')}
+        </div>` : ''}
+      </div>
+      <div class="b2n-col">
+        <div class="b2n-kpis">
+          <div class="b2n-kpi"><span class="b2n-kpi-ico">🎮</span><b>${ctx.totalGames||0}</b><i>총 경기수</i></div>
+          <div class="b2n-kpi"><span class="b2n-kpi-ico">🏫</span><b>${ctx.activeUnivs||0}</b><i>활동 대학</i></div>
+        </div>
+        <div class="b2n-col-title"><i></i>대학 순위</div>
+        ${_newsStandingsHtml(ctx)}
+        ${_newsSilentUnivsHtml(ctx)}
+      </div>
+    </div>
+    ${_newsUnivAcesHtml(ctx)}
+    ${_newsUnivRostersHtml(ctx)}
+    <div class="b2n-footer">
+      <span><span class="b2n-footer-dot"></span>STAR DATACENTER · star-datacenter</span>
+      <span>${_esc(meta.univ)} · ${_esc(info.title||'브리핑')}</span>
+    </div>
+  </div>`;
+}
+/* ══════════════════════════════════════
+   브리핑 저장 — 다양한 모드(기본/신문기사/포스터/미니멀)
+   통계탭 스트리머 리포트의 "미리보기 → 스타일 전환 → 다운로드" 흐름을 그대로 차용.
+   각 모드는 window._b2BriefingExportCtx(board2-briefing.js가 저장해둔 통계 스냅샷)를
+   바탕으로 완전히 독립된 레이아웃을 렌더링해 캡처한다.
+══════════════════════════════════════ */
+var BRIEF_MODES = [
+  ['basic','📋 기본'],
+  ['newspaper','📰 신문기사'],
+  ['poster','🎬 포스터'],
+  ['minimal','⬜ 미니멀']
+];
+
+// MVP가 속한 대학의 브랜드컬러(포스터 배경/사진 배지에 사용). 대학 정보가 없으면 기본 남색.
