@@ -164,7 +164,22 @@ window._openMatchDetailByMatchId = function(matchId, modeLabel, silent){
       if(g){
         const sid = g.sid || g.matchId || '';
         if(sid){
-          const group = arr.filter(x=>x && (x.sid===sid || x.matchId===sid));
+          // (버그픽스) sid는 "같은 날 붙여넣기 배치" 단위로 부여되어 서로 다른 선수쌍이
+          // 같은 sid를 공유할 수 있음. sid만으로 묶으면 배치 내 다른 쌍(예: A vs B)의 경기가
+          // 지금 클릭한 쌍(C vs D)의 상세팝업/공유카드에 섞여 나오는 문제가 있었음.
+          // -> sid가 같아도 실제 선수쌍(and 프로/일반 구분)이 일치하는 경기만 묶는다.
+          const _sidPairKey = [g.wName||'', g.lName||''].map(s=>String(s).trim()).sort().join('||');
+          const _sidIsProGJ = (lbl==='프로리그끝장전');
+          const group = arr.filter(x=>{
+            if(!x || (x.sid!==sid && x.matchId!==sid)) return false;
+            const pk = [x.wName||'', x.lName||''].map(s=>String(s).trim()).sort().join('||');
+            if(pk !== _sidPairKey) return false;
+            if(typeof x._proLabel !== 'undefined'){
+              if(_sidIsProGJ && !x._proLabel) return false;
+              if(!_sidIsProGJ && x._proLabel) return false;
+            }
+            return true;
+          });
           if(group.length>=2){
             const names=[]; const seen=new Set();
             group.forEach(it=>{ [it.wName,it.lName].forEach(n=>{ if(n && !seen.has(n)){ seen.add(n); names.push(n);} }); });
@@ -326,6 +341,27 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
   try{
     const selfN=String(selfName||'').trim();
     const oppN=String(oppName||'').trim();
+    const _pairEq = (a1,b1,a2,b2) => {
+      const A1=String(a1||'').trim(), B1=String(b1||'').trim();
+      const A2=String(a2||'').trim(), B2=String(b2||'').trim();
+      if(!A1 || !B1 || !A2 || !B2) return false;
+      return (A1===A2 && B1===B2) || (A1===B2 && B1===A2);
+    };
+    const _openedMatchHasPair = ()=>{
+      try{
+        const st = window._lastHistDetailState || null;
+        if(!st || !st.key) return false;
+        const reg = (window._detReg||{})[st.key];
+        if(!reg || !reg.m) return false;
+        const mm = reg.m || {};
+        // mm.a/mm.b(세트형) 또는 mm.wName/mm.lName(단일) 기준으로 비교
+        const A = mm.a || mm.teamALabel || mm.wName || '';
+        const B = mm.b || mm.teamBLabel || mm.lName || '';
+        return _pairEq(A, B, selfN, oppN);
+      }catch(e){
+        return false;
+      }
+    };
     const _normDate = (s) => {
       const t = String(s||'').trim();
       if(!t) return '';
@@ -343,10 +379,13 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
     try{
       if(mid && typeof window._openMatchDetailByMatchId === 'function'){
         const ok = window._openMatchDetailByMatchId(mid, lbl, true);
-        if(ok) return true;
+        // ⚠️ (버그픽스) 끝장전/개인전 자동인식 '배치 sid'가 여러 선수쌍에 공유되면,
+        // matchId(sid)만으로는 엉뚱한 선수쌍의 상세가 열릴 수 있음.
+        // -> 열리더라도 실제 (selfN, oppN) 쌍과 일치할 때만 성공으로 간주한다.
+        if(ok && _openedMatchHasPair()) return true;
       }else if(mid && typeof window.openMatchDetailByMatchId === 'function'){
         const ok2 = window.openMatchDetailByMatchId(mid, lbl);
-        if(ok2) return true;
+        if(ok2 && _openedMatchHasPair()) return true;
       }
     }catch(e){}
 
@@ -787,8 +826,8 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
 };
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const _wrapMdDetail = (inner)=>`<div class="cmd-detail-shell" data-md-mode="${_mdDesignMode}" data-md-layout="${_mdLayoutMode}">${inner}</div>`;
   const _modeLabel = (mk)=>{
     const v=String(mk||'').trim();
@@ -1141,7 +1180,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 
   if(_mdLayoutMode==='poster'){
     const main=setBlocks.map(sb=>sb.html).join('');
-    return _wrapMdDetail(`<div class="cmd-poster">${_posterHero()}<div class="cmd-sets">${main}</div>${_playerTallyHTML}</div>`);
+    return _wrapMdDetail(`<div class="cmd-poster"><div class="cmd-sets">${main}</div>${_playerTallyHTML}</div>`);
   }
 
   if(_mdLayoutMode==='focus'){

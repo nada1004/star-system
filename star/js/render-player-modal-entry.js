@@ -233,10 +233,20 @@ function _doOpenPlayerModal(name, p){
   mbody.style.zoom=pdFs==='xlarge'?'1.2':pdFs==='large'?'1.12':'1';
   injectUnivIcons(mbody);
   const editBtn=document.getElementById('playerModalEditBtn');
-  if(editBtn){
+  const styleBtn=document.getElementById('playerModalStyleBtn');
+  {
     const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
-    editBtn.style.display=canEdit?'inline-flex':'none';
-    editBtn.dataset.playerName=name;
+    if(editBtn){
+      editBtn.style.display=canEdit?'inline-flex':'none';
+      editBtn.dataset.playerName=name;
+    }
+    if(styleBtn){
+      styleBtn.style.display=canEdit?'inline-flex':'none';
+      styleBtn.dataset.playerName=name;
+    }else if(typeof window._pdCloseStylePicker==='function'){
+      window._pdCloseStylePicker();
+    }
+    if(!canEdit && typeof window._pdCloseStylePicker==='function') window._pdCloseStylePicker();
   }
   st.currentName=name;
   {

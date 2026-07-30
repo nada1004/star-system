@@ -349,7 +349,15 @@ function _b2ScheduleImageSwap(playerName) {
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
-  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  const _myGen = mainBox._swapGen;
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _hasMediaUrl = (v)=>!!_normMediaUrl(v);
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
   const imgList = p ? [
@@ -357,7 +365,12 @@ function _b2ScheduleImageSwap(playerName) {
     {slot:2, url:p.secondProfileFile},
     {slot:3, url:p.profileFile3},
     {slot:4, url:p.profileFile4},
-    {slot:5, url:p.profileFile5}
+    {slot:5, url:p.profileFile5},
+    {slot:6, url:p.profileFile6},
+    {slot:7, url:p.profileFile7},
+    {slot:8, url:p.profileFile8},
+    {slot:9, url:p.profileFile9},
+    {slot:10, url:p.profileFile10}
   ].filter(x=>x && _hasMediaUrl(x.url)) : [];
   const clampSec = (v, d)=>{
     const n = parseFloat(v);
@@ -365,6 +378,16 @@ function _b2ScheduleImageSwap(playerName) {
     return Math.max(0.2, Math.min(60, n));
   };
   const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
+  const isBrokenEl = (el)=>{
+    if(!el) return true;
+    if(String(el.dataset?.b2Broken || '') === '1') return true;
+    if(el.style.visibility === 'hidden') return true;
+    return false;
+  };
+  const getLiveImgList = ()=>{
+    const live = imgList.filter(item => !isBrokenEl(getEl(item.slot)));
+    return live.length ? live : imgList;
+  };
   const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
   // 비디오 슬롯이 화면에 보일 때 재생 시작(음소거 자동재생) — 전환 타이밍 자체는
   // 항상 아래 delayMs()로 설정한 "전환 시간(초)"을 따르며, 영상 길이와는 무관함.
@@ -382,44 +405,60 @@ function _b2ScheduleImageSwap(playerName) {
       }catch(e){}
     }catch(e){}
   };
+  const _delayKeyLegacy = {
+    '1_2':'photoDelay12','2_1':'photoDelay21','2_3':'photoDelay23','3_1':'photoDelay31',
+    '3_4':'photoDelay34','4_1':'photoDelay41','4_5':'photoDelay45','5_1':'photoDelay51'
+  };
   const delayMs = (fromSlot, toSlot)=>{
     try{
       if(!p) return 1000;
-      if(toSlot===1){
-        if(fromSlot===2) return Math.round(clampSec(p.photoDelay21 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===3) return Math.round(clampSec(p.photoDelay31 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===4) return Math.round(clampSec(p.photoDelay41 ?? p.photoDelay51 ?? 4, 4) * 1000);
-        if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
-        return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
-      }
-      if(fromSlot===1) return Math.round(clampSec(p.photoDelay12 ?? 4, 4) * 1000);
-      if(fromSlot===2) return Math.round(clampSec(p.photoDelay23 ?? 4, 4) * 1000);
-      if(fromSlot===3) return Math.round(clampSec(p.photoDelay34 ?? 4, 4) * 1000);
-      if(fromSlot===4) return Math.round(clampSec(p.photoDelay45 ?? 4, 4) * 1000);
-      if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 4, 4) * 1000);
+      const key = _delayKeyLegacy[`${fromSlot}_${toSlot}`] || `photoDelay${fromSlot}_${toSlot}`;
+      // [FIX-DELAY-FALLBACK] 예전에는 "N→1"로 돌아가는 모든 구간의 기본값을 무조건
+      // photoDelay51(5번째 이미지에서 1번으로 돌아갈 때 전용 값)로 사용했음.
+      // 그래서 이미지가 2장뿐인 선수도 2→1 전환 시 과거에 5장 순환용으로 저장해둔
+      // photoDelay51 값을 그대로 빌려써서, 의도치 않게 아주 짧거나 긴 전환 시간이
+      // 적용되며 화면이 잠깐 비는 것처럼 보이는 원인이 됐다. 이제는 항상 안전한
+      // 공통 기본값(4초)만 사용한다.
+      const fallback = 4;
+      return Math.round(clampSec(p[key] ?? fallback, 4) * 1000);
     }catch(e){}
     return 1000;
   };
-  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
-  if (imgList.length < 2) {
-    const showSlot = (imgList[0] && imgList[0].slot) ? imgList[0].slot : 1;
-    // 먼저 showSlot을 즉시 보이게 한 뒤 나머지를 숨김
-    const _showEl = document.getElementById('b2-main-img-' + showSlot);
-    if (_showEl) _showEl.style.opacity = '1';
-    for (let slot = 1; slot <= 5; slot++) {
-      if (slot === showSlot) continue;
-      const el = document.getElementById('b2-main-img-' + slot);
-      if (el) el.style.opacity = '0';
+  // [FIX-IMG-GAP] 들어오는 이미지의 z-index를 항상 맨 위로 올려두는 헬퍼.
+  // 기존에는 슬롯 번호로 z-index가 고정돼 있어서, 전환 시 "나가는 이미지"와
+  // "들어오는 이미지"가 서로 반대 방향(1→0 / 0→1)으로 동시에 opacity 트랜지션을 탔다.
+  // 두 레이어가 각각 부분투명 상태를 지나가는 순간(특히 50% 부근) 두 이미지 뒤의
+  // 배경(테마색)이 잠깐 비치면서 "공백"처럼 보이는 원인이었다.
+  // 이제는 들어오는 이미지만 항상 맨 위에서 0→1로 페이드인하고, 나가는 이미지는
+  // 그 아래에서 opacity:1을 그대로 유지(=자연스럽게 가려짐)한 뒤, 트랜지션이
+  // 끝난 다음에야 트랜지션 없이 즉시 opacity:0으로 되돌려 다음 전환을 준비한다.
+  const CROSSFADE_MS = 400;
+  const bringToFront = (slot)=>{
+    for (let s = 1; s <= 10; s++) {
+      const el = document.getElementById('b2-main-img-' + s);
+      if (el) el.style.zIndex = (s === slot) ? '50' : String(s);
     }
-    applyMediaForSlot(showSlot);
+  };
+  const showOnlySlot = (slot)=>{
+    bringToFront(slot);
+    for (let s = 1; s <= 10; s++) {
+      const el = getEl(s);
+      if (!el) continue;
+      el.style.opacity = (s === slot) ? '1' : '0';
+    }
+    mainBox._swapCurSlot = slot;
+    applyMediaForSlot(slot);
+  };
+  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
+  const initialLiveList = getLiveImgList();
+  if (initialLiveList.length < 2) {
+    const showSlot = (initialLiveList[0] && initialLiveList[0].slot) ? initialLiveList[0].slot : ((imgList[0] && imgList[0].slot) ? imgList[0].slot : 1);
+    showOnlySlot(showSlot);
     return;
   }
   // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
-  const firstSlot = imgList[0].slot;
-  for (let slot = 1; slot <= 5; slot++) {
-    const el = document.getElementById('b2-main-img-' + slot);
-    if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
-  }
+  const firstSlot = initialLiveList[0].slot;
+  showOnlySlot(firstSlot);
   try{
     const badge = document.getElementById('b2-cur-img-slot');
     if(badge) badge.textContent = '🖼️ 이미지 ' + firstSlot;
@@ -430,15 +469,24 @@ function _b2ScheduleImageSwap(playerName) {
   // 첫 이미지가 비디오면 즉시 재생
   applyMediaForSlot(firstSlot);
   function doSwap() {
-    const prev = mainBox._swapIdx;
-    mainBox._swapIdx = (prev + 1) % totalImgs;
-    const cur = mainBox._swapIdx;
-    const curSlot = imgList[cur] ? imgList[cur].slot : 1;
-    mainBox._swapCurSlot = curSlot;
-    for (let slot = 1; slot <= 5; slot++) {
-      const el = document.getElementById('b2-main-img-' + slot);
-      if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
+    if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
+    const liveImgList = getLiveImgList();
+    if (liveImgList.length < 2) {
+      const fallbackSlot = (liveImgList[0] && liveImgList[0].slot) ? liveImgList[0].slot : firstSlot;
+      showOnlySlot(fallbackSlot);
+      return;
     }
+    const prevSlot = mainBox._swapCurSlot || firstSlot;
+    const prevIdx = liveImgList.findIndex(item => item.slot === prevSlot);
+    const cur = ((prevIdx >= 0 ? prevIdx : 0) + 1) % liveImgList.length;
+    mainBox._swapIdx = cur;
+    const curSlot = liveImgList[cur] ? liveImgList[cur].slot : firstSlot;
+    mainBox._swapCurSlot = curSlot;
+    // 들어오는 이미지를 맨 위로 올리고 페이드인. 나머지(나가는 이미지 포함)는
+    // 그 아래에 그대로 두어(opacity 유지) 자연스럽게 가려지도록 한다.
+    bringToFront(curSlot);
+    const curEl = getEl(curSlot);
+    if (curEl) curEl.style.opacity = '1';
     try{
       const badge = document.getElementById('b2-cur-img-slot');
       if(badge) badge.textContent = '🖼️ 이미지 ' + curSlot;
@@ -457,17 +505,44 @@ function _b2ScheduleImageSwap(playerName) {
     // 새로 보이는 슬롯이 비디오면 재생 시작
     applyMediaForSlot(curSlot);
 
+    // 크로스페이드가 끝난 뒤(들어오는 이미지가 이미 완전히 덮은 뒤), 가려진 나머지
+    // 슬롯들을 트랜지션 없이 즉시 opacity:0으로 되돌려 다음 전환을 준비한다.
+    // 이미 새 이미지 아래로 완전히 가려진 상태라 시각적으로 아무 변화도 없다.
+    const _mySwapIdx = mainBox._swapIdx;
+    setTimeout(()=>{
+      if (mainBox._swapGen !== _myGen || mainBox._swapIdx !== _mySwapIdx) return;
+      for (let slot = 1; slot <= 10; slot++) {
+        if (slot === curSlot) continue;
+        const el = document.getElementById('b2-main-img-' + slot);
+        if (!el) continue;
+        const prevTransition = el.style.transition;
+        el.style.transition = 'none';
+        el.style.opacity = '0';
+        void el.offsetWidth;
+        el.style.transition = prevTransition || 'opacity 0.4s ease';
+      }
+    }, CROSSFADE_MS + 40);
+
     // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름
     if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-    const next = (cur + 1) % totalImgs;
+    const next = (cur + 1) % liveImgList.length;
     const fromSlot = curSlot;
-    const toSlot = imgList[next] ? imgList[next].slot : 1;
+    const toSlot = liveImgList[next] ? liveImgList[next].slot : firstSlot;
     mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
-  const firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
+  const firstDelay = (initialLiveList[0] && initialLiveList[1]) ? delayMs(initialLiveList[0].slot, initialLiveList[1].slot) : 1000;
   mainBox._swapCurSlot = firstSlot;
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
+window._b2HandleMediaFailure = function(mediaEl) {
+  try{
+    if(!mediaEl) return;
+    mediaEl.dataset.b2Broken = '1';
+    const playerName = String(window._b2SelectedPlayer?.name || '').trim();
+    if(!playerName || typeof window._b2ScheduleImageSwap !== 'function') return;
+    setTimeout(()=>window._b2ScheduleImageSwap(playerName), 0);
+  }catch(e){}
+};
 window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.zoom = settings.scale;

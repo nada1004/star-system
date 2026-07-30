@@ -17,9 +17,7 @@ function prepareUnivDetailStyleData(univName){
   const bgPosX=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosX ?? udStyle.header_bg_pos_x ?? 50) || 50));
   const bgPosY=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosY ?? udStyle.header_bg_pos_y ?? 50) || 50));
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const _validUdLayouts=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
   const designMode = _validUdModes.includes(udStyle.design_mode) ? udStyle.design_mode : 'classic';
-  const layoutMode = _validUdLayouts.includes(udStyle.layout_mode) ? udStyle.layout_mode : 'default';
   const _hexToRgb = (hex) => {
     const s = String(hex||'').trim();
     const m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
@@ -117,7 +115,6 @@ function prepareUnivDetailStyleData(univName){
     hdrBg:hdrBgEff,
     hdrBgLayer:bgImg ? { url:bgImg, fit:(bgFit==='fill'?'fill':bgFit==='cover'?'cover':'contain'), scale:bgScale, posX:bgPosX, posY:bgPosY } : null,
     designMode,
-    layoutMode,
     pastelVars,
     modalBgVars,
     bgScope,

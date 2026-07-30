@@ -32,9 +32,11 @@ function indInputHTML(){
     `<button class="btn btn-w btn-sm mb-mini-btn" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>`
   ], '');
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">
         <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
         <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
+        <label style="font-size:var(--fs-sm);font-weight:700">대회명</label>
+        <input type="text" value="${(gi.compName||'').replace(/"/g,'&quot;')}" placeholder="대회명 입력 (선택)" onchange="_indInput.compName=this.value;if(BLD['ind'])BLD['ind'].compName=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);width:160px">
       </div>
       <div class="mb-split">
         <div>
@@ -93,6 +95,8 @@ function _gjCanInput(){
 function openGJProPasteModal(){
   openGJPasteModal();
   window._gjProPaste=true;
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🏅 프로리그 끝장전 경기 결과 입력 모드</span>';
 }
 
 function gjInputHTML(){
@@ -142,6 +146,10 @@ function gjInputHTML(){
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
           <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:var(--fs-sm);font-weight:700">대회명</label>
+          <input type="text" value="${(gi.compName||'').replace(/"/g,'&quot;')}" placeholder="대회명 입력 (선택)" onchange="_gjInput.compName=this.value;if(BLD['gj'])BLD['gj'].compName=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);width:160px">
         </div>
       </div>
       <div class="mb-split">

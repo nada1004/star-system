@@ -437,16 +437,14 @@ function applyImageContextStyle(){
 // ── 랜덤 이미지 회전 ──
 try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotationTimer = null; }catch(e){}
 
+// [REMOVED-RANDOM] "이미지 랜덤 회전" 기능 완전 비활성화.
+// 이 기능은 설정에서 켜져 있으면 일정 시간마다 완전히 다른(무작위) 선수의 프로필로
+// 화면을 바꿔치기했는데, 사용자 입장에서는 "프로필 이미지가 순서 없이 랜덤으로 나온다"로
+// 보였던 원인 중 하나였다. 요청에 따라 코드 자체를 무력화(no-op)해서 저장된 설정값(과거에
+// 켜져 있던 값 포함)과 무관하게 다시는 실행되지 않도록 한다.
 function startRandomRotation(){
   stopRandomRotation();
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(!imgSettings.randomRotation) return;
-  
-  const interval = (imgSettings.interval || 5) * 1000;
-  
-  window._randomRotationTimer = setInterval(()=>{
-    rotateRandomImage();
-  }, interval);
+  return;
 }
 
 function stopRandomRotation(){
@@ -457,6 +455,10 @@ function stopRandomRotation(){
 }
 
 function rotateRandomImage(){
+  return;
+}
+
+function _rotateRandomImage_DISABLED(){
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(!imgSettings.randomRotation) return;
   

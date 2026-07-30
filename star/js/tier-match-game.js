@@ -209,7 +209,7 @@ function _tiBuildTierPool() {
     if (seenByTier[t].has(name)) return; // 중복 인물 스킵
     seenByTier[t].add(name);
     if (!pool[t]) pool[t] = [];
-    pool[t].push({ name, photo: p.photo });
+    pool[t].push({ name, photo: p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '' });
   });
   let teams = Object.keys(pool).map(t => ({
     tier: t,

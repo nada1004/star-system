@@ -56,7 +56,7 @@ function preparePlayerDetailComputedData(opts){
   const eloColor=eloVal>=1400?'#7c3aed':eloVal>=1300?'#d97706':eloVal>=1200?'#16a34a':'#dc2626';
   const eloChartPts=modeHist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
 
-  const modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
+  const modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a','프로리그대회':'#0d9488'};
   const histModeStats={};
   modeHist.forEach(hh=>{
     if(hh.mode){
@@ -83,6 +83,10 @@ function preparePlayerDetailComputedData(opts){
   });
   const gjW=(gjM||[]).filter(g=>g.wName===p.name&&(!year||(g.d||'').startsWith(year))).length;
   const gjL=(gjM||[]).filter(g=>g.lName===p.name&&(!year||(g.d||'').startsWith(year))).length;
+  // (요청사항) 프로리그 대회(조별리그/대진표/팀전/중장전)는 별도 모드칩으로 쪼개지 않고
+  // '프로리그대회' 하나로 합산해서 노출한다 (리포트의 대회·모드별 성적과 동일한 방식)
+  const proTourW=(histModeStats['프로리그대회']?.w||0)+(histModeStats['프로리그대회끝장전']?.w||0);
+  const proTourL=(histModeStats['프로리그대회']?.l||0)+(histModeStats['프로리그대회끝장전']?.l||0);
   const fixedModes=[
     {key:'미니대전',w:histModeStats['미니대전']?.w||0,l:histModeStats['미니대전']?.l||0},
     {key:'대학대전',w:histModeStats['대학대전']?.w||0,l:histModeStats['대학대전']?.l||0},
@@ -92,7 +96,9 @@ function preparePlayerDetailComputedData(opts){
     {key:'티어대회',w:histModeStats['티어대회']?.w||0,l:histModeStats['티어대회']?.l||0},
     {key:'대회',w:compW,l:compL},
     {key:'프로리그',w:histModeStats['프로리그']?.w||0,l:histModeStats['프로리그']?.l||0},
-  ];
+    {key:'프로리그대회',w:proTourW,l:proTourL},
+  // (요청사항) 기록(경기)이 전혀 없는 모드 카드는 표시하지 않고, 실제 전적이 있는 모드만 노출
+  ].filter(m=>(m.w+m.l)>0);
 
   return {
     hist,

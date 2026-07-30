@@ -58,15 +58,19 @@ function _compActionMenuHTML(items){
 }
 
 function getCurrentTourney(){
+  // [BUGFIX] curComp가 비어있을 때(=대회를 아직 선택 안 한 상태) _tourneys[0]으로
+  // 폴백하면, 배열의 첫 대회가 하필 type:'tier'인 경우 선택도 안 했는데 티어대회
+  // 서브메뉴/최근 기록이 자동으로 표시되는 문제가 있었음. 선택된 게 없으면 null.
+  if(!curComp) return null;
   const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
-  return _tourneys.find(t=>t && t.name===curComp) || _tourneys[0] || null;
+  return _tourneys.find(t=>t && t.name===curComp) || null;
 }
 
 function rComp(C,T){
   T.innerText='🎖️ 대회';
   const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
   if(window._compFilterOpen===undefined) window._compFilterOpen=_lockOpen;
   if(_lockOpen) window._compFilterOpen=true;
   // [BUGFIX-HIGH-4] 비로그인 시 grpedit 진입 차단 - URL 파라미터/외부링크 직접 진입도 포함

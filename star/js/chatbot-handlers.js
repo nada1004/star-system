@@ -5,7 +5,9 @@ async function _chatbotHandleMainCommands(msg, userMessage){
         return window._chatbotGetPlayerByName(name);
       }
     }catch(e){}
-    return typeof players !== 'undefined' ? players.find(p => p.name === name) : null;
+    if (typeof players === 'undefined') return null;
+    const lower = String(name || '').toLowerCase();
+    return players.find(p => p.name === name) || players.find(p => String(p.name || '').toLowerCase() === lower) || null;
   }
 
   // 🏆 이번주 / 이번달 MVP
@@ -57,6 +59,30 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     return formatDailyTypeResult(typeKey, dateStr, dateKeyword || null);
   }
 
+  if (msg.includes('프로필') && msg.includes('카드')) {
+    const nameMatch = userMessage.match(/([^\s]+)\s+프로필\s*카드/);
+    if (nameMatch) {
+      const playerName = nameMatch[1];
+      let player = _getExactPlayer(playerName);
+      if (!player) player = findSimilarPlayer(playerName);
+      if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerBasicInfo(player);
+      return formatPlayerBasicInfo(player);
+    }
+  }
+
+  if (msg.includes('프로필') && (msg.includes('사진') || msg.includes('이미지')) && typeof formatPlayerPhotoGallery === 'function') {
+    const nameMatch = userMessage.match(/([^\s]+)\s+프로필\s*(사진|이미지)(들)?/);
+    if (nameMatch) {
+      const playerName = nameMatch[1];
+      let player = _getExactPlayer(playerName);
+      if (!player) player = findSimilarPlayer(playerName);
+      if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerPhotoGallery(player);
+      return formatPlayerPhotoGallery(player);
+    }
+  }
+
   if (msg.includes('최근전적')) {
     const nameMatch = userMessage.match(/([^\s]+)\s+최근전적/);
     if (nameMatch) {
@@ -79,6 +105,17 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerStats(player);
       return formatPlayerStats(player);
     }
+  }
+
+  // 🤖 AI 분석 코멘트 (예: "홍길동 AI분석", "홍길동 AI 분석", "홍길동 분석코멘트")
+  const aiAnalysisMatch = userMessage.match(/^([^\s]+)\s*(AI\s*분석(?:\s*코멘트)?|분석\s*코멘트)$/i);
+  if (aiAnalysisMatch && typeof formatPlayerAiAnalysis === 'function') {
+    const playerName = aiAnalysisMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerAiAnalysis(player);
+    return formatPlayerAiAnalysis(player);
   }
   
   const monthMatch = userMessage.match(/([^\s]+)\s+(\d+)월\s+전적/i);
@@ -281,7 +318,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
 
     if (!player) {
       const similarPlayer = findSimilarPlayer(query);
-      if (similarPlayer && levenshteinDistance(query, similarPlayer.name) <= 2) {
+      if (similarPlayer && levenshteinDistance(query, String(similarPlayer.name || '').toLowerCase()) <= 2) {
         player = similarPlayer;
       }
     }

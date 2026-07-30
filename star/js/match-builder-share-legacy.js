@@ -38,7 +38,7 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const profileBlock = (name, pObj, size, extra='') => {
     const bg = gc(pObj.univ||'')||'#94a3b8';
     const initial = String(name||'?').charAt(0);
-    return `<span style="position:relative;width:${size};height:${size};border-radius:var(--su_profile_radius,50%);background:${bg};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;overflow:hidden;${extra}">
+    return `<span style="position:relative;width:${size};height:${size};border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);background:${bg};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;overflow:hidden;${extra}">
       <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900">${initial}</span>
       ${pObj && pObj.photo ? `<img src="${toHttpsUrl(pObj.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" onerror="this.remove()">` : ''}
     </span>`;
@@ -184,7 +184,7 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
   const profileBlock = (name, pObj, size, extra='') => {
     const bg = gc(pObj.univ||'')||'#94a3b8';
     const initial = String(name||'?').charAt(0);
-    return `<span style="position:relative;width:${size};height:${size};border-radius:var(--su_profile_radius,50%);background:${bg};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;overflow:hidden;${extra}">
+    return `<span style="position:relative;width:${size};height:${size};border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);background:${bg};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;overflow:hidden;${extra}">
       <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900">${initial}</span>
       ${pObj && pObj.photo ? `<img src="${toHttpsUrl(pObj.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" onerror="this.remove()">` : ''}
     </span>`;

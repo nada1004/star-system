@@ -78,6 +78,7 @@
               oncompositionstart="window._hsComp=true"
               oncompositionend="window._hsComp=false;heatmapSearchFilter(this.value);if(!this.value){window._heatmapSelPlayer='';render();}"
               oninput="heatmapSearchFilter(this.value);if(!this.value&&!window._hsComp){window._heatmapSelPlayer='';render();}"
+              onkeydown="if(event.key==='Enter'){applyHeatmapSearch(this.value);}"
               onfocus="document.getElementById('heatmap-search-drop').style.display='block'"
               onblur="setTimeout(()=>{const d=document.getElementById('heatmap-search-drop');if(d)d.style.display='none'},200)">
             <div id="heatmap-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">

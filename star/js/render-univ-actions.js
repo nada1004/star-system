@@ -148,16 +148,19 @@ function openUnivModal(univName){
   });
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const editBtn=document.getElementById('univEditBtn');
-  if(editBtn){
+  const styleBtn=document.getElementById('univModalStyleBtn');
+  {
     const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
-    editBtn.style.display=canEdit?'inline-flex':'none';
+    if(editBtn) editBtn.style.display=canEdit?'inline-flex':'none';
+    if(styleBtn) styleBtn.style.display=canEdit?'inline-flex':'none';
+    if(!canEdit && typeof window._udCloseStylePicker==='function') window._udCloseStylePicker();
   }
   requestAnimationFrame(()=>{
     const btn=document.getElementById('univEditBtn');
-    if(btn){
-      const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
-      btn.style.display=canEdit?'inline-flex':'none';
-    }
+    const sbtn=document.getElementById('univModalStyleBtn');
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+    if(btn) btn.style.display=canEdit?'inline-flex':'none';
+    if(sbtn) sbtn.style.display=canEdit?'inline-flex':'none';
   });
 }
 

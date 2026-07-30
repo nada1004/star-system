@@ -30,6 +30,70 @@ function _toggleStreamerMobileInfo(btn){
 }
 if(typeof window!=='undefined') window._toggleStreamerMobileInfo = _toggleStreamerMobileInfo;
 
+// 스트리머 탭: "🏫 대학 바로가기" — 대학을 고르면 해당 대학 소속만 필터링하고(모든 보기 모드 공통),
+// 현재 화면에 그 대학 섹션 헤더가 있으면(테이블/카드/심플/상세형 모두 헤더 존재) 그 위치로 스크롤 이동.
+function _closeUnivShortcutPopover(){
+  try{ const p=document.getElementById('streamer-univ-popover'); if(p) p.remove(); }catch(e){}
+  try{ document.removeEventListener('mousedown', _univShortcutOutsideClick, true); }catch(e){}
+}
+function _univShortcutOutsideClick(ev){
+  const pop = document.getElementById('streamer-univ-popover');
+  if(!pop) return;
+  if(pop.contains(ev.target)) return;
+  if(ev.target && ev.target.closest && ev.target.closest('.streamer-univ-shortcut-btn')) return;
+  _closeUnivShortcutPopover();
+}
+function _toggleUnivShortcutPopover(btn){
+  const existing = document.getElementById('streamer-univ-popover');
+  if(existing){ _closeUnivShortcutPopover(); return; }
+  try{
+    const _plU = (typeof players!=='undefined' && Array.isArray(players)) ? players : [];
+    const _getUnivsU = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
+    const univs = _getUnivsU ? _getUnivsU().filter(u=>(typeof isLoggedIn!=='undefined'&&isLoggedIn)||!u.hidden) : [];
+    const counts = new Map();
+    _plU.forEach(p=>{
+      if(!p || p.retired || !p.univ) return;
+      counts.set(p.univ, (counts.get(p.univ)||0)+1);
+    });
+    const pop = document.createElement('div');
+    pop.id = 'streamer-univ-popover';
+    pop.className = 'streamer-univ-popover';
+    pop.innerHTML = `
+      <div class="streamer-univ-popover-title">🏫 대학 바로가기</div>
+      <div class="streamer-univ-popover-list">
+        <button type="button" class="streamer-univ-popover-item ${!totalUnivFilter?'on':''}" onclick="_selectUnivShortcut('')">전체 보기</button>
+        ${univs.map(u=>`<button type="button" class="streamer-univ-popover-item ${totalUnivFilter===u.name?'on':''}" onclick="_selectUnivShortcut('${String(u.name).replace(/'/g,"\\'")}')"><span class="streamer-univ-popover-dot" style="background:${u.color||'#6366f1'}"></span><span class="streamer-univ-popover-name">${u.name}</span><span class="streamer-univ-popover-cnt">${counts.get(u.name)||0}명</span></button>`).join('')}
+      </div>`;
+    document.body.appendChild(pop);
+    const rect = btn.getBoundingClientRect();
+    pop.style.position='fixed';
+    pop.style.top = (rect.bottom+6)+'px';
+    let left = rect.right - pop.offsetWidth;
+    if(left<8) left=8;
+    pop.style.left = Math.min(left, window.innerWidth-pop.offsetWidth-8)+'px';
+    setTimeout(()=>document.addEventListener('mousedown', _univShortcutOutsideClick, true), 0);
+  }catch(e){}
+}
+function _selectUnivShortcut(name){
+  totalUnivFilter = name || '';
+  _closeUnivShortcutPopover();
+  if(typeof render==='function') render();
+  if(totalUnivFilter){
+    const _targetUniv = totalUnivFilter;
+    requestAnimationFrame(()=>{
+      try{
+        const esc = (typeof CSS!=='undefined' && CSS.escape) ? CSS.escape(_targetUniv) : _targetUniv.replace(/"/g,'\\"');
+        const el = document.querySelector(`[data-univ-header="${esc}"],[data-gallery-univ-header="${esc}"],[data-simple-univ-header="${esc}"],[data-focus-univ-header="${esc}"]`);
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      }catch(e){}
+    });
+  }
+}
+if(typeof window!=='undefined'){
+  window._toggleUnivShortcutPopover = _toggleUnivShortcutPopover;
+  window._selectUnivShortcut = _selectUnivShortcut;
+}
+
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
@@ -89,12 +153,14 @@ function rTotal(C,T){
   const _visiblePlayers = _pl.filter(p=>{
     if(!p || p.retired) return false;
     if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
+    if(totalGenderFilter!=='전체' && p.gender!==totalGenderFilter) return false;
+    if(totalUnivFilter && String(p.univ||'').trim()!==totalUnivFilter) return false;
     if(totalHideNoRecord && (Number(p.win||0)+Number(p.loss||0))<=0) return false;
     return true;
   });
   const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
   const _photoCount = _visiblePlayers.filter(p=>String(p.photo||'').trim()).length;
-  const _roleCount = _visiblePlayers.filter(p=>p.role && MAIN_ROLES.includes(p.role)).length;
+  const _roleCount = _visiblePlayers.filter(p=>p.role && roleIsMain(p.role)).length;
   const _liveCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='hot').length;
   const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
@@ -131,10 +197,26 @@ function rTotal(C,T){
     <button class="streamer-viewmode-btn ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기"><span class="streamer-viewmode-ico">☰</span><span class="streamer-viewmode-txt">리스트</span></button>
     <button class="streamer-viewmode-btn ${totalViewMode==='simple'?'on':''}" onclick="totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()" title="여백을 줄인 한 줄 미니멀 리스트"><span class="streamer-viewmode-ico">✨</span><span class="streamer-viewmode-txt">심플형</span></button>
   </div>`;
+  // 모바일 전용: 위 4개 버튼을 한 줄 드롭다운 트리거로 대체 (streamer-viewmode-seg는 CSS로 숨김)
+  const _streamerViewModeMeta = {
+    gallery:{icon:'🪪',label:'카드형',action:"totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()"},
+    focus:{icon:'🧾',label:'상세형',action:"if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()"},
+    table:{icon:'☰',label:'리스트',action:"totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()"},
+    simple:{icon:'✨',label:'심플형',action:"totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()"}
+  };
+  window._streamerViewModeItems = Object.keys(_streamerViewModeMeta).map(id=>({id, icon:_streamerViewModeMeta[id].icon, label:_streamerViewModeMeta[id].label, action:_streamerViewModeMeta[id].action, active:totalViewMode===id}));
+  const _curStreamerVm = _streamerViewModeMeta[totalViewMode] || _streamerViewModeMeta.table;
+  const _viewSegMobile = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._streamerViewModeItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curStreamerVm.icon}</span><span class="mode-select-trigger-label">${_curStreamerVm.label}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
+  const _genderBtn=(g,label)=>`<button class="pill ${totalGenderFilter===g?'on':''}" onclick="totalGenderFilter='${g}';render()">${label}</button>`;
+  const _univShortcutBtn=`<button type="button" class="pill streamer-univ-shortcut-btn ${totalUnivFilter?'on':''}" onclick="_toggleUnivShortcutPopover(this)" title="대학 바로가기">🏫${totalUnivFilter?`<span class="streamer-univ-shortcut-name">${totalUnivFilter}</span>`:' 대학 바로가기'}</button>`;
   let filterBar=`<div class="streamer-toolbar-card">
     ${_viewSeg}
+    ${_viewSegMobile}
     <div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" data-race="${r}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span class="fbar-divider"></span>
@@ -144,6 +226,9 @@ function rTotal(C,T){
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false">
     <button class="pill ${totalHideNoRecord?'on warn-on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
+    <span class="fbar-divider"></span>
+    ${_genderBtn('전체','전체')}${_genderBtn('M','남자만 보기')}${_genderBtn('F','여자만 보기')}
+    ${_univShortcutBtn}
     ${totalViewMode==='table'?(isLoggedIn?`<span class="fbar-divider"></span><button class="pill action-btn ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">✏️ 일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill action-btn" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
@@ -322,9 +407,11 @@ function rTotal(C,T){
   const _gFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
   const _gFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+    if(totalUnivFilter && u.name!==totalUnivFilter) return;
     const _isHiddenUniv=isLoggedIn&&u.hidden;
     let up=_univScMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalGenderFilter!=='전체') up=up.filter(p=>p.gender===totalGenderFilter);
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length)return;
     totalShown+=up.length;
@@ -407,10 +494,10 @@ function rTotal(C,T){
       </div>
     </td></tr>`;
     // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
-    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((b.points||0)-(a.points||0)));
+    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((b.points||0)-(a.points||0)));
     // 직책자와 일반 선수 분리
-    const _rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const _normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
+    const _rolePl = sorted.filter(p=>p.role&&roleIsMain(p.role));
+    const _normalPl = sorted.filter(p=>!p.role||!roleIsMain(p.role));
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
@@ -554,12 +641,14 @@ function _buildGalleryView(rankMap){
   const _ggFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
   const _ggFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+    if(totalUnivFilter && u.name!==totalUnivFilter) return;
     let up=_univScActiveMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalGenderFilter!=='전체') up=up.filter(p=>p.gender===totalGenderFilter);
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     // 대학 헤더: 대학별 설정 적용
     const _gHdrBgImg = u.streamerHeaderBgImg || '';
     const _gHdrBgSize = u.streamerHeaderBgSize || 'cover';
@@ -723,12 +812,14 @@ function _buildSimpleView(rankMap){
   let anyShown=false;
   let _sRowIdx=0;
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+    if(totalUnivFilter && u.name!==totalUnivFilter) return;
     let up=_univScMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalGenderFilter!=='전체') up=up.filter(p=>p.gender===totalGenderFilter);
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     html+=`<div class="streamer-simple-head" data-simple-univ-header="${u.name}" style="--c:${u.color||'#6366f1'}">
       <span class="streamer-simple-univ clickable-univ" onclick="openUnivModal('${_uSafe}')">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px'))}${u.name}</span>
@@ -753,7 +844,7 @@ function _buildSimpleView(rankMap){
       const _tierColorRaw = (p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : '#8b5cf6';
       html+=`<div class="streamer-simple-row ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--c:${u.color||'#6366f1'};--i:${_sRowIdx}">
         <span class="streamer-simple-avatar-wrap">
-          ${photoSrcRaw?`<span class="streamer-simple-avatar"><img ${_sImgLoadAttr} decoding="async" src="${toThumbUrl(photoSrcRaw,56)}" data-orig="${toHttpsUrl(photoSrcRaw)}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.parentNode.textContent='${p.race||'?'}';}"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
+          ${photoSrcRaw?`<span class="streamer-simple-avatar${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim())?' ph-swap':''}"><img ${_sImgLoadAttr} decoding="async" src="${toThumbUrl(photoSrcRaw,56)}" data-orig="${toHttpsUrl(photoSrcRaw)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.parentNode.textContent='${p.race||'?'}';}">${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim()&&typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):''}</span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
         </span>
         <span class="streamer-simple-line">
           <span class="streamer-simple-left">
@@ -832,9 +923,10 @@ function _buildSimpleView(rankMap){
   s.textContent=[
     // 심플형: 여백·장식·모션을 최소화한 담백한 한 줄 리스트. 그라디언트/그림자/회전 없이 정보 위주로 빠르게 훑을 수 있도록 구성
     '.streamer-simple-list{display:flex;flex-direction:column;gap:6px;font-family:inherit}',
-    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:16px;border-bottom:2px solid color-mix(in srgb, var(--c,#6366f1) 45%, transparent)}',
+    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:16px;border-radius:8px 8px 0 0;border-bottom:2px solid color-mix(in srgb, var(--c,#6366f1) 60%, transparent);background:linear-gradient(to right, color-mix(in srgb, var(--c,#6366f1) 78%, transparent) 0%, color-mix(in srgb, var(--c,#6366f1) 78%, transparent) 28%, color-mix(in srgb, var(--c,#6366f1) 34%, transparent) 62%, transparent 100%)}',
     '.streamer-simple-head:first-child{margin-top:0}',
-    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-base);font-weight:800;color:var(--c,#6366f1);cursor:pointer;letter-spacing:-.01em}',
+    'body.dark .streamer-simple-head{background:linear-gradient(to right, color-mix(in srgb, var(--c,#6366f1) 84%, transparent) 0%, color-mix(in srgb, var(--c,#6366f1) 84%, transparent) 28%, color-mix(in srgb, var(--c,#6366f1) 40%, transparent) 62%, transparent 100%)}',
+    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-base);font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5),0 0 1px rgba(0,0,0,.3);cursor:pointer;letter-spacing:-.01em}',
     '.streamer-simple-univ-count{margin-left:auto;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
     '.streamer-simple-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);border:1px solid rgba(148,163,184,.16);background:var(--panel,#fff);cursor:pointer;transition:background-color .12s ease,border-color .12s ease}',
     '@media (prefers-reduced-motion:reduce){.streamer-simple-row{transition:none}}',
@@ -895,7 +987,10 @@ function _buildFocusCardDetail(selected, opts){
   const photoSrcOrig = selected.photo ? toHttpsUrl(selected.photo) : '';
   const photoSrc = selected.photo ? toScaledUrl(selected.photo, 320) : '';
   const photo2SrcOrig = String(selected.secondProfileFile||'').trim() ? toHttpsUrl(String(selected.secondProfileFile||'').trim()) : '';
-  const photo2Src = String(selected.secondProfileFile||'').trim() ? toScaledUrl(String(selected.secondProfileFile||'').trim(), 720) : '';
+  const _photo2Raw = String(selected.secondProfileFile||'').trim();
+  const _photo2IsGif = /\.gif(\?|$)/i.test(_photo2Raw);
+  // gif는 toScaledUrl(webp변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+  const photo2Src = _photo2Raw ? (_photo2IsGif ? toHttpsUrl(_photo2Raw) : toScaledUrl(_photo2Raw, 720)) : '';
   const photo2Pos = heroPhoto2Pos || 'center center';
   const _p2XNow = (()=>{ const n=Number(selected.photo2PosX); return Number.isFinite(n) ? Math.round(Math.max(0,Math.min(100,n))) : 50; })();
   const _p2YNow = (()=>{ const n=Number(selected.photo2PosY); return Number.isFinite(n) ? Math.round(Math.max(0,Math.min(100,n))) : 50; })();
@@ -925,9 +1020,10 @@ function _buildFocusCardDetail(selected, opts){
   ];
   return `<div class="streamer-focus-main">
     <div class="streamer-focus-card2">
-      <div class="streamer-focus-card2-photo">
+      <div class="streamer-focus-card2-photo${photo2Src?' ph-swap':''}">
         ${photoSrc ? `<img src="${photoSrc}" data-orig="${photoSrcOrig}" alt="${selected.name}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">` : ''}
         <div class="streamer-focus-photo-fallback" style="display:${photoSrc?'none':'flex'}">${selected.race||'?'}</div>
+        ${photo2Src && typeof _phSwap2ndHTML==='function' ? _phSwap2ndHTML(String(selected.secondProfileFile||'').trim()) : ''}
       </div>
       <div class="streamer-focus-card2-info">
         <div class="streamer-focus-card2-name">${selected.name}${genderIcon(selected.gender)}</div>
@@ -1090,6 +1186,8 @@ function _buildFocusView(rankMap){
   const visible = _pl.filter(p=>{
     if(!p || p.retired) return false;
     if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
+    if(totalGenderFilter!=='전체' && p.gender!==totalGenderFilter) return false;
+    if(totalUnivFilter && String(p.univ||'').trim()!==totalUnivFilter) return false;
     if(totalHideNoRecord && (Number(p.win||0)+Number(p.loss||0))<=0) return false;
     return true;
   });
@@ -1123,7 +1221,7 @@ function _buildFocusView(rankMap){
         <span style="display:inline-flex;align-items:center;gap:6px">${u.name && u.name!=='무소속' ? gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px')) : '🏷️'}<span class="${u.name&&u.name!=='무소속'?'clickable-univ':''}" ${u.name&&u.name!=='무소속'?`onclick="event.stopPropagation();openUnivModal('${u.name.replace(/'/g,"\\'")}')"`:''}>${u.name}</span></span>
         <span style="font-size:var(--fs-caption);color:rgba(255,255,255,.82)">${members.length}명</span>
       </div>`;
-    const sorted = [...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted = [...members].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     listHtml += `<div class="streamer-focus-card-grid">`;
     sorted.forEach(p=>{
       const win = Number(p.win||0);
@@ -1137,9 +1235,10 @@ function _buildFocusView(rankMap){
       const _isActive = !!(selected && selected.name===p.name);
       _fRowIdx++;
       const _fImgLoadAttr = _fRowIdx<=10 ? 'loading="eager" fetchpriority="high"' : 'loading="eager" fetchpriority="low"';
-      listHtml += `<div class="streamer-focus-card ${_isActive?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
+      listHtml += `<div class="streamer-focus-card ${_isActive?'active':''} ${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim())?'ph-swap':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
         ${photoSrc ? `<img ${_fImgLoadAttr} decoding="async" src="${toScaledUrl(photoSrc,320)}" data-orig="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="_thumbFallback(this)">` : ''}
         <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
+        ${(typeof p.secondProfileFile==='string'&&p.secondProfileFile.trim()&&typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile):''}
         ${_isActive ? `<span class="streamer-focus-card-check">✓</span>` : ''}
         ${(isLoggedIn && p.photo2CardAutoManual===true) ? `<span class="streamer-focus-card-pin" title="이미지2 위치가 수동으로 지정된 스트리머입니다">📌</span>` : ''}
         <div class="streamer-focus-card-bottom">
@@ -1192,7 +1291,8 @@ function _buildFocusView(rankMap){
   const heroPhotoOrig = selected.photo ? toHttpsUrl(selected.photo).replace(/'/g,'%27').replace(/"/g,'%22') : '';
   const heroPhotoUrl = selected.photo ? toScaledUrl(selected.photo, 200).replace(/'/g,'%27').replace(/"/g,'%22') : '';
   const heroPhotoUrl2Src = String(selected.secondProfileFile||'').trim();
-  const heroPhotoUrl2 = heroPhotoUrl2Src ? toScaledUrl(heroPhotoUrl2Src, 200).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  const _heroP2IsGif = /\.gif(\?|$)/i.test(heroPhotoUrl2Src);
+  const heroPhotoUrl2 = heroPhotoUrl2Src ? (_heroP2IsGif ? toHttpsUrl(heroPhotoUrl2Src).replace(/'/g,'%27').replace(/"/g,'%22') : toScaledUrl(heroPhotoUrl2Src, 200).replace(/'/g,'%27').replace(/"/g,'%22')) : '';
   try{ if(heroPhotoUrl2Src && typeof prewarmImageUrls==='function') prewarmImageUrls([heroPhotoUrl2Src], 1, 200, 'scaled'); }catch(e){}
   const heroPhoto2Use = (selected.photo2PosUse !== false);
   const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
@@ -1203,9 +1303,10 @@ function _buildFocusView(rankMap){
     <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
       ${heroPhotoUrl ? `<div class="streamer-focus-hero-bg" style="background-image:url('${heroPhotoUrl}')"></div>` : ''}
       ${(heroPhotoUrl2 || heroPhotoUrl) ? `<div class="streamer-focus-hero-bg2" style="background-image:url('${heroPhotoUrl2 || heroPhotoUrl}');--hero-bg2-op:${heroPhotoUrl2 ? '.11' : '.05'};--hero-bg2-pos:${heroPhotoUrl2 ? heroPhoto2Pos : 'top center'};--hero-bg2-left:${heroPhotoUrl2 ? '46%' : '54%'};--hero-bg2-scale:${heroPhotoUrl2 ? '1.02' : '1.05'}"></div>` : ''}
-      <div class="streamer-focus-photo">
+      <div class="streamer-focus-photo${heroPhotoUrl2Src?' ph-swap':''}">
         ${selected.photo ? `<img src="${toScaledUrl(selected.photo,480)}" data-orig="${heroPhotoOrig}" alt="${selected.name}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';}">` : ''}
         <div class="streamer-focus-photo-fallback" style="display:${selected.photo?'none':'flex'}">${selected.race||'?'}</div>
+        ${heroPhotoUrl2Src && typeof _phSwap2ndHTML==='function' ? _phSwap2ndHTML(heroPhotoUrl2Src) : ''}
       </div>
       <div class="streamer-focus-copy">
         <div class="streamer-focus-title">${selected.name}${genderIcon(selected.gender)}</div>

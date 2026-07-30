@@ -317,6 +317,8 @@ function openProPasteModal() {
   const tlB = document.getElementById('pro-paste-team-b');
   if (tlA) tlA.value = '';
   if (tlB) tlB.value = '';
+  const compNameInp = document.getElementById('pro-paste-comp-name');
+  if (compNameInp) compNameInp.value = '';
   // 날짜
   const di = document.getElementById('pro-paste-date');
   if (di) di.value = new Date().toISOString().slice(0, 10); // Always reset to today
@@ -1038,6 +1040,7 @@ function swapProTeams() {
 function proApply() {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
   if (!window._proPasteResults) return;
+  const _proCompName = (document.getElementById('pro-paste-comp-name')?.value || '').trim();
   const isSavableRow = (r) => {
     if (r?.isTeam) {
       const lp = Array.isArray(r.leftPlayers) ? r.leftPlayers : [];
@@ -1161,6 +1164,7 @@ function proApply() {
       teamAMembers:mA, teamBMembers:mB,
       sets:setsSnap, univWins:{}, univLosses:{},
       scoreMode: (mode==='set' || isMultiSet) ? 'set' : 'game',
+      ...(_proCompName ? {n:_proCompName} : {}),
       ...(fmt > 0 ? {fmt} : {})
     });
     totalSaved += groupRows.length;

@@ -30,10 +30,16 @@ function formatUniversityInfo(univName) {
   const textSubOnColor = luminance > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)';
 
   const ROLE_ORDER = {'이사장':0,'총장':1,'교수':2,'코치':3};
+  const _roleOrderByLen = Object.keys(ROLE_ORDER).sort((a,b)=>b.length-a.length);
+  const _roleRank = (role) => {
+    if (role in ROLE_ORDER) return ROLE_ORDER[role];
+    if (role) { for (const key of _roleOrderByLen) { if (role.includes(key)) return ROLE_ORDER[key]; } }
+    return 9;
+  };
   const _tiersArr = (typeof TIERS !== 'undefined') ? TIERS : ['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스','미정'];
   const _tierIdx = t => { const i = _tiersArr.indexOf(t); return i < 0 ? 999 : i; };
   const sortedPlayers = [...univPlayers].sort((a,b) => {
-    const ro = (ROLE_ORDER[a.role]??9) - (ROLE_ORDER[b.role]??9);
+    const ro = _roleRank(a.role) - _roleRank(b.role);
     if(ro !== 0) return ro;
     const to = _tierIdx(a.tier) - _tierIdx(b.tier);
     return to !== 0 ? to : (b.elo||0) - (a.elo||0);

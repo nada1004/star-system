@@ -63,8 +63,8 @@ function _renderCfgMatchDetailSection(){
   const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
-  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','focus','broadcast','poster','arena','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -84,11 +84,12 @@ function _renderCfgMatchDetailSection(){
           ['classic','클래식','기본 경기 상세 톤','linear-gradient(135deg,#dbeafe,#1d4ed8)'],
           ['glass','글래스','유리질감과 밝은 카드 강조','linear-gradient(135deg,#bfdbfe,#a5f3fc)'],
           ['editorial','에디토리얼','잡지형 대비와 차분한 면 분리','linear-gradient(135deg,#f8fafc,#e2e8f0)'],
-          ['neon','네온','보라/청록 계열의 강한 하이라이트','linear-gradient(135deg,#7c3aed,#06b6d4)'],
-          ['midnight','미드나잇','짙은 방송형 헤더와 어두운 대비','linear-gradient(135deg,#0f172a,#1e293b)'],
           ['sunset','선셋','오렌지/핑크 계열의 경기 포스터 톤','linear-gradient(135deg,#fb7185,#f59e0b)'],
           ['aurora','오로라','민트/라벤더 계열 몽환 톤','linear-gradient(135deg,#67e8f9,#a78bfa)'],
-          ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)']
+          ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)'],
+          ['retro','레트로','80s 아케이드풍 원색 대비','linear-gradient(135deg,#fde047,#ef4444)'],
+          ['paper','스크랩북','종이 질감의 다이어리 콜라주 톤','linear-gradient(135deg,#fef3c7,#fbcfe8)'],
+          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdDesignMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailMode('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdDesignMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px;position:relative">
@@ -112,17 +113,19 @@ function _renderCfgMatchDetailSection(){
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
         ${[
           ['default','기본형','현재 구조 중심의 균형형','linear-gradient(180deg,#fff 0 38%,#eff6ff 38% 100%)'],
-          ['compact','컴팩트형','세트와 경기 카드를 촘촘하게','linear-gradient(180deg,#fff 0 38%,#f8fafc 38% 100%)'],
-          ['focus','포커스형','승자/핵심 경기 카드 존재감 확대','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
-          ['broadcast','브로드캐스트형','헤더와 스코어바를 방송형으로 강조','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
-          ['split','스플릿형','좌우 카드와 중간 스코어 분리감 강화','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
-          ['poster','포스터형','상단 배너와 경기행 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fff7ed 38% 100%)']
+          ['focus','포커스형','승자 카드를 크게, 패자는 축소·비대칭 스포트라이트','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
+          ['broadcast','브로드캐스트형','방송 스코어바 톤 강화, 상단 라이브 악센트 추가','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
+          ['poster','포스터형','대전 헤드라인 포스터 — 대학명 vs 대학명 한 줄 타이틀 · 밝은 크림 골드 톤 · 골드 다이아몬드 VS','linear-gradient(180deg,#fffaf0 0 38%,#fdf3dd 38% 100%)'],
+          ['arena','아레나형','대형 아바타와 중앙 VS 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fdf2f8 38% 100%)'],
+          ['cute','큐트형','밝고 사랑스러운 파스텔 카드 · 동글동글 라운드 · 리본·별 장식','linear-gradient(180deg,#fff 0 38%,#ffe4f1 38% 100%)'],
+          ['magazine','매거진형','에디토리얼 매거진 커버 톤 · 큰 스코어 넘버 · 얇은 룰선','linear-gradient(180deg,#fdfcfa 0 38%,#f5f3ee 38% 100%)'],
+          ['nintendo','닌텐도형','팝한 원색 블록 · 두꺼운 외곽선 · 통통 튀는 3D 버튼감','linear-gradient(180deg,#fff 0 38%,#fee2e2 38% 100%)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdLayoutMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailLayout('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdLayoutMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px">
             <span style="display:grid;grid-template-columns:1fr;gap:5px;height:100%">
               <span style="height:14px;border-radius:var(--r);background:rgba(99,102,241,.18)"></span>
-              <span style="display:grid;grid-template-columns:${key==='broadcast'?'1fr 42px 1fr':(key==='split'?'1fr 36px 1fr':'1fr 30px 1fr')};gap:4px">
+              <span style="display:grid;grid-template-columns:${key==='broadcast'?'1fr 42px 1fr':'1fr 30px 1fr'};gap:4px">
                 <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
                 <span style="height:18px;border-radius:8px;background:rgba(255,255,255,.92)"></span>
                 <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
@@ -331,7 +334,7 @@ function _refreshOpenMatchDetailModals(){
 }
 
 function cfgSetMatchDetailMode(mode){
-  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(mode)?mode:'classic'); }catch(e){}
+  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(mode)?mode:'classic'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -356,7 +359,7 @@ function cfgSetMatchDetailMode(mode){
 }
 
 function cfgSetMatchDetailLayout(mode){
-  try{ localStorage.setItem('su_md_layout_mode', ['default','compact','focus','broadcast','split','poster'].includes(mode)?mode:'default'); }catch(e){}
+  try{ localStorage.setItem('su_md_layout_mode', ['default','focus','broadcast','poster','arena','cute','magazine','nintendo'].includes(mode)?mode:'default'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
@@ -380,6 +383,99 @@ function cfgSetMatchDetailLayout(mode){
   try{ _renderCfgMatchDetailSection(); }catch(e){}
 }
 
+function _mdStylePickerOutsideClick(e){
+  const p=document.getElementById('mdStylePicker');
+  if(!p) return;
+  if(e.target && e.target.closest && (e.target.closest('#mdStylePicker') || e.target.closest('.detail-act-md-style'))) return;
+  _mdCloseStylePicker();
+}
+function _mdStylePickerReposition(){
+  const p=document.getElementById('mdStylePicker');
+  if(!p) return;
+  const anchor = p._mdAnchor;
+  if(!anchor || !anchor.isConnected){ _mdCloseStylePicker(); return; }
+  const r = anchor.getBoundingClientRect();
+  const w = Math.min(320, window.innerWidth - 24);
+  let left = r.right - w;
+  left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+  let top = r.bottom + 8;
+  const maxH = Math.min(window.innerHeight * 0.6, 480);
+  if(top + maxH > window.innerHeight - 12){ top = Math.max(12, r.top - maxH - 8); }
+  p.style.left = left + 'px';
+  p.style.top = top + 'px';
+  p.style.width = w + 'px';
+  p.style.maxHeight = maxH + 'px';
+}
+function _mdCloseStylePicker(){
+  const p=document.getElementById('mdStylePicker');
+  if(p) p.remove();
+  try{ document.removeEventListener('click', _mdStylePickerOutsideClick, true); }catch(e){}
+  try{ window.removeEventListener('resize', _mdStylePickerReposition); }catch(e){}
+  try{ window.removeEventListener('scroll', _mdStylePickerReposition, true); }catch(e){}
+}
+function _mdToggleStylePicker(evt){
+  const existing = document.getElementById('mdStylePicker');
+  if(existing){ _mdCloseStylePicker(); return; }
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
+  const lm = (localStorage.getItem('su_md_layout_mode')||'default').trim();
+  const designs = [
+    ['classic','클래식'],['glass','글래스'],['editorial','에디토리얼'],
+    ['sunset','선셋'],['aurora','오로라'],['mono','모노'],
+    ['retro','레트로'],['paper','스크랩북'],['holo','홀로그램']
+  ];
+  const layouts = [
+    ['default','기본'],['focus','포커스'],
+    ['broadcast','방송형'],['poster','포스터'],
+    ['arena','아레나'],['cute','큐트'],
+    ['magazine','매거진'],['nintendo','닌텐도']
+  ];
+  const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_mdRefreshStylePicker()"
+    style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;
+    border:1.5px solid ${active?'#0f172a':'rgba(148,163,184,.32)'};
+    background:${active?'#0f172a':'#fff'};color:${active?'#fff':'#334155'}">${label}</button>`;
+  const panel=document.createElement('div');
+  panel.id='mdStylePicker';
+  panel.style.cssText='position:fixed;z-index:100050;overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.24);padding:12px';
+  panel.innerHTML = `
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">디자인 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+      ${designs.map(([key,label])=>_chip(key,label,key===md,'cfgSetMatchDetailMode')).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 모드</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${layouts.map(([key,label])=>_chip(key,label,key===lm,'cfgSetMatchDetailLayout')).join('')}
+    </div>
+  `;
+  // 현재 열려있는 경기 상세 팝업(대회/히스토리)의 스타일 전환 버튼을 앵커로 사용
+  // (팝업 shell에 overflow:hidden이 걸려있어 절대 위치로 자식에 붙이면 잘려서 안 보이는 문제가 있었음 →
+  //  document.body에 fixed로 부착하고 좌표만 버튼 기준으로 계산)
+  let anchor = (evt && evt.currentTarget) || document.querySelector('.detail-act-md-style');
+  if(!anchor){
+    for(const id of ['compMatchDetailModal','histDetModal']){
+      const modal=document.getElementById(id);
+      if(modal && getComputedStyle(modal).display!=='none'){
+        anchor = modal.querySelector('.detail-act-md-style') || modal.querySelector('.cmd-head');
+        if(anchor) break;
+      }
+    }
+  }
+  panel._mdAnchor = anchor || document.body;
+  document.body.appendChild(panel);
+  _mdStylePickerReposition();
+  setTimeout(()=>{
+    document.addEventListener('click', _mdStylePickerOutsideClick, true);
+    window.addEventListener('resize', _mdStylePickerReposition);
+    window.addEventListener('scroll', _mdStylePickerReposition, true);
+  }, 0);
+}
+function _mdRefreshStylePicker(){
+  if(!document.getElementById('mdStylePicker')) return;
+  _mdCloseStylePicker();
+  _mdToggleStylePicker();
+}
+
 try{
   window.SettingsModules = window.SettingsModules || {};
   window.SettingsModules.matchDetail = {
@@ -390,4 +486,7 @@ try{
   window.cfgSetMatchDetailMode = cfgSetMatchDetailMode;
   window.cfgSetMatchDetailLayout = cfgSetMatchDetailLayout;
   window._renderCfgMatchDetailSection = _renderCfgMatchDetailSection;
+  window._mdToggleStylePicker = _mdToggleStylePicker;
+  window._mdCloseStylePicker = _mdCloseStylePicker;
+  window._mdRefreshStylePicker = _mdRefreshStylePicker;
 }catch(e){}

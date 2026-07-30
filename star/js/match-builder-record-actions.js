@@ -112,6 +112,7 @@
       modal.id = '__inlineEditModal';
       const games = s.games.slice();
       const dateVal = s.d||'';
+      const compNameVal = s.n || (games.find(g=>g && g.n)||{}).n || '';
 
       function _buildGameRows(){
         return games.map((g,i)=>{
@@ -153,6 +154,7 @@
       window._iem_save = function(){
         try{
           const newDate = document.getElementById('__iem_date')?.value || dateVal;
+          const newCompName = (document.getElementById('__iem_compname')?.value || '').trim();
           const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
           const sid = (s.games.find(g=>g&&g.sid)?.sid) || (s.games[0]?.sid||s.games[0]?._id) || '';
           if(!games.length){ alert('경기 결과가 없습니다.'); return; }
@@ -163,7 +165,8 @@
             const newGames = games.map(g=>({
               _id: typeof genId==='function' ? genId() : Date.now()+Math.random(),
               sid: newSid, d: newDate,
-              wName: g.wName, lName: g.lName, map: g.map||''
+              wName: g.wName, lName: g.lName, map: g.map||'',
+              ...(newCompName?{n:newCompName}:{})
             }));
             if(Array.isArray(window.indM)){
               // (버그픽스) g.map을 applyGameResult에 전달해야 선수 history에 맵이 기록됨
@@ -178,7 +181,8 @@
               _id: typeof genId==='function' ? genId() : Date.now()+Math.random(),
               sid: newSid, d: newDate,
               wName: g.wName, lName: g.lName, map: g.map||'',
-              _proLabel: proOnly ? true : undefined
+              _proLabel: proOnly ? true : undefined,
+              ...(newCompName?{n:newCompName}:{})
             }));
             if(Array.isArray(window.gjM)){
               // (버그픽스) g.map을 applyGameResult에 전달해야 선수 history에 맵이 기록됨
@@ -215,6 +219,11 @@
             <div style="display:flex;align-items:center;gap:10px">
               <label style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">📅 날짜</label>
               <input type="date" id="__iem_date" value="${dateVal}" style="padding:7px 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:var(--fs-base);font-weight:900;flex:1">
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">🏆 대회명</label>
+              <input type="text" id="__iem_compname" value="${String(compNameVal||'').replace(/"/g,'&quot;')}" placeholder="대회명 입력 (선택)" style="padding:7px 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:var(--fs-base);font-weight:700;flex:1">
             </div>
 
             <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border)">
@@ -274,6 +283,7 @@
       const B = s.p2 || 'B';
       const sid = (s.games.find(g=>g && g.sid)?.sid) || (s.games[0]? (s.games[0].sid||s.games[0]._id) : '') || '';
       const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
+      const compNameVal = s.n || (s.games.find(g=>g && g.n)||{}).n || '';
       const freeGames = _buildFreeGamesFromSession(s, A, B);
       const aObj = (window.players||[]).find(p=>p.name===A) || {};
       const bObj = (window.players||[]).find(p=>p.name===B) || {};
@@ -282,6 +292,7 @@
       window.BLD = window.BLD || {};
       window.BLD['ind'] = {
         date: s.d || '',
+        compName: compNameVal,
         membersA: [memA],
         membersB: [memB],
         sets: [],
@@ -289,7 +300,7 @@
         freeGames,
         _editCtx: { mode:'ind', sessKey, sid, ids }
       };
-      try{ if(typeof window._indInput!=='undefined'){ window._indInput.playerA=A; window._indInput.playerB=B; window._indInput.date=s.d||''; } }catch(e){}
+      try{ if(typeof window._indInput!=='undefined'){ window._indInput.playerA=A; window._indInput.playerB=B; window._indInput.date=s.d||''; window._indInput.compName=compNameVal; } }catch(e){}
       try{ window.curTab = 'ind'; }catch(e){}
       try{ if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'ind'; }catch(e){}
       try{ if(typeof window.indSub!=='undefined') window.indSub = 'input'; }catch(e){}
@@ -310,6 +321,7 @@
       const proOnly = !!(s._proOnly || s._proLabel || s.games.find(g=>g && g._proLabel));
       const sid = (s.games.find(g=>g && g.sid)?.sid) || (s.games[0]? (s.games[0].sid||s.games[0]._id) : '') || '';
       const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
+      const compNameVal = s.n || (s.games.find(g=>g && g.n)||{}).n || '';
       const freeGames = _buildFreeGamesFromSession(s, A, B);
       const aObj = (window.players||[]).find(p=>p.name===A) || {};
       const bObj = (window.players||[]).find(p=>p.name===B) || {};
@@ -318,6 +330,7 @@
       window.BLD = window.BLD || {};
       window.BLD['gj'] = {
         date: s.d || '',
+        compName: compNameVal,
         membersA: [memA],
         membersB: [memB],
         sets: [],
@@ -326,7 +339,7 @@
         _proLabel: proOnly,
         _editCtx: { mode:'gj', sessKey, sid, ids, proOnly }
       };
-      try{ if(typeof window._gjInput!=='undefined'){ window._gjInput.playerA=A; window._gjInput.playerB=B; window._gjInput.date=s.d||''; } }catch(e){}
+      try{ if(typeof window._gjInput!=='undefined'){ window._gjInput.playerA=A; window._gjInput.playerB=B; window._gjInput.date=s.d||''; window._gjInput.compName=compNameVal; } }catch(e){}
       try{ window._gjProMode = proOnly; }catch(e){}
       if(proOnly){
         try{ window.curTab = 'pro'; }catch(e){}

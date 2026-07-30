@@ -25,7 +25,13 @@ function _b2CardHoverLeave(card) {
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  const visPlayers = players.filter(p => {
+    if (p.hidden || p.retired || p.hideFromBoard) return false;
+    if (dissolvedUnivs.has(p.univ)) return false;
+    const _u = String(p?.univ || '').trim();
+    if (_u === 'YB' || _u === '무소속' || !_u) return false;
+    return true;
+  });
   
   // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
@@ -62,6 +68,12 @@ function _b2PlayersView() {
   }
 
   // 기본 선택 선수: 없거나 현재 필터 목록에 없으면 랜덤으로 선택
+  // (대학 소속 스트리머만 대상 — YB/무소속은 위 visPlayers 단계에서 이미 제외됨)
+  // [복원] 이전 요청으로 "고정"으로 바꿨었으나, 이 랜덤은 이미지 순환 버그와 무관한
+  // 의도된 기능(탭 진입 시 매번 다른 대학 소속 스트리머 노출)이라 원복함.
+  // 대신 render-nav-lazy.js의 _TAB_ENTER.board2 훅에서 board2 탭에 "새로 진입할 때"만
+  // _b2SelectedPlayer/셔플 캐시를 초기화해서, 같은 탭 안에서 필터만 바꿀 때는
+  // 화면이 계속 랜덤으로 튀지 않고 유지되도록 한다.
   if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     const withPhoto2 = tierFilteredPlayers.filter(p => p.photo || (window.playerPhotos && window.playerPhotos[p.name]));
     const pool2 = withPhoto2.length ? withPhoto2 : tierFilteredPlayers;
@@ -84,6 +96,7 @@ function _b2PlayersView() {
   // (요청사항) 이미지탭 목록 랜덤(셔플) 옵션
   // [FIX-12] 선수가 이미 선택된 상태에서 필터만 바꿀 때 셔플이 재발생하면 그리드 위치가 튀므로
   //          셔플 순서는 처음 렌더(또는 필터 변경) 때만 결정하고 그 이후엔 선택 선수를 맨 앞에 고정
+  // [복원] 이 옵션도 이미지 순환 버그와 무관한 의도된 랜덤 기능이라 원복함.
   const _shuffleOn = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
   if (_shuffleOn) {
     // 셔플 순서 캐시 키 (필터 조합이 바뀌면 재셔플)
@@ -107,12 +120,24 @@ function _b2PlayersView() {
   } else {
     // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
     const roleOrder = ['이사장', '총장', '교수', '코치'];
+    const roleOrderByLen = [...roleOrder].sort((a,b)=>b.length-a.length);
+    const _roleIdx = (p) => {
+      // 직책 편집에서 "표시 순서 직접 지정"(roleOrder 숫자)을 해뒀으면 자동 판정보다 우선한다.
+      if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return p.roleOrder;
+      const r = (p && p.role) || '';
+      const exact = roleOrder.indexOf(r);
+      if (exact >= 0) return exact;
+      // 직책란에 두 직책을 함께 적어도(예: "이사장 & 회장") 알려진 키워드가 포함돼 있으면
+      // 그 순위를 그대로 적용해 현황판 순서가 바뀌지 않게 한다.
+      for (const key of roleOrderByLen) { if (r.includes(key)) return roleOrder.indexOf(key); }
+      return -1;
+    };
     const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
 
     tierFilteredPlayers.sort((a, b) => {
       // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
-      const aRoleIdx = roleOrder.indexOf(a.role || '');
-      const bRoleIdx = roleOrder.indexOf(b.role || '');
+      const aRoleIdx = _roleIdx(a);
+      const bRoleIdx = _roleIdx(b);
       const aHasRole = aRoleIdx >= 0;
       const bHasRole = bRoleIdx >= 0;
 
@@ -342,7 +367,7 @@ function _b2PlayersView() {
         left: 0;
         right: 0;
         padding: 24px;
-        z-index: 12;
+        z-index: 60;
       }
       .b2-players-info .b2-players-name,
       .b2-players-info .b2-players-race {
@@ -617,7 +642,14 @@ function _b2PlayersView() {
   const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
   const imgSettings = primarySettings;
   const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _hasMediaUrl = (v)=>!!_normMediaUrl(v);
   const hasPrimary = _hasMediaUrl(_b2SelectedPlayer.photo);
   const hasSecondary = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile);
   const _b2PosPct = (useFlag, x, y)=>{
@@ -635,6 +667,11 @@ function _b2PlayersView() {
   const _p3pos = _b2PosPct(_b2SelectedPlayer.photo3PosUse, _b2SelectedPlayer.photo3PosX, _b2SelectedPlayer.photo3PosY);
   const _p4pos = _b2PosPct(_b2SelectedPlayer.photo4PosUse, _b2SelectedPlayer.photo4PosX, _b2SelectedPlayer.photo4PosY);
   const _p5pos = _b2PosPct(_b2SelectedPlayer.photo5PosUse, _b2SelectedPlayer.photo5PosX, _b2SelectedPlayer.photo5PosY);
+  const _p6pos = _b2PosPct(_b2SelectedPlayer.photo6PosUse, _b2SelectedPlayer.photo6PosX, _b2SelectedPlayer.photo6PosY);
+  const _p7pos = _b2PosPct(_b2SelectedPlayer.photo7PosUse, _b2SelectedPlayer.photo7PosX, _b2SelectedPlayer.photo7PosY);
+  const _p8pos = _b2PosPct(_b2SelectedPlayer.photo8PosUse, _b2SelectedPlayer.photo8PosX, _b2SelectedPlayer.photo8PosY);
+  const _p9pos = _b2PosPct(_b2SelectedPlayer.photo9PosUse, _b2SelectedPlayer.photo9PosX, _b2SelectedPlayer.photo9PosY);
+  const _p10pos = _b2PosPct(_b2SelectedPlayer.photo10PosUse, _b2SelectedPlayer.photo10PosX, _b2SelectedPlayer.photo10PosY);
   try{
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls([
@@ -661,10 +698,16 @@ function _b2PlayersView() {
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
+    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
+    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
+    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
+    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
-    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
   const _slot1 = _hasMediaUrl(_b2SelectedPlayer.photo)
@@ -692,6 +735,21 @@ function _b2PlayersView() {
   const _slot5 = _hasMediaUrl(_b2SelectedPlayer.profileFile5)
     ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
+  const _slot6 = _hasMediaUrl(_b2SelectedPlayer.profileFile6)
+    ? _b2MainMediaHTML(6, _b2SelectedPlayer.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot7 = _hasMediaUrl(_b2SelectedPlayer.profileFile7)
+    ? _b2MainMediaHTML(7, _b2SelectedPlayer.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot8 = _hasMediaUrl(_b2SelectedPlayer.profileFile8)
+    ? _b2MainMediaHTML(8, _b2SelectedPlayer.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot9 = _hasMediaUrl(_b2SelectedPlayer.profileFile9)
+    ? _b2MainMediaHTML(9, _b2SelectedPlayer.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot10 = _hasMediaUrl(_b2SelectedPlayer.profileFile10)
+    ? _b2MainMediaHTML(10, _b2SelectedPlayer.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
+    : '';
   const _selUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
     return uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
@@ -705,6 +763,11 @@ function _b2PlayersView() {
         ${_slot3}
         ${_slot4}
         ${_slot5}
+        ${_slot6}
+        ${_slot7}
+        ${_slot8}
+        ${_slot9}
+        ${_slot10}
         
         <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
         ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
@@ -790,7 +853,6 @@ function _b2PlayersView() {
           : ''
         }
         ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:1;height:62%;background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.15) 35%, rgba(0,0,0,.75) 100%);pointer-events:none"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
           <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
             ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
@@ -821,6 +883,13 @@ function _b2PlayersView() {
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
   try{
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls([player.photo, player.secondProfileFile], 4);
@@ -853,6 +922,11 @@ function _b2UpdateMainDisplay(playerName) {
   const _p3pos = _b2PosPct(player.photo3PosUse, player.photo3PosX, player.photo3PosY);
   const _p4pos = _b2PosPct(player.photo4PosUse, player.photo4PosX, player.photo4PosY);
   const _p5pos = _b2PosPct(player.photo5PosUse, player.photo5PosX, player.photo5PosY);
+  const _p6pos = _b2PosPct(player.photo6PosUse, player.photo6PosX, player.photo6PosY);
+  const _p7pos = _b2PosPct(player.photo7PosUse, player.photo7PosX, player.photo7PosY);
+  const _p8pos = _b2PosPct(player.photo8PosUse, player.photo8PosX, player.photo8PosY);
+  const _p9pos = _b2PosPct(player.photo9PosUse, player.photo9PosX, player.photo9PosY);
+  const _p10pos = _b2PosPct(player.photo10PosUse, player.photo10PosX, player.photo10PosY);
   const _b2IsVideoUrl = (u)=>{
     const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
     return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
@@ -869,13 +943,19 @@ function _b2UpdateMainDisplay(playerName) {
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
     const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
+    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
+    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
+    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
+    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
-    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
-  const _hasMediaUrl2 = (v)=>!!String(v || '').trim();
+  const _hasMediaUrl2 = (v)=>!!_normMediaUrl(v);
   const _slot1 = _hasMediaUrl2(player.photo)
     ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'transition:opacity 0.4s ease;' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
@@ -890,6 +970,21 @@ function _b2UpdateMainDisplay(playerName) {
     : '';
   const _slot5 = _hasMediaUrl2(player.profileFile5)
     ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot6 = _hasMediaUrl2(player.profileFile6)
+    ? _b2MainMediaHTML(6, player.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot7 = _hasMediaUrl2(player.profileFile7)
+    ? _b2MainMediaHTML(7, player.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot8 = _hasMediaUrl2(player.profileFile8)
+    ? _b2MainMediaHTML(8, player.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot9 = _hasMediaUrl2(player.profileFile9)
+    ? _b2MainMediaHTML(9, player.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot10 = _hasMediaUrl2(player.profileFile10)
+    ? _b2MainMediaHTML(10, player.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
     : '';
   const _updUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === player.univ) || {};
@@ -913,6 +1008,11 @@ function _b2UpdateMainDisplay(playerName) {
       ${_slot3}
       ${_slot4}
       ${_slot5}
+      ${_slot6}
+      ${_slot7}
+      ${_slot8}
+      ${_slot9}
+      ${_slot10}
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
@@ -965,40 +1065,54 @@ function _b2UpdateMainDisplay(playerName) {
 function openB2ProfileEditModal(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
-  const _trimMedia = (v)=>String(v || '').trim();
+  const _normMediaUrl = (v)=>{
+    const s = String(v == null ? '' : v).trim();
+    if(!s) return '';
+    const lower = s.toLowerCase();
+    if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
+    return s;
+  };
+  const _trimMedia = (v)=>_normMediaUrl(v);
   const _media1 = _trimMedia(player.photo);
   const _media2 = _trimMedia(player.secondProfileFile);
   const _media3 = _trimMedia(player.profileFile3);
   const _media4 = _trimMedia(player.profileFile4);
   const _media5 = _trimMedia(player.profileFile5);
+  const _media6 = _trimMedia(player.profileFile6);
+  const _media7 = _trimMedia(player.profileFile7);
+  const _media8 = _trimMedia(player.profileFile8);
+  const _media9 = _trimMedia(player.profileFile9);
+  const _media10 = _trimMedia(player.profileFile10);
   const _slotOrder = [
     { slot:1, url:_media1 },
     { slot:2, url:_media2 },
     { slot:3, url:_media3 },
     { slot:4, url:_media4 },
-    { slot:5, url:_media5 }
+    { slot:5, url:_media5 },
+    { slot:6, url:_media6 },
+    { slot:7, url:_media7 },
+    { slot:8, url:_media8 },
+    { slot:9, url:_media9 },
+    { slot:10, url:_media10 }
   ].filter(item => !!item.url);
+  // [FIX] 1~5번까지만 지원하던 하드코딩 테이블 대신, 실제 순환 로직(board2-image-utils.js의
+  // _delayKeyLegacy + `photoDelay${from}_${to}` 패턴)과 동일한 규칙을 그대로 사용해
+  // 6~10번 슬롯 간 전환에도 올바른 키가 매칭되도록 함.
+  const _swapDelayKeyLegacy = {
+    '1_2':'photoDelay12', '2_1':'photoDelay21', '2_3':'photoDelay23', '3_1':'photoDelay31',
+    '3_4':'photoDelay34', '4_1':'photoDelay41', '4_5':'photoDelay45', '5_1':'photoDelay51'
+  };
   const _swapDelayKey = (from, to)=>{
-    if(to === 1){
-      if(from === 2) return 'photoDelay21';
-      if(from === 3) return 'photoDelay31';
-      if(from === 4) return 'photoDelay41';
-      return 'photoDelay51';
-    }
-    if(from === 1) return 'photoDelay12';
-    if(from === 2) return 'photoDelay23';
-    if(from === 3) return 'photoDelay34';
-    if(from === 4) return 'photoDelay45';
-    return '';
+    return _swapDelayKeyLegacy[`${from}_${to}`] || `photoDelay${from}_${to}`;
   };
   const _swapDelayVal = (key)=>{
-    const n = parseFloat(player?.[key] ?? 1);
-    if(isNaN(n)) return 1;
+    const n = parseFloat(player?.[key] ?? 4);
+    if(isNaN(n)) return 4;
     return Math.max(0.2, Math.min(60, n));
   };
   const clampDelay = (v)=>{
     const n = parseFloat(v);
-    if(isNaN(n)) return 1;
+    if(isNaN(n)) return 4;
     return Math.max(0.2, Math.min(60, n));
   };
   const _swapDelayInputs = _slotOrder.length < 2
@@ -1077,8 +1191,21 @@ function openB2ProfileEditModal(playerName) {
             <video id="b2-ed-photo5-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">이미지별 탭에서 2→3→4→5(→1) 순서로 전환됩니다.</div>
       </div>
+      ${[6,7,8,9,10].map(_n=>{
+        const _v = { 6:_media6, 7:_media7, 8:_media8, 9:_media9, 10:_media10 }[_n];
+        return `<div style="margin-bottom:16px">
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 ${_n} (순환용)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo${_n}" value="${_v}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
+          <span id="b2-ed-photo${_n}-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_v&&!_v.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo${_n}-preview" src="${_v&&!_v.startsWith('data:')?toHttpsUrl(_v).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo${_n}-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
+      </div>`;
+      }).join('')}
+      <div style="font-size:10px;color:var(--gray-l);margin:-8px 0 16px">이미지별 탭에서 2→3→...→10(→1) 순서로, 등록된 이미지만 순환합니다.</div>
       <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:var(--r)">
         <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
         ${_swapDelayInputs}
@@ -1163,14 +1290,19 @@ function openB2ProfileEditModal(playerName) {
       }
     });
   }
-  ['b2-ed-second-profile','b2-ed-photo3','b2-ed-photo4','b2-ed-photo5'].forEach((id, idx)=>{
+  ['b2-ed-second-profile','b2-ed-photo3','b2-ed-photo4','b2-ed-photo5','b2-ed-photo6','b2-ed-photo7','b2-ed-photo8','b2-ed-photo9','b2-ed-photo10'].forEach((id, idx)=>{
     const el = document.getElementById(id);
     if(!el) return;
     const map = [
       ['b2-ed-photo2-preview-wrap','b2-ed-photo2-preview','b2-ed-photo2-preview-vid'],
       ['b2-ed-photo3-preview-wrap','b2-ed-photo3-preview','b2-ed-photo3-preview-vid'],
       ['b2-ed-photo4-preview-wrap','b2-ed-photo4-preview','b2-ed-photo4-preview-vid'],
-      ['b2-ed-photo5-preview-wrap','b2-ed-photo5-preview','b2-ed-photo5-preview-vid']
+      ['b2-ed-photo5-preview-wrap','b2-ed-photo5-preview','b2-ed-photo5-preview-vid'],
+      ['b2-ed-photo6-preview-wrap','b2-ed-photo6-preview','b2-ed-photo6-preview-vid'],
+      ['b2-ed-photo7-preview-wrap','b2-ed-photo7-preview','b2-ed-photo7-preview-vid'],
+      ['b2-ed-photo8-preview-wrap','b2-ed-photo8-preview','b2-ed-photo8-preview-vid'],
+      ['b2-ed-photo9-preview-wrap','b2-ed-photo9-preview','b2-ed-photo9-preview-vid'],
+      ['b2-ed-photo10-preview-wrap','b2-ed-photo10-preview','b2-ed-photo10-preview-vid']
     ][idx] || null;
     if(!map) return;
     el.addEventListener('input', ()=>_b2SyncSmallPreview(id, map[0], map[1], map[2]));
@@ -1187,13 +1319,18 @@ function saveB2Profile(playerName) {
   const thirdProfileUrl = (document.getElementById('b2-ed-photo3')?.value || '').trim();
   const fourthProfileUrl = (document.getElementById('b2-ed-photo4')?.value || '').trim();
   const fifthProfileUrl = (document.getElementById('b2-ed-photo5')?.value || '').trim();
+  const sixthProfileUrl = (document.getElementById('b2-ed-photo6')?.value || '').trim();
+  const seventhProfileUrl = (document.getElementById('b2-ed-photo7')?.value || '').trim();
+  const eighthProfileUrl = (document.getElementById('b2-ed-photo8')?.value || '').trim();
+  const ninthProfileUrl = (document.getElementById('b2-ed-photo9')?.value || '').trim();
+  const tenthProfileUrl = (document.getElementById('b2-ed-photo10')?.value || '').trim();
   const clampDelay = (v)=>{
     const n = parseFloat(v);
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
   
-  const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl].some(u=>u && u.startsWith('data:'));
+  const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl, sixthProfileUrl, seventhProfileUrl, eighthProfileUrl, ninthProfileUrl, tenthProfileUrl].some(u=>u && u.startsWith('data:'));
   if (anyBase64) {
     alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
     return;
@@ -1204,13 +1341,19 @@ function saveB2Profile(playerName) {
   player.profileFile3 = thirdProfileUrl || undefined;
   player.profileFile4 = fourthProfileUrl || undefined;
   player.profileFile5 = fifthProfileUrl || undefined;
+  player.profileFile6 = sixthProfileUrl || undefined;
+  player.profileFile7 = seventhProfileUrl || undefined;
+  player.profileFile8 = eighthProfileUrl || undefined;
+  player.profileFile9 = ninthProfileUrl || undefined;
+  player.profileFile10 = tenthProfileUrl || undefined;
   try{
     document.querySelectorAll('#b2-profile-edit-modal [data-b2-delay-key]').forEach(inp=>{
       const key = String(inp?.getAttribute('data-b2-delay-key') || '').trim();
       if(!key) return;
-      const v = clampDelay(inp?.value || '1');
-      if(v === 1) delete player[key];
-      else player[key] = v;
+      // [FIX] 예전에는 값이 1(구 기본값 표기)이면 무조건 삭제해서, 사용자가 실제로 원하는
+      // 전환 시간을 입력해도 저장 시 사라지고 런타임 기본값(4초)으로 되돌아가는 문제가 있었음.
+      // 이제는 입력된 값을 항상 그대로 저장한다.
+      player[key] = clampDelay(inp?.value ?? player[key] ?? 4);
     });
   }catch(e){}
   
@@ -1251,4 +1394,3 @@ function saveB2Profile(playerName) {
    🏆 랭킹 뷰 v2 — 정렬기준 전환 + 실전승률 + 순위변동
 ══════════════════════════════════════ */
 window._b2RankingSort = window._b2RankingSort || 'tier';
-

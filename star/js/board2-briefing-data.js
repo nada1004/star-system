@@ -90,12 +90,13 @@ function _b2BuildMvpCardHtml(s, rank, isWorst, extraClass, opts) {
     ? `${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem(s.wins,'승',winColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`
     : `${_statItem(s.wins,'승',winColor)}${_sep}${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`;
 
-  return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" data-fx="${mvpFxStyleAttr}" data-design="${mvpFxDesign}" style="--b2mvp-fx-op:${mvpFxOp}" onclick="openPlayerModal('${nameEsc}')">
+  return `<div class="b2w2-mvp-card ph-swap ${cardClass}${extraClass ? ' '+extraClass : ''}" data-fx="${mvpFxStyleAttr}" data-design="${mvpFxDesign}" style="--b2mvp-fx-op:${mvpFxOp}" onclick="openPlayerModal('${nameEsc}')">
     ${photo
       ? `<img class="b2w2-mvp-bg" src="${photo}" alt="${mp.name||''}"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : ''}
     <div class="b2w2-mvp-bg-fallback" style="${photo?'display:none':''}">${initial}</div>
+    ${(typeof _phSwap2ndHTML==='function' && mp.secondProfileFile) ? _phSwap2ndHTML(mp.secondProfileFile, {style:'object-position:center top'}) : ''}
     <div class="b2w2-mvp-overlay"></div>
     <div class="b2w2-mvp-top-badge">${mvpFxDesign==='ribbon' ? badgeText : `${badgeEmoji} ${badgeText}`}</div>
     <div class="b2w2-mvp-bottom">

@@ -1,7 +1,7 @@
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
   if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
   if(_lockOpen) window._histFilterOpen = true;
 
@@ -18,7 +18,6 @@ function rHist(C,T){
   const tabDefs=[
     {id:'all',      grp:'종합',   lbl:'전체 통합'},
     {id:'psearch',  grp:'종합',   lbl:'스트리머별 검색'},
-    {id:'race',     grp:'종합',   lbl:'종족 승률'},
     {id:'vs',       grp:'종합',   lbl:'1:1 상대전적'},
     {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
     {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전'},
@@ -34,9 +33,6 @@ function rHist(C,T){
     // (요청사항) 대전기록 > 프로리그 하위에 "대회" 탭이 있고,
     // 그 아래 하위메뉴에서 조별리그/토너먼트/팀전/중장전 기록을 선택
     {id:'procomp',    grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 대회'},
-    {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
-    {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
-    {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
   // (탭 라벨 설정) 표시 이름만 설정에서 교체 가능
   try{
@@ -71,7 +67,7 @@ function rHist(C,T){
     histSub='procomp';
     try{ openDetails={}; }catch(e){}
   }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   const _histBulkKeyTop = (()=>{
     if(!isLoggedIn) return '';
     if(histSub==='mini' || histSub==='civil' || histSub==='univm' || histSub==='ck' || histSub==='pro') return histSub;
@@ -156,26 +152,6 @@ function rHist(C,T){
     // 두 선수 이미 선택된 경우 결과 즉시 렌더
     if(typeof vsNameA!=='undefined' && typeof vsNameB!=='undefined' && vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
     renderUnivVsResult();
-    return;
-  }
-  if(histSub==='race'){
-    if(typeof raceSummaryHTML==='function'){
-      h+=raceSummaryHTML();
-      C.innerHTML=h;
-      return;
-    }
-    rRace(C,T);
-    return;
-  }
-  if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h;return;}
-  if(histSub==='univcomp'){try{h+=histUnivCompHTML();}catch(e){h+=`<div style="padding:20px;color:red;font-size:var(--fs-sm)">⚠️ 오류: ${e.message}</div>`;console.error('histUnivCompHTML error:',e);}C.innerHTML=h;return;}
-  if(histSub==='univrank'){
-    if(typeof rUnivBodyHTML==='function'){
-      h+=rUnivBodyHTML();
-      C.innerHTML=h;
-      return;
-    }
-    rUniv(C,T);
     return;
   }
   if(histSub==='ext'){
@@ -403,16 +379,19 @@ function histAllHTML(){
   const _proTourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
   const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
   // 각 경기 타입별 레이블과 색상
+  // (UI/UX 개선) 타입마다 색이 다 달라 무지개처럼 산만했던 것을 카테고리 3색(팀전/개인전/대회)으로 단순화.
+  // 세부 구분은 뱃지 텍스트로 계속 유지.
+  const _histCatCol={team:'#2563eb', solo:'#16a34a', comp:'#7c3aed'};
   const typeInfo={
-    mini:{lbl:'미니대전',col:'#2563eb'},
-    univm:{lbl:'대학대전',col:'#7c3aed'},
-    ck:{lbl:'대학CK',col:'#dc2626'},
-    pro:{lbl:'프로리그',col:'#0891b2'},
-    ind:{lbl:'개인전',col:'#16a34a'},
-    gj:{lbl:'끝장전',col:'#d97706'},
-    tt:{lbl:'티어대회',col:'#7c3aed'},
-    tourney:{lbl:'대회',col:'#b45309'},
-    procomp:{lbl:'프로리그대회',col:'#7c3aed'},
+    mini:{lbl:'미니대전',col:_histCatCol.team},
+    univm:{lbl:'대학대전',col:_histCatCol.team},
+    ck:{lbl:'대학CK',col:_histCatCol.team},
+    pro:{lbl:'프로리그',col:_histCatCol.team},
+    ind:{lbl:'개인전',col:_histCatCol.solo},
+    gj:{lbl:'끝장전',col:_histCatCol.solo},
+    tt:{lbl:'티어대회',col:_histCatCol.comp},
+    tourney:{lbl:'대회',col:_histCatCol.comp},
+    procomp:{lbl:'프로리그대회',col:_histCatCol.comp},
   };
   // 통합 목록 생성
   const allItems=[];
@@ -535,39 +514,72 @@ function histAllHTML(){
   const _mapCountMap = {};
   _typeFiltered.forEach(item => _getItemMaps(item).forEach(mp => { _mapCountMap[mp]=(_mapCountMap[mp]||0)+1; }));
 
-  // 페이지네이션
+  // (UI/UX 개선) prev/next 페이지네이션 대신, histPage['all']를 "몇 묶음을 더 불러왔는지"로 재해석해
+  // 누적 로드형 "더보기" 방식으로 전환 (다른 파일에서 histPage['all']=0으로 리셋하는 기존 로직과도 호환됨)
   const pageSize=getHistPageSize();
   if(histPage['all']===undefined) histPage['all']=0;
-  const totalPages=Math.ceil(_mapFiltered.length/pageSize)||1;
-  if(histPage['all']>=totalPages) histPage['all']=Math.max(0,totalPages-1);
-  const curPage=histPage['all'];
-  const paged=_mapFiltered.length>pageSize?_mapFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_mapFiltered;
+  const _loadedCount=(histPage['all']+1)*pageSize;
+  const paged=_mapFiltered.slice(0,_loadedCount);
+  const _hasMore=_mapFiltered.length>paged.length;
 
-  let h=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-    ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';window._recMapFilter='전체';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
+  // (UI/UX 개선) 상단 요약 스트립: 총 경기 수 / 이번달 경기 수 / 최근 기록 날짜를 한눈에
+  const _todayYm=new Date().toISOString().slice(0,7);
+  const _thisMonthCnt=_mapFiltered.filter(({d})=>d && d.slice(0,7)===_todayYm).length;
+  const _latestD=allItems.length?allItems.reduce((a,b)=>((a.d||'')>(b.d||'')?a:b)).d:'';
+  const _latestDLabel=_latestD?_latestD.slice(2).replace(/-/g,'/'):'-';
+  let h=`<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 14px;border-radius:12px;background:linear-gradient(120deg,rgba(37,99,235,.08),rgba(124,58,237,.06));border:1px solid var(--border)">
+    <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">📋 총 <b style="font-size:var(--fs-base)">${_mapFiltered.length}</b>경기</span>
+    <span style="width:1px;height:14px;background:var(--border)"></span>
+    <span style="font-size:var(--fs-sm);color:var(--text2)">이번 달 <b style="color:var(--text)">${_thisMonthCnt}</b>경기</span>
+    <span style="width:1px;height:14px;background:var(--border)"></span>
+    <span style="font-size:var(--fs-sm);color:var(--text2)">최근 기록 <b style="color:var(--text)">${_latestDLabel}</b></span>
   </div>`;
-  if((typeof isLoggedIn!=='undefined' && isLoggedIn) || !!window.isLoggedIn){
-    h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
-      <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">맵명 일괄 변경</span>
-      <input id="hist-bulk-map-from" type="text" placeholder="교체 전 맵명" value="${window._recMapFilter&&window._recMapFilter!=='전체'?String(window._recMapFilter).replace(/"/g,'&quot;'):''}" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
-      <span style="font-size:var(--fs-sm);color:var(--gray-l)">→</span>
-      <input id="hist-bulk-map-to" type="text" placeholder="교체 후 맵명" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
-      <button class="btn btn-w btn-sm" onclick="histBulkPreviewMapFromAllTab()">미리보기</button>
-      <button class="btn btn-b btn-sm" onclick="histBulkChangeMapFromAllTab()">일괄 변경</button>
-      <span id="hist-bulk-map-result" style="font-size:var(--fs-sm);color:var(--green)"></span>
+
+  // (UI/UX 개선) 타입/맵 필터를 접이식 패널로 압축. 접혀있을 때도 활성 필터 개수는 뱃지로 표시.
+  // (버그 수정) 상단 '필터 ▲/▼' 토글이 닫혀 있으면 이 버튼들 자체가 노출되지 않아야 함
+  const _enableSubFilterAll = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(!_enableSubFilterAll || window._histFilterOpen){
+  if(window._histAllFilterPanelOpen===undefined) window._histAllFilterPanelOpen=false;
+  const _activeFilterCnt=(window._recTypeFilter&&window._recTypeFilter!=='전체'?1:0)+(window._recMapFilter&&window._recMapFilter!=='전체'?1:0);
+  h+=`<div style="margin-bottom:8px">
+    <button class="pill ${window._histAllFilterPanelOpen?'on':''}" onclick="window._histAllFilterPanelOpen=!window._histAllFilterPanelOpen;render()">🔍 타입/맵 필터${_activeFilterCnt?` <span style="font-size:10px;opacity:.8">(${_activeFilterCnt})</span>`:''} ${window._histAllFilterPanelOpen?'▲':'▼'}</button>
+  </div>`;
+  if(window._histAllFilterPanelOpen){
+    h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+      ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';window._recMapFilter='전체';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
     </div>`;
+    // 맵 필터 바 (맵이 2개 이상일 때만 표시)
+    if(_allMapList.length >= 2){
+      h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">`;
+      h+=`<span style="font-size:var(--fs-caption);color:var(--gray-l);white-space:nowrap;flex-shrink:0">맵</span>`;
+      h+=`<button class="pill ${window._recMapFilter==='전체'?'on':''}" style="font-size:var(--fs-caption)" onclick="window._recMapFilter='전체';histPage['all']=0;render()">전체</button>`;
+      _allMapList.forEach(mp=>{
+        const cnt=_mapCountMap[mp]||0;
+        const isOn=window._recMapFilter===mp;
+        h+=`<button class="pill ${isOn?'on':''}" style="font-size:var(--fs-caption)" onclick="window._recMapFilter='${mp.replace(/'/g,"\\'")}';histPage['all']=0;render()">${mp}<span style="font-size:10px;opacity:.65;margin-left:3px">${cnt}</span></button>`;
+      });
+      h+=`</div>`;
+    }
   }
-  // 맵 필터 바 (맵이 2개 이상일 때만 표시)
-  if(_allMapList.length >= 2){
-    h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">`;
-    h+=`<span style="font-size:var(--fs-caption);color:var(--gray-l);white-space:nowrap;flex-shrink:0">맵</span>`;
-    h+=`<button class="pill ${window._recMapFilter==='전체'?'on':''}" style="font-size:var(--fs-caption)" onclick="window._recMapFilter='전체';histPage['all']=0;render()">전체</button>`;
-    _allMapList.forEach(mp=>{
-      const cnt=_mapCountMap[mp]||0;
-      const isOn=window._recMapFilter===mp;
-      h+=`<button class="pill ${isOn?'on':''}" style="font-size:var(--fs-caption)" onclick="window._recMapFilter='${mp.replace(/'/g,"\\'")}';histPage['all']=0;render()">${mp}<span style="font-size:10px;opacity:.65;margin-left:3px">${cnt}</span></button>`;
-    });
-    h+=`</div>`;
+
+  // (UI/UX 개선) 관리자 전용 "맵명 일괄 변경" 도구를 상시 노출 대신 접이식 도구 패널로 분리
+  if((typeof isLoggedIn!=='undefined' && isLoggedIn) || !!window.isLoggedIn){
+    if(window._histAllAdminToolOpen===undefined) window._histAllAdminToolOpen=false;
+    h+=`<div style="margin-bottom:8px">
+      <button class="pill" onclick="window._histAllAdminToolOpen=!window._histAllAdminToolOpen;render()">🛠 관리자 도구 ${window._histAllAdminToolOpen?'▲':'▼'}</button>
+    </div>`;
+    if(window._histAllAdminToolOpen){
+      h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
+        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">맵명 일괄 변경</span>
+        <input id="hist-bulk-map-from" type="text" placeholder="교체 전 맵명" value="${window._recMapFilter&&window._recMapFilter!=='전체'?String(window._recMapFilter).replace(/"/g,'&quot;'):''}" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">→</span>
+        <input id="hist-bulk-map-to" type="text" placeholder="교체 후 맵명" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
+        <button class="btn btn-w btn-sm" onclick="histBulkPreviewMapFromAllTab()">미리보기</button>
+        <button class="btn btn-b btn-sm" onclick="histBulkChangeMapFromAllTab()">일괄 변경</button>
+        <span id="hist-bulk-map-result" style="font-size:var(--fs-sm);color:var(--green)"></span>
+      </div>`;
+    }
+  }
   }
 
   if(!paged.length){
@@ -575,16 +587,33 @@ function histAllHTML(){
     return h;
   }
 
+  // (UI/UX 개선) 긴 가로 막대형 대신 신용카드 비율의 미니 카드를 그리드로 배치.
+  // 같은 날짜끼리는 구분선으로 묶어 하루 단위 그리드로 나눔 (날짜 바뀔 때 그리드 새로 오픈)
+  let _histAllLastD=null;
+  let _histAllGridOpen=false;
   paged.forEach(({type,d,m,idx,_ref}, pageIdx)=>{
+    if(d!==_histAllLastD){
+      if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
+      _histAllLastD=d;
+      const _dvLabel=d?d.slice(2).replace(/-/g,'/'):'날짜 미정';
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;${pageIdx===0?'margin-top:0;':''}">
+        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">${_dvLabel}</span>
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>`;
+    }
+    if(!_histAllGridOpen){ h+='<div class="hist-all-cardgrid">'; _histAllGridOpen=true; }
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
     const isCK=(type==='ck'||type==='pro');
     const isInd=(type==='ind'||type==='gj'||type==='procomp');
     let teamA='',teamB='',scoreA='',scoreB='';
+    // (UI/UX 개선) CK/프로리그처럼 팀원이 많은 경기는 이름을 전부 나열하면 카드가 쓸데없이 길어짐 →
+    // 헤더에는 짧은 팀 라벨만 표시하고, 팀원 목록은 "참여자 보기" 버튼으로 팝업(openProMembersPopup, 개별 탭과 동일 컴포넌트 재사용)에서 확인
+    let aMembers=[], bMembers=[];
     if(isInd){
       teamA=m.wName||''; teamB=m.lName||'';
     } else if(isCK){
-      teamA=(m.teamAMembers||[]).map(x=>x.name||'').join(', ')||m.a||'';
-      teamB=(m.teamBMembers||[]).map(x=>x.name||'').join(', ')||m.b||'';
+      aMembers=m.teamAMembers||[]; bMembers=m.teamBMembers||[];
+      teamA='A팀'; teamB='B팀';
       scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
     } else {
       teamA=m.a||''; teamB=m.b||'';
@@ -594,7 +623,10 @@ function histAllHTML(){
     const dLabel=d?d.slice(2).replace(/-/g,'/'):'미정';
     const dColor=d?'var(--text3)':'#f59e0b';
     const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
-    const key=`hist-all-${type}-${d}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
+    const _regIdx = (typeof idx==='number' ? idx : pageIdx);
+    // (버그예방) CK/프로리그는 teamA/teamB가 이제 'A팀'/'B팀'으로 고정돼 더 이상 유니크하지 않으므로
+    // idx를 포함해 상세토글 키가 서로 충돌하지 않도록 함
+    const key=`hist-all-${type}-${d}-${_regIdx}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
     const labelA=isCK?'A팀':(m.a||teamA);
     const labelB=isCK?'B팀':(m.b||teamB);
     const _sideCols = type==='ck' ? getFixedSideColors('ck') : type==='pro' ? getFixedSideColors('pro') : getFixedSideColors('tt');
@@ -604,45 +636,130 @@ function histAllHTML(){
     const bWin=!isInd && Number(scoreB)>Number(scoreA);
     const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',ind:'ind',gj:'gj',progj:'progj',tourney:'tourney',procomp:'procomp'};
     const mode=modeMap[type]||'comp';
-    const _regIdx = (typeof idx==='number' ? idx : pageIdx);
     const _detM = _ref ? {...m, _editRef:_ref} : m;
     const _isIndLike = (type==='ind'||type==='gj'||type==='procomp');
     let dotA=ca, dotB=cb;
+    let _raceA='', _raceB='';
+    let _thumbA='', _thumbB='';
     if(_isIndLike){
       const _wp=players.find(p=>p.name===(m.wName||teamA||'')); const _lp=players.find(p=>p.name===(m.lName||teamB||''));
       dotA=_wp?gc(_wp.univ):'#94a3b8'; dotB=_lp?gc(_lp.univ):'#94a3b8';
+      const _rIcon={'테란':'🔵','저그':'🟣','프로토스':'🟡'};
+      _raceA=_wp?(_rIcon[_wp.race]||''):''; _raceB=_lp?(_rIcon[_lp.race]||''):'';
+      if(typeof getPlayerPhotoHTML==='function'){
+        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'44px','border:none;',{lazy:true});
+        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'44px','border:none;',{lazy:true});
+      }
+    } else if(!isCK){
+      // (UI/UX 개선) 대학 대 대학 매치는 선수 얼굴 대신 대학 로고를 카드 양끝 썸네일로 사용
+      const _univLogoHTML=(n,side)=>{
+        try{
+          const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
+          if(!url) return '';
+          const _src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+          const _won=side==='a'?aWin:bWin;
+          const _filt=_won?'none':'grayscale(0.7) opacity(0.8)';
+          const _nAttr=String(n).replace(/"/g,'&quot;');
+          return `<img src="${_src}" loading="lazy" title="${_nAttr}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:${_filt}" onerror="this.style.display='none'">`;
+        }catch(e){ return ''; }
+      };
+      _thumbA=_univLogoHTML(teamA,'a'); _thumbB=_univLogoHTML(teamB,'b');
     }
-    const _rgbStr=(function(){const hx=String(ti.col||'').replace('#','');if(hx.length!==6)return'100,116,139';return parseInt(hx.slice(0,2),16)+','+parseInt(hx.slice(2,4),16)+','+parseInt(hx.slice(4,6),16);})();
-    h+=`<div class="rec-summary rec-mode-tierrank${_recSideFxClass(mode)}" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${_rgbStr};${_recSideFxStyle(mode,ca,cb)}background:linear-gradient(120deg, rgba(${_rgbStr},.09) 0%, var(--white) 42%);border-left:3px solid ${ti.col}">
-      <div class="rec-sum-header" style="gap:8px">
-        <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;min-width:70px">
-          <span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:${ti.col}1f;color:${ti.col};border:1px solid ${ti.col}33;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;width:fit-content">${ti.lbl}${m._src==='tour_normal'?` <span style="background:#6366f1;color:#fff;padding:0 4px;border-radius:3px">일반경기</span>`:m._src==='tour_bracket'||m._src==='tour_manual'?` <span style="background:#1e3a8a;color:#fff;padding:0 4px;border-radius:3px">토너먼트</span>`:m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
-          <span style="font-size:var(--fs-caption);font-weight:700;color:${dColor};white-space:nowrap;display:inline-flex;align-items:center;gap:3px">${dLabel}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:60px;overflow:hidden">
-          <span style="width:7px;height:7px;border-radius:50%;background:${dotA};flex-shrink:0;box-shadow:0 0 0 2px ${dotA}22"></span>
-          <span style="font-weight:800;font-size:var(--fs-base);color:${winner===teamA?'var(--win-col)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
+    // (UI/UX 개선) 대학 대 대학 매치: 세트/게임 기록에서 실제 출전한 선수를 게임 순서대로 모아
+    // 로고 아래에 프로필 사진 1장을 슬라이드쇼처럼 순환 표시. 팀 승패 × 개인 승패 조합으로 명암 처리:
+    //  - 이긴팀 + 개인승  : 정상(효과 없음)
+    //  - 이긴팀 + 개인패  : 아주 약하게만 회색 처리
+    //  - 진팀   + 개인승  : 살짝만 연하게
+    //  - 진팀   + 개인패  : 기본 회색 처리(가장 진하게)
+    const _sideOrderedParticipants=(side)=>{
+      if(isInd) return [];
+      if(!m.sets||!Array.isArray(m.sets)) return [];
+      const seen=new Set(); const out=[];
+      m.sets.forEach(set=>{
+        (set.games||[]).forEach(g=>{
+          const n=side==='a'?g.playerA:g.playerB;
+          if(!n||seen.has(n)) return;
+          seen.add(n);
+          const _won=(side==='a')?(g.winner==='A'):(g.winner==='B');
+          out.push({name:n,won:_won});
+        });
+      });
+      return out;
+    };
+    const _individualFilter=(playerWon,teamWon)=>{
+      if(teamWon&&playerWon) return '';
+      if(teamWon&&!playerWon) return 'grayscale(0.35) opacity(0.9)';
+      if(!teamWon&&playerWon) return 'grayscale(0.55) opacity(0.85)';
+      return 'grayscale(1) opacity(0.55)';
+    };
+    const _participantsHTML=(side)=>{
+      const list=_sideOrderedParticipants(side);
+      if(!list.length || typeof getPlayerPhotoHTML!=='function') return '';
+      const teamWon=(side==='a')?aWin:bWin;
+      const N=list.length;
+      const animName=`rspRot_${key}_${side}`.replace(/[^\w]/g,'_');
+      const DUR=Math.max(2.4, N*2.4);
+      const frames=list.map((p,i)=>{
+        const raw=getPlayerPhotoHTML(p.name,'46px','border:none;display:block;',{lazy:true});
+        const filt=_individualFilter(p.won,teamWon);
+        const animStyle=N>1?`animation:${animName}_${i} ${DUR}s linear infinite;`:'opacity:1;';
+        return `<span class="hist-all-mc-avatar-frame" style="${animStyle}filter:${filt||'none'}">${raw}</span>`;
+      }).join('');
+      const styleTag=N>1?`<style>${list.map((p,i)=>{
+        const start=(i/N*100), end=((i+1)/N*100);
+        const fadeGap=Math.min(1.2,(end-start)*0.12);
+        return `@keyframes ${animName}_${i}{${start.toFixed(2)}%{opacity:0}${(start+fadeGap).toFixed(2)}%{opacity:1}${(end-fadeGap).toFixed(2)}%{opacity:1}${end.toFixed(2)}%{opacity:0}}`;
+      }).join('')}</style>`:'';
+      return `${styleTag}<div class="hist-all-mc-participants">${frames}</div>`;
+    };
+    // (UI/UX 개선) 참여자 보기 버튼 마크업 (CK/프로리그, 팀원 정보 있을 때만) — 카드 하단용 축소 버전
+    const _memBtn=(side,members)=>{
+      if(!isCK || !members || !members.length) return '';
+      const col=side==='a'?ca:cb;
+      const lbl=side==='a'?teamA:teamB;
+      const memJson=JSON.stringify(members).replace(/"/g,"'");
+      return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:1px 7px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:9px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥${members.length}</button>`;
+    };
+    const _extraTag = m._src==='tour_normal'?'일반경기':(m._src==='tour_bracket'||m._src==='tour_manual')?'토너먼트':(m._teamMatchType?m._teamMatchType.replace('v',':')+'전':'');
+    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp');
+    const _editBtn = (()=>{
+      if(!_canEdit) return '';
+      if(type==='ind'||type==='gj'||type==='progj'){
+        const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
+        return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
+      }
+      return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
+    })();
+    const _bottomContent = (_memBtn('a',aMembers)||_memBtn('b',bMembers))
+      ? `${_memBtn('a',aMembers)}${_memBtn('b',bMembers)}`
+      : (_extraTag ? `<span class="hist-all-mc-map">${_extraTag}</span>`
+        : (m.map&&m.map!=='-' ? `<span class="hist-all-mc-map">${m.map}</span>` : ''));
+    const _teamAAttr=String(teamA).replace(/"/g,'&quot;');
+    const _teamBAttr=String(teamB).replace(/"/g,'&quot;');
+    h+=`<div class="hist-all-minicard" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};border-left-color:${dotA};border-right-color:${dotB};background:linear-gradient(90deg, ${dotA}26 0%, ${dotA}0d 14%, var(--white) 28%, var(--white) 72%, ${dotB}0d 86%, ${dotB}26 100%)" onclick="toggleDetail('${key}')">
+      <div class="hist-all-mc-top">
+        <span class="hist-all-mc-type" style="background:${ti.col}1f;color:${ti.col}">${ti.lbl}</span>
+        <span class="hist-all-mc-date" style="color:${dColor}">${dLabel}</span>
+        ${_editBtn}
+      </div>
+      <div class="hist-all-mc-mid">
+        <div class="hist-all-mc-side">
+          ${_thumbA || `<span class="hist-all-mc-dot" style="background:${dotA}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamAAttr}" style="color:${(!isCK&&!_isIndLike)?dotA:(winner===teamA?'var(--win-col)':winner===teamB?'var(--lose-col)':'var(--text)')}">${_raceA?`${_raceA} `:''}${teamA}</span>
+          ${_participantsHTML('a')}
         </div>
         ${isInd
-          ?`<span style="font-size:var(--fs-caption);font-weight:800;padding:3px 11px;border-radius:20px;background:linear-gradient(135deg,#fee2e2,#fecaca55);color:var(--win-col);border:1px solid #fecaca;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 6px rgba(220,38,38,.12)" onclick="toggleDetail('${key}')">승</span>`
-          :`<div class="rec-sum-score score-click" style="font-size:16px;padding:4px 13px;border-radius:20px;background:var(--surface);border:1px solid var(--border)" onclick="toggleDetail('${key}')">
-            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span>
-            <span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:400">:</span>
-            <span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
-          </div>`}
-        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:60px;overflow:hidden;justify-content:flex-end">
-          <span style="font-weight:800;font-size:var(--fs-base);color:${winner===teamB?'var(--win-col)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamB}</span>
-          <span style="width:7px;height:7px;border-radius:50%;background:${dotB};flex-shrink:0;box-shadow:0 0 0 2px ${dotB}22"></span>
+          ?`<span class="hist-all-mc-score" style="color:var(--win-col)">승</span>`
+          :`<span class="hist-all-mc-score">
+            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
+          </span>`}
+        <div class="hist-all-mc-side right">
+          ${_thumbB || `<span class="hist-all-mc-dot" style="background:${dotB}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamBAttr}" style="color:${(!isCK&&!_isIndLike)?dotB:(winner===teamB?'var(--win-col)':winner===teamA?'var(--lose-col)':'var(--text)')}">${teamB}${_raceB?` ${_raceB}`:''}</span>
+          ${_participantsHTML('b')}
         </div>
-        ${(()=>{
-          if(!(typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp')) return '';
-          if(type==='ind'||type==='gj'||type==='progj'){
-            const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
-            return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:var(--fs-caption)" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
-          }
-          return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:var(--fs-caption)" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
-        })()}
       </div>
+      <div class="hist-all-mc-bottom">${_bottomContent}</div>
       <div id="det-${key}" class="rec-detail-area">
         ${isInd
           ? (()=> {
@@ -660,13 +777,14 @@ function histAllHTML(){
       </div>
     </div>`;
   });
+  if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
 
-  // 페이지 네비게이션 (버그픽스: 맵 필터 적용 후 실제 항목 수 기준으로 표시)
+  // (UI/UX 개선) prev/next 대신 "더보기"로 이어붙이는 피드형 로딩. 여러 페이지를 불러온 뒤엔 "처음으로"도 제공.
   if(_mapFiltered.length>pageSize){
-    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
-      <button class="btn btn-sm" ${curPage===0?'disabled':''} onclick="histPage['all']=${curPage-1};render()">← 이전</button>
-      <span style="font-size:var(--fs-sm);color:var(--gray-l)">${curPage+1} / ${totalPages}</span>
-      <button class="btn btn-sm" ${curPage>=totalPages-1?'disabled':''} onclick="histPage['all']=${curPage+1};render()">다음 →</button>
+    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">${paged.length} / ${_mapFiltered.length}건 표시 중</span>
+      ${_hasMore?`<button class="btn btn-sm" onclick="histPage['all']=${histPage['all']+1};render()">더 보기 ↓</button>`:''}
+      ${histPage['all']>0?`<button class="btn btn-sm btn-w" onclick="histPage['all']=0;render()">처음으로</button>`:''}
     </div>`;
   }
   return h;

@@ -72,7 +72,10 @@ function onGlobalSearch(val){
       onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
       ${p.photo
-        ?`<img src="${toHttpsUrl(p.photo)}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
+        ?(()=>{
+          const _2nd=(typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):'';
+          return `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:inline-flex;width:60px;height:60px;flex-shrink:0;border-radius:8px;overflow:hidden"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">${_2nd}</span>`;
+        })()
         :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
       }
       <div style="flex:1;min-width:0">
@@ -203,18 +206,24 @@ function statsPlayerVsHTML(){
   const pB=statsP(_vsSelB);
   const colA=pA?gc(pA.univ):'#2563eb';
   const colB=pB?gc(pB.univ):'#dc2626';
+  const _vsLastN=window._statsChartLastN|0;
+  function _vsHist(p){
+    const h=statsNonProHist(p);
+    if(_vsLastN<=0) return h;
+    return [...h].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(-_vsLastN);
+  }
 
   // 직접 대결 기록
   let h2hAwin=0,h2hBwin=0;
   if(pA&&pB){
-    statsNonProHist(pA).forEach(h=>{if(h.opp===_vsSelB){if(h.result==='승')h2hAwin++;else h2hBwin++;}});
+    _vsHist(pA).forEach(h=>{if(h.opp===_vsSelB){if(h.result==='승')h2hAwin++;else h2hBwin++;}});
   }
   const h2hTotal=h2hAwin+h2hBwin;
 
   // 개인 통계
   function getStats(p){
     if(!p)return null;
-    const h=statsNonProHist(p);
+    const h=_vsHist(p);
     const w=h.filter(x=>x.result==='승').length;
     const l=h.filter(x=>x.result==='패').length;
     const tot=w+l;

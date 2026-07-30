@@ -562,7 +562,7 @@ function saveMatch(mode){
           const tb = [g.b1, g.b2].filter(Boolean);
           applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
         }
-        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{})});
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{}),...(bld.compName?{n:bld.compName}:{})});
       });
       BLD[mode]=null;
       // 수정 저장 시에는 history/포인트/elo를 전체 재구성해서 잔존/중복을 방지
@@ -599,7 +599,7 @@ function saveMatch(mode){
           const tb = [g.b1, g.b2].filter(Boolean);
           applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, '개인전');
         }
-        if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
+        if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',...(bld.compName?{n:bld.compName}:{})});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
       BLD[mode]=null;
@@ -740,7 +740,7 @@ function saveMatch(mode){
           const tb = [g.b1, g.b2].filter(Boolean);
           applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
         }
-        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{})});
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{}),...(bld.compName?{n:bld.compName}:{})});
       });
     });
     BLD[mode]=null;

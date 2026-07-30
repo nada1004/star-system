@@ -109,9 +109,13 @@ window.openHeatmapDayPopup = function(dateStr, gameCount){
         const rc = _raceColor(p.race);
         const uc = _univColor(p.univ);
         const photo = p.photo || p.media1 || '';
+        const _2nd = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:inherit'}) : '';
         const imgHtml = photo
-          ? `<img class="hm-player-img" src="${_toHttps(photo)}" alt="${p.name||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          ? `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:block;width:100%;height:100%">`
+            + `<img class="hm-player-img" src="${_toHttps(photo)}" alt="${p.name||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
             + `<div class="hm-player-fallback" style="display:none;background:${rc.bg};color:${rc.col};border-color:${rc.border}">${(p.name||'?')[0]}</div>`
+            + _2nd
+            + `</span>`
           : `<div class="hm-player-fallback" style="background:${rc.bg};color:${rc.col};border-color:${rc.border}">${(p.name||'?')[0]}</div>`;
 
         const raceIco = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';

@@ -345,8 +345,25 @@ function openShareCardFromMatch(mode,idx){
   };
   if((mode==='ind' || mode==='gj' || mode==='progj') && window._detReg){
     try{
-      const vals = Object.values(window._detReg||{});
-      const hit = vals.find(v => v && v.mode===mode && v.idx===idx && v.m && (v.m.a||v.m.b) && v.m.sa!=null && v.m.sb!=null);
+      const isValidHit = v => v && v.mode===mode && v.idx===idx && v.m && (v.m.a||v.m.b) && v.m.sa!=null && v.m.sb!=null;
+      let hit = null;
+      // (버그픽스) mode+idx는 렌더링될 때마다 0부터 재사용되는 "위치"일 뿐이라
+      // window._detReg는 지워지지 않고 계속 누적됨. 예전 방식은 Array.find로
+      // "가장 먼저 등록된" 항목을 찾아버려서, 대량 자동등록 후에는 항상
+      // 맨 처음 등록된 경기의 공유카드가 나오는 문제가 있었음.
+      // -> 최신 등록 우선순위(_detRegLatestByModeIdx)를 먼저 확인하고,
+      //    없으면 등록 순서 역순(최신순)으로 탐색.
+      try{
+        const latestKey = window._detRegLatestByModeIdx && window._detRegLatestByModeIdx[`${mode}|${idx}`];
+        const latest = latestKey ? window._detReg[latestKey] : null;
+        if(isValidHit(latest)) hit = latest;
+      }catch(e){}
+      if(!hit){
+        const vals = Object.values(window._detReg||{});
+        for(let i=vals.length-1;i>=0;i--){
+          if(isValidHit(vals[i])){ hit = vals[i]; break; }
+        }
+      }
       if(hit && typeof window._openShareMatchObjCard==='function'){
         window._openShareMatchObjCard(_shareDefaults(_detailLikePayload(hit)));
         return;

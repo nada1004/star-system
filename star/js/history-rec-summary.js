@@ -629,6 +629,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
 window._detReg = window._detReg || {};
 function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW, idx){
   window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW, idx};
+  try{
+    window._detRegLatestByModeIdx = window._detRegLatestByModeIdx || {};
+    if(mode!=null && idx!=null) window._detRegLatestByModeIdx[`${mode}|${idx}`] = key;
+  }catch(e){}
   return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
 }
 window._openShareFromDetReg = window._openShareFromDetReg || function(key){

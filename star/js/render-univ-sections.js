@@ -34,7 +34,7 @@ function _bindUnivSectionsDelegatedEvents(){
 function buildUnivHeaderCardHTML(opts){
   const {
     univName='', col='', members=[], wins=0, losses=0, tot=0, pts=0, wr=0,
-    hdrBg='', hdrBgLayer=null, isMobile=false, isTablet=false, logoSizeEff='46px', layoutMode='default'
+    hdrBg='', hdrBgLayer=null, isMobile=false, isTablet=false, logoSizeEff='46px'
   } = opts || {};
   const uNameFs = isMobile ? 34 : (isTablet ? 44 : 52);
   const dissolvedBadge = (()=>{
@@ -66,7 +66,7 @@ function buildUnivHeaderCardHTML(opts){
   const quickValueCol = '#020617';
   const quickMetaCol = '#334155';
   const quickRail = `
-    <div class="ud-hero-quickrail" data-ud-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${isMobile?2:4},minmax(0,1fr));gap:8px;padding:${isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
+    <div class="ud-hero-quickrail" style="display:grid;grid-template-columns:repeat(${isMobile?2:4},minmax(0,1fr));gap:8px;padding:${isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="ud-hero-quickcard" data-kind="members" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">활동 인원</div>
         <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};text-shadow:0 1px 0 rgba(255,255,255,.35)">${activeCount}명</div>
@@ -116,7 +116,7 @@ function buildUnivHeaderCardHTML(opts){
         <span style="font-size:calc(${logoSizeEff} * 0.52);font-weight:1000;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.2)">${univName ? univName.trim().charAt(0) : '?'}</span>
       </div>`;
 
-  return `<div class="ud-hero" data-ud-layout="${layoutMode}" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
+  return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
     <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 28px':'26px 22px 34px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'170px':'192px'}">
       ${bgLayerHTML}
@@ -146,7 +146,7 @@ function buildUnivHeaderCardHTML(opts){
     </div>
     ${quickRail}
     <!-- 하단 스탯 -->
-    <div class="ud-hero-stats" data-ud-layout="${layoutMode}" style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
+    <div class="ud-hero-stats" style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
       ${tot?`<div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:10.5px;font-weight:900;color:var(--text3,#475569);letter-spacing:.5px">대학 승률</span>
@@ -172,7 +172,7 @@ function buildUnivMembersTableHTML(opts){
   const { members=[], univName='', col='', byPlayer={} } = opts || {};
   if(!members.length) return '';
   const _recOf = (p)=>byPlayer[String(p?.name||'').trim()] || {w:0,l:0,tot:0,wr:0,pts:0};
-  const sorted=[...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((_recOf(b).pts||0)-(_recOf(a).pts||0)));
+  const sorted=[...members].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((_recOf(b).pts||0)-(_recOf(a).pts||0)));
   const _hexToRgb = h => { const m=String(h||'').match(/^#([0-9a-f]{6})$/i); if(!m)return '59,130,246'; const n=parseInt(m[1],16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; };
   const colRgb = _hexToRgb(col);
   let h=`<div class="su-sec" style="--su-sec-accent:${col}">

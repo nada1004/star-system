@@ -2,6 +2,17 @@
    Match Builder Record Views
 ══════════════════════════════════════ */
 
+// 세션 키 충돌 방지용 짧은 해시 (FNV-1a 32bit 간이)
+function _sessHashKey(v){
+  const str = String(v||'');
+  let h = 2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h>>>0).toString(36);
+}
+
 function _safeHeadToHeadSideFx(leftHex, rightHex){
   try{
     if(typeof _getRecSideFxCfg!=='function') return '';
@@ -201,8 +212,17 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
     : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
   // 패배자는 눈에 띄게 흑백 처리(예전엔 grayscale(.14)로 거의 표시가 안 됐음)
   const loseImgFx = isLose ? 'filter:grayscale(.9) saturate(.3) brightness(.9) contrast(.96);opacity:.88;' : '';
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:var(--r2);height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
+  // 이미지2(두번째 프로필) 호버 스크럽 미리보기 (PC 마우스 전용)
+  const _h2hSecondRaw = String(p.secondProfileFile || '').trim();
+  const _h2hSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_h2hSecondRaw);
+  const h2hSecondPhoto = (_h2hSecondRaw && !_h2hSecondIsVideo) ? _h2hSecondRaw : '';
+  const h2hHoverAttrs = h2hSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+  const h2hSecondHtml = h2hSecondPhoto
+    ? `<img class="b2-players-card-secondary" style="z-index:0;object-position:${bgPos}" src="${toHttpsUrl(h2hSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+    : '';
+  return `<div ${click}${h2hHoverAttrs} style="position:relative;overflow:hidden;border-radius:var(--r2);height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
+    ${h2hSecondHtml}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
       <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 10px rgba(0,0,0,.7)">${pName||'미정'}</div>
       <div style="font-size:var(--fs-caption);font-weight:800;color:${txtCol2};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 8px rgba(0,0,0,.6)">${univ}</div>
@@ -521,8 +541,8 @@ function _h2hPillCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const av = (pName, col)=>{
     const p = players.find(x=>x.name===pName)||{};
     const sz = isMb ? 26 : 30;
-    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:999px;object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
-    return `<div style="width:${sz}px;height:${sz}px;border-radius:999px;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,999px);clip-path:var(--su_profile_clip,none);object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,999px);clip-path:var(--su_profile_clip,none);background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
   };
   return `<div style="padding:${isMb?'12px 12px 14px':'14px 14px 16px'}">
     <div style="border-radius:999px;border:1.5px solid var(--border);background:linear-gradient(90deg,${p1col}12,rgba(255,255,255,.92),${p2col}12);box-shadow:0 10px 24px rgba(15,23,42,.08);display:flex;align-items:center;gap:10px;padding:${isMb?'10px 12px':'12px 14px'}">
@@ -896,7 +916,7 @@ function indRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];const ns=s.games.map(g=>g.n||'').filter(Boolean);if(ns.length)s.n=ns[ns.length-1];});
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSess.sort((a,b)=>{
     const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
@@ -986,7 +1006,9 @@ function indRecordsHTML(){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const _indSessKey = ('inds_' + String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
+    // 세션 키 충돌 방지: 사람이 읽을 수 있는 일부 + 짧은 해시를 함께 사용
+    const _indRawKey = String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`);
+    const _indSessKey = (`inds_${_sessHashKey(_indRawKey)}_${_indRawKey.replace(/[^\w\-]/g,'_')}`).slice(0,120);
     window._indSessCache = window._indSessCache || {};
     window._indSessCache[_indSessKey] = {...s};
     const actionOpts = [];
@@ -1026,6 +1048,7 @@ function indRecordsHTML(){
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
+        ${s.n?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#FEF3C7;color:#92400E">🏆 ${escHTML(s.n)}</span>`:''}
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
@@ -1068,7 +1091,7 @@ function gjRecordsHTML(proOnly){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];const ns=s.games.map(g=>g.n||'').filter(Boolean);if(ns.length)s.n=ns[ns.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSessGj.sort((a,b)=>{
     const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
@@ -1163,8 +1186,14 @@ function gjRecordsHTML(proOnly){
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const _gjActionBtnId = `_gjActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     // ✅ 버그픽스: 캐시 저장 키와 수정 버튼에 전달하는 키를 동일하게 생성
-    const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;
-    const _gjSessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
+    // ✅ 버그픽스: raw sid만 쓰면 "여러 명 경기를 한번에 자동인식 등록"처럼
+    // 서로 다른 선수쌍이 같은 sid(같은 붙여넣기 배치)를 공유하는 경우
+    // 세션 키가 충돌해서(마지막에 렌더된 세션이 캐시를 덮어써서) 엉뚱한 경기의
+    // 상세 팝업/공유카드가 열리는 문제가 있었음. sid에 선수쌍을 함께 포함시켜 고유화.
+    const _sidBase = (s.games.find(x=>x && x.sid)?.sid) || '';
+    const _sidRaw = _sidBase ? `${_sidBase}|${s.p1||''}|${s.p2||''}` : (s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`);
+    // ✅ 버그픽스(추가 보강): 세션 키 충돌(특히 자동인식 배치 저장 시 sid 공유) 방지
+    const _gjSessKey = (`gjs_${_sessHashKey(_sidRaw)}_${String(_sidRaw).replace(/[^\w\-]/g,'_')}`).slice(0,120);
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
@@ -1205,6 +1234,7 @@ function gjRecordsHTML(proOnly){
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
+        ${s.n?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#FEF3C7;color:#92400E">🏆 ${escHTML(s.n)}</span>`:''}
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>

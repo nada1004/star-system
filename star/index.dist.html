@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="dist/css/bundle.css?v=e2e3d7a16e">
+<link rel="stylesheet" href="dist/css/bundle.css?v=6caae2fd60">
 <!-- /* [Z-IDX] */ -->
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
@@ -377,6 +377,7 @@ if ('serviceWorker' in navigator) {
       <div class="mtitle detail-modal-title" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
       <div class="detail-modal-actions">
         <button id="playerModalEditBtn" class="btn btn-o btn-sm detail-act detail-act-edit" style="display:none" title="수정" aria-label="수정" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️</button>
+        <button id="playerModalStyleBtn" class="btn btn-o btn-sm detail-act detail-act-style" style="display:none" title="스타일 전환" aria-label="스타일 전환" onclick="event.stopPropagation();try{_pdToggleStylePicker();}catch(e){console.error('[styleBtn]',e);}">🎨</button>
         <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromPlayer()">🎴</button>
         <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('playerModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
@@ -393,6 +394,7 @@ if ('serviceWorker' in navigator) {
       <div class="detail-modal-actions">
         <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromUniv()">🎴</button>
         <button id="univEditBtn" class="btn btn-o btn-sm no-export detail-act detail-act-edit" title="수정" aria-label="수정" onclick="toggleUnivEdit()" style="display:none">✏️</button>
+        <button id="univModalStyleBtn" class="btn btn-o btn-sm no-export detail-act detail-act-style" title="스타일 전환" aria-label="스타일 전환" onclick="event.stopPropagation();try{_udToggleStylePicker();}catch(e){console.error('[udStyleBtn]',e);}" style="display:none">🎨</button>
         <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('univModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
     </div>
@@ -621,6 +623,10 @@ if ('serviceWorker' in navigator) {
         <input type="text" id="pro-paste-team-a" placeholder="A팀명 (미입력 시 A조)" oninput="onProPasteTeamNameInput()" style="flex:1;min-width:120px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
         <span style="font-size:12px;font-weight:700;color:#dc2626;flex-shrink:0">🔴 B팀명</span>
         <input type="text" id="pro-paste-team-b" placeholder="B팀명 (미입력 시 B조)" oninput="onProPasteTeamNameInput()" style="flex:1;min-width:120px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0">🏷️ 경기명</span>
+        <input type="text" id="pro-paste-comp-name" placeholder="경기명 입력 (선택)" style="flex:1;min-width:160px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
       </div>
     </div>
     <div style="position:relative">

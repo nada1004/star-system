@@ -63,3 +63,154 @@ body.dark .rec-summary.detail-open{
 .empty-state-icon:empty{
   display:none;
 }
+
+/* ============================================================
+   대전기록 종합(전체 통합) 탭 — 신용카드형 미니 카드 그리드 (요청사항: 2026-07)
+   기존 긴 가로 막대형 행 목록을 고정 비율의 작은 카드들로 교체.
+   ============================================================ */
+.hist-all-cardgrid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:10px;
+  margin-bottom:16px;
+}
+@media (max-width:900px){
+  .hist-all-cardgrid{grid-template-columns:repeat(3, minmax(0,1fr));}
+}
+@media (max-width:560px){
+  .hist-all-cardgrid{grid-template-columns:repeat(2, minmax(0,1fr));}
+}
+.hist-all-minicard{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-left:5px solid var(--rec-mode-col,#94a3b8);
+  border-right:5px solid var(--border);
+  border-radius:14px;
+  padding:8px 10px;
+  min-height:118px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  cursor:pointer;
+  transition:box-shadow .18s ease, transform .18s ease, border-left-color .18s ease;
+  position:relative;
+  overflow:hidden;
+}
+.hist-all-minicard:hover{
+  box-shadow:0 6px 18px rgba(15,23,42,.09);
+  transform:translateY(-1px);
+}
+body.dark .hist-all-minicard{
+  background:var(--surface);
+  box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+body.dark .hist-all-minicard:hover{
+  box-shadow:0 6px 20px rgba(0,0,0,.30);
+}
+.hist-all-mc-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding-right:26px;
+}
+.hist-all-mc-type{
+  font-size:10px;
+  font-weight:800;
+  padding:2px 7px;
+  border-radius:20px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.hist-all-mc-date{
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hist-all-mc-top .btn{
+  position:absolute;
+  top:8px;
+  right:9px;
+}
+.hist-all-mc-mid{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:4px;
+  min-width:0;
+}
+.hist-all-mc-side{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  min-width:0;
+  flex:1;
+  overflow:hidden;
+  text-align:center;
+}
+.hist-all-mc-side.right{
+  align-items:center;
+}
+.hist-all-mc-name{
+  font-weight:800;
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+.hist-all-mc-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.hist-all-mc-participants{
+  position:relative;
+  width:46px;
+  height:46px;
+  margin-top:4px;
+}
+.hist-all-mc-avatar-frame{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:var(--su_profile_radius,50%);
+  clip-path:var(--su_profile_clip,none);
+  box-shadow:0 0 0 1px var(--white);
+  opacity:0;
+}
+body.dark .hist-all-mc-avatar-frame{
+  box-shadow:0 0 0 1px var(--surface);
+}
+.hist-all-mc-score{
+  font-size:13px;
+  font-weight:800;
+  padding:2px 8px;
+  border-radius:20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.hist-all-mc-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-height:15px;
+}
+.hist-all-mc-map{
+  font-size:9px;
+  color:var(--text3);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}

@@ -342,10 +342,35 @@ function _b2ExpandAll() {
 }
 
 const _B2_ROLE_ORDER = ['이사장','동아리 회장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
+// 긴 키워드부터 검사해야 "총장"이 "부총장"의 부분 문자열로 먼저 걸려서 순위가 잘못
+// 앞당겨지는 걸 막을 수 있다.
+const _B2_ROLE_ORDER_BY_LEN = [..._B2_ROLE_ORDER].sort((a,b)=>b.length-a.length);
 
 function _b2RoleRank(p) {
-  const i = _B2_ROLE_ORDER.indexOf(p.role||'');
-  return i >= 0 ? i : 99;
+  // 직책 편집에서 "표시 순서 직접 지정"(roleOrder 숫자)을 해뒀으면 자동 판정보다 우선한다.
+  if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return p.roleOrder;
+  const role = p.role || '';
+  const exact = _B2_ROLE_ORDER.indexOf(role);
+  if (exact >= 0) return exact;
+  // 직책란에 "이사장 & 회장"처럼 두 직책을 함께 적어도, 그 안에 알려진 직책 키워드가
+  // 있으면 그 키워드의 순위를 그대로 적용해 현황판 순서가 바뀌지 않게 한다.
+  if (role) {
+    for (const key of _B2_ROLE_ORDER_BY_LEN) {
+      if (role.includes(key)) return _B2_ROLE_ORDER.indexOf(key);
+    }
+  }
+  return 99;
+}
+
+// 직책자 여부 판정: 정확히 일치 / 두 직책이 "&"로 함께 적힌 경우(부분 문자열 포함) / 순서를
+// 수동으로 지정해둔 경우까지 모두 "직책자"로 인식한다. (기존에는 정확히 일치하는 경우만
+// 직책자로 분류돼, 직책 2개를 함께 선택하면 대학별/라인업 등에서 일반 명단으로 밀려나던 문제 수정)
+function _b2HasRole(p) {
+  if (p && typeof p.roleOrder === 'number' && !isNaN(p.roleOrder)) return true;
+  const role = (p && p.role) || '';
+  if (!role) return false;
+  if (_B2_ROLE_ORDER.includes(role)) return true;
+  return _B2_ROLE_ORDER_BY_LEN.some(key => role.includes(key));
 }
 
 // 현황판 표시용 대학 리스트
@@ -417,7 +442,7 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
         <div style="display:flex;gap:4px">
           ${_lcModeBtn('default','🖼️ 기본')}
@@ -425,6 +450,12 @@ function rBoard2(C, T) {
           ${_lcModeBtn('table','🗂️ 테이블')}
         </div>
       </div>
+      ${(function(){
+        const _lcItems=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+        window._b2LineupModeItems = _lcItems.map(it=>({id:it.id, label:it.label, action:`_b2SetLineupCardMode('${it.id}')`, active:_b2LineupCardMode===it.id}));
+        const _curLc = _lcItems.find(it=>it.id===_b2LineupCardMode) || _lcItems[0];
+        return `<button type="button" class="pill mode-select-trigger" style="flex-shrink:0" onclick="_toggleModePopover(this,'라인업 모드',window._b2LineupModeItems)">${_curLc.label} ▾</button>`;
+      })()}
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -486,11 +517,29 @@ function rBoard2(C, T) {
   const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑'));
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
-  const compareBtn = _b2TabBtn('compare','#ef4444', (typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교'));
   const rankingBtn = _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹'));
-  const radarBtn   = _b2TabBtn('radar',  '#a855f7', (typeof getTabLabel==='function'?getTabLabel('board2','radar',  '🕸️ 레이더'):'🕸️ 레이더'));
   const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
   const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
+  // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/요약/구현황판)을
+  // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
+  const _b2TabDefs = [
+    {id:'weekly',  label:(typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')},
+    {id:'lineup',  label:(typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')},
+    {id:'univ',    label:(typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')},
+    {id:'femco',   label:(typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')},
+    {id:'free',    label:(typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속')},
+    {id:'players', label:(typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel)},
+    {id:'heatmap', label:(typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵')},
+    {id:'bubble',  label:(typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵')},
+    {id:'summary', label:(typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')},
+  ];
+  if(isLoggedIn) _b2TabDefs.push({id:'old', label:(typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')});
+  window._b2TabPopoverItems = _b2TabDefs.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
+  const _curB2TabItem = _b2TabDefs.find(it=>it.id===_b2View) || _b2TabDefs[0];
+  const _b2TabMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'현황판 화면 선택',window._b2TabPopoverItems)">
+    <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${_curB2TabItem.label}</span></span>
+    <span class="mode-select-trigger-caret">▾</span>
+  </button>`;
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
   const _navTight = _b2View === 'players' ? '#b2-nav.b2-nav-new { padding-top: 0; }' : '';
@@ -561,9 +610,7 @@ function rBoard2(C, T) {
     ranking: { label:'랭킹', desc:'대학별 성과를 리더보드 형태로 정리해 비교가 쉽도록 구성합니다.' },
     heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
     bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
-    radar:   { label:'레이더', desc:'대학별 강점과 균형감을 다차원으로 비교해서 보여줍니다.' },
     summary: { label:'요약', desc:'핵심 숫자와 흐름만 모아 간결하게 확인할 수 있도록 구성합니다.' },
-    compare: { label:'대학비교', desc:'여러 대학 지표를 한 자리에서 비교하기 좋게 정리합니다.' },
     old:     { label:'구현황판', desc:'기존 현황판 레이아웃을 그대로 유지하면서 현재 데이터와 연결합니다.' }
   };
   const _curViewMeta = _heroViewMeta[_b2View] || { label:'현황판', desc:'여러 시각화와 카드형 화면으로 현황을 빠르게 탐색할 수 있습니다.' };
@@ -656,12 +703,11 @@ function rBoard2(C, T) {
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}
-        ${radarBtn}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${summaryBtn}
-        ${compareBtn}
         ${oldBtn}
           </div>
+          ${_b2TabMobileTrigger}
           ${playerFilters}
           <div class="b2-toolbar-actions">${rightBtns}</div>
         </div>
@@ -712,7 +758,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','radar','compare','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -763,12 +809,6 @@ function rBoard2(C, T) {
       _b2InjectAndRunScripts(sub);
     } else if (_b2View === 'ranking') {
       sub.innerHTML = _b2RankingView();
-      injectUnivIcons && injectUnivIcons(sub);
-    } else if (_b2View === 'radar') {
-      sub.innerHTML = _b2RadarView();
-      _b2InjectAndRunScripts(sub);
-    } else if (_b2View === 'compare') {
-      sub.innerHTML = _b2CompareView();
       injectUnivIcons && injectUnivIcons(sub);
     } else if (_b2View === 'heatmap') {
       sub.innerHTML = _b2HeatmapView();

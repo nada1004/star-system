@@ -55,11 +55,20 @@ function _getPlayerByName(name) {
   try{
     const idx = _getChatbotIndex();
     if (idx.playersByName && idx.playersByName.get) {
-      return idx.playersByName.get(name) || null;
+      const exact = idx.playersByName.get(name);
+      if (exact) return exact;
+      // 챗봇 입력은 소문자로 변환되어 들어오므로, 영문이 섞인 닉네임(예: Light, sOs)은
+      // 대소문자 그대로의 exact 매칭에 실패함 → 대소문자 무시 매칭으로 보완
+      if (idx.playersByLowerName && idx.playersByLowerName.get) {
+        const ci = idx.playersByLowerName.get(String(name || '').toLowerCase());
+        if (ci) return ci;
+      }
+      return null;
     }
   }catch(e){}
   if (typeof players === 'undefined') return null;
-  return players.find(p => p.name === name) || null;
+  const lower = String(name || '').toLowerCase();
+  return players.find(p => p.name === name) || players.find(p => String(p.name || '').toLowerCase() === lower) || null;
 }
 
 function _getUniversities() {

@@ -200,7 +200,7 @@ function _mmBuildPool() {
     const name = String(p.name || '').trim();
     if (!name || seen.has(name)) return;
     seen.add(name);
-    pool.push({ name, photo: p.photo });
+    pool.push({ name, photo: p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '' });
   });
   return pool;
 }

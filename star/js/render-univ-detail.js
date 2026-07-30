@@ -9,7 +9,6 @@ function buildUnivDetailHTML(univName){
   const _logoSizeEff = _style?.logoSizeEff || 'var(--su_univ_logo_size_detail,46px)';
   const _hdrBg = _style?.hdrBg || `linear-gradient(135deg,${col},${col}cc)`;
   const _hdrBgLayer = _style?.hdrBgLayer || null;
-  const _layoutMode = _style?.layoutMode || 'default';
   const _univComputed = (typeof prepareUnivDetailComputedData==='function')
     ? prepareUnivDetailComputedData({ univName, members })
     : null;
@@ -35,8 +34,7 @@ function buildUnivDetailHTML(univName){
         hdrBgLayer:_hdrBgLayer,
         isMobile:_isMobile,
         isTablet:_isTablet,
-        logoSizeEff:_logoSizeEff,
-        layoutMode:_layoutMode
+        logoSizeEff:_logoSizeEff
       })
     : '';
 
@@ -62,37 +60,7 @@ function buildUnivDetailHTML(univName){
     ? buildUnivAceCardsHTML({ members, col })
     : '';
 
-  let h='';
-  if(_layoutMode==='poster'){
-    h = `<div class="ud-layout ud-layout--poster">
-      <div class="ud-layout-top">${_secHeader}</div>
-      <div class="ud-layout-grid">
-        <div class="ud-layout-main">${_secMembers}${_secRecent}</div>
-        <div class="ud-layout-side">${_secOpp}${_secAce}</div>
-      </div>
-    </div>`;
-  }else if(_layoutMode==='split'){
-    h = `<div class="ud-layout ud-layout--split">
-      <div class="ud-split-left">${_secHeader}${_secOpp}${_secAce}</div>
-      <div class="ud-split-right">${_secMembers}${_secRecent}</div>
-    </div>`;
-  }else if(_layoutMode==='timeline'){
-    h = `<div class="ud-layout ud-layout--timeline">
-      <div class="ud-layout-top">${_secHeader}</div>
-      <div class="ud-layout-grid">
-        <div class="ud-layout-main">${_secRecent}</div>
-        <div class="ud-layout-side">${_secMembers}${_secOpp}${_secAce}</div>
-      </div>
-    </div>`;
-  }else if(_layoutMode==='board'){
-    h = `<div class="ud-layout ud-layout--board">
-      ${_secHeader}
-      <div class="ud-board-grid">${_secOpp}${_secAce}${_secRecent}</div>
-      ${_secMembers}
-    </div>`;
-  }else{
-    h = `${_secHeader}${_secMembers}${_secOpp}${_secRecent}${_secAce}`;
-  }
+  const h = `${_secHeader}${_secMembers}${_secOpp}${_secRecent}${_secAce}`;
 
   const _udMode = _style?.designMode || 'classic';
   const _udDecor = (typeof buildUnivDetailModeDecorHTML==='function') ? buildUnivDetailModeDecorHTML(_udMode) : '';
@@ -100,10 +68,10 @@ function buildUnivDetailHTML(univName){
     const _um = document.getElementById('univModal');
     if(_um){
       _um.setAttribute('data-ud-mode', _udMode);
-      _um.setAttribute('data-ud-layout', _layoutMode);
       _um.setAttribute('data-ud-univbg-enabled', _style?.modalBgVars ? '1' : '0');
       _um.setAttribute('data-ud-univbg-scope', _style?.bgScope || 'body');
       _um.setAttribute('data-ud-univbtn-enabled', (_style?.modalBgVars && _style?.univBtnEnabled) ? '1' : '0');
+      if(col) _um.style.setProperty('--ud-univ-col', String(col));
       const keys=['--su-pastel-bg1','--su-pastel-bg2','--su-pastel-card','--su-pastel-border','--su-pastel-accent1','--su-pastel-accent2','--su-pastel-accent3','--su-pastel-text1','--su-pastel-text2','--su-pastel-shadow','--su-pastel-glow'];
       const modalKeys=['--su-ud-modal-box-bg','--su-ud-modal-box-border','--su-ud-modal-title-bg','--su-ud-modal-body-bg','--su-ud-hero-bg','--su-ud-card-bg','--su-ud-card-border','--su-ud-card-btn-bg','--su-ud-card-btn-border','--su-ud-card-btn-text'];
       if(_udMode==='pastel' && _style?.pastelVars){
@@ -125,7 +93,7 @@ function buildUnivDetailHTML(univName){
       }
     }
   }catch(e){}
-  return `<div class="ud-premium-shell" data-ud-mode="${_udMode}" data-ud-layout="${_layoutMode}">${_udDecor}${h}</div>`;
+  return `<div class="ud-premium-shell" data-ud-mode="${_udMode}">${_udDecor}${h}</div>`;
 }
 
 try{
