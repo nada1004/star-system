@@ -76,6 +76,13 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   '제인':'제인스',
 };
 
+// NFC 정규화: 다른 앱(카톡/디스코드 등)에서 복사한 텍스트가 NFD(분해형)로 들어와
+// 설정 탭에 저장된 NFC(완성형) 약자와 겉보기엔 같아도 매칭 실패하는 것을 방지
+function _mapAliasNfc(s) {
+  s = String(s == null ? '' : s);
+  return s.normalize ? s.normalize('NFC') : s;
+}
+
 // 기본 약자 + 사용자 정의 약자를 합쳐 반환
 function getMapAlias() {
   const user = typeof userMapAlias !== 'undefined' ? userMapAlias : {};
@@ -88,21 +95,28 @@ function getMapAlias() {
       delete merged[k];
     }
   });
-  return merged;
+  // 키/값을 NFC로 정규화한 항목도 함께 넣어 반환 (원본 키도 유지해 하위호환)
+  const nfcDict = {};
+  Object.keys(merged).forEach(k => {
+    nfcDict[_mapAliasNfc(k)] = _mapAliasNfc(merged[k]);
+  });
+  return Object.assign({}, merged, nfcDict);
 }
 
 // 맵 이름 변환: exact alias → prefix 매칭(2자 이상) → 원본 반환
 function resolveMapName(alias) {
   if (!alias) return alias;
   const dict = getMapAlias();
+  const aliasNfc = _mapAliasNfc(alias).trim();
   if (dict[alias]) return dict[alias];
-  if (alias.length < 2) return alias;
+  if (dict[aliasNfc]) return dict[aliasNfc];
+  if (aliasNfc.length < 2) return alias;
   // 등록된 전체 맵 이름 중 prefix 일치
   const allFull = [...new Set(Object.values(dict))];
-  const pre = allFull.find(m => m.startsWith(alias));
+  const pre = allFull.find(m => _mapAliasNfc(m).startsWith(aliasNfc));
   if (pre) return pre;
   // 사용자가 직접 등록한 maps 배열에서도 prefix 매칭
-  const regPre = (typeof maps !== 'undefined' ? maps : []).find(m => m.startsWith(alias));
+  const regPre = (typeof maps !== 'undefined' ? maps : []).find(m => _mapAliasNfc(m).startsWith(aliasNfc));
   if (regPre) return regPre;
   return alias;
 }

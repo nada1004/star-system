@@ -536,6 +536,9 @@ function histAllHTML(){
   </div>`;
 
   // (UI/UX 개선) 타입/맵 필터를 접이식 패널로 압축. 접혀있을 때도 활성 필터 개수는 뱃지로 표시.
+  // (버그 수정) 상단 '필터 ▲/▼' 토글이 닫혀 있으면 이 버튼들 자체가 노출되지 않아야 함
+  const _enableSubFilterAll = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(!_enableSubFilterAll || window._histFilterOpen){
   if(window._histAllFilterPanelOpen===undefined) window._histAllFilterPanelOpen=false;
   const _activeFilterCnt=(window._recTypeFilter&&window._recTypeFilter!=='전체'?1:0)+(window._recMapFilter&&window._recMapFilter!=='전체'?1:0);
   h+=`<div style="margin-bottom:8px">
@@ -576,6 +579,7 @@ function histAllHTML(){
         <span id="hist-bulk-map-result" style="font-size:var(--fs-sm);color:var(--green)"></span>
       </div>`;
     }
+  }
   }
 
   if(!paged.length){
@@ -668,7 +672,7 @@ function histAllHTML(){
     //  - 진팀   + 개인승  : 살짝만 연하게
     //  - 진팀   + 개인패  : 기본 회색 처리(가장 진하게)
     const _sideOrderedParticipants=(side)=>{
-      if(isCK||isInd) return [];
+      if(isInd) return [];
       if(!m.sets||!Array.isArray(m.sets)) return [];
       const seen=new Set(); const out=[];
       m.sets.forEach(set=>{

@@ -46,7 +46,7 @@ function _refreshAliasList(){
 }
 
 function editMapAlias(key, newVal){
-  newVal=(newVal||'').trim();
+  newVal=(newVal||'').trim().normalize?.('NFC') ?? (newVal||'').trim();
   if(!newVal){alert('맵 이름을 입력하세요.');return;}
   if(key===newVal){alert('약자와 맵 이름이 같습니다.');return;}
   userMapAlias[key]=newVal;
@@ -55,8 +55,9 @@ function editMapAlias(key, newVal){
 }
 
 function addMapAlias(){
-  const key = (document.getElementById('alias-key')?.value || '').trim();
-  const val = (document.getElementById('alias-val')?.value || '').trim();
+  const _norm = (s) => { s=(s||'').trim(); return s.normalize ? s.normalize('NFC') : s; };
+  const key = _norm(document.getElementById('alias-key')?.value);
+  const val = _norm(document.getElementById('alias-val')?.value);
   const msg = document.getElementById('alias-msg');
   if(!key){ if(msg){msg.style.color='var(--red)';msg.textContent='약자를 입력하세요.';} return; }
   if(!val){ if(msg){msg.style.color='var(--red)';msg.textContent='맵을 선택하세요.';} return; }
