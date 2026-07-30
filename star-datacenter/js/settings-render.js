@@ -1296,7 +1296,7 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>`;
   })()}
   ${(()=>{ 
-    const lock = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+    const lock = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
     const enabled = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
     return _scfgD('uifilter','🔽 필터/하위메뉴') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">대전기록/통계/개인전/대학대전/대회/프로리그 등의 하위메뉴 표시 방식을 설정합니다.</div>

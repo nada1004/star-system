@@ -34,7 +34,7 @@ try{
   }
 }catch(e){}
 // histSub 초기값 'race' — constants.js var가 진실 공급원
-var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='race';
+var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='all';
 // WARNING fix: 암묵적 전역 방지 — 엄격 모드에서 접근 순서 문제 예방
 window.histSub = window.histSub || histSub;
 var miniType='mini'; // 'mini' | 'civil'

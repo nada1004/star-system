@@ -53,7 +53,6 @@
       { title:'📅 대전기록 하위탭', ctx:'history', items:[
         {id:'all', d:'전체 통합'},
         {id:'psearch', d:'스트리머별 검색'},
-        {id:'race', d:'종족 승률'},
         {id:'vs', d:'1:1 상대전적'},
         {id:'ind', d:'🎮 개인전'},
         {id:'gj', d:'⚔️ 끝장전'},
@@ -68,10 +67,7 @@
         {id:'procomp', d:'🏆 대회'},
         {id:'ext', d:'📎 외부'},
         {id:'ext2', d:'🌐 외부2'},
-        {id:'ext3', d:'🌐 외부3'},
-        {id:'univstat', d:'🏛️ 대학별 기록'},
-        {id:'univrank', d:'🏛️ 대학별 포인트'},
-        {id:'univcomp', d:'⚔️ 대학 전력 비교'}
+        {id:'ext3', d:'🌐 외부3'}
       ]},
       { title:'📅 대전기록 그룹 이름', ctx:'historyGroup', items:[
         {id:'종합', d:'종합'},
@@ -79,7 +75,6 @@
         {id:'팀경기', d:'팀경기'},
         {id:'대회', d:'대회'},
         {id:'프로리그', d:'프로리그'},
-        {id:'통계', d:'통계'},
         {id:'외부', d:'외부'}
       ]},
       { title:'🎮 개인전/대학대전 상단 하위탭', ctx:'mergedInd', items:[
@@ -176,12 +171,15 @@
         {id:'univmatrix', d:'🏛️ 대학 매트릭스'},
         {id:'univmatrix2', d:'🏛️ 대학 매트릭스+'},
         {id:'univwinbar', d:'📊 대학별 승률'},
+        {id:'univstat', d:'🏛️ 대학별 기록'},
+        {id:'univrank', d:'🏛️ 대학별 포인트'},
         {id:'period', d:'🗓️ 주간/월간 분석'},
         {id:'mismatch', d:'⚡ 미스매치'},
         {id:'heatmap', d:'📅 활동 히트맵'},
         {id:'tierwin', d:'🎯 티어별 승률(개인)'},
         {id:'tiermatch', d:'🎖️ 티어별 승률(팀전)'},
         {id:'maprank', d:'🗺️ 맵별 특화'},
+        {id:'race', d:'⚔️ 종족 승률'},
         {id:'racetrend', d:'🔬 종족 트렌드'},
         {id:'seasonal', d:'📅 요일/시즌 승률'},
         {id:'psearch', d:'🔍 스트리머 검색'},

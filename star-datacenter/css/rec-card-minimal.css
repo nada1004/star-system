@@ -136,7 +136,7 @@ body.dark .hist-all-minicard:hover{
 }
 .hist-all-mc-mid{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:space-between;
   gap:4px;
   min-width:0;

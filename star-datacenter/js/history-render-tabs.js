@@ -1,7 +1,7 @@
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
   if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
   if(_lockOpen) window._histFilterOpen = true;
 
@@ -18,7 +18,6 @@ function rHist(C,T){
   const tabDefs=[
     {id:'all',      grp:'종합',   lbl:'전체 통합'},
     {id:'psearch',  grp:'종합',   lbl:'스트리머별 검색'},
-    {id:'race',     grp:'종합',   lbl:'종족 승률'},
     {id:'vs',       grp:'종합',   lbl:'1:1 상대전적'},
     {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
     {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전'},
@@ -34,9 +33,6 @@ function rHist(C,T){
     // (요청사항) 대전기록 > 프로리그 하위에 "대회" 탭이 있고,
     // 그 아래 하위메뉴에서 조별리그/토너먼트/팀전/중장전 기록을 선택
     {id:'procomp',    grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 대회'},
-    {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
-    {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
-    {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
   // (탭 라벨 설정) 표시 이름만 설정에서 교체 가능
   try{
@@ -71,7 +67,7 @@ function rHist(C,T){
     histSub='procomp';
     try{ openDetails={}; }catch(e){}
   }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   const _histBulkKeyTop = (()=>{
     if(!isLoggedIn) return '';
     if(histSub==='mini' || histSub==='civil' || histSub==='univm' || histSub==='ck' || histSub==='pro') return histSub;
@@ -156,26 +152,6 @@ function rHist(C,T){
     // 두 선수 이미 선택된 경우 결과 즉시 렌더
     if(typeof vsNameA!=='undefined' && typeof vsNameB!=='undefined' && vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
     renderUnivVsResult();
-    return;
-  }
-  if(histSub==='race'){
-    if(typeof raceSummaryHTML==='function'){
-      h+=raceSummaryHTML();
-      C.innerHTML=h;
-      return;
-    }
-    rRace(C,T);
-    return;
-  }
-  if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h;return;}
-  if(histSub==='univcomp'){try{h+=histUnivCompHTML();}catch(e){h+=`<div style="padding:20px;color:red;font-size:var(--fs-sm)">⚠️ 오류: ${e.message}</div>`;console.error('histUnivCompHTML error:',e);}C.innerHTML=h;return;}
-  if(histSub==='univrank'){
-    if(typeof rUnivBodyHTML==='function'){
-      h+=rUnivBodyHTML();
-      C.innerHTML=h;
-      return;
-    }
-    rUniv(C,T);
     return;
   }
   if(histSub==='ext'){
@@ -560,7 +536,7 @@ function histAllHTML(){
   </div>`;
 
   // (UI/UX 개선) 타입/맵 필터를 접이식 패널로 압축. 접혀있을 때도 활성 필터 개수는 뱃지로 표시.
-  if(window._histAllFilterPanelOpen===undefined) window._histAllFilterPanelOpen=true;
+  if(window._histAllFilterPanelOpen===undefined) window._histAllFilterPanelOpen=false;
   const _activeFilterCnt=(window._recTypeFilter&&window._recTypeFilter!=='전체'?1:0)+(window._recMapFilter&&window._recMapFilter!=='전체'?1:0);
   h+=`<div style="margin-bottom:8px">
     <button class="pill ${window._histAllFilterPanelOpen?'on':''}" onclick="window._histAllFilterPanelOpen=!window._histAllFilterPanelOpen;render()">🔍 타입/맵 필터${_activeFilterCnt?` <span style="font-size:10px;opacity:.8">(${_activeFilterCnt})</span>`:''} ${window._histAllFilterPanelOpen?'▲':'▼'}</button>
