@@ -647,8 +647,8 @@ function histAllHTML(){
       const _rIcon={'테란':'🔵','저그':'🟣','프로토스':'🟡'};
       _raceA=_wp?(_rIcon[_wp.race]||''):''; _raceB=_lp?(_rIcon[_lp.race]||''):'';
       if(typeof getPlayerPhotoHTML==='function'){
-        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'22px','border:none;',{lazy:true});
-        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'22px','border:none;',{lazy:true});
+        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'44px','border:none;',{lazy:true});
+        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'44px','border:none;',{lazy:true});
       }
     } else if(!isCK){
       // (UI/UX 개선) 대학 대 대학 매치는 선수 얼굴 대신 대학 로고를 카드 양끝 썸네일로 사용
