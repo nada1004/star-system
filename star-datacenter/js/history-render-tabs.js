@@ -607,17 +607,21 @@ function histAllHTML(){
     return h;
   }
 
-  // (UI/UX 개선) 같은 날짜끼리 구분선으로 묶어 하루 단위로 훑어볼 수 있게 함
+  // (UI/UX 개선) 긴 가로 막대형 대신 신용카드 비율의 미니 카드를 그리드로 배치.
+  // 같은 날짜끼리는 구분선으로 묶어 하루 단위 그리드로 나눔 (날짜 바뀔 때 그리드 새로 오픈)
   let _histAllLastD=null;
+  let _histAllGridOpen=false;
   paged.forEach(({type,d,m,idx,_ref}, pageIdx)=>{
     if(d!==_histAllLastD){
+      if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
       _histAllLastD=d;
       const _dvLabel=d?d.slice(2).replace(/-/g,'/'):'날짜 미정';
-      h+=`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px;${pageIdx===0?'margin-top:0;':''}">
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;${pageIdx===0?'margin-top:0;':''}">
         <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">${_dvLabel}</span>
         <span style="flex:1;height:1px;background:var(--border)"></span>
       </div>`;
     }
+    if(!_histAllGridOpen){ h+='<div class="hist-all-cardgrid">'; _histAllGridOpen=true; }
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
     const isCK=(type==='ck'||type==='pro');
     const isInd=(type==='ind'||type==='gj'||type==='procomp');
@@ -655,51 +659,127 @@ function histAllHTML(){
     const _detM = _ref ? {...m, _editRef:_ref} : m;
     const _isIndLike = (type==='ind'||type==='gj'||type==='procomp');
     let dotA=ca, dotB=cb;
+    let _raceA='', _raceB='';
+    let _thumbA='', _thumbB='';
     if(_isIndLike){
       const _wp=players.find(p=>p.name===(m.wName||teamA||'')); const _lp=players.find(p=>p.name===(m.lName||teamB||''));
       dotA=_wp?gc(_wp.univ):'#94a3b8'; dotB=_lp?gc(_lp.univ):'#94a3b8';
+      const _rIcon={'테란':'🔵','저그':'🟣','프로토스':'🟡'};
+      _raceA=_wp?(_rIcon[_wp.race]||''):''; _raceB=_lp?(_rIcon[_lp.race]||''):'';
+      if(typeof getPlayerPhotoHTML==='function'){
+        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'22px','border:none;',{lazy:true});
+        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'22px','border:none;',{lazy:true});
+      }
+    } else if(!isCK){
+      // (UI/UX 개선) 대학 대 대학 매치는 선수 얼굴 대신 대학 로고를 카드 양끝 썸네일로 사용
+      const _univLogoHTML=(n,side)=>{
+        try{
+          const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
+          if(!url) return '';
+          const _src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+          const _won=side==='a'?aWin:bWin;
+          const _filt=_won?'none':'grayscale(0.7) opacity(0.8)';
+          const _nAttr=String(n).replace(/"/g,'&quot;');
+          return `<img src="${_src}" loading="lazy" title="${_nAttr}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:${_filt}" onerror="this.style.display='none'">`;
+        }catch(e){ return ''; }
+      };
+      _thumbA=_univLogoHTML(teamA,'a'); _thumbB=_univLogoHTML(teamB,'b');
     }
-    const _rgbStr=(function(){const hx=String(ti.col||'').replace('#','');if(hx.length!==6)return'100,116,139';return parseInt(hx.slice(0,2),16)+','+parseInt(hx.slice(2,4),16)+','+parseInt(hx.slice(4,6),16);})();
-    // (UI/UX 개선) 참여자 보기 버튼 마크업 (CK/프로리그, 팀원 정보 있을 때만)
+    // (UI/UX 개선) 대학 대 대학 매치: 세트/게임 기록에서 실제 출전한 선수를 게임 순서대로 모아
+    // 로고 아래에 프로필 사진 1장을 슬라이드쇼처럼 순환 표시. 팀 승패 × 개인 승패 조합으로 명암 처리:
+    //  - 이긴팀 + 개인승  : 정상(효과 없음)
+    //  - 이긴팀 + 개인패  : 아주 약하게만 회색 처리
+    //  - 진팀   + 개인승  : 살짝만 연하게
+    //  - 진팀   + 개인패  : 기본 회색 처리(가장 진하게)
+    const _sideOrderedParticipants=(side)=>{
+      if(isCK||isInd) return [];
+      if(!m.sets||!Array.isArray(m.sets)) return [];
+      const seen=new Set(); const out=[];
+      m.sets.forEach(set=>{
+        (set.games||[]).forEach(g=>{
+          const n=side==='a'?g.playerA:g.playerB;
+          if(!n||seen.has(n)) return;
+          seen.add(n);
+          const _won=(side==='a')?(g.winner==='A'):(g.winner==='B');
+          out.push({name:n,won:_won});
+        });
+      });
+      return out;
+    };
+    const _individualFilter=(playerWon,teamWon)=>{
+      if(teamWon&&playerWon) return '';
+      if(teamWon&&!playerWon) return 'grayscale(0.35) opacity(0.9)';
+      if(!teamWon&&playerWon) return 'grayscale(0.55) opacity(0.85)';
+      return 'grayscale(1) opacity(0.55)';
+    };
+    const _participantsHTML=(side)=>{
+      const list=_sideOrderedParticipants(side);
+      if(!list.length || typeof getPlayerPhotoHTML!=='function') return '';
+      const teamWon=(side==='a')?aWin:bWin;
+      const N=list.length;
+      const animName=`rspRot_${key}_${side}`.replace(/[^\w]/g,'_');
+      const DUR=Math.max(2.4, N*2.4);
+      const frames=list.map((p,i)=>{
+        const raw=getPlayerPhotoHTML(p.name,'46px','border:none;display:block;',{lazy:true});
+        const filt=_individualFilter(p.won,teamWon);
+        const animStyle=N>1?`animation:${animName}_${i} ${DUR}s linear infinite;`:'opacity:1;';
+        return `<span class="hist-all-mc-avatar-frame" style="${animStyle}filter:${filt||'none'}">${raw}</span>`;
+      }).join('');
+      const styleTag=N>1?`<style>${list.map((p,i)=>{
+        const start=(i/N*100), end=((i+1)/N*100);
+        const fadeGap=Math.min(1.2,(end-start)*0.12);
+        return `@keyframes ${animName}_${i}{${start.toFixed(2)}%{opacity:0}${(start+fadeGap).toFixed(2)}%{opacity:1}${(end-fadeGap).toFixed(2)}%{opacity:1}${end.toFixed(2)}%{opacity:0}}`;
+      }).join('')}</style>`:'';
+      return `${styleTag}<div class="hist-all-mc-participants">${frames}</div>`;
+    };
+    // (UI/UX 개선) 참여자 보기 버튼 마크업 (CK/프로리그, 팀원 정보 있을 때만) — 카드 하단용 축소 버전
     const _memBtn=(side,members)=>{
       if(!isCK || !members || !members.length) return '';
       const col=side==='a'?ca:cb;
       const lbl=side==='a'?teamA:teamB;
       const memJson=JSON.stringify(members).replace(/"/g,"'");
-      return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:2px 9px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:10px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥 ${members.length}명</button>`;
+      return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:1px 7px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:9px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥${members.length}</button>`;
     };
-    h+=`<div class="rec-summary rec-mode-tierrank hist-all-card${_recSideFxClass(mode)}" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${_rgbStr};${_recSideFxStyle(mode,ca,cb)}background:linear-gradient(120deg, rgba(${_rgbStr},.09) 0%, var(--white) 42%);border-left:3px solid ${ti.col}">
-      <div class="rec-sum-header hist-all-header" style="gap:8px">
-        <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;min-width:70px">
-          <span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:${ti.col}1f;color:${ti.col};border:1px solid ${ti.col}33;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;width:fit-content">${ti.lbl}${m._src==='tour_normal'?` <span style="background:#6366f1;color:#fff;padding:0 4px;border-radius:3px">일반경기</span>`:m._src==='tour_bracket'||m._src==='tour_manual'?` <span style="background:#1e3a8a;color:#fff;padding:0 4px;border-radius:3px">토너먼트</span>`:m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
-          <span style="font-size:var(--fs-caption);font-weight:700;color:${dColor};white-space:nowrap;display:inline-flex;align-items:center;gap:3px">${dLabel}</span>
-        </div>
-        <div class="hist-all-side" style="display:flex;align-items:center;gap:6px;flex:1;min-width:60px;overflow:hidden">
-          <span style="width:7px;height:7px;border-radius:50%;background:${dotA};flex-shrink:0;box-shadow:0 0 0 2px ${dotA}22"></span>
-          <span class="hist-all-name" style="font-weight:800;font-size:var(--fs-base);color:${winner===teamA?'var(--win-col)':winner===teamB?'var(--lose-col)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
-          ${_memBtn('a',aMembers)}
+    const _extraTag = m._src==='tour_normal'?'일반경기':(m._src==='tour_bracket'||m._src==='tour_manual')?'토너먼트':(m._teamMatchType?m._teamMatchType.replace('v',':')+'전':'');
+    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp');
+    const _editBtn = (()=>{
+      if(!_canEdit) return '';
+      if(type==='ind'||type==='gj'||type==='progj'){
+        const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
+        return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
+      }
+      return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
+    })();
+    const _bottomContent = (_memBtn('a',aMembers)||_memBtn('b',bMembers))
+      ? `${_memBtn('a',aMembers)}${_memBtn('b',bMembers)}`
+      : (_extraTag ? `<span class="hist-all-mc-map">${_extraTag}</span>`
+        : (m.map&&m.map!=='-' ? `<span class="hist-all-mc-map">${m.map}</span>` : ''));
+    const _teamAAttr=String(teamA).replace(/"/g,'&quot;');
+    const _teamBAttr=String(teamB).replace(/"/g,'&quot;');
+    h+=`<div class="hist-all-minicard" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};border-left-color:${dotA};border-right-color:${dotB};background:linear-gradient(90deg, ${dotA}26 0%, ${dotA}0d 14%, var(--white) 28%, var(--white) 72%, ${dotB}0d 86%, ${dotB}26 100%)" onclick="toggleDetail('${key}')">
+      <div class="hist-all-mc-top">
+        <span class="hist-all-mc-type" style="background:${ti.col}1f;color:${ti.col}">${ti.lbl}</span>
+        <span class="hist-all-mc-date" style="color:${dColor}">${dLabel}</span>
+        ${_editBtn}
+      </div>
+      <div class="hist-all-mc-mid">
+        <div class="hist-all-mc-side">
+          ${_thumbA || `<span class="hist-all-mc-dot" style="background:${dotA}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamAAttr}" style="color:${(!isCK&&!_isIndLike)?dotA:(winner===teamA?'var(--win-col)':winner===teamB?'var(--lose-col)':'var(--text)')}">${_raceA?`${_raceA} `:''}${teamA}</span>
+          ${_participantsHTML('a')}
         </div>
         ${isInd
-          ?`<span style="font-size:var(--fs-caption);font-weight:800;padding:3px 11px;border-radius:20px;background:linear-gradient(135deg,#fee2e2,#fecaca55);color:var(--win-col);border:1px solid #fecaca;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 6px rgba(220,38,38,.12)" onclick="toggleDetail('${key}')">승</span>`
-          :`<div class="rec-sum-score score-click" style="font-size:16px;padding:4px 13px;border-radius:20px;background:var(--surface);border:1px solid var(--border)" onclick="toggleDetail('${key}')">
-            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span>
-            <span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:400">:</span>
-            <span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
-          </div>`}
-        <div class="hist-all-side" style="display:flex;align-items:center;gap:6px;flex:1;min-width:60px;overflow:hidden;justify-content:flex-end">
-          ${_memBtn('b',bMembers)}
-          <span class="hist-all-name" style="font-weight:800;font-size:var(--fs-base);color:${winner===teamB?'var(--win-col)':winner===teamA?'var(--lose-col)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamB}</span>
-          <span style="width:7px;height:7px;border-radius:50%;background:${dotB};flex-shrink:0;box-shadow:0 0 0 2px ${dotB}22"></span>
+          ?`<span class="hist-all-mc-score" style="color:var(--win-col)">승</span>`
+          :`<span class="hist-all-mc-score">
+            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
+          </span>`}
+        <div class="hist-all-mc-side right">
+          ${_thumbB || `<span class="hist-all-mc-dot" style="background:${dotB}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamBAttr}" style="color:${(!isCK&&!_isIndLike)?dotB:(winner===teamB?'var(--win-col)':winner===teamA?'var(--lose-col)':'var(--text)')}">${teamB}${_raceB?` ${_raceB}`:''}</span>
+          ${_participantsHTML('b')}
         </div>
-        ${(()=>{
-          if(!(typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp')) return '';
-          if(type==='ind'||type==='gj'||type==='progj'){
-            const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
-            return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:var(--fs-caption)" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
-          }
-          return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:var(--fs-caption)" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
-        })()}
       </div>
+      <div class="hist-all-mc-bottom">${_bottomContent}</div>
       <div id="det-${key}" class="rec-detail-area">
         ${isInd
           ? (()=> {
@@ -717,6 +797,7 @@ function histAllHTML(){
       </div>
     </div>`;
   });
+  if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
 
   // (UI/UX 개선) prev/next 대신 "더보기"로 이어붙이는 피드형 로딩. 여러 페이지를 불러온 뒤엔 "처음으로"도 제공.
   if(_mapFiltered.length>pageSize){
