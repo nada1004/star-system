@@ -450,8 +450,6 @@ function _b2WeeklyBriefingView() {
       : `활동 ${activePlayers.length}명`;
     const _heroCompareText = `${_briefingInfo.prevLabel} ${fmtDate(prevDateFrom)} ~ ${fmtDate(prevDateTo)}`;
 
-    const css = _b2BriefingCSS();
-    _b2EnsureStyleTag('b2w2-style', css);
     let h = '';
 
     const _totalGames = curStats.gameCount || 0;

@@ -487,7 +487,10 @@ async function _ensureGlobalSearchReady(){
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report.js?v=20260725-styles11');
+  await _loadScriptOnce('js/stats-player-report-data.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
     return typeof window.onGlobalSearch === 'function' && window.onGlobalSearch !== _lazyOnGlobalSearch;
   }catch(e){
     console.error('[lazy] global search load fail', e);

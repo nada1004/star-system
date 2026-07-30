@@ -137,7 +137,10 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report.js?v=20260725-styles11');
+  await _loadScriptOnce('js/stats-player-report-data.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
@@ -170,7 +173,10 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report.js?v=20260725-styles11');
+  await _loadScriptOnce('js/stats-player-report-data.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260717-ds03');
@@ -234,7 +240,11 @@ async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
   await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
-  await _loadScriptOnce('js/settings-base.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-base-core.js?v=20260730-split4');
+  await _loadScriptOnce('js/settings-b2img.js?v=20260730-split4');
+  await _loadScriptOnce('js/settings-cfg-menu.js?v=20260730-split4');
+  await _loadScriptOnce('js/settings-color-utils.js?v=20260730-split4');
+  await _loadScriptOnce('js/settings-h2h-bgpos.js?v=20260730-split4');
   await _loadScriptOnce('js/settings-presets.js?v=20260717-ds01');
   await _loadScriptOnce('js/settings-femco-cfg.js?v=20260717-ds01');
   await _loadScriptOnce('js/settings-cfg-modal.js?v=20260717-ds01');

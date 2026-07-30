@@ -40,7 +40,10 @@ const DIST = path.join(__dirname, 'dist');
 const CORE_FILES = [
   'js/config.js',
   'js/match-store-idb.js',
-  'js/constants.js',
+  'js/constants-core.js',
+  'js/constants-ui-vars.js',
+  'js/constants-tier-theme.js',
+  'js/constants-state.js',
   'js/constants-save.js',
   'js/constants-game.js',
   'js/constants-tab-colors.js',
@@ -67,7 +70,11 @@ const CORE_FILES = [
   'js/tier-tour-misc.js',
   'js/settings/font-controls.js',
   'js/settings/ui-scale-controls.js',
-  'js/settings-base.js',
+  'js/settings-base-core.js',
+  'js/settings-b2img.js',
+  'js/settings-cfg-menu.js',
+  'js/settings-color-utils.js',
+  'js/settings-h2h-bgpos.js',
   'js/settings-presets.js',
   'js/settings-femco-cfg.js',
   'js/settings-cfg-modal.js',
@@ -82,7 +89,11 @@ const CORE_FILES = [
   'js/settings-render-sec4.js',
   'js/settings-render.js',
   'js/settings-data-ops.js',
-  'js/settings-crud.js',
+  'js/settings-crud-add.js',
+  'js/settings-crud-editmodal.js',
+  'js/settings-crud-save.js',
+  'js/settings-crud-photopos.js',
+  'js/settings-crud-recedit.js',
   'js/settings-crud-univ.js',
   'js/settings-map-status.js',
   'js/settings-profile-ui.js',
@@ -145,7 +156,10 @@ const MATCH_FILES = [
   'js/history-render-tabs.js',
   'js/history-rec-summary.js',
   'js/history-match-index.js',
-  'js/history-search.js',
+  'js/history-psearch.js',
+  'js/history-record-list.js',
+  'js/history-detail-modal.js',
+  'js/history-procomp-tab.js',
   'js/match.js',
   'js/match-builder.js',
   'js/match-builder-core-tabs.js',
@@ -178,7 +192,11 @@ const SEARCH_FILES = [
 
 /** 프로대회 번들 */
 const PROCOMP_FILES = [
-  'js/pro-comp-core.js',
+  'js/pro-comp-sync.js',
+  'js/pro-comp-league.js',
+  'js/pro-comp-team.js',
+  'js/pro-comp-bracket.js',
+  'js/pro-comp-stage-merge.js',
   'js/pro-comp-edit-stage.js',
   'js/pro-comp-edit-bracket.js',
   'js/pro-comp-edit-paste.js',
@@ -205,7 +223,6 @@ const BOARD_FILES = [
   'js/board2-analytics.js',
   'js/board2-heatmap-bubble.js',
   'js/board2-briefing-data.js',
-  'js/board2-briefing-css.js',
   'js/board2-briefing.js',
 ];
 
@@ -244,7 +261,10 @@ const LAZY_CHUNKS = {
     'js/stats-search.js',
     'js/stats-overview-elo.js',
     'js/stats-sharecard.js',
-    'js/stats-player-report.js',
+    'js/stats-player-report-data.js',
+    'js/stats-player-report-sections.js',
+    'js/stats-player-report-entry.js',
+    'js/stats-player-report-canvas.js',
   ],
   'lazy-roulette.js': [
     'js/wheel.js',
@@ -301,6 +321,7 @@ const CSS_FILES = [
   'css/univ-detail-design-modes.css',
   'css/match-detail-design-modes.css',
   'css/rec-card-minimal.css',
+  'css/board2-briefing.css',
 ];
 
 
