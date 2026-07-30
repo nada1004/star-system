@@ -346,7 +346,7 @@
         const repUnivColor = logoUniv && typeof window.gc==='function' ? (window.gc(logoUniv) || col) : col;
         const baseGray = Math.round((scp.loserGray||.55)*100);
         const grayWinTeamLose = Math.max(10, Math.round(baseGray*0.40));   // 이긴 팀에서 개인 패배 (약한 회색)
-        const grayLoseTeamWin = Math.max(14, Math.round(baseGray*0.55));   // 진 팀에서 개인 승리 (약한 회색, 밝기 다르게)
+        const grayLoseTeamWin = Math.max(1, Math.round(baseGray*0.05));   // 진 팀에서 개인 승리 (거의 티 안 나는 회색)
         const grayLoseTeamLose = baseGray;                                 // 진 팀에서 개인 패배 (강한 회색)
         const bHero = (scp.heroBrightness||1);
         const bLose = (scp.loserPhotoBrightness||.92);
@@ -358,7 +358,7 @@
           // 4) 팀패 + 개인패: 강한 회색 + 패배 밝기
           if(overallTeamWin && isWin) return `brightness(${bHero})`;
           if(overallTeamWin && !isWin) return `grayscale(${grayWinTeamLose}%) brightness(${Math.max(.86, Math.min(1.05, bLose+0.02))})`;
-          if(!overallTeamWin && isWin) return `grayscale(${grayLoseTeamWin}%) brightness(${Math.max(.90, Math.min(1.08, bHero-0.02))})`;
+          if(!overallTeamWin && isWin) return `grayscale(${grayLoseTeamWin}%) brightness(${Math.max(1.00, Math.min(1.12, bHero+0.04))})`;
           return `grayscale(${grayLoseTeamLose}%) brightness(${bLose})`;
         };
         const repLogoTone = isWin ? '' : 'filter:grayscale(1) brightness(.82) contrast(.9);opacity:.82;';
@@ -367,7 +367,9 @@
         const remainCount = Math.max(0, memberNames.filter(n=>n!==repName).length);
         const opp = String(rep && rep.__opponent || '').trim();
         const repSummary = repName
-          ? (rep && rep.__fromGameFrame ? `${repName}${opp?` vs ${opp}`:''}` : `${repName}${remainCount>0?` 외 ${remainCount}명`:''}`)
+          ? (rep && rep.__fromGameFrame
+              ? `<span style="font-weight:900">${escName(repName)}</span>${opp?` <span style="opacity:.68;font-weight:700"> vs ${escName(opp)}</span>`:''}`
+              : `${escName(repName)}${remainCount>0?` 외 ${remainCount}명`:''}`)
           : (memberNames.length?`참가자 ${memberNames.length}명`:'');
         const showRepSummary = !['procomp-team','procomp-bkt'].includes(matchType);
         const _posterImgStyle=`width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${_filterByState()}`;
@@ -377,7 +379,7 @@
               ? `<span class="ph-swap" style="position:absolute;inset:0;display:block">${`<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="position:absolute;inset:0;${_posterImgStyle}">`}${_posterSecondHtml}</span>`
               : `<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="${_posterImgStyle}">`)
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));"><span style="font-size:74px;font-weight:1000;color:#fff">${title.slice(0,1)}</span></div>`;
-        const titleColor = hideTopUnivMeta ? (isWin ? '#ffffff' : 'rgba(226,232,240,.78)') : (isWin ? repUnivColor : 'rgba(203,213,225,.78)');
+        const titleColor = isWin ? repUnivColor : (hideTopUnivMeta ? 'rgba(226,232,240,.78)' : 'rgba(203,213,225,.78)');
         const titleLong = title.length >= 7;
         const logoBox = isWin ? (titleLong?56:52) : (titleLong?29:27);
         const logoSize = isWin ? (titleLong?'52px':'48px') : (titleLong?'27px':'23px');
@@ -387,7 +389,7 @@
         const logoTitleGap = 0;
         return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'248px':'201px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 20px rgba(2,6,23,.10);transform:translateY(${isWin?'-3':'2'}px) scale(${isWin?'1.043':'.971'});transform-origin:center center">
           ${media}
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,.05),rgba(15,23,42,.10) 24%,rgba(15,23,42,.42));pointer-events:none"></div>
+          <div style="position:absolute;inset:0;background:${isWin?'linear-gradient(180deg,rgba(2,6,23,.02),rgba(15,23,42,.05) 24%,rgba(15,23,42,.24))':'linear-gradient(180deg,rgba(2,6,23,.05),rgba(15,23,42,.10) 24%,rgba(15,23,42,.42))'};pointer-events:none"></div>
           <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:4px">
             <div class="share-poster-name" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${titleStack?logoTitleGap:4}px;min-width:0;font-size:${Math.round((isWin?'28':'20')*(scp.titleScale||1))}px;font-weight:${isWin?1000:900};color:${titleColor};line-height:1.05;text-shadow:0 5px 18px rgba(0,0,0,.54),0 1px 0 rgba(0,0,0,.22);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${titleStack?`<span style="display:inline-flex;align-items:flex-end;justify-content:center;width:${logoBox}px;height:${logoBox}px;flex-shrink:0;background:transparent;border:none;box-shadow:none;line-height:1;${repLogoTone}">${logoMarkup}</span>`:''}<span style="min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${title}</span></div>
             ${showRepSummary&&repSummary?`<div class="share-poster-summary" style="font-size:${isWin?12:11}px;font-weight:800;color:${summaryColor};line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.22)">${repSummary}</div>`:''}

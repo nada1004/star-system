@@ -67,18 +67,18 @@
   }
 
   function _getLoseTeamWinOpacity(){
-    try{ return Math.max(0.1, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80')||0.80)); }
-    catch(e){ return 0.80; }
+    try{ return Math.max(0.1, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.98')||0.98)); }
+    catch(e){ return 0.98; }
   }
 
   function _getLoseTeamWinGray(){
-    try{ return Math.max(0, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15')||0.15)); }
-    catch(e){ return 0.15; }
+    try{ return Math.max(0, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.03')||0.03)); }
+    catch(e){ return 0.03; }
   }
 
   function _getLoseTeamWinBrightness(){
-    try{ return Math.max(0.5, Math.min(1.8, parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0')||1.0)); }
-    catch(e){ return 1.0; }
+    try{ return Math.max(0.5, Math.min(1.8, parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.08')||1.08)); }
+    catch(e){ return 1.08; }
   }
 
   function _getLoseTeamLoseOpacity(){
@@ -283,21 +283,21 @@
   function _buildImgBox(raw, sizePx, radius, shadow, filterStr, isWinTeam, playerWon, col, pName, isLeft){
     var isCircle = (radius==='50%'||radius==='999px'||radius==='9999px'||parseInt(radius,10)>=50);
 
-    // 팀 컬러 링
-    var ringSize  = (playerWon && isWinTeam) ? 3 : 1.5;
-    var ringColor = (playerWon && isWinTeam) ? col : 'rgba(148,163,184,0.25)';
+    // 팀 컬러 링 — 팀 전체 승패와 무관하게, 이 게임을 개인적으로 이겼으면 항상 강조
+    var ringSize  = playerWon ? 3 : 1.5;
+    var ringColor = playerWon ? col : 'rgba(148,163,184,0.25)';
 
     // 글로우 (팀 컬러 기반)
-    var glowBase = (playerWon && isWinTeam)
+    var glowBase = playerWon
       ? '0 4px 16px '+col+'55, 0 0 0 '+(ringSize+1)+'px '+col+'33'
       : shadow;
-    var glowPeak = (playerWon && isWinTeam)
+    var glowPeak = playerWon
       ? '0 6px 28px '+col+'88, 0 0 0 '+(ringSize+2)+'px '+col+'55'
       : '0 6px 20px rgba(0,0,0,.22)';
 
     // 이름 레이블 — textContent로 XSS 방지
-    var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';
-    var nameLblGlow  = (playerWon && isWinTeam) ? '0 0 8px '+col+'77' : 'none';
+    var nameLblColor = playerWon ? col : 'var(--gray-l)';
+    var nameLblGlow  = playerWon ? '0 0 8px '+col+'77' : 'none';
     var shortName = pName ? (pName.length>6 ? pName.slice(0,6)+'…' : pName) : '';
     var nameLbl = shortName
       ? '<div class="rsp-namelbl" style="color:'+nameLblColor+';text-shadow:'+nameLblGlow+';">'+shortName.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
@@ -324,10 +324,13 @@
       +'filter:'+filterStr+';'
       +'background:#e2e8f0;';
 
-    return '<div class="rsp-imgbox'+(playerWon&&isWinTeam?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
+    var winBadge = '';
+
+    return '<div class="rsp-imgbox'+(playerWon?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
       + '<div class="rsp-imginner" style="'+innerStyle+'">'
       + raw
       + '</div>'
+      + winBadge
       + '</div>'
       + nameLbl;
   }
