@@ -61,7 +61,8 @@ function _b2UnivView() {
     <span class="mode-select-trigger-caret">▾</span>
   </button>`;
   const statsBar = `<div style="margin-bottom:12px">
-    <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
+    <button type="button" class="pill ${window._b2UnivStatsBarOpen?'on':''}" style="width:100%;justify-content:center;padding:10px" onclick="window._b2UnivStatsBarOpen=!window._b2UnivStatsBarOpen;render()">🔍 필터/보기 ${window._b2UnivStatsBarOpen?'▲':'▼'}</button>
+    ${window._b2UnivStatsBarOpen?`<div style="margin-top:8px;padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
       <div class="b2-race-tier-row b2-stats-subrow">
         <span class="b2-section-label">⚔️ 종족 비중</span>
         ${_uvRaceBar||`<span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">집계 없음</span>`}
@@ -76,7 +77,7 @@ function _b2UnivView() {
         <div class="b2-seg-track">${_viewBtn}</div>
       </div>
       ${_univModeMobileTrigger}
-    </div>
+    </div>`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
   let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:var(--r);padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}.b2-univ-statsbar-grid{display:none!important;}}</style>`;

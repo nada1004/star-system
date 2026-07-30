@@ -335,6 +335,7 @@ function rStats(C,T){
     ]},
     {label:'🏛️ 대학',tabs:[
       {id:'radar',lbl:'🕸️ 대학 레이더'},
+      {id:'univcompare',lbl:'⚔️ 대학비교'},
       {id:'univmatrix',lbl:'🏛️ 대학 매트릭스'},
       {id:'univmatrix2',lbl:'🏛️ 대학 매트릭스+'},
       {id:'univwinbar',lbl:'📊 대학별 승률'},
@@ -535,6 +536,7 @@ function rStats(C,T){
   else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이달의 스트리머');
   else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
   else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '대학 레이더');
+  else if(window.statsSub==='univcompare') h+=_safeRender(statsUnivCompareHTML, '대학비교');
   else if(window.statsSub==='period') h+=_safeRender(()=>_cached('period', statsPeriodAnalysisHTML), '주간/월간 분석');
   else if(window.statsSub==='mismatch')h+=_safeRender(()=>_cached('mismatch', statsMismatchHTML), '미스매치');
   else if(window.statsSub==='heatmap')  h+=_safeRender(()=>_cached('heatmap', statsHeatmapHTML), '활동 히트맵');

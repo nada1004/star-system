@@ -517,12 +517,10 @@ function rBoard2(C, T) {
   const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑'));
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
-  const compareBtn = _b2TabBtn('compare','#ef4444', (typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교'));
   const rankingBtn = _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹'));
-  const radarBtn   = _b2TabBtn('radar',  '#a855f7', (typeof getTabLabel==='function'?getTabLabel('board2','radar',  '🕸️ 레이더'):'🕸️ 레이더'));
   const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
   const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
-  // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/레이더/요약/대학비교/구현황판)을
+  // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/요약/구현황판)을
   // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
   const _b2TabDefs = [
     {id:'weekly',  label:(typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')},
@@ -533,9 +531,7 @@ function rBoard2(C, T) {
     {id:'players', label:(typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel)},
     {id:'heatmap', label:(typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵')},
     {id:'bubble',  label:(typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵')},
-    {id:'radar',   label:(typeof getTabLabel==='function'?getTabLabel('board2','radar','🕸️ 레이더'):'🕸️ 레이더')},
     {id:'summary', label:(typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')},
-    {id:'compare', label:(typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교')},
   ];
   if(isLoggedIn) _b2TabDefs.push({id:'old', label:(typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')});
   window._b2TabPopoverItems = _b2TabDefs.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
@@ -614,9 +610,7 @@ function rBoard2(C, T) {
     ranking: { label:'랭킹', desc:'대학별 성과를 리더보드 형태로 정리해 비교가 쉽도록 구성합니다.' },
     heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
     bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
-    radar:   { label:'레이더', desc:'대학별 강점과 균형감을 다차원으로 비교해서 보여줍니다.' },
     summary: { label:'요약', desc:'핵심 숫자와 흐름만 모아 간결하게 확인할 수 있도록 구성합니다.' },
-    compare: { label:'대학비교', desc:'여러 대학 지표를 한 자리에서 비교하기 좋게 정리합니다.' },
     old:     { label:'구현황판', desc:'기존 현황판 레이아웃을 그대로 유지하면서 현재 데이터와 연결합니다.' }
   };
   const _curViewMeta = _heroViewMeta[_b2View] || { label:'현황판', desc:'여러 시각화와 카드형 화면으로 현황을 빠르게 탐색할 수 있습니다.' };
@@ -709,10 +703,8 @@ function rBoard2(C, T) {
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}
-        ${radarBtn}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${summaryBtn}
-        ${compareBtn}
         ${oldBtn}
           </div>
           ${_b2TabMobileTrigger}
@@ -766,7 +758,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','radar','compare','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -817,12 +809,6 @@ function rBoard2(C, T) {
       _b2InjectAndRunScripts(sub);
     } else if (_b2View === 'ranking') {
       sub.innerHTML = _b2RankingView();
-      injectUnivIcons && injectUnivIcons(sub);
-    } else if (_b2View === 'radar') {
-      sub.innerHTML = _b2RadarView();
-      _b2InjectAndRunScripts(sub);
-    } else if (_b2View === 'compare') {
-      sub.innerHTML = _b2CompareView();
       injectUnivIcons && injectUnivIcons(sub);
     } else if (_b2View === 'heatmap') {
       sub.innerHTML = _b2HeatmapView();

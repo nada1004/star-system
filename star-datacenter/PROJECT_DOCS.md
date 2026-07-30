@@ -741,3 +741,14 @@ _proPasteResults      프로리그 파싱 결과
 **조치**: `npm install`(esbuild) 후 `node build.mjs` 재실행 → `dist/js/lazy-stats.js`(30개 파일 병합, statsPlayerReportHTML 포함), `dist/js/lazy-chatbot.js`(formatPlayerAiAnalysis 포함) 등 전체 번들 재생성 완료.
 
 **중요 — 앞으로 매 패치마다 지켜야 할 것**: 이 프로젝트는 `js/*.js` 소스와 `dist/js/*` 번들이 분리되어 있고, 실서비스(`index.dist.html`)는 번들만 봄. 소스 js 파일을 수정한 뒤에는 반드시 `node build.mjs`로 dist를 재빌드해야 실제 사이트에 반영됩니다. (`index.html`로 직접 개발 테스트할 때는 소스 파일이 바로 적용되어 이 문제가 안 보임 — 그래서 그동안 놓치기 쉬웠음)
+
+### 2026-07-30 — 현황판 대학비교/레이더 정리: 레이더는 삭제(통계탭 중복), 대학비교는 통계탭으로 이동
+
+**요청**: 현황판탭(board2)의 대학비교/레이더를 통계탭으로 이동하고, 이미 통계탭에 있는 기능이면 삭제.
+
+- **레이더(🕸️)**: 통계탭에 이미 `대학 레이더`(statsRadarHTML, stats-overview-elo.js)가 동일 기능(비교선택 포함)으로 존재 → 완전 중복으로 판단해 현황판에서 `_b2RadarView()` 함수와 관련 탭/버튼을 모두 삭제(이동하지 않음).
+- **대학비교(⚔️)**: 통계탭에는 선수 단위 `스트리머 비교`만 있고 대학 단위 직접대결/티어·종족 비교는 없어 중복이 아니므로, 현황판의 `_b2CompareView()`를 `js/stats-overview-elo.js`의 `statsUnivCompareHTML()`로 그대로 이식하고 현황판에서는 삭제.
+  - 이식 과정에서 board2 전용 의존 함수를 통계탭 전용으로 독립 구현: `_b2HasRole` → `_statsCvHasRole`, `_b2NameTag` → `_statsCvNameTag`(getPlayerPhotoHTML/openPlayerModal 재사용), `_b2VisUnivs()` → `getAllUnivs()`. 전역 변수도 `_b2CompareA/B` → `_statsCompareA/B`로 분리해 현황판 청크가 로드되지 않은 상태(통계탭 단독 진입)에서도 오류 없이 동작하도록 함.
+  - select onchange 시 기존 `document.getElementById('b2-content').innerHTML=...` 방식 대신 통계탭 표준 패턴인 `render()` 재호출로 변경.
+- **수정 파일**: `js/board2-core.js`(버튼/탭정의/dispatch 제거), `js/board2-analytics.js`(`_b2RadarView`, `_b2CompareView` 함수 삭제), `js/stats-overview-elo.js`(`statsUnivCompareHTML` 신규), `js/stats-core.js`(🏛️ 대학 그룹에 `⚔️ 대학비교` 서브탭 추가 및 라우터 연결), `js/settings/tabs.js`(하위탭 라벨 목록 정리)
+- `node build.mjs` 재빌드 완료 (dist/js/chunk-board.js에서 관련 함수 완전 제거 확인, dist/js/lazy-stats.js에 statsUnivCompareHTML 포함 확인)

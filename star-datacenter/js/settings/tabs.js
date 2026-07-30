@@ -45,9 +45,7 @@
         {id:'heatmap', d:'🗺️ 히트맵'},
         {id:'bubble', d:'🌐 버블맵'},
         {id:'ranking', d:'🥇 랭킹'},
-        {id:'radar', d:'🕸️ 레이더'},
         {id:'summary', d:'📊 요약'},
-        {id:'compare', d:'⚔️ 대학비교'},
         {id:'old', d:'📊 구현황판'}
       ]},
       { title:'📅 대전기록 하위탭', ctx:'history', items:[
@@ -168,6 +166,7 @@
         {id:'streakhist', d:'🔥 역대 연속 기록'},
         {id:'playervs', d:'⚔️ 스트리머 비교'},
         {id:'radar', d:'🕸️ 대학 레이더'},
+        {id:'univcompare', d:'⚔️ 대학비교'},
         {id:'univmatrix', d:'🏛️ 대학 매트릭스'},
         {id:'univmatrix2', d:'🏛️ 대학 매트릭스+'},
         {id:'univwinbar', d:'📊 대학별 승률'},
