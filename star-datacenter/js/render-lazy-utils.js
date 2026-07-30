@@ -240,6 +240,10 @@ async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings-cfg-modal.js?v=20260717-ds01');
   await _loadScriptOnce('js/settings-cfg-apply.js?v=20260717-ds03');
   await _loadScriptOnce('js/settings-cfg-misc.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-render-sec1.js?v=20260730-split1');
+  await _loadScriptOnce('js/settings-render-sec2.js?v=20260730-split1');
+  await _loadScriptOnce('js/settings-render-sec3.js?v=20260730-split1');
+  await _loadScriptOnce('js/settings-render-sec4.js?v=20260730-split1');
   await _loadScriptOnce('js/settings-render.js?v=20260717-ds03');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
