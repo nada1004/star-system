@@ -700,6 +700,7 @@ function rBoard2(C, T) {
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
         ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
+        ${_b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브'))}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}
@@ -758,7 +759,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','live','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -816,6 +817,9 @@ function rBoard2(C, T) {
     } else if (_b2View === 'bubble') {
       sub.innerHTML = _b2BubbleView();
       _b2InjectAndRunScripts(sub);
+    } else if (_b2View === 'live') {
+      sub.innerHTML = _b2LiveView();
+      injectUnivIcons && injectUnivIcons(sub);
     } else if (_b2View === 'old') {
       if (typeof rBoard === 'function') {
         rBoard(sub, T);

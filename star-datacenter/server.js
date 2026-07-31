@@ -3,8 +3,11 @@
  *
  * 기능:
  *  1. 정적 파일 서빙 (HTTP/1.1 + 캐싱 헤더 최적화)
- *  2. POST /api/aibot  → Groq Chat Completions 프록시
- *  3. GET  /api/health → 헬스체크
+ *  2. POST /api/aibot            → Groq Chat Completions 프록시
+ *  3. GET  /api/health           → 헬스체크
+ *  4. POST /api/soop-live-status → SOOP(sooplive) 방송중 여부 조회 프록시
+ *       (player_live_api.php 는 브라우저 CORS 미허용이라 서버에서 대신 호출.
+ *        비공식 API이므로 응답 포맷이 바뀌면 방어적으로 실패 처리됨)
  *
  * 캐싱 전략:
  *  - dist/js/chunk-*.js, dist/js/lazy-*.js
@@ -52,6 +55,12 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS || '')
 const SSL_CERT     = process.env.SSL_CERT || '';
 const SSL_KEY      = process.env.SSL_KEY  || '';
 const ROOT         = __dirname;  // 정적 파일 루트
+
+// SOOP(sooplive) 라이브 상태 조회 프록시 설정
+const SOOP_STATUS_TIMEOUT_MS   = Number(process.env.SOOP_STATUS_TIMEOUT_MS || 6000);
+const SOOP_STATUS_CACHE_TTL_MS = Number(process.env.SOOP_STATUS_CACHE_TTL_MS || 15000); // 서버측 캐시(여러 클라이언트 폴링 완충)
+const SOOP_STATUS_MAX_IDS      = 60;   // 1회 요청당 최대 BJ ID 개수
+const SOOP_STATUS_CONCURRENCY  = 6;    // SOOP 서버 부하 방지용 동시요청 제한
 
 // ─────────────────────────────────────────
 // MIME 타입
@@ -261,6 +270,75 @@ async function groqChat(messages) {
 }
 
 // ─────────────────────────────────────────
+// SOOP(sooplive) 라이브 상태 조회 프록시
+//  - player_live_api.php 는 비공식/비문서화 API. 응답 형식이 바뀔 수 있으므로
+//    항상 방어적으로 파싱하고, 실패한 ID는 결과에서 제외한다(= 클라이언트는
+//    "확인 불가"로 간주하고 오프라인으로 단정하지 않음 — 오탐으로 스트리머
+//    카드가 부당하게 숨겨지는 것을 방지).
+// ─────────────────────────────────────────
+const _soopStatusCache = new Map(); // bjId -> { data, ts }
+
+function _soopIdValid(id) {
+  return typeof id === 'string' && /^[a-zA-Z0-9_.]{2,30}$/.test(id);
+}
+
+async function _soopFetchOne(bjId) {
+  const cached = _soopStatusCache.get(bjId);
+  if (cached && (Date.now() - cached.ts) < SOOP_STATUS_CACHE_TTL_MS) return cached.data;
+
+  const ctrl = new AbortController();
+  const t = setTimeout(() => { try { ctrl.abort(); } catch {} }, SOOP_STATUS_TIMEOUT_MS);
+  try {
+    const r = await fetch('https://live.sooplive.co.kr/afreeca/player_live_api.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': `https://play.sooplive.co.kr/${encodeURIComponent(bjId)}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      },
+      body: `bid=${encodeURIComponent(bjId)}&type=live&pwd=&player_type=html5&mode=landing`,
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(t));
+
+    // 주의: 예전엔 !r.ok 이면 즉시 throw 하여 "확인 불가" 상태로 남겼으나,
+    // SOOP 비공식 API가 오프라인 채널에 대해 2xx가 아닌 상태코드로 응답하는
+    // 케이스가 있어 이 경우 오프라인 숨기기가 영원히 동작하지 않는 원인이 됨.
+    // → 상태코드와 무관하게 본문 파싱을 우선 시도하고, RESULT 필드를 얻을 수
+    //   있으면 오프라인으로 확정 처리한다. 본문 파싱조차 실패하는 경우에만
+    //   "확인 불가"(null)로 남긴다.
+    const j = await r.json().catch(() => null);
+    if (!j && !r.ok) throw new Error(`HTTP ${r.status}`);
+    const ch = (j && (j.CHANNEL || j)) || {};
+    const result = Number(ch.RESULT);
+    const data = {
+      live: result === 1,
+      title: typeof ch.TITLE === 'string' ? ch.TITLE : null,
+      viewerCnt: Number.isFinite(Number(ch.CTUSER)) ? Number(ch.CTUSER) : null,
+    };
+    _soopStatusCache.set(bjId, { data, ts: Date.now() });
+    return data;
+  } catch (e) {
+    return null; // 실패 시 캐시하지 않음 — 다음 폴링에서 재시도
+  }
+}
+
+async function soopLiveStatus(ids) {
+  const uniqueIds = [...new Set((Array.isArray(ids) ? ids : []).filter(_soopIdValid))].slice(0, SOOP_STATUS_MAX_IDS);
+  const results = {};
+  let idx = 0;
+  async function worker() {
+    while (idx < uniqueIds.length) {
+      const id = uniqueIds[idx++];
+      const data = await _soopFetchOne(id);
+      if (data) results[id] = data;
+    }
+  }
+  const poolSize = Math.min(SOOP_STATUS_CONCURRENCY, uniqueIds.length) || 0;
+  await Promise.all(Array.from({ length: poolSize }, worker));
+  return results;
+}
+
+// ─────────────────────────────────────────
 // 요청 핸들러 (HTTP/1.1 & HTTP/2 공용)
 // ─────────────────────────────────────────
 async function handleRequest(req, res) {
@@ -287,6 +365,18 @@ async function handleRequest(req, res) {
       const text = await groqChat(messages);
       res.statusCode = 200; res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.end(JSON.stringify({ text })); return;
+    }
+
+    if (req.method === 'POST' && u.pathname === '/api/soop-live-status') {
+      const ct = String(req.headers['content-type'] || '');
+      if (ct && !ct.includes('application/json')) {
+        res.statusCode = 415; res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Content-Type must be application/json' })); return;
+      }
+      const body = await readJson(req);
+      const results = await soopLiveStatus(body.ids);
+      res.statusCode = 200; res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify({ results, checkedAt: Date.now() })); return;
     }
 
     if (req.method === 'GET' && u.pathname === '/api/health') {

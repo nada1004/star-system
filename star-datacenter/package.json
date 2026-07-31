@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "build:watch": "node build.mjs --watch"

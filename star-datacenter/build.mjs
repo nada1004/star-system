@@ -282,6 +282,7 @@ const BOARD_FILES = [
   'js/board2-players-edit-modal.js',
   'js/board2-players-save.js',
   'js/board2-analytics.js',
+  'js/board2-live-view.js',
   'js/board2-heatmap-bubble.js',
   'js/board2-briefing-data.js',
   'js/board2-briefing-state.js',
