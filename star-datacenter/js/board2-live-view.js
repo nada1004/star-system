@@ -260,14 +260,17 @@ function _b2LiveApplyStatusToDom(container) {
       liveCount++;
       if (badge) badge.style.display = 'inline-flex';
       if (avatarBadge) avatarBadge.style.display = 'inline-flex';
+      card.classList.add('is-live');
     } else if (st) {
       // 확인 완료 & 오프라인
       if (badge) badge.style.display = 'none';
       if (avatarBadge) avatarBadge.style.display = 'none';
+      card.classList.remove('is-live');
     } else {
       // 아직 확인 못함 — 오프라인으로 단정하지 않고 그대로 표시
       if (badge) badge.style.display = 'none';
       if (avatarBadge) avatarBadge.style.display = 'none';
+      card.classList.remove('is-live');
     }
   });
   const counter = document.getElementById('b2-live-count-badge');
@@ -364,20 +367,39 @@ function _b2LiveView() {
   const liveFiltered = tierFiltered;
 
   const sizeCfgMap = {
-    // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이)
-    s: { min: 126, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '11px',  tagFs: '8.5px', gap: 6 },
-    m: { min: 218, avatar: 58, stacked: false, fullImage: false, pad: '10px 12px',     nameFs: '12px',  tagFs: '9px',  gap: 10 },
-    l: { min: 282, avatar: 72, stacked: false, fullImage: false, pad: '12px 14px',     nameFs: '14px',  tagFs: '10px', gap: 12 },
+    // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이 + 상단 티어 색상 리본)
+    s: { min: 130, avatar: 34, stacked: true,  fullImage: true,  pad: '0',              nameFs: '11px',   tagFs: '8.5px', gap: 8,  radius: 16 },
+    // M: 아바타에 티어 컬러 링 + 대학 컬러 은은한 배경 워시를 더한 컴팩트 리스트형
+    m: { min: 226, avatar: 56, stacked: false, fullImage: false, pad: '12px 13px',      nameFs: '12.5px', tagFs: '9px',   gap: 11, radius: 14, ring: 3 },
+    // L: 더 큰 티어 링 아바타 + 텍스트 라벨이 붙은 액션 버튼으로 정보량을 늘린 대형 카드형
+    l: { min: 306, avatar: 80, stacked: false, fullImage: false, pad: '16px 16px 14px', nameFs: '15px',   tagFs: '10.5px', gap: 14, radius: 18, ring: 4, labeled: true },
   };
   const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
   const cardMinPx = sizeCfg.min;
 
-  const sizeBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetCardSize('${v}')"
-    style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LiveCardSize===v?'#2563eb':'var(--border2)'};background:${_b2LiveCardSize===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveCardSize===v?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LiveCardSize===v?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
+  const sizeIconPx = { s: 8, m: 11, l: 14 };
+  const sizeBtn = (v, label) => `<button type="button" class="b2-toolbar-btn b2-size-btn" onclick="_b2LiveSetCardSize('${v}')" title="${label === 'S' ? '작게' : label === 'M' ? '보통' : '크게'}"
+    style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;border:1px solid ${_b2LiveCardSize===v?'#2563eb':'var(--border2)'};background:${_b2LiveCardSize===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveCardSize===v?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LiveCardSize===v?900:700};cursor:pointer;margin-bottom:0">
+      <span style="display:inline-block;width:${sizeIconPx[v]}px;height:${sizeIconPx[v]}px;border-radius:3px;background:currentColor;opacity:.85;flex-shrink:0"></span>${label}
+    </button>`;
 
   const filterBar = `
     <style>
       @keyframes b2LivePulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+      .b2-live-card{ transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease; }
+      .b2-live-card:hover{ box-shadow:0 10px 24px rgba(15,23,42,.10); border-color:var(--border-strong,var(--border2)); transform:translateY(-2px); }
+      .b2-live-card.is-live{ border-color:rgba(220,38,38,.45); box-shadow:0 0 0 1px rgba(220,38,38,.14) inset; }
+      .b2-live-card.is-live:hover{ box-shadow:0 0 0 1px rgba(220,38,38,.18) inset,0 10px 24px rgba(220,38,38,.14); }
+      .b2-live-icon-btn{ transition:background .15s ease,border-color .15s ease,transform .15s ease; }
+      .b2-live-icon-btn:hover{ background:var(--gray-bg,#f1f5f9); border-color:#94a3b8; transform:scale(1.08); }
+      .b2-live-icon-btn:active{ transform:scale(.96); }
+      .b2-live-glass-btn:hover{ background:rgba(17,24,39,.68) !important; border-color:rgba(255,255,255,.55) !important; }
+      .b2-live-avatar-btn{ transition:transform .15s ease,box-shadow .15s ease; }
+      .b2-live-avatar-btn:hover{ transform:scale(1.05); box-shadow:0 8px 18px rgba(15,23,42,.16); }
+      .b2-live-photo-wrap img{ transition:transform .4s ease; }
+      .b2-live-photo-wrap:hover img{ transform:scale(1.06); }
+      .b2-size-btn{ transition:transform .12s ease; }
+      .b2-size-btn:active{ transform:scale(.94); }
     </style>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <div style="position:relative">
@@ -471,17 +493,35 @@ function _b2LiveView() {
       }
     }
 
-    const enlargeBtn = `<button type="button" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
-            style="width:${sizeCfg.stacked ? 22 : 26}px;height:${sizeCfg.stacked ? 22 : 26}px;border-radius:7px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:${sizeCfg.stacked ? 11 : 12}px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">⛶</button>`;
-    const linkBtn = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener"
-            style="width:${sizeCfg.stacked ? 22 : 26}px;height:${sizeCfg.stacked ? 22 : 26}px;border-radius:7px;border:1px solid var(--border2);background:var(--white);font-size:${sizeCfg.stacked ? 11 : 12}px;text-decoration:none;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center" title="SOOP 채널로 이동">🔗</a>`;
+    const isS = sizeCfg.fullImage;
+    const isL = !!sizeCfg.labeled;
+
+    // 아이콘 버튼(원형) — M모드 기본
+    const enlargeBtn = `<button type="button" class="b2-live-icon-btn" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
+            style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:13px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">⛶</button>`;
+    const linkBtn = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" class="b2-live-icon-btn"
+            style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--white);font-size:13px;text-decoration:none;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center" title="SOOP 채널로 이동">🔗</a>`;
+
+    // 라벨 버튼(텍스트 포함) — L모드 전용, 넉넉한 카드 폭을 살려 정보성 강화
+    const enlargeBtnLabeled = `<button type="button" class="b2-live-icon-btn" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')"
+            style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11.5px;font-weight:800;cursor:pointer">⛶ 확대보기</button>`;
+    const linkBtnLabeled = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" class="b2-live-icon-btn"
+            style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11.5px;font-weight:800;text-decoration:none;cursor:pointer">🔗 채널 이동</a>`;
+
+    // 유리(glass) 버튼 — S모드 사진 위에 떠 있는 원형 오버레이 버튼(반투명 + 블러)
+    const enlargeBtnOnPhoto = `<button type="button" class="b2-live-icon-btn b2-live-glass-btn" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
+            style="width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(17,24,39,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);color:#fff;font-size:11px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">⛶</button>`;
+    const linkBtnOnPhoto = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" class="b2-live-icon-btn b2-live-glass-btn" title="SOOP 채널로 이동"
+            style="width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(17,24,39,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);color:#fff;font-size:11px;text-decoration:none;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">🔗</a>`;
 
     // M/L 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
+    // + 티어 컬러 링(box-shadow)으로 한눈에 티어를 구분할 수 있게 함 (M: 3px, L: 4px)
+    const ringShadow = sizeCfg.ring ? `0 0 0 ${sizeCfg.ring}px ${tierBg}2e,` : '';
     const avatarBlock = `
       <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveHoverEnter(this,'${p._soopId}','${safeName}')" onmouseleave="_b2LiveHoverLeave(event)">
-        <button type="button" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="${badgeInitDisplay==='inline-flex'?'선수 상세 · 마우스 올리면 라이브 미리보기':'선수 상세'}"
-          style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:1px solid var(--border2);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)">
+        <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="${badgeInitDisplay==='inline-flex'?'선수 상세 · 마우스 올리면 라이브 미리보기':'선수 상세'}"
+          style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:1px solid var(--border2);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:${ringShadow}0 4px 12px rgba(15,23,42,.08)">
           ${avatarHtml}
         </button>
         <span class="b2-live-preview-badge" title="마우스를 올리면 라이브 미리보기"
@@ -494,24 +534,21 @@ function _b2LiveView() {
     const univTag = p.univ ? `<span style="font-size:${sizeCfg.tagFs};font-weight:800;padding:1px 7px;border-radius:999px;background:${univColor}1a;color:${univColor};white-space:nowrap">${p.univ}</span>` : '';
     const tierTag = p.tier ? `<span style="font-size:${sizeCfg.tagFs};font-weight:800;padding:1px 7px;border-radius:999px;background:${tierBg};color:${tierFg};white-space:nowrap">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : '';
 
-    // 버튼(⛶🔗)은 사진 위에서도 잘 보이도록 살짝 그림자 추가
-    const enlargeBtnOnPhoto = enlargeBtn.replace('cursor:pointer;', 'cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.3);');
-    const linkBtnOnPhoto = linkBtn.replace('text-decoration:none;', 'text-decoration:none;box-shadow:0 1px 5px rgba(0,0,0,.3);');
-
-    const cardBody = sizeCfg.fullImage
+    const cardBody = isS
       // ── S(작게) 모드: 프로필 이미지가 카드를 가득 채우는 포토카드형
-      //    (원형 아바타 대신 카드 전체를 사진으로 채우고 하단에 그라데이션 위 이름/태그 오버레이)
+      //    (원형 아바타 대신 카드 전체를 사진으로 채우고, 상단엔 티어 컬러 리본 + 하단엔 그라데이션 위 이름/태그 오버레이)
       ? `
-        <div style="position:relative;width:100%;aspect-ratio:3/4;background:${univColor}12;overflow:hidden"
+        <div class="b2-live-photo-wrap" style="position:relative;width:100%;aspect-ratio:3/4;background:${univColor}12;overflow:hidden"
           onmouseenter="_b2LiveHoverEnter(this,'${p._soopId}','${safeName}')" onmouseleave="_b2LiveHoverLeave(event)">
           ${photoUrl
             ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:38px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</span>`
             : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:38px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</span>`}
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${tierBg};z-index:2;pointer-events:none"></div>
           <div style="position:absolute;left:0;right:0;bottom:0;height:60%;background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.32) 55%,rgba(0,0,0,0));pointer-events:none"></div>
-          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:2">${enlargeBtnOnPhoto}${linkBtnOnPhoto}</div>
+          <div style="position:absolute;top:9px;right:8px;display:flex;gap:5px;z-index:2">${enlargeBtnOnPhoto}${linkBtnOnPhoto}</div>
           <span class="b2-live-preview-badge" title="마우스를 올리면 라이브 미리보기"
-            style="display:${badgeInitDisplay};align-items:center;gap:3px;position:absolute;top:8px;left:8px;padding:2px 7px;border:1px solid rgba(255,255,255,.9);border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900;letter-spacing:.2px;line-height:1.4;box-shadow:0 2px 6px rgba(220,38,38,.35);pointer-events:none;z-index:2">
+            style="display:${badgeInitDisplay};align-items:center;gap:3px;position:absolute;top:9px;left:8px;padding:2px 7px;border:1px solid rgba(255,255,255,.9);border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900;letter-spacing:.2px;line-height:1.4;box-shadow:0 2px 6px rgba(220,38,38,.35);pointer-events:none;z-index:2">
             <span style="width:4px;height:4px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
           </span>
           <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 10px;display:flex;flex-direction:column;gap:5px;z-index:1">
@@ -522,19 +559,33 @@ function _b2LiveView() {
             </div>
           </div>
         </div>`
-      // ── M/L 모드: 가로 정렬형 카드 — 아바타 크기 확대 + 아이콘이 텍스트를 침범하지 않도록 정리
-      : `
-        <div style="display:flex;align-items:center;gap:10px">
+      : isL
+        // ── L(크게) 모드: 큰 티어 링 아바타 + 텍스트 라벨 버튼으로 정보량을 늘린 카드형
+        ? `
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          ${avatarBlock}
+          <div style="display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;padding-top:3px">
+            <div style="min-width:0">${nameHtml}</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">${univTag}${tierTag}</div>
+            <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">${enlargeBtnLabeled}${linkBtnLabeled}</div>
+          </div>
+        </div>`
+        // ── M(보통) 모드: 티어 링 아바타 + 대학 컬러 배경 워시가 더해진 컴팩트 리스트형
+        : `
+        <div style="display:flex;align-items:center;gap:11px">
           ${avatarBlock}
           <div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1">
             <div style="min-width:0">${nameHtml}</div>
             <div style="display:flex;gap:4px;flex-wrap:wrap">${univTag}${tierTag}</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">${enlargeBtn}${linkBtn}</div>
+          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">${enlargeBtn}${linkBtn}</div>
         </div>`;
 
+    // M/L 카드는 소속 대학 컬러를 은은한 배경 워시로 반영해 카드마다 색이 살짝 다르게(S모드는 사진이 이미 컬러풀해 워시 생략)
+    const cardWash = isS ? '' : `background:linear-gradient(135deg,${univColor}0c,var(--white) 62%);`;
+
     return groupHeader + `
-      <div class="b2-live-card" data-soop-id="${p._soopId}" style="position:relative;background:var(--white);border:1.5px solid var(--border2);border-radius:14px;overflow:hidden;padding:${sizeCfg.pad};transition:box-shadow .15s,border-color .15s" onmouseover="this.style.boxShadow='0 6px 18px rgba(15,23,42,.08)';this.style.borderColor='var(--border-strong,var(--border2))'" onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
+      <div class="b2-live-card" data-soop-id="${p._soopId}" style="position:relative;${cardWash || 'background:var(--white);'}border:1.5px solid var(--border2);border-radius:${sizeCfg.radius}px;overflow:hidden;padding:${sizeCfg.pad}">
         ${cardBody}
       </div>
     `;
