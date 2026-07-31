@@ -14,6 +14,7 @@ var _b2LiveUnivFilter = '전체';
 var _b2LiveTierFilter = '전체';
 var _b2LiveGenderFilter = (()=>{ try{ const g = localStorage.getItem('su_b2_live_gender'); return ['전체','F','M'].includes(g) ? g : '전체'; }catch(e){ return '전체'; } })();
 var _b2LiveSearch = '';
+var _b2LiveSearchComposing = false; // 한글 등 IME 조합 중 여부 — 조합 끝나기 전 재렌더 방지
 var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort') || 'tier'; }catch(e){ return 'tier'; } })(); // 'tier' | 'name' | 'univ'
 var _b2LiveCardSize = (()=>{ try{ const s = localStorage.getItem('su_b2_live_card_size'); return ['s','m'].includes(s) ? s : 'm'; }catch(e){ return 'm'; } })();
 var _b2LiveObserver = null;
@@ -443,7 +444,9 @@ function _b2LiveView() {
         ${genderBtn('전체','전체')}${genderBtn('F','♀ 여자만')}${genderBtn('M','♂ 남자만')}
       </div>
       <input id="b2-live-search" type="text" placeholder="🔍 이름 검색" value="${(_b2LiveSearch||'').replace(/"/g,'&quot;')}"
-        oninput="_b2LiveSearch=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'));const _v=document.getElementById('b2-live-search');if(_v){_v.focus();_v.setSelectionRange(_v.value.length,_v.value.length)}"
+        oncompositionstart="_b2LiveSearchComposing=true"
+        oncompositionend="_b2LiveSearchComposing=false;_b2LiveSearch=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'));const _v=document.getElementById('b2-live-search');if(_v){_v.focus();_v.setSelectionRange(_v.value.length,_v.value.length)}"
+        oninput="_b2LiveSearch=this.value;if(!_b2LiveSearchComposing){document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'));const _v=document.getElementById('b2-live-search');if(_v){_v.focus();_v.setSelectionRange(_v.value.length,_v.value.length)}}"
         style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);width:150px">
       <div style="display:flex;gap:4px;align-items:center">
         ${sizeBtn('s','S')}${sizeBtn('m','M')}
