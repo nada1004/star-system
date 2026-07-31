@@ -115,6 +115,45 @@ function _b2LiveEnlarge(id, name) {
   } catch (e) {}
 }
 
+// 프로필 우상단 LIVE 배지 클릭용 미리보기 모달
+function _b2LivePreview(id, name) {
+  try {
+    if (!id) return;
+    let ov = document.getElementById('b2LivePreviewOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'b2LivePreviewOverlay';
+      ov.className = 'su-modal-overlay';
+      document.body.appendChild(ov);
+    }
+    ov.style.display = 'flex';
+    ov.innerHTML = `
+      <div class="su-modal" style="width:min(540px, calc(100vw - 28px));height:auto;max-height:min(430px, calc(100vh - 28px));overflow:hidden">
+        <div class="su-modal-hd">
+          <div style="font-weight:1000;min-width:0;display:flex;align-items:center;gap:8px">
+            <span style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1">
+              <span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
+            </span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name || ''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <a href="https://ch.sooplive.co.kr/${id}" target="_blank" rel="noopener" class="btn btn-b btn-sm" style="text-decoration:none">SOOP 열기</a>
+            <button type="button" class="btn btn-g btn-sm" onclick="_b2LiveEnlarge('${id}','${String(name || '').replace(/'/g, "\\'")}')">확대</button>
+            <button type="button" class="btn btn-r btn-sm" onclick="document.getElementById('b2LivePreviewOverlay').style.display='none';document.getElementById('b2LivePreviewOverlay').innerHTML=''">닫기</button>
+          </div>
+        </div>
+        <div class="su-modal-bd" style="padding:0;overflow:hidden">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000">
+            <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+              style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#000"></iframe>
+          </div>
+        </div>
+      </div>
+    `;
+    ov.onclick = (e) => { if (e.target === ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
+  } catch (e) {}
+}
+
 // 오프라인 숨기기 토글
 function _b2LiveToggleHideOffline() {
   _b2LiveHideOffline = !_b2LiveHideOffline;
@@ -150,17 +189,21 @@ function _b2LiveApplyStatusToDom(container) {
     const id = card.getAttribute('data-soop-id');
     const st = _b2LiveStatusCache[id];
     const badge = card.querySelector('.b2-live-badge');
+    const avatarBadge = card.querySelector('.b2-live-preview-badge');
     if (st && st.live) {
       liveCount++;
       if (badge) badge.style.display = 'inline-flex';
+      if (avatarBadge) avatarBadge.style.display = 'inline-flex';
       card.style.display = '';
     } else if (st) {
       // 확인 완료 & 오프라인
       if (badge) badge.style.display = 'none';
+      if (avatarBadge) avatarBadge.style.display = 'none';
       card.style.display = _b2LiveHideOffline ? 'none' : '';
     } else {
       // 아직 확인 못함 — 오프라인으로 단정하지 않고 그대로 표시
       if (badge) badge.style.display = 'none';
+      if (avatarBadge) avatarBadge.style.display = 'none';
     }
   });
   const counter = document.getElementById('b2-live-count-badge');
@@ -374,9 +417,15 @@ function _b2LiveView() {
     const tierBg = typeof getTierBtnColor === 'function' ? getTierBtnColor(p.tier) : '#64748b';
     const tierFg = typeof getTierBtnTextColor === 'function' ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
     const safeName = String(p.name || '').replace(/'/g, "\\'");
+    const safeNameHtml = String(p.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const embedUrl = _b2LiveEmbedUrl(p._soopId);
     const stKnown = _b2LiveStatusCache[p._soopId];
     const badgeInitDisplay = (stKnown && stKnown.live) ? 'inline-flex' : 'none';
+    const photoUrl = p.photo ? ((typeof toHttpsUrl === 'function' ? toHttpsUrl(p.photo) : p.photo).replace(/"/g, '&quot;')) : '';
+    const avatarHtml = photoUrl
+      ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+         <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`
+      : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`;
 
     let groupHeader = '';
     if (showTierGroups) {
@@ -405,11 +454,23 @@ function _b2LiveView() {
           <button type="button" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
             style="position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:8px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:13px;cursor:pointer;line-height:26px;padding:0">⛶</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;flex-wrap:wrap">
-          <span style="font-weight:900;font-size:var(--fs-base);cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>
-          ${p.univ ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${univColor}1a;color:${univColor}">${p.univ}</span>` : ''}
-          ${p.tier ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${tierBg};color:${tierFg}">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : ''}
-          <a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;text-decoration:none" title="SOOP 채널로 이동">🔗</a>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
+          <div style="position:relative;flex-shrink:0">
+            <button type="button" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
+              style="width:42px;height:42px;padding:0;border:1px solid var(--border2);border-radius:50%;overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)">
+              ${avatarHtml}
+            </button>
+            <button type="button" class="b2-live-preview-badge" onclick="event.stopPropagation();_b2LivePreview('${p._soopId}','${safeName}')" title="라이브 미리보기"
+              style="display:${badgeInitDisplay};align-items:center;gap:4px;position:absolute;right:-3px;bottom:-3px;padding:2px 7px;border:1px solid rgba(255,255,255,.9);border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900;letter-spacing:.2px;line-height:1;box-shadow:0 2px 6px rgba(220,38,38,.35);cursor:pointer">
+              <span style="width:5px;height:5px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1">
+            <span style="font-weight:900;font-size:var(--fs-base);cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>
+            ${p.univ ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${univColor}1a;color:${univColor}">${p.univ}</span>` : ''}
+            ${p.tier ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${tierBg};color:${tierFg}">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : ''}
+          </div>
+          <a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" style="font-size:12px;text-decoration:none;flex-shrink:0" title="SOOP 채널로 이동">🔗</a>
         </div>
       </div>
     `;
