@@ -131,7 +131,7 @@
     }
   }
 
-  function embedUrl(id){ return id ? `https://play.sooplive.co.kr/${id}/embed` : 'about:blank'; }
+  function embedUrl(id){ return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y` : 'about:blank'; }
 
   function applySoopLayout(){
     const ov = $('soopMultiOverlay');
