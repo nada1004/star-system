@@ -524,6 +524,7 @@ function rBoard2(C, T) {
   // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
   const _b2TabDefs = [
     {id:'weekly',  label:(typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')},
+    {id:'live',    label:(typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')},
     {id:'lineup',  label:(typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')},
     {id:'univ',    label:(typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')},
     {id:'femco',   label:(typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')},
@@ -611,6 +612,7 @@ function rBoard2(C, T) {
     heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
     bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
     summary: { label:'요약', desc:'핵심 숫자와 흐름만 모아 간결하게 확인할 수 있도록 구성합니다.' },
+    live:    { label:'라이브', desc:'SOOP 방송국이 등록된 스트리머를 모아 보고 현재 라이브 상태를 빠르게 확인합니다.' },
     old:     { label:'구현황판', desc:'기존 현황판 레이아웃을 그대로 유지하면서 현재 데이터와 연결합니다.' }
   };
   const _curViewMeta = _heroViewMeta[_b2View] || { label:'현황판', desc:'여러 시각화와 카드형 화면으로 현황을 빠르게 탐색할 수 있습니다.' };
@@ -695,12 +697,12 @@ function rBoard2(C, T) {
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
         ${weeklyBtn}
+        ${_b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브'))}
         ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
         ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
-        ${_b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브'))}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}

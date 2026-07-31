@@ -620,7 +620,7 @@ window.cfgGetStreamerChannelRowsHTML = function(q){
     ? window.escAttr
     : (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const players = (Array.isArray(window.players) ? window.players : [])
-    .filter(p=>p && !p.hidden && !p.retired)
+    .filter(p=>p && !p.hidden && !p.retired && String(p.univ||'').trim() !== 'YB')
     .slice()
     .sort((a,b)=>{
       const ua = String(a.univ||'').trim();

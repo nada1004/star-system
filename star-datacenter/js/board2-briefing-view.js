@@ -70,6 +70,13 @@ function _b2WeeklyBriefingView() {
 
     // 필터
     const targetStats = selUniv === '전체' ? curStats : curStats.filter(ud => ud.u.name === selUniv);
+    const orderedTargetStats = [...targetStats].sort((a, b) => {
+      const ia = univList.findIndex(u => u.name === a?.u?.name);
+      const ib = univList.findIndex(u => u.name === b?.u?.name);
+      const ra = ia >= 0 ? ia : 999;
+      const rb = ib >= 0 ? ib : 999;
+      return ra - rb;
+    });
 
     // 전체 MVP
     const mvp = _b2WeeklyMVP(curStats);
@@ -891,7 +898,7 @@ function _b2WeeklyBriefingView() {
     }
 
     // ── 대학별 카드
-    targetStats.filter(ud=>ud.tg>0).forEach((ud, ui) => {
+    orderedTargetStats.filter(ud=>ud.tg>0).forEach((ud, ui) => {
       const { u, active, tw, tl, tg, wr, raceCount } = ud;
       const color   = (gc ? gc(u.name) : '#64748b') || '#64748b';
       const prevUd  = prevMap[u.name];

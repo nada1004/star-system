@@ -214,7 +214,7 @@ function _cfgSecGroup2(ctx){
   })()}
   ${(()=>{ 
     const q = (localStorage.getItem('su_cfg_streamer_channel_q') || '').trim();
-    const players = (Array.isArray(window.players) ? window.players : []).filter(p=>p && !p.hidden && !p.retired);
+    const players = (Array.isArray(window.players) ? window.players : []).filter(p=>p && !p.hidden && !p.retired && String(p.univ||'').trim() !== 'YB');
     const withUrl = players.filter(p=>String(p.channelUrl||'').trim()).length;
     return _scfgD('streamerchannel','📺 스트리머 방송국 URL') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px;line-height:1.6">
