@@ -14,7 +14,6 @@ var _b2LiveUnivFilter = '전체';
 var _b2LiveTierFilter = '전체';
 var _b2LiveGenderFilter = (()=>{ try{ const g = localStorage.getItem('su_b2_live_gender'); return ['전체','F','M'].includes(g) ? g : '전체'; }catch(e){ return '전체'; } })();
 var _b2LiveSearch = '';
-var _b2LiveSearchComposing = false; // 한글 등 IME 조합 중 여부 — 조합 끝나기 전 재렌더 방지
 var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort') || 'tier'; }catch(e){ return 'tier'; } })(); // 'tier' | 'name' | 'univ'
 var _b2LiveCardSize = (()=>{ try{ const s = localStorage.getItem('su_b2_live_card_size'); return ['s','m'].includes(s) ? s : 'm'; }catch(e){ return 'm'; } })();
 var _b2LiveObserver = null;
@@ -332,52 +331,6 @@ function _b2LiveView() {
     univList.sort();
   }
 
-  const univFiltered = _b2LiveUnivFilter === '전체'
-    ? soopPlayers
-    : soopPlayers.filter(p => String(p?.univ || '').trim() === _b2LiveUnivFilter);
-
-  const tierFiltered0 = _b2LiveTierFilter === '전체'
-    ? univFiltered
-    : univFiltered.filter(p => p.tier === _b2LiveTierFilter);
-
-  const genderFiltered0 = _b2LiveGenderFilter === '전체'
-    ? tierFiltered0
-    : tierFiltered0.filter(p => p.gender === _b2LiveGenderFilter);
-
-  const q = String(_b2LiveSearch || '').trim().toLowerCase();
-  const searched = q
-    ? genderFiltered0.filter(p => String(p.name || '').toLowerCase().includes(q))
-    : genderFiltered0;
-
-  const tierOrder = typeof TIERS !== 'undefined' ? TIERS : [];
-  const univOrder = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
-  const tierFiltered = searched.slice().sort((a, b) => {
-    if (_b2LiveSortMode === 'name') {
-      return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
-    }
-    if (_b2LiveSortMode === 'univ') {
-      const ia = univOrder.indexOf(a.univ); const ib = univOrder.indexOf(b.univ);
-      const ra = ia >= 0 ? ia : 999; const rb = ib >= 0 ? ib : 999;
-      if (ra !== rb) return ra - rb;
-      return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
-    }
-    // 기본: 티어순
-    const idxA = tierOrder.indexOf(a.tier); const idxB = tierOrder.indexOf(b.tier);
-    const rankA = idxA >= 0 ? idxA : 999; const rankB = idxB >= 0 ? idxB : 999;
-    if (rankA !== rankB) return rankA - rankB;
-    return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
-  });
-
-  const liveFiltered = tierFiltered;
-
-  const sizeCfgMap = {
-    // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이)
-    s: { min: 70, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '9px',  tagFs: '7px', gap: 6 },
-    m: { min: 132, avatar: 50, stacked: false, fullImage: false, pad: '8px 9px',     nameFs: '12px',  tagFs: '9px', gap: 9 },
-  };
-  const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
-  const cardMinPx = sizeCfg.min;
-
   const sizeBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetCardSize('${v}')" title="카드 크기: ${label}" aria-pressed="${_b2LiveCardSize===v}"
     style="padding:7px 13px;border-radius:9px;border:1.5px solid ${_b2LiveCardSize===v?'#2563eb':'var(--border2)'};background:${_b2LiveCardSize===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveCardSize===v?'#1d4ed8':'var(--text2)'};font-size:13px;font-weight:${_b2LiveCardSize===v?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
 
@@ -444,15 +397,77 @@ function _b2LiveView() {
         ${genderBtn('전체','전체')}${genderBtn('F','♀ 여자만')}${genderBtn('M','♂ 남자만')}
       </div>
       <input id="b2-live-search" type="text" placeholder="🔍 이름 검색" value="${(_b2LiveSearch||'').replace(/"/g,'&quot;')}"
-        oncompositionstart="_b2LiveSearchComposing=true"
-        oncompositionend="_b2LiveSearchComposing=false;_b2LiveSearch=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'));const _v=document.getElementById('b2-live-search');if(_v){_v.focus();_v.setSelectionRange(_v.value.length,_v.value.length)}"
-        oninput="_b2LiveSearch=this.value;if(!_b2LiveSearchComposing){document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'));const _v=document.getElementById('b2-live-search');if(_v){_v.focus();_v.setSelectionRange(_v.value.length,_v.value.length)}}"
+        oninput="_b2LiveSearch=this.value;_b2LiveRefreshResultsOnly&&_b2LiveRefreshResultsOnly()"
         style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);width:150px">
       <div style="display:flex;gap:4px;align-items:center">
         ${sizeBtn('s','S')}${sizeBtn('m','M')}
       </div>
     </div>
   `;
+
+  return filterBar + `<div id="b2-live-results">${_b2LiveResultsHTML()}</div>`;
+}
+
+// (버그수정 2026-07-31) 검색창에 한글(IME)을 입력할 때, 매 글자마다 #b2-content
+// 전체(툴바 + input 포함)를 innerHTML로 통째로 재생성하면 <input> DOM 노드 자체가
+// 매번 새로 만들어져 브라우저의 조합(composition) 상태가 끊기고 "다나짱"이
+// "ㄷㅏㄴㅏㅉㅏㅇ"처럼 자모 분리되어 나오는 문제가 있었다.
+// → 검색 input은 그대로 두고, 결과 그리드(#b2-live-results)만 갱신하도록 분리.
+//   (input 노드가 파괴되지 않으므로 composition/커서/포커스가 전혀 끊기지 않아
+//    별도의 oncompositionstart/end 가드나 포커스 복원 로직도 필요 없어짐)
+function _b2LiveResultsHTML() {
+  const soopPlayers = (typeof players !== 'undefined' ? players : []).filter(p => {
+    if (p.hidden || p.retired || p.hideFromBoard) return false;
+    const _u = String(p?.univ || '').trim();
+    if (_u === 'YB') return false;
+    return !!_b2LiveSoopId(p.channelUrl);
+  }).map(p => Object.assign({ _soopId: _b2LiveSoopId(p.channelUrl) }, p));
+
+  const univFiltered = _b2LiveUnivFilter === '전체'
+    ? soopPlayers
+    : soopPlayers.filter(p => String(p?.univ || '').trim() === _b2LiveUnivFilter);
+
+  const tierFiltered0 = _b2LiveTierFilter === '전체'
+    ? univFiltered
+    : univFiltered.filter(p => p.tier === _b2LiveTierFilter);
+
+  const genderFiltered0 = _b2LiveGenderFilter === '전체'
+    ? tierFiltered0
+    : tierFiltered0.filter(p => p.gender === _b2LiveGenderFilter);
+
+  const q = String(_b2LiveSearch || '').trim().toLowerCase();
+  const searched = q
+    ? genderFiltered0.filter(p => String(p.name || '').toLowerCase().includes(q))
+    : genderFiltered0;
+
+  const tierOrder = typeof TIERS !== 'undefined' ? TIERS : [];
+  const univOrder = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+  const tierFiltered = searched.slice().sort((a, b) => {
+    if (_b2LiveSortMode === 'name') {
+      return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+    }
+    if (_b2LiveSortMode === 'univ') {
+      const ia = univOrder.indexOf(a.univ); const ib = univOrder.indexOf(b.univ);
+      const ra = ia >= 0 ? ia : 999; const rb = ib >= 0 ? ib : 999;
+      if (ra !== rb) return ra - rb;
+      return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+    }
+    // 기본: 티어순
+    const idxA = tierOrder.indexOf(a.tier); const idxB = tierOrder.indexOf(b.tier);
+    const rankA = idxA >= 0 ? idxA : 999; const rankB = idxB >= 0 ? idxB : 999;
+    if (rankA !== rankB) return rankA - rankB;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+  });
+
+  const liveFiltered = tierFiltered;
+
+  const sizeCfgMap = {
+    // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이)
+    s: { min: 70, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '9px',  tagFs: '7px', gap: 6 },
+    m: { min: 132, avatar: 50, stacked: false, fullImage: false, pad: '8px 9px',     nameFs: '12px',  tagFs: '9px', gap: 9 },
+  };
+  const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
+  const cardMinPx = sizeCfg.min;
 
   if (!soopPlayers.length) {
     return `
@@ -464,7 +479,7 @@ function _b2LiveView() {
   }
 
   if (!tierFiltered.length) {
-    return filterBar + `
+    return `
       <div style="padding:60px 20px;text-align:center;color:var(--gray-l)">
         <div style="font-size:40px;margin-bottom:10px">🔍</div>
         <div style="font-weight:700">해당 조건에 맞는 스트리머가 없습니다</div>
@@ -585,9 +600,20 @@ function _b2LiveView() {
     }catch(e){}
   }, 0);
 
-  return filterBar + `
+  return `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${cardMinPx}px,1fr));gap:${sizeCfg.gap}px">
       ${cards}
     </div>
   `;
+}
+
+// 검색어 변경 시: #b2-content 전체가 아니라 #b2-live-results(카드 그리드)만 갱신.
+// 검색 input 자신은 DOM에서 전혀 교체되지 않으므로 IME 조합/커서/포커스가 유지된다.
+function _b2LiveRefreshResultsOnly() {
+  try {
+    const box = document.getElementById('b2-live-results');
+    if (!box) return; // 다른 탭으로 이미 이동한 경우
+    box.innerHTML = _b2LiveResultsHTML();
+    injectUnivIcons && injectUnivIcons(box);
+  } catch (e) {}
 }

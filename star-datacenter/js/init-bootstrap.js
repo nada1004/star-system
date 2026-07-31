@@ -291,11 +291,51 @@ async function init(){
         try{
           window.SettingsStore.pullOnSignal({ silent:true, returnInfo:true }).then(info=>{
             try{
-              if(info && info.ok && !info.skipped && typeof render==='function') render();
+              if(info && info.ok && !info.skipped && typeof render==='function'){
+                // (버그수정) 검색창 등에 입력/한글 조합 중이거나 모달이 열려있으면
+                // 전체 재렌더로 화면을 새로 그리면 IME 조합이 깨지고(예: 라이브탭 검색창
+                // 한글 입력 도중 글자가 깨지는 문제) 포커스도 끊기므로, 이번 주기는
+                // 건너뛰고 다음 15초 주기 또는 입력 종료 시점에 반영한다.
+                const active = document.activeElement;
+                const isTyping = active && (active.tagName==='INPUT' || active.tagName==='TEXTAREA' || active.isContentEditable);
+                let hasOpenModal = false;
+                try{
+                  hasOpenModal = Array.from(document.querySelectorAll('.modal,[id$="Modal"],[id$="modal"]')).some(el=>{
+                    const st = window.getComputedStyle(el);
+                    return st.display !== 'none' && st.visibility !== 'hidden';
+                  });
+                }catch(e){}
+                if(isTyping || hasOpenModal){
+                  window._settingsAutoPullPending = true;
+                  return;
+                }
+                render();
+              }
             }catch(e){}
           }).catch(()=>{});
         }catch(e){}
       }, 15000);
+    }
+  }catch(e){}
+  // (버그수정) 위에서 입력/모달 중이라 미뤄둔(_settingsAutoPullPending) 재렌더를
+  // 입력창 blur 또는 한글 조합 종료 시점에 뒤늦게 반영한다.
+  try{
+    if(!window._settingsAutoPullFlushBound){
+      window._settingsAutoPullFlushBound = true;
+      const _flushPendingRender = ()=>{
+        if(!window._settingsAutoPullPending) return;
+        setTimeout(()=>{
+          try{
+            const active = document.activeElement;
+            const stillTyping = active && (active.tagName==='INPUT' || active.tagName==='TEXTAREA' || active.isContentEditable);
+            if(stillTyping) return;
+            window._settingsAutoPullPending = false;
+            if(typeof render==='function') render();
+          }catch(e){}
+        }, 50);
+      };
+      document.addEventListener('focusout', _flushPendingRender, true);
+      document.addEventListener('compositionend', _flushPendingRender, true);
     }
   }catch(e){}
   try{ setTimeout(()=>{ if(typeof window._applyDeepLinkFromUrl==='function') window._applyDeepLinkFromUrl(); }, 80); }catch(e){}
