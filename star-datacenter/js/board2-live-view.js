@@ -4,12 +4,10 @@
    - 대학별 / 티어별 필터 + 이름검색 + 정렬 + 카드크기 조절
    - IntersectionObserver로 화면에 보이는 카드만 iframe 로드(성능)
    - 카드 확대보기 모달 지원
-   - 🔴 라이브 뱃지 자동감지 + 오프라인 카드 숨기기:
+   - 🔴 라이브 뱃지 자동감지:
      서버(/api/soop-live-status)가 SOOP player_live_api.php를 대신 호출해
-     방송중 여부를 조회(CORS 우회). 주기적으로 폴링해 뱃지·숨김 상태만
+     방송중 여부를 조회(CORS 우회). 주기적으로 폴링해 뱃지 상태만
      갱신하며, 이미 로드된 iframe은 다시 만들지 않음(방송 새로고침 방지).
-     비공식 API라 응답이 실패하면 "확인 불가" 상태로 두고 절대 임의로
-     오프라인 처리하지 않음(오탐으로 카드가 부당하게 숨겨지는 것 방지).
    ══════════════════════════════════════════════════════════════ */
 
 var _b2LiveUnivFilter = '전체';
@@ -19,12 +17,15 @@ var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort')
 var _b2LiveCardSize = (()=>{ try{ const s = localStorage.getItem('su_b2_live_card_size'); return ['s','m','l'].includes(s) ? s : 'm'; }catch(e){ return 'm'; } })();
 var _b2LiveObserver = null;
 
-// ── 라이브 상태(뱃지 / 오프라인 숨기기) ──
-var _b2LiveHideOffline = (()=>{ try{ return localStorage.getItem('su_b2_live_hide_offline') === '1'; }catch(e){ return false; } })();
+// ── 라이브 상태(뱃지) ──
 var _b2LiveStatusCache = {};        // soopId -> { live, title, viewerCnt, ts }
 var _b2LivePollTimer = null;        // setInterval 핸들
 var _b2LivePollInFlight = false;    // 중복 폴링 방지
 var _b2LivePollIntervalMs = 45000;  // 자동 새로고침 주기
+var _b2LiveHoverOpenTimer = null;
+var _b2LiveHoverCloseTimer = null;
+var _b2LiveHoverOpenId = '';
+var _b2LiveHoverOpenName = '';
 
 // soop-multiview.js 의 정규화 로직과 동일 — 독립 로드 순서 문제 없도록 자체 보유
 function _b2LiveSoopId(input) {
@@ -99,67 +100,132 @@ function _b2LiveEnlarge(id, name) {
       document.body.appendChild(ov);
     }
     ov.style.display = 'flex';
+    // (요청사항) 확대보기는 팝업창 가득하게 크게 표시 — su-modal-bd에 flex:1이 없으면
+    // iframe height:100%가 부모 높이를 못 잡아 영상이 작게(기본 iframe 높이) 나오고
+    // 나머지 공간이 빈 흰 여백으로 남는 문제가 있어 flex:1;min-height:0 추가
     ov.innerHTML = `
-      <div class="su-modal" style="width:min(900px, calc(100vw - 28px));height:min(560px, calc(100vh - 28px));">
+      <div class="su-modal" style="width:min(1024px, calc(100vw - 20px));height:min(640px, calc(100vh - 20px));overflow:hidden;display:flex;flex-direction:column">
         <div class="su-modal-hd">
           <div style="font-weight:1000">📺 ${name || ''}</div>
           <button type="button" class="btn btn-r btn-sm" onclick="document.getElementById('b2LiveEnlargeOverlay').style.display='none';document.getElementById('b2LiveEnlargeOverlay').innerHTML=''">닫기</button>
         </div>
-        <div class="su-modal-bd" style="padding:0;overflow:hidden">
+        <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
+          <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+            style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
+        </div>
+      </div>
+    `;
+    ov.onclick = (e) => { if (e.target === ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
+  } catch (e) {}
+}
+
+function _b2LiveCanHoverPreview() {
+  // 일부 환경에서 matchMedia 판단이 빗나가 hover가 막히는 경우가 있어
+  // 데스크톱 브라우저 기준으로는 넉넉하게 허용한다.
+  try {
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return false;
+  } catch (e) {}
+  return true;
+}
+
+function _b2LiveEnsureHoverOverlay(){
+  let ov = document.getElementById('b2LiveHoverOverlay');
+  if(ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'b2LiveHoverOverlay';
+  ov.className = 'su-modal-overlay';
+  ov.style.display = 'none';
+  // 바깥 클릭(다른 곳 클릭) 시 닫기
+  ov.addEventListener('mousedown', (e)=>{
+    try{
+      if(e.target === ov) _b2LiveHideHoverPreview(true);
+    }catch(_){}
+  });
+  // ⚠️ 깜빡임 버그 수정: 팝업(su-modal-overlay)이 화면 전체를 덮는 position:fixed 요소라서
+  // 팝업이 열리는 순간 마우스 커서 아래 요소가 프로필 카드 → 팝업(배경 포함)으로 바뀐다.
+  // 이전에는 "닫힘 취소" 처리가 팝업 안쪽 박스(.su-modal)에만 걸려 있어서, 커서가
+  // 팝업의 어두운 배경(바깥 여백) 위에 있을 때는 닫힘 취소가 안 되고 그대로 닫혔다가,
+  // 팝업이 사라지면 커서가 다시 프로필 위로 돌아온 걸로 판정되어 재오픈 → 무한 반복(깜빡임).
+  // → 팝업 전체(배경 포함)에 마우스가 있으면 닫힘을 취소하고, 팝업을 완전히 벗어나야만 닫히게 함.
+  ov.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
+  ov.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
+  document.body.appendChild(ov);
+  return ov;
+}
+
+function _b2LiveShowHoverPreview(anchorEl, id, name){
+  try{
+    if(!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
+    const ov = _b2LiveEnsureHoverOverlay();
+    const safeName = String(name||'').replace(/'/g,"\\'");
+    _b2LiveHoverOpenId = String(id||'');
+    _b2LiveHoverOpenName = String(name||'');
+    ov.style.display = 'flex';
+    // (요청사항) 미리보기창은 팝업창 가득하게 크게 표시
+    ov.innerHTML = `
+      <div class="su-modal" style="width:min(620px, calc(100vw - 20px));height:min(400px, calc(100vh - 20px));overflow:hidden;display:flex;flex-direction:column">
+        <div class="su-modal-hd" style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:1000;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden">
+            <span style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;flex-shrink:0">
+              <span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
+            </span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name || ''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveHideHoverPreview(true)">닫기</button>
+          </div>
+        </div>
+        <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
           <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
             style="width:100%;height:100%;border:0;background:#000"></iframe>
         </div>
       </div>
     `;
-    ov.onclick = (e) => { if (e.target === ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
-  } catch (e) {}
+    // 모달에 마우스 올라가면 닫힘 예약 취소 (프로필→모달 이동 가능)
+    try{
+      const modal = ov.querySelector('.su-modal');
+      if(modal && !modal.dataset.boundHover){
+        modal.dataset.boundHover = '1';
+        modal.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
+        modal.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
+      }
+    }catch(e){}
+  }catch(e){}
 }
 
-// 프로필 우상단 LIVE 배지 클릭용 미리보기 모달
-function _b2LivePreview(id, name) {
+function _b2LiveHideHoverPreview(immediate){
+  try{
+    clearTimeout(_b2LiveHoverOpenTimer);
+    clearTimeout(_b2LiveHoverCloseTimer);
+    const ov = document.getElementById('b2LiveHoverOverlay');
+    if(!ov) return;
+    const close = ()=>{
+      ov.style.display = 'none';
+      ov.innerHTML = '';
+      _b2LiveHoverOpenId = '';
+      _b2LiveHoverOpenName = '';
+    };
+    if(immediate) close();
+    else _b2LiveHoverCloseTimer = setTimeout(close, 180);
+  }catch(e){}
+}
+
+function _b2LiveHoverEnter(anchorEl, id, name) {
   try {
-    if (!id) return;
-    let ov = document.getElementById('b2LivePreviewOverlay');
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = 'b2LivePreviewOverlay';
-      ov.className = 'su-modal-overlay';
-      document.body.appendChild(ov);
-    }
-    ov.style.display = 'flex';
-    ov.innerHTML = `
-      <div class="su-modal" style="width:min(540px, calc(100vw - 28px));height:auto;max-height:min(430px, calc(100vh - 28px));overflow:hidden">
-        <div class="su-modal-hd">
-          <div style="font-weight:1000;min-width:0;display:flex;align-items:center;gap:8px">
-            <span style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1">
-              <span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-            </span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name || ''}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <a href="https://ch.sooplive.co.kr/${id}" target="_blank" rel="noopener" class="btn btn-b btn-sm" style="text-decoration:none">SOOP 열기</a>
-            <button type="button" class="btn btn-g btn-sm" onclick="_b2LiveEnlarge('${id}','${String(name || '').replace(/'/g, "\\'")}')">확대</button>
-            <button type="button" class="btn btn-r btn-sm" onclick="document.getElementById('b2LivePreviewOverlay').style.display='none';document.getElementById('b2LivePreviewOverlay').innerHTML=''">닫기</button>
-          </div>
-        </div>
-        <div class="su-modal-bd" style="padding:0;overflow:hidden">
-          <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000">
-            <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
-              style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#000"></iframe>
-          </div>
-        </div>
-      </div>
-    `;
-    ov.onclick = (e) => { if (e.target === ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
+    clearTimeout(_b2LiveHoverCloseTimer);
+    clearTimeout(_b2LiveHoverOpenTimer);
+    _b2LiveHoverOpenTimer = setTimeout(()=>_b2LiveShowHoverPreview(anchorEl, id, name), 140);
   } catch (e) {}
 }
 
-// 오프라인 숨기기 토글
-function _b2LiveToggleHideOffline() {
-  _b2LiveHideOffline = !_b2LiveHideOffline;
-  try{ localStorage.setItem('su_b2_live_hide_offline', _b2LiveHideOffline ? '1' : '0'); }catch(e){}
-  const el = document.getElementById('b2-content');
-  if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+function _b2LiveHoverLeave(e) {
+  try {
+    // 프로필 카드에서 벗어난 곳(relatedTarget)이 팝업 자신이면 닫지 않음(깜빡임 방지 이중 안전장치)
+    const ov = document.getElementById('b2LiveHoverOverlay');
+    const related = e && e.relatedTarget;
+    if (ov && related && ov.contains(related)) return;
+  } catch (_) {}
+  _b2LiveHideHoverPreview(false);
 }
 
 // 서버 프록시(/api/soop-live-status)로 방송상태 일괄 조회
@@ -179,7 +245,7 @@ async function _b2LiveFetchStatus(ids) {
   }
 }
 
-// 캐시된 상태를 이미 렌더된 카드 DOM에 반영 (뱃지 표시 + 오프라인 숨김)
+// 캐시된 상태를 이미 렌더된 카드 DOM에 반영 (뱃지 표시)
 // ※ innerHTML을 다시 쓰지 않음 — iframe이 재로드되어 방송이 끊기는 것 방지
 function _b2LiveApplyStatusToDom(container) {
   if (!container) return;
@@ -194,12 +260,10 @@ function _b2LiveApplyStatusToDom(container) {
       liveCount++;
       if (badge) badge.style.display = 'inline-flex';
       if (avatarBadge) avatarBadge.style.display = 'inline-flex';
-      card.style.display = '';
     } else if (st) {
       // 확인 완료 & 오프라인
       if (badge) badge.style.display = 'none';
       if (avatarBadge) avatarBadge.style.display = 'none';
-      card.style.display = _b2LiveHideOffline ? 'none' : '';
     } else {
       // 아직 확인 못함 — 오프라인으로 단정하지 않고 그대로 표시
       if (badge) badge.style.display = 'none';
@@ -302,25 +366,18 @@ function _b2LiveView() {
     return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
   });
 
-  // 오프라인 숨기기: 캐시상 "확인됨 & 오프라인"인 경우만 제외.
-  // 아직 확인 안 된(unknown) 항목은 오탐 방지를 위해 그대로 표시하고,
-  // 이후 폴링에서 오프라인으로 확인되면 DOM에서 display:none 처리됨.
-  const liveFiltered = _b2LiveHideOffline
-    ? tierFiltered.filter(p => { const st = _b2LiveStatusCache[p._soopId]; return !st || st.live; })
-    : tierFiltered;
-  const knownLiveCount = tierFiltered.reduce((n, p) => n + ((_b2LiveStatusCache[p._soopId] && _b2LiveStatusCache[p._soopId].live) ? 1 : 0), 0);
-  const unknownCount = tierFiltered.reduce((n, p) => n + (_b2LiveStatusCache[p._soopId] ? 0 : 1), 0);
+  const liveFiltered = tierFiltered;
 
-  const sizeMap = { s: 170, m: 240, l: 320 };
-  const cardMinPx = sizeMap[_b2LiveCardSize] || 240;
+  const sizeCfgMap = {
+    s: { min: 152, avatar: 44, stacked: true,  pad: '16px 10px 12px', nameFs: '12.5px', tagFs: '9px',  gap: 10 },
+    m: { min: 240, avatar: 54, stacked: false, pad: '10px 12px',      nameFs: 'var(--fs-base)', tagFs: '10px', gap: 14 },
+    l: { min: 300, avatar: 68, stacked: false, pad: '13px 16px',      nameFs: '15px',  tagFs: '11px', gap: 16 },
+  };
+  const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
+  const cardMinPx = sizeCfg.min;
 
   const sizeBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetCardSize('${v}')"
     style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LiveCardSize===v?'#2563eb':'var(--border2)'};background:${_b2LiveCardSize===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveCardSize===v?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LiveCardSize===v?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
-
-  const hideOfflineBtn = `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveToggleHideOffline()" title="오프라인 카드 숨기기"
-    style="padding:4px 12px;border-radius:20px;border:1px solid ${_b2LiveHideOffline?'#dc2626':'var(--border2)'};background:${_b2LiveHideOffline?'linear-gradient(135deg,#fef2f2,#fee2e2)':'var(--white)'};color:${_b2LiveHideOffline?'#b91c1c':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LiveHideOffline?900:700};cursor:pointer;display:inline-flex;align-items:center;gap:4px">
-    ${_b2LiveHideOffline ? '🙈' : '👁️'} 오프라인 숨기기
-  </button>`;
 
   const refreshBtn = `<button type="button" class="b2-toolbar-btn" onclick="_b2LivePoll()" title="라이브 상태 새로고침"
     style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer">🔄</button>`;
@@ -361,18 +418,7 @@ function _b2LiveView() {
       <div style="display:flex;gap:4px;align-items:center">
         ${sizeBtn('s','S')}${sizeBtn('m','M')}${sizeBtn('l','L')}
       </div>
-      ${hideOfflineBtn}
       ${refreshBtn}
-      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:var(--gray-l);font-weight:700">
-        <span id="b2-live-count-badge">🔴 라이브 ${knownLiveCount}명</span>
-        ${unknownCount > 0 ? `<span title="아직 방송상태 확인이 안 된 스트리머 — 오프라인 숨기기 대상에서 제외되어 계속 표시됩니다">⏳ 미확인 ${unknownCount}명</span>` : ''}
-        <span>📺 ${liveFiltered.length}명 표시중 (SOOP 등록 ${soopPlayers.length}명)</span>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;margin-bottom:14px;background:var(--surface);border:1px dashed var(--border2);border-radius:10px;font-size:var(--fs-sm);color:var(--gray-l)">
-      ℹ️ 방송중 여부는 SOOP 비공식 API를 주기적으로 조회해 표시하므로 실제와 최대 ${Math.round(_b2LivePollIntervalMs/1000)}초 정도 차이가 날 수 있습니다.
-      오프라인 숨기기 중 새로 방송을 시작한 스트리머는 필터를 다시 선택하거나 🔄 새로고침을 누르면 다시 나타납니다.
-      ${unknownCount > 0 ? ' ⏳ 표시가 있는 스트리머는 상태 확인이 안 되어 오프라인이어도 숨겨지지 않습니다.' : ''}
     </div>
   `;
 
@@ -393,15 +439,6 @@ function _b2LiveView() {
       </div>`;
   }
 
-  if (!liveFiltered.length) {
-    return filterBar + `
-      <div style="padding:60px 20px;text-align:center;color:var(--gray-l)">
-        <div style="font-size:40px;margin-bottom:10px">📴</div>
-        <div style="font-weight:700">현재 방송중인 스트리머가 없습니다</div>
-        <div style="font-size:var(--fs-sm);margin-top:6px">오프라인 숨기기가 켜져 있습니다. 👁️ 버튼으로 끄면 전체 카드를 볼 수 있어요.</div>
-      </div>`;
-  }
-
   // 티어순 정렬 + 전체 티어 보기일 때만 그룹 헤더 삽입(구별 표시)
   const showTierGroups = _b2LiveSortMode === 'tier' && _b2LiveTierFilter === '전체';
   const tierGroupCounts = {};
@@ -418,7 +455,6 @@ function _b2LiveView() {
     const tierFg = typeof getTierBtnTextColor === 'function' ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
     const safeName = String(p.name || '').replace(/'/g, "\\'");
     const safeNameHtml = String(p.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const embedUrl = _b2LiveEmbedUrl(p._soopId);
     const stKnown = _b2LiveStatusCache[p._soopId];
     const badgeInitDisplay = (stKnown && stKnown.live) ? 'inline-flex' : 'none';
     const photoUrl = p.photo ? ((typeof toHttpsUrl === 'function' ? toHttpsUrl(p.photo) : p.photo).replace(/"/g, '&quot;')) : '';
@@ -443,35 +479,50 @@ function _b2LiveView() {
       }
     }
 
+    const enlargeBtn = `<button type="button" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
+            style="width:${sizeCfg.stacked ? 22 : 26}px;height:${sizeCfg.stacked ? 22 : 26}px;border-radius:7px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:${sizeCfg.stacked ? 11 : 12}px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">⛶</button>`;
+    const linkBtn = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener"
+            style="width:${sizeCfg.stacked ? 22 : 26}px;height:${sizeCfg.stacked ? 22 : 26}px;border-radius:7px;border:1px solid var(--border2);background:var(--white);font-size:${sizeCfg.stacked ? 11 : 12}px;text-decoration:none;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center" title="SOOP 채널로 이동">🔗</a>`;
+
+    const avatarBlock = `
+      <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveHoverEnter(this,'${p._soopId}','${safeName}')" onmouseleave="_b2LiveHoverLeave(event)">
+        <button type="button" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="${badgeInitDisplay==='inline-flex'?'선수 상세 · 마우스 올리면 라이브 미리보기':'선수 상세'}"
+          style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:1px solid var(--border2);border-radius:50%;overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)">
+          ${avatarHtml}
+        </button>
+        <span class="b2-live-preview-badge" title="마우스를 올리면 라이브 미리보기"
+          style="display:${badgeInitDisplay};align-items:center;gap:3px;position:absolute;right:-3px;bottom:-3px;padding:2px 6px;border:1px solid rgba(255,255,255,.9);border-radius:999px;background:#dc2626;color:#fff;font-size:8px;font-weight:900;letter-spacing:.2px;line-height:1.4;box-shadow:0 2px 6px rgba(220,38,38,.35);pointer-events:none">
+          <span style="width:4px;height:4px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
+        </span>
+      </div>`;
+
+    const nameHtml = `<span style="font-weight:900;font-size:${sizeCfg.nameFs};cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>`;
+    const univTag = p.univ ? `<span style="font-size:${sizeCfg.tagFs};font-weight:800;padding:1px 7px;border-radius:999px;background:${univColor}1a;color:${univColor};white-space:nowrap">${p.univ}</span>` : '';
+    const tierTag = p.tier ? `<span style="font-size:${sizeCfg.tagFs};font-weight:800;padding:1px 7px;border-radius:999px;background:${tierBg};color:${tierFg};white-space:nowrap">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : '';
+
+    const cardBody = sizeCfg.stacked
+      // ── S(작게) 모드: 세로 정렬형 카드 — 좁은 폭에서 가로 배치가 아이콘/텍스트와 겹치던 문제 해결
+      ? `
+        <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:1">${enlargeBtn}${linkBtn}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px">
+          ${avatarBlock}
+          <div style="max-width:100%">${nameHtml}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">${univTag}${tierTag}</div>
+        </div>`
+      // ── M/L 모드: 가로 정렬형 카드 — 아바타 크기 확대 + 아이콘이 텍스트를 침범하지 않도록 정리
+      : `
+        <div style="display:flex;align-items:center;gap:10px">
+          ${avatarBlock}
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1">
+            <div style="min-width:0">${nameHtml}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">${univTag}${tierTag}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">${enlargeBtn}${linkBtn}</div>
+        </div>`;
+
     return groupHeader + `
-      <div class="b2-live-card" data-soop-id="${p._soopId}" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
-        <div class="b2-live-frame-box" data-src="${embedUrl}" style="position:relative;width:100%;aspect-ratio:16/9;background:#000">
-          <iframe loading="lazy" allow="fullscreen; picture-in-picture" referrerpolicy="no-referrer"
-            style="width:100%;height:100%;border:0"></iframe>
-          <span class="b2-live-badge" style="display:${badgeInitDisplay};align-items:center;gap:4px;position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:10px;font-weight:900;letter-spacing:.3px;box-shadow:0 2px 6px rgba(220,38,38,.45);pointer-events:none">
-            <span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-          </span>
-          <button type="button" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기"
-            style="position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:8px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:13px;cursor:pointer;line-height:26px;padding:0">⛶</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
-          <div style="position:relative;flex-shrink:0">
-            <button type="button" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
-              style="width:42px;height:42px;padding:0;border:1px solid var(--border2);border-radius:50%;overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)">
-              ${avatarHtml}
-            </button>
-            <button type="button" class="b2-live-preview-badge" onclick="event.stopPropagation();_b2LivePreview('${p._soopId}','${safeName}')" title="라이브 미리보기"
-              style="display:${badgeInitDisplay};align-items:center;gap:4px;position:absolute;right:-3px;bottom:-3px;padding:2px 7px;border:1px solid rgba(255,255,255,.9);border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:900;letter-spacing:.2px;line-height:1;box-shadow:0 2px 6px rgba(220,38,38,.35);cursor:pointer">
-              <span style="width:5px;height:5px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-            </button>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1">
-            <span style="font-weight:900;font-size:var(--fs-base);cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>
-            ${p.univ ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${univColor}1a;color:${univColor}">${p.univ}</span>` : ''}
-            ${p.tier ? `<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:${tierBg};color:${tierFg}">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : ''}
-          </div>
-          <a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" style="font-size:12px;text-decoration:none;flex-shrink:0" title="SOOP 채널로 이동">🔗</a>
-        </div>
+      <div class="b2-live-card" data-soop-id="${p._soopId}" style="position:relative;background:var(--white);border:1.5px solid var(--border2);border-radius:14px;overflow:hidden;padding:${sizeCfg.pad};transition:box-shadow .15s,border-color .15s" onmouseover="this.style.boxShadow='0 6px 18px rgba(15,23,42,.08)';this.style.borderColor='var(--border-strong,var(--border2))'" onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
+        ${cardBody}
       </div>
     `;
   }).join('');
@@ -479,14 +530,14 @@ function _b2LiveView() {
   setTimeout(() => {
     try{
       const el = document.getElementById('b2-content');
-      _b2LiveInitObservers(el);
+      // (요청사항) 라이브 탭 진입 시 방송이 자동으로 로드되지 않도록 iframe 미사용
       _b2LiveApplyStatusToDom(el); // 기존 캐시로 즉시 뱃지/숨김 반영(깜빡임 방지)
       _b2LiveStartPoll();          // 최신 상태 폴링 시작(다른 탭 이동 시 자동 중단)
     }catch(e){}
   }, 0);
 
   return filterBar + `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${cardMinPx}px,1fr));gap:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${cardMinPx}px,1fr));gap:${sizeCfg.gap}px">
       ${cards}
     </div>
   `;

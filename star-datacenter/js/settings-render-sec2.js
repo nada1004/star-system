@@ -212,6 +212,30 @@ function _cfgSecGroup2(ctx){
     </div>
   </details>`;
   })()}
+  ${(()=>{ 
+    const q = (localStorage.getItem('su_cfg_streamer_channel_q') || '').trim();
+    const players = (Array.isArray(window.players) ? window.players : []).filter(p=>p && !p.hidden && !p.retired);
+    const withUrl = players.filter(p=>String(p.channelUrl||'').trim()).length;
+    return _scfgD('streamerchannel','📺 스트리머 방송국 URL') + `
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+      스트리머별 <b>방송국 홈 URL</b>을 한 곳에서 빠르게 입력/수정합니다.<br>
+      라이브탭 SOOP 미리보기/채널 이동은 여기 입력된 주소를 기준으로 동작합니다.
+    </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input id="cfg-streamer-channel-search" type="text" value="${(typeof escAttr==='function'?escAttr(q):String(q).replace(/"/g,'&quot;'))}" placeholder="이름/대학/티어/URL 검색"
+          oninput="cfgFilterStreamerChannels(this.value)"
+          style="width:min(320px,100%);padding:8px 12px;border-radius:20px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2)">
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:800">총 ${players.length}명 · URL 설정 ${withUrl}명</span>
+        <button class="btn btn-w btn-xs" onclick="document.getElementById('cfg-streamer-channel-search').value='';cfgFilterStreamerChannels('')">검색 지우기</button>
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.5">
+        입력 후 <b>포커스 아웃</b> 또는 <b>Enter</b> 시 바로 저장됩니다. 예: <code>https://ch.sooplive.co.kr/...</code>, <code>https://chzzk.naver.com/...</code>
+      </div>
+      <div id="cfg-streamer-channel-rows" style="display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto">${typeof window.cfgGetStreamerChannelRowsHTML==='function' ? window.cfgGetStreamerChannelRowsHTML(q) : ''}</div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('streamer-view','🎬 스트리머탭 기본 뷰')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">스트리머탭 진입 시 기본으로 표시할 뷰 방식을 설정합니다. 탭 상단 버튼으로도 즉시 전환 가능합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
