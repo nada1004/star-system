@@ -46,13 +46,13 @@ function _b2LiveSoopId(input) {
   return '';
 }
 
-function _b2LiveEmbedUrl(id) {
+function _b2LiveEmbedUrl(id, autoplay) {
   // 라이브 탭은 항상 무음으로 시작되게 파라미터를 최대한 명시한다.
-  // (2026-08-01 변경) 과거엔 화면만 띄우고 자동재생은 막아 플레이어 안의
-  // 재생 버튼을 직접 눌러야 했는데, 그 버튼이 진하게(어둡게) 표시돼 방송중인지
-  // 아닌지 헷갈린다는 피드백을 받아 자동재생(음소거 유지)으로 전환.
+  // (2026-08-01 재변경) 호버만 해도 전부 자동재생되는 건 원치 않는다는 피드백으로
+  // 기본값은 다시 자동재생 없음(autoPlay=n) — 화면(호버 미리보기/확대보기)은 뜨되
+  // 재생은 사용자가 명시적으로 클릭했을 때만(autoplay 인자가 true일 때만) 시작됨.
   // SOOP 임베드 파라미터가 비공식이라 환경별 차이는 있을 수 있다.
-  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=y` : '';
+  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=${autoplay ? 'y' : 'n'}` : '';
 }
 
 function _b2LiveSetSort(mode) {
@@ -123,7 +123,7 @@ function _b2LiveEnlarge(id, name) {
           <button type="button" class="btn btn-r btn-sm" onclick="document.getElementById('b2LiveEnlargeOverlay').style.display='none';document.getElementById('b2LiveEnlargeOverlay').innerHTML=''">닫기</button>
         </div>
         <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
-          <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+          <iframe src="${_b2LiveEmbedUrl(id, true)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
             style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
         </div>
       </div>
@@ -153,8 +153,9 @@ function _b2LiveFindCard(anchorEl){
   try{ return anchorEl && anchorEl.closest ? anchorEl.closest('.b2-live-card') : null; }catch(e){ return null; }
 }
 
-// 프로필 이미지에 마우스를 올리면 방송 화면을 보여줌 (자동재생 없음 — 정지 화면/버퍼링 상태로 대기)
-function _b2LiveShowInlinePreview(anchorEl, id) {
+// 프로필 이미지에 마우스를 올리면 방송 화면을 보여줌 (기본은 자동재생 없음 — 정지 화면으로 대기,
+// forcePlay=true로 호출하면(클릭 시) 바로 재생 시작)
+function _b2LiveShowInlinePreview(anchorEl, id, forcePlay) {
   try {
     if (!anchorEl || !id) return;
     const card = _b2LiveFindCard(anchorEl);
@@ -166,7 +167,9 @@ function _b2LiveShowInlinePreview(anchorEl, id) {
     if (frameBox) frameBox.style.display = 'block';
     if (cover) cover.style.opacity = '0';
     if (frame) {
-      const nextSrc = _b2LiveEmbedUrl(id);
+      const nextSrc = _b2LiveEmbedUrl(id, !!forcePlay);
+      // autoplay 여부(n↔y)만 바뀌어도 src가 달라지므로, 호버 중 이미 떠있던 화면을
+      // 클릭해 재생으로 전환하는 경우에도 정상적으로 다시 로드됨
       if (frame.getAttribute('src') !== nextSrc) frame.setAttribute('src', nextSrc);
     }
     card.classList.add('is-previewing');
@@ -196,12 +199,12 @@ function _b2LiveHideInlinePreview(anchorEl, id, e) {
   } catch (e) {}
 }
 
-// 방송화면(프로필 큰 이미지)을 클릭하면 바로 재생되도록 — 마우스 호버가 없는
-// 모바일/터치 환경에서도 탭 한 번으로 방송이 나오게 함(호버 중이면 이미 보이는 중이라 그대로 유지)
+// 방송화면(프로필 큰 이미지)을 클릭하면 바로 재생되도록 — 호버로 뜬 화면은 자동재생되지
+// 않지만, 클릭은 명시적 재생 의도이므로 forcePlay=true로 호출해 바로 재생 시작
 function _b2LiveClickCover(el, id) {
   try {
     if (!el || !id) return;
-    _b2LiveShowInlinePreview(el, id);
+    _b2LiveShowInlinePreview(el, id, true);
   } catch (e) {}
 }
 
@@ -497,7 +500,7 @@ function _b2LiveResultsHTML() {
     const titleText = String((stKnown && stKnown.title) || '').trim();
     const titleHtml = titleText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const avatarHtml = photoUrl
-      ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`
       : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`;
 
@@ -546,7 +549,7 @@ function _b2LiveResultsHTML() {
         <div style="position:relative;width:100%;aspect-ratio:16/13;background:${univColor}12;overflow:hidden" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
           <div class="b2-live-cover-wrap" style="position:absolute;inset:0;transition:opacity .15s ease">
             <img class="b2-live-cover" src="${coverUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async"
-              style="width:100%;height:100%;object-fit:cover;display:${coverUrl ? 'block' : 'none'};cursor:pointer"
+              style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:${coverUrl ? 'block' : 'none'};cursor:pointer"
               onclick="_b2LiveClickCover(this,'${p._soopId}')"
               onerror="this.style.display='none';const fb=this.parentNode.querySelector('.b2-live-cover-fallback');if(fb) fb.style.display='flex'">
             <div class="b2-live-cover-fallback" style="display:${coverUrl ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:26px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</div>
