@@ -158,6 +158,30 @@ function _b2LiveFindCard(anchorEl){
   try{ return anchorEl && anchorEl.closest ? anchorEl.closest('.b2-live-card') : null; }catch(e){ return null; }
 }
 
+// 미리보기를 "켜는" 영역(프로필 이미지, 썸네일)만 hover 존으로 취급.
+// 카드 전체를 기준으로 판단하면 프로필 이미지 아래(이름/버튼 등)로 마우스만 옮겨도
+// 계속 카드 안에 있는 것으로 인식되어 방송이 꺼지지 않는 문제가 있었음.
+function _b2LiveIsInHoverZone(card, target){
+  try{
+    if (!card || !target) return false;
+    const zones = card.querySelectorAll('.b2-live-hover-zone');
+    for (let i = 0; i < zones.length; i++) {
+      if (zones[i] === target || zones[i].contains(target)) return true;
+    }
+    return false;
+  }catch(e){ return false; }
+}
+
+function _b2LiveAnyHoverZoneActive(card){
+  try{
+    const zones = card.querySelectorAll('.b2-live-hover-zone');
+    for (let i = 0; i < zones.length; i++) {
+      if (zones[i].matches && zones[i].matches(':hover')) return true;
+    }
+    return false;
+  }catch(e){ return false; }
+}
+
 function _b2LiveShowInlinePreview(anchorEl, id) {
   try {
     if (!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
@@ -182,11 +206,11 @@ function _b2LiveHideInlinePreview(anchorEl, id, e) {
     const card = _b2LiveFindCard(anchorEl);
     if (!card || !id) return;
     const related = e && e.relatedTarget;
-    if (related && card.contains(related)) return;
+    if (_b2LiveIsInHoverZone(card, related)) return;
     if (_b2LiveInlineHideTimers[id]) clearTimeout(_b2LiveInlineHideTimers[id]);
     _b2LiveInlineHideTimers[id] = setTimeout(() => {
       try {
-        if (card.matches && card.matches(':hover')) return;
+        if (_b2LiveAnyHoverZoneActive(card)) return;
         const frameBox = card.querySelector('.b2-live-inline-box');
         const frame = card.querySelector('.b2-live-inline-frame');
         const cover = card.querySelector('.b2-live-cover-wrap');
@@ -521,7 +545,7 @@ function _b2LiveResultsHTML() {
     // 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
     const avatarBlock = `
-      <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
+      <div class="b2-live-hover-zone" style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
         <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
           style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:2px solid rgba(255,255,255,.96);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.14)">
           ${avatarHtml}
@@ -537,7 +561,7 @@ function _b2LiveResultsHTML() {
 
     const cardBody = `
       <div style="display:flex;flex-direction:column">
-        <div style="position:relative;width:100%;aspect-ratio:16/10;background:${univColor}12;overflow:hidden"
+        <div class="b2-live-hover-zone" style="position:relative;width:100%;aspect-ratio:16/10;background:${univColor}12;overflow:hidden"
           onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
           <div class="b2-live-cover-wrap" style="position:absolute;inset:0;transition:opacity .15s ease">
             <img class="b2-live-cover" src="${coverUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async"
