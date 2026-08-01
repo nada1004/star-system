@@ -410,6 +410,10 @@ function rBoard2(C, T) {
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
   if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
+  // 모바일에서는 라이브 탭을 노출하지 않음 (SOOP 임베드/미리보기가 모바일 화면·터치 환경에
+  // 적합하지 않아 요청에 따라 숨김) — 데스크톱에서 라이브 탭에 있다가 창을 좁히거나,
+  // 모바일로 접속했는데 이전 상태가 남아있는 경우 안전하게 다른 탭으로 이동
+  if (_b2View === 'live' && window.innerWidth <= 768) _b2View = 'univ';
 
   // 저장/초기화 바
   let saveBar = '';
@@ -697,7 +701,7 @@ function rBoard2(C, T) {
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
         ${weeklyBtn}
-        ${_b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브'))}
+        ${window.innerWidth > 768 ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
         ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}

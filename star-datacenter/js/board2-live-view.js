@@ -4,10 +4,11 @@
    - 대학별 / 티어별 필터 + 이름검색 + 정렬 + 카드크기 조절
    - IntersectionObserver로 화면에 보이는 카드만 iframe 로드(성능)
    - 카드 확대보기 모달 지원
-   - 🔴 라이브 뱃지 자동감지:
+   - 라이브 상태 자동감지:
      서버(/api/soop-live-status)가 SOOP player_live_api.php를 대신 호출해
-     방송중 여부를 조회(CORS 우회). 주기적으로 폴링해 뱃지 상태만
-     갱신하며, 이미 로드된 iframe은 다시 만들지 않음(방송 새로고침 방지).
+     방송중 여부를 조회(CORS 우회). 주기적으로 폴링해 카드 테두리 강조(is-live)와
+     정렬만 갱신하며, 이미 로드된 iframe은 다시 만들지 않음(방송 새로고침 방지).
+     (LIVE 텍스트 뱃지는 v27에서 제거됨)
    ══════════════════════════════════════════════════════════════ */
 
 var _b2LiveUnivFilter = '전체';
@@ -15,7 +16,7 @@ var _b2LiveTierFilter = '전체';
 var _b2LiveGenderFilter = (()=>{ try{ const g = localStorage.getItem('su_b2_live_gender'); return ['전체','F','M'].includes(g) ? g : '전체'; }catch(e){ return '전체'; } })();
 var _b2LiveSearch = '';
 var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort') || 'tier'; }catch(e){ return 'tier'; } })(); // 'tier' | 'name' | 'univ'
-var _b2LiveCardSize = (()=>{ try{ const s = localStorage.getItem('su_b2_live_card_size'); return ['s','m'].includes(s) ? s : 'm'; }catch(e){ return 'm'; } })();
+var _b2LiveCardSize = 's';
 var _b2LiveObserver = null;
 
 // ── 라이브 상태(뱃지) ──
@@ -27,6 +28,7 @@ var _b2LiveHoverOpenTimer = null;
 var _b2LiveHoverCloseTimer = null;
 var _b2LiveHoverOpenId = '';
 var _b2LiveHoverOpenName = '';
+var _b2LiveInlineHideTimers = {};
 
 // soop-multiview.js 의 정규화 로직과 동일 — 독립 로드 순서 문제 없도록 자체 보유
 function _b2LiveSoopId(input) {
@@ -45,9 +47,9 @@ function _b2LiveSoopId(input) {
 }
 
 function _b2LiveEmbedUrl(id) {
-  // 기본 볼륨 0 — SOOP 임베드 공식 mute 파라미터 문서가 없어 확인된 값(mute=y) 사용.
-  // 100% 보장은 어려우니 실제 화면에서 확인 필요.
-  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&showChat=false` : '';
+  // 라이브 탭은 항상 무음으로 시작되게 파라미터를 최대한 명시한다.
+  // SOOP 임베드 파라미터가 비공식이라 환경별 차이는 있을 수 있다.
+  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=true` : '';
 }
 
 function _b2LiveSetSort(mode) {
@@ -65,7 +67,7 @@ function _b2LiveSetGender(g) {
 }
 
 function _b2LiveSetCardSize(size) {
-  _b2LiveCardSize = ['s','m'].includes(size) ? size : 'm';
+  _b2LiveCardSize = 's';
   try{ localStorage.setItem('su_b2_live_card_size', _b2LiveCardSize); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
@@ -136,31 +138,6 @@ function _b2LiveCanHoverPreview() {
   return true;
 }
 
-function _b2LiveEnsureHoverOverlay(){
-  let ov = document.getElementById('b2LiveHoverOverlay');
-  if(ov) return ov;
-  ov = document.createElement('div');
-  ov.id = 'b2LiveHoverOverlay';
-  ov.className = 'su-modal-overlay';
-  ov.style.display = 'none';
-  // 바깥 클릭(다른 곳 클릭) 시 닫기
-  ov.addEventListener('mousedown', (e)=>{
-    try{
-      if(e.target === ov) _b2LiveHideHoverPreview(true);
-    }catch(_){}
-  });
-  // ⚠️ 깜빡임 버그 수정: 팝업(su-modal-overlay)이 화면 전체를 덮는 position:fixed 요소라서
-  // 팝업이 열리는 순간 마우스 커서 아래 요소가 프로필 카드 → 팝업(배경 포함)으로 바뀐다.
-  // 이전에는 "닫힘 취소" 처리가 팝업 안쪽 박스(.su-modal)에만 걸려 있어서, 커서가
-  // 팝업의 어두운 배경(바깥 여백) 위에 있을 때는 닫힘 취소가 안 되고 그대로 닫혔다가,
-  // 팝업이 사라지면 커서가 다시 프로필 위로 돌아온 걸로 판정되어 재오픈 → 무한 반복(깜빡임).
-  // → 팝업 전체(배경 포함)에 마우스가 있으면 닫힘을 취소하고, 팝업을 완전히 벗어나야만 닫히게 함.
-  ov.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
-  ov.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
-  document.body.appendChild(ov);
-  return ov;
-}
-
 // 참고사이트(ssustar/live)처럼 경과시간을 "n분 전"/"n시간 전" 형태로 표시
 function _b2LiveRelativeTime(startTimeStr) {
   if (!startTimeStr) return '';
@@ -177,126 +154,49 @@ function _b2LiveRelativeTime(startTimeStr) {
   } catch (e) { return ''; }
 }
 
-// (참고사이트 방식과 동일하게 변경) 호버 시 실제 방송 iframe을 바로 불러오지 않고,
-// 썸네일 이미지 + 시청자수 + 경과시간 + 방송제목만 가벼운 팝업으로 보여준다.
-// 실제 시청은 카드 클릭(확대보기 _b2LiveEnlarge)에서만 iframe을 로드한다.
-// → 마우스를 여러 카드에 빠르게 올려도 매번 라이브 임베드가 재생되지 않아 가볍다.
-function _b2LiveShowHoverPreview(anchorEl, id, name){
-  try{
-    if(!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
-    const st = _b2LiveStatusCache[id];
-    const ov = _b2LiveEnsureHoverOverlay();
-    _b2LiveHoverOpenId = String(id||'');
-    _b2LiveHoverOpenName = String(name||'');
-    ov.style.display = 'flex';
-
-    if (!st || !st.live) {
-      // ⚠️ 수정: 서버의 라이브 상태 폴링이 아직 안 됐거나(로딩 지연) 실패한 경우에도
-      // 이전에는 팝업 자체를 아예 숨겨버려서 "hover해도 팝업이 안 뜬다"는 문제가 있었음.
-      // → 라이브 확정 정보가 없을 때는 실제 SOOP 방송 iframe을 바로 띄워서(두 번째 버전과
-      //   동일한 방식) 최소한 팝업은 항상 뜨도록 한다. (오프라인이면 SOOP 임베드 자체가
-      //   "방송 종료" 화면을 보여줌)
-      ov.innerHTML = `
-        <div class="su-modal" style="width:min(620px, calc(100vw - 20px));height:min(400px, calc(100vh - 20px));overflow:hidden;display:flex;flex-direction:column">
-          <div class="su-modal-hd" style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📺 ${name || ''}</div>
-            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveHideHoverPreview(true)">닫기</button>
-          </div>
-          <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
-            <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
-              style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
-          </div>
-        </div>
-      `;
-      try{
-        const modal = ov.querySelector('.su-modal');
-        if(modal && !modal.dataset.boundHover){
-          modal.dataset.boundHover = '1';
-          modal.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
-          modal.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
-        }
-      }catch(e){}
-      return;
-    }
-
-    const safeTitle = String(st.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const viewerCnt = Number.isFinite(st.viewerCnt) ? st.viewerCnt : (st.viewerCnt || '0');
-    const relTime = _b2LiveRelativeTime(st.broadStart);
-    const thumbHtml = st.thumb
-      ? `<img src="${st.thumb}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;background:#111" onerror="this.style.display='none'">`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;background:#111;font-size:13px">미리보기 이미지 없음</div>`;
-
-    ov.innerHTML = `
-      <div class="su-modal" style="width:min(480px, calc(100vw - 20px));overflow:hidden;display:flex;flex-direction:column">
-        <div class="su-modal-hd" style="display:flex;align-items:center;justify-content:space-between">
-          <div style="font-weight:1000;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden">
-            <span style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;flex-shrink:0">
-              <span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-            </span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name || ''}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveEnlarge('${String(id).replace(/'/g,"\\'")}','${String(name||'').replace(/'/g,"\\'")}');_b2LiveHideHoverPreview(true)">시청하기</button>
-            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveHideHoverPreview(true)">닫기</button>
-          </div>
-        </div>
-        <div class="su-modal-bd" style="padding:0;overflow:hidden">
-          <div style="position:relative;width:100%;aspect-ratio:16/9;background:#111">
-            ${thumbHtml}
-            <div style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;background:rgba(30,30,30,.75);color:#fff;padding:3px 10px;border-radius:16px;font-size:13px;font-weight:800">
-              <span style="width:6px;height:6px;border-radius:50%;background:#ef4444"></span>${viewerCnt}
-            </div>
-            ${relTime ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;padding:3px 10px;border-radius:16px;font-size:12px">${relTime}</div>` : ''}
-          </div>
-          ${safeTitle ? `<div style="padding:8px 12px;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeTitle}</div>` : ''}
-        </div>
-      </div>
-    `;
-    // 모달에 마우스 올라가면 닫힘 예약 취소 (프로필→모달 이동 가능)
-    try{
-      const modal = ov.querySelector('.su-modal');
-      if(modal && !modal.dataset.boundHover){
-        modal.dataset.boundHover = '1';
-        modal.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
-        modal.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
-      }
-    }catch(e){}
-  }catch(e){}
+function _b2LiveFindCard(anchorEl){
+  try{ return anchorEl && anchorEl.closest ? anchorEl.closest('.b2-live-card') : null; }catch(e){ return null; }
 }
 
-function _b2LiveHideHoverPreview(immediate){
-  try{
-    clearTimeout(_b2LiveHoverOpenTimer);
-    clearTimeout(_b2LiveHoverCloseTimer);
-    const ov = document.getElementById('b2LiveHoverOverlay');
-    if(!ov) return;
-    const close = ()=>{
-      ov.style.display = 'none';
-      ov.innerHTML = '';
-      _b2LiveHoverOpenId = '';
-      _b2LiveHoverOpenName = '';
-    };
-    if(immediate) close();
-    else _b2LiveHoverCloseTimer = setTimeout(close, 180);
-  }catch(e){}
-}
-
-function _b2LiveHoverEnter(anchorEl, id, name) {
+function _b2LiveShowInlinePreview(anchorEl, id) {
   try {
-    clearTimeout(_b2LiveHoverCloseTimer);
-    clearTimeout(_b2LiveHoverOpenTimer);
-    _b2LiveHoverOpenTimer = setTimeout(()=>_b2LiveShowHoverPreview(anchorEl, id, name), 140);
+    if (!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
+    const card = _b2LiveFindCard(anchorEl);
+    if (!card) return;
+    if (_b2LiveInlineHideTimers[id]) { clearTimeout(_b2LiveInlineHideTimers[id]); _b2LiveInlineHideTimers[id] = null; }
+    const frameBox = card.querySelector('.b2-live-inline-box');
+    const frame = card.querySelector('.b2-live-inline-frame');
+    const cover = card.querySelector('.b2-live-cover-wrap');
+    if (frameBox) frameBox.style.display = 'block';
+    if (cover) cover.style.opacity = '0';
+    if (frame) {
+      const nextSrc = _b2LiveEmbedUrl(id);
+      if (frame.getAttribute('src') !== nextSrc) frame.setAttribute('src', nextSrc);
+    }
+    card.classList.add('is-previewing');
   } catch (e) {}
 }
 
-function _b2LiveHoverLeave(e) {
+function _b2LiveHideInlinePreview(anchorEl, id, e) {
   try {
-    // 프로필 카드에서 벗어난 곳(relatedTarget)이 팝업 자신이면 닫지 않음(깜빡임 방지 이중 안전장치)
-    const ov = document.getElementById('b2LiveHoverOverlay');
+    const card = _b2LiveFindCard(anchorEl);
+    if (!card || !id) return;
     const related = e && e.relatedTarget;
-    if (ov && related && ov.contains(related)) return;
-  } catch (_) {}
-  _b2LiveHideHoverPreview(false);
+    if (related && card.contains(related)) return;
+    if (_b2LiveInlineHideTimers[id]) clearTimeout(_b2LiveInlineHideTimers[id]);
+    _b2LiveInlineHideTimers[id] = setTimeout(() => {
+      try {
+        if (card.matches && card.matches(':hover')) return;
+        const frameBox = card.querySelector('.b2-live-inline-box');
+        const frame = card.querySelector('.b2-live-inline-frame');
+        const cover = card.querySelector('.b2-live-cover-wrap');
+        if (frame) frame.removeAttribute('src');
+        if (frameBox) frameBox.style.display = 'none';
+        if (cover) cover.style.opacity = '1';
+        card.classList.remove('is-previewing');
+      } catch (_) {}
+    }, 120);
+  } catch (e) {}
 }
 
 // 서버 프록시(/api/soop-live-status)로 방송상태 일괄 조회
@@ -321,22 +221,32 @@ async function _b2LiveFetchStatus(ids) {
 function _b2LiveApplyStatusToDom(container) {
   if (!container) return;
   const cards = container.querySelectorAll('.b2-live-card[data-soop-id]');
-  let liveCount = 0;
   cards.forEach(card => {
     const id = card.getAttribute('data-soop-id');
     const st = _b2LiveStatusCache[id];
-    const badge = card.querySelector('.b2-live-badge');
-    const avatarBadge = card.querySelector('.b2-live-preview-badge');
-    const avatarBtn = card.querySelector('.b2-live-avatar-btn');
-    const isLive = !!(st && st.live);
-    if (isLive) liveCount++;
-    if (badge) badge.style.display = isLive ? 'inline-flex' : 'none';
-    if (avatarBadge) avatarBadge.style.display = isLive ? 'inline-flex' : 'none';
-    card.classList.toggle('is-live', isLive);
-    if (avatarBtn) avatarBtn.classList.toggle('is-live', isLive);
+    const coverImg = card.querySelector('.b2-live-cover');
+    const coverFallback = card.querySelector('.b2-live-cover-fallback');
+    const titleEl = card.querySelector('.b2-live-title');
+    const photoUrl = card.getAttribute('data-photo-url') || '';
+    const thumbUrl = st && st.thumb ? st.thumb : '';
+    const coverUrl = thumbUrl || photoUrl;
+    if (coverImg) {
+      if (coverUrl) {
+        if (coverImg.getAttribute('src') !== coverUrl) coverImg.setAttribute('src', coverUrl);
+        coverImg.style.display = 'block';
+        if (coverFallback) coverFallback.style.display = 'none';
+      } else {
+        coverImg.removeAttribute('src');
+        coverImg.style.display = 'none';
+        if (coverFallback) coverFallback.style.display = 'flex';
+      }
+    }
+    if (titleEl) {
+      const title = String((st && st.title) || '').trim();
+      titleEl.textContent = title || '';
+      titleEl.style.display = title ? '-webkit-box' : 'none';
+    }
   });
-  const counter = document.getElementById('b2-live-count-badge');
-  if (counter) counter.textContent = `🔴 라이브 ${liveCount}명`;
 }
 
 // 현재 렌더된 카드들의 상태를 조회하고 DOM에 반영
@@ -355,7 +265,8 @@ async function _b2LivePoll() {
       const prevLive = !!(_b2LiveStatusCache[id] && _b2LiveStatusCache[id].live);
       const nextLive = !!(results[id] && results[id].live);
       if (prevLive !== nextLive) changed = true;
-      _b2LiveStatusCache[id] = Object.assign({ ts: now }, results[id]);
+      const prev = _b2LiveStatusCache[id] || {};
+      _b2LiveStatusCache[id] = Object.assign({}, prev, results[id], { ts: now });
     });
     // 폴링 도중 다른 탭으로 이동했을 수 있으니 재확인 후 반영
     const stillLive = document.getElementById('b2-content');
@@ -404,16 +315,11 @@ function _b2LiveView() {
     univList.sort();
   }
 
-  const sizeBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetCardSize('${v}')" title="카드 크기: ${label}" aria-pressed="${_b2LiveCardSize===v}"
-    style="padding:7px 13px;border-radius:9px;border:1.5px solid ${_b2LiveCardSize===v?'#2563eb':'var(--border2)'};background:${_b2LiveCardSize===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveCardSize===v?'#1d4ed8':'var(--text2)'};font-size:13px;font-weight:${_b2LiveCardSize===v?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
-
   const genderBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetGender('${v}')" title="${label}" aria-pressed="${_b2LiveGenderFilter===v}"
     style="padding:8px 14px;border-radius:20px;border:1.5px solid ${_b2LiveGenderFilter===v?'#2563eb':'var(--border2)'};background:${_b2LiveGenderFilter===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveGenderFilter===v?'#1d4ed8':'var(--text2)'};font-size:var(--fs-base);font-weight:${_b2LiveGenderFilter===v?900:700};cursor:pointer;margin-bottom:0;white-space:nowrap">${label}</button>`;
 
   const filterBar = `
     <style>
-      @keyframes b2LivePulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-
       /* ── 라이브탭 카드 리뉴얼: 가독성/사용성 개선 공용 클래스 ── */
       .b2-live-card{ transition:box-shadow .15s ease, border-color .15s ease, transform .15s ease; }
       .b2-live-card:hover{ box-shadow:0 10px 26px rgba(15,23,42,.10); border-color:#94a3b8; transform:translateY(-2px); }
@@ -472,9 +378,6 @@ function _b2LiveView() {
       <input id="b2-live-search" type="text" placeholder="🔍 이름 검색" value="${(_b2LiveSearch||'').replace(/"/g,'&quot;')}"
         oninput="_b2LiveSearch=this.value;_b2LiveRefreshResultsOnly&&_b2LiveRefreshResultsOnly()"
         style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);width:150px">
-      <div style="display:flex;gap:4px;align-items:center">
-        ${sizeBtn('s','S')}${sizeBtn('m','M')}
-      </div>
     </div>
   `;
 
@@ -543,11 +446,9 @@ function _b2LiveResultsHTML() {
   const liveFiltered = tierFiltered;
 
   const sizeCfgMap = {
-    // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이)
-    s: { min: 70, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '11px', tagFs: '7px', univLogoFs: '20px', gap: 6 },
-    m: { min: 132, avatar: 50, stacked: false, fullImage: false, pad: '8px 9px',     nameFs: '12px',  tagFs: '9px', univLogoFs: '13px', gap: 9 },
+    s: { min: 158, avatar: 30, pad: '0', nameFs: '12.5px', tagFs: '9px', univLogoFs: '14px', gap: 8, metaFs: '10px', titleFs: '11px' },
   };
-  const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
+  const sizeCfg = sizeCfgMap.s;
   const cardMinPx = sizeCfg.min;
 
   if (!soopPlayers.length) {
@@ -584,8 +485,11 @@ function _b2LiveResultsHTML() {
     const safeName = String(p.name || '').replace(/'/g, "\\'");
     const safeNameHtml = String(p.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const stKnown = _b2LiveStatusCache[p._soopId];
-    const badgeInitDisplay = (stKnown && stKnown.live) ? 'inline-flex' : 'none';
     const photoUrl = p.photo ? ((typeof toHttpsUrl === 'function' ? toHttpsUrl(p.photo) : p.photo).replace(/"/g, '&quot;')) : '';
+    const thumbUrl = stKnown && stKnown.thumb ? String(stKnown.thumb).replace(/"/g, '&quot;') : '';
+    const coverUrl = thumbUrl || photoUrl;
+    const titleText = String((stKnown && stKnown.title) || '').trim();
+    const titleHtml = titleText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const avatarHtml = photoUrl
       ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`
@@ -607,71 +511,64 @@ function _b2LiveResultsHTML() {
       }
     }
 
-    const btnSize = sizeCfg.stacked ? 26 : 24;
+    const btnSize = sizeCfg.avatar <= 40 ? 24 : 26;
     const btnAccentStyle = p.univ ? `border-color:${univColor}55;color:${univColor};background:${univColor}14;` : '';
     const enlargeBtn = `<button type="button" class="b2-live-iconbtn" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기" aria-label="${safeNameHtml} 확대보기"
-            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px;line-height:1;padding:0;flex-shrink:0;${btnAccentStyle}">⛶</button>`;
+            style="width:${btnSize}px;height:${btnSize}px;border-radius:8px;font-size:${sizeCfg.avatar <= 40 ? 11.5 : 12.5}px;line-height:1;padding:0;flex-shrink:0;box-shadow:0 2px 8px rgba(15,23,42,.06);${btnAccentStyle}">⛶</button>`;
     const linkBtn = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" class="b2-live-iconbtn"
-            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px;${btnAccentStyle}" title="SOOP 채널로 이동" aria-label="${safeNameHtml} SOOP 채널로 이동">🔗</a>`;
+            style="width:${btnSize}px;height:${btnSize}px;border-radius:8px;font-size:${sizeCfg.avatar <= 40 ? 11.5 : 12.5}px;box-shadow:0 2px 8px rgba(15,23,42,.06);${btnAccentStyle}" title="SOOP 채널로 이동" aria-label="${safeNameHtml} SOOP 채널로 이동">🔗</a>`;
 
-    // M/L 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
+    // 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
     const avatarBlock = `
-      <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveHoverEnter(this,'${p._soopId}','${safeName}')" onmouseleave="_b2LiveHoverLeave(event)">
-        <button type="button" class="b2-live-avatar-btn${badgeInitDisplay==='inline-flex'?' is-live':''}" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="${badgeInitDisplay==='inline-flex'?'선수 상세 · 마우스 올리면 라이브 미리보기':'선수 상세'}"
-          style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:1.5px solid var(--border2);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)">
+      <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
+        <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
+          style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:2px solid rgba(255,255,255,.96);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.14)">
           ${avatarHtml}
         </button>
-        <span class="b2-live-preview-badge" title="마우스를 올리면 라이브 미리보기"
-          style="display:${badgeInitDisplay};align-items:center;gap:2px;position:absolute;right:-3px;bottom:-3px;padding:1px 5px;border:1px solid #fff;border-radius:999px;background:#dc2626;color:#fff;font-size:7px;font-weight:900;letter-spacing:.2px;line-height:1.4;box-shadow:0 1px 5px rgba(220,38,38,.4);pointer-events:none">
-          <span class="b2-live-badge-dot" style="width:3px;height:3px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-        </span>
       </div>`;
 
     const nameHtml = `<span class="b2-live-name" style="font-weight:900;font-size:${sizeCfg.nameFs};cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>`;
     // 대학명 텍스트 대신 대학 로고를 노출 (무소속은 태그 자체를 숨김)
     const univLogoSize = typeof getUnivLogoSizeStr === 'function' ? getUnivLogoSizeStr(p.univ, 'players', sizeCfg.univLogoFs) : sizeCfg.univLogoFs;
     const univTag = p.univ ? `<span class="b2-live-tag" title="${String(p.univ).replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;font-size:${sizeCfg.tagFs};padding:0;background:transparent;color:${univColor};border:none;white-space:nowrap">${typeof gUI === 'function' ? gUI(p.univ, univLogoSize) : ''}</span>` : '';
-    const tierTag = p.tier ? `<span class="b2-live-tag" style="font-size:${sizeCfg.tagFs};padding:1px 6px;background:${tierBg};color:${tierFg};white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : '';
-    // 카드 배경: 대학 색상의 연한 톤 (무소속은 흰색 유지)
-    const cardBg = p.univ ? `${univColor}28` : 'var(--white)';
+    const cardBg = p.univ ? `${univColor}18` : 'var(--white)';
+    const titleLine = titleHtml || '';
 
-    const cardBody = sizeCfg.fullImage
-      // ── S(작게) 모드: 프로필 이미지가 카드를 가득 채우는 포토카드형
-      //    (원형 아바타 대신 카드 전체를 사진으로 채우고 하단에 그라데이션 위 이름/태그 오버레이)
-      ? `
-        <div style="position:relative;width:100%;aspect-ratio:3/4;background:${univColor}12;overflow:hidden"
-          onmouseenter="_b2LiveHoverEnter(this,'${p._soopId}','${safeName}')" onmouseleave="_b2LiveHoverLeave(event)">
-          ${photoUrl
-            ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-               <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</span>`
-            : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</span>`}
-          <div style="position:absolute;left:0;right:0;bottom:0;height:60%;background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.32) 55%,rgba(0,0,0,0));pointer-events:none"></div>
-          <span class="b2-live-preview-badge" title="마우스를 올리면 라이브 미리보기"
-            style="display:${badgeInitDisplay};align-items:center;gap:2px;position:absolute;top:4px;left:4px;padding:1px 5px;border:1px solid rgba(255,255,255,.95);border-radius:999px;background:#dc2626;color:#fff;font-size:7px;font-weight:900;letter-spacing:.2px;line-height:1.4;box-shadow:0 1px 4px rgba(220,38,38,.4);pointer-events:none;z-index:2">
-            <span class="b2-live-badge-dot" style="width:3px;height:3px;border-radius:50%;background:#fff;animation:b2LivePulse 1.4s infinite"></span>LIVE
-          </span>
-          <div style="position:absolute;left:0;right:0;bottom:0;padding:5px 6px;display:flex;flex-direction:column;gap:3px;z-index:1">
-            <span class="b2-live-name" style="font-weight:900;font-size:${sizeCfg.nameFs};color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>
-            <div style="display:flex;gap:3px;flex-wrap:wrap">
-              ${p.univ ? `<span class="b2-live-tag" title="${String(p.univ).replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;font-size:${sizeCfg.tagFs};padding:0;background:transparent;color:#fff;border:none;white-space:nowrap">${typeof gUI === 'function' ? gUI(p.univ, univLogoSize) : ''}</span>` : ''}
+    const cardBody = `
+      <div style="display:flex;flex-direction:column">
+        <div style="position:relative;width:100%;aspect-ratio:16/10;background:${univColor}12;overflow:hidden"
+          onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
+          <div class="b2-live-cover-wrap" style="position:absolute;inset:0;transition:opacity .15s ease">
+            <img class="b2-live-cover" src="${coverUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async"
+              style="width:100%;height:100%;object-fit:cover;display:${coverUrl ? 'block' : 'none'};cursor:pointer"
+              onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')"
+              onerror="this.style.display='none';const fb=this.parentNode.querySelector('.b2-live-cover-fallback');if(fb) fb.style.display='flex'">
+            <div class="b2-live-cover-fallback" style="display:${coverUrl ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:26px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</div>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,.30),rgba(15,23,42,.08) 48%,rgba(15,23,42,0));pointer-events:none"></div>
+          </div>
+          <div class="b2-live-inline-box" style="display:none;position:absolute;inset:0;background:#000">
+            <iframe class="b2-live-inline-frame" src="" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+              style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
+          </div>
+        </div>
+        <div style="padding:2px 8px 8px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:8px;margin-top:-3px;min-height:${sizeCfg.avatar + 6}px">
+            ${avatarBlock}
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;padding-top:12px">
+              <div style="display:flex;align-items:center;gap:5px;min-width:0">
+                <div style="min-width:0;flex:1">${nameHtml}</div>
+                ${univTag}
+              </div>
+              <div class="b2-live-title" style="font-size:${sizeCfg.titleFs};font-weight:600;line-height:1.25;color:var(--text3);display:${titleLine ? '-webkit-box' : 'none'};-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word">${titleLine}</div>
             </div>
+            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;padding-top:10px">${enlargeBtn}${linkBtn}</div>
           </div>
-        </div>`
-      // ── M/L 모드: 가로 정렬형 카드 — 축소된 크기에 맞춘 컴팩트 레이아웃
-      //    (카드 안 티어뱃지는 표시하지 않음 — 대학태그만 노출)
-      : `
-        <div style="display:flex;align-items:center;gap:9px">
-          ${avatarBlock}
-          <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1">
-            <div style="min-width:0">${nameHtml}</div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap">${univTag}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">${enlargeBtn}${linkBtn}</div>
-        </div>`;
+        </div>
+      </div>`;
 
     return groupHeader + `
-      <div class="b2-live-card${badgeInitDisplay==='inline-flex' ? ' is-live' : ''}" data-soop-id="${p._soopId}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:12px;overflow:hidden;padding:${sizeCfg.pad}">
+      <div class="b2-live-card" data-soop-id="${p._soopId}" data-photo-url="${photoUrl}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:16px;overflow:hidden;padding:${sizeCfg.pad}">
         ${cardBody}
       </div>
     `;
