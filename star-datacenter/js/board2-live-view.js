@@ -470,7 +470,7 @@ function _b2LiveResultsHTML() {
   const liveFiltered = tierFiltered;
 
   const sizeCfgMap = {
-    s: { min: 158, avatar: 30, pad: '0', nameFs: '12.5px', tagFs: '9px', univLogoFs: '14px', gap: 8, metaFs: '10px', titleFs: '11px' },
+    s: { min: 158, avatar: 30, pad: '0', nameFs: '12.5px', tagFs: '9px', univLogoFs: '18px', gap: 8, metaFs: '10px', titleFs: '11px' },
   };
   const sizeCfg = sizeCfgMap.s;
   const cardMinPx = sizeCfg.min;
@@ -561,7 +561,7 @@ function _b2LiveResultsHTML() {
 
     const cardBody = `
       <div style="display:flex;flex-direction:column">
-        <div class="b2-live-hover-zone" style="position:relative;width:100%;aspect-ratio:16/10;background:${univColor}12;overflow:hidden"
+        <div class="b2-live-hover-zone" style="position:relative;width:100%;aspect-ratio:16/13;background:${univColor}12;overflow:hidden"
           onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
           <div class="b2-live-cover-wrap" style="position:absolute;inset:0;transition:opacity .15s ease">
             <img class="b2-live-cover" src="${coverUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async"
@@ -576,17 +576,17 @@ function _b2LiveResultsHTML() {
               style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
           </div>
         </div>
-        <div style="padding:2px 8px 8px;display:flex;flex-direction:column">
+        <div style="padding:2px 8px 6px;display:flex;flex-direction:column">
           <div style="display:flex;align-items:center;gap:8px;margin-top:-3px;min-height:${sizeCfg.avatar + 6}px">
             ${avatarBlock}
-            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;padding-top:12px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;padding-top:4px">
               <div style="display:flex;align-items:center;gap:5px;min-width:0">
                 <div style="min-width:0;flex:1">${nameHtml}</div>
                 ${univTag}
               </div>
               <div class="b2-live-title" style="font-size:${sizeCfg.titleFs};font-weight:600;line-height:1.25;color:var(--text3);display:${titleLine ? '-webkit-box' : 'none'};-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word">${titleLine}</div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;padding-top:10px">${enlargeBtn}${linkBtn}</div>
+            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;padding-top:2px">${enlargeBtn}${linkBtn}</div>
           </div>
         </div>
       </div>`;
