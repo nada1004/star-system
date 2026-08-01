@@ -161,17 +161,73 @@ function _b2LiveEnsureHoverOverlay(){
   return ov;
 }
 
+// 참고사이트(ssustar/live)처럼 경과시간을 "n분 전"/"n시간 전" 형태로 표시
+function _b2LiveRelativeTime(startTimeStr) {
+  if (!startTimeStr) return '';
+  try {
+    const start = new Date(String(startTimeStr).replace(/-/g, '/'));
+    const diffMs = Date.now() - start.getTime();
+    if (!Number.isFinite(diffMs) || diffMs < 0) return '';
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return '방금 전';
+    if (diffMin < 60) return `${diffMin}분 전`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour}시간 전`;
+    return `${Math.floor(diffHour / 24)}일 전`;
+  } catch (e) { return ''; }
+}
+
+// (참고사이트 방식과 동일하게 변경) 호버 시 실제 방송 iframe을 바로 불러오지 않고,
+// 썸네일 이미지 + 시청자수 + 경과시간 + 방송제목만 가벼운 팝업으로 보여준다.
+// 실제 시청은 카드 클릭(확대보기 _b2LiveEnlarge)에서만 iframe을 로드한다.
+// → 마우스를 여러 카드에 빠르게 올려도 매번 라이브 임베드가 재생되지 않아 가볍다.
 function _b2LiveShowHoverPreview(anchorEl, id, name){
   try{
     if(!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
+    const st = _b2LiveStatusCache[id];
     const ov = _b2LiveEnsureHoverOverlay();
-    const safeName = String(name||'').replace(/'/g,"\\'");
     _b2LiveHoverOpenId = String(id||'');
     _b2LiveHoverOpenName = String(name||'');
     ov.style.display = 'flex';
-    // (요청사항) 미리보기창은 팝업창 가득하게 크게 표시
+
+    if (!st || !st.live) {
+      // ⚠️ 수정: 서버의 라이브 상태 폴링이 아직 안 됐거나(로딩 지연) 실패한 경우에도
+      // 이전에는 팝업 자체를 아예 숨겨버려서 "hover해도 팝업이 안 뜬다"는 문제가 있었음.
+      // → 라이브 확정 정보가 없을 때는 실제 SOOP 방송 iframe을 바로 띄워서(두 번째 버전과
+      //   동일한 방식) 최소한 팝업은 항상 뜨도록 한다. (오프라인이면 SOOP 임베드 자체가
+      //   "방송 종료" 화면을 보여줌)
+      ov.innerHTML = `
+        <div class="su-modal" style="width:min(620px, calc(100vw - 20px));height:min(400px, calc(100vh - 20px));overflow:hidden;display:flex;flex-direction:column">
+          <div class="su-modal-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📺 ${name || ''}</div>
+            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveHideHoverPreview(true)">닫기</button>
+          </div>
+          <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
+            <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+              style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
+          </div>
+        </div>
+      `;
+      try{
+        const modal = ov.querySelector('.su-modal');
+        if(modal && !modal.dataset.boundHover){
+          modal.dataset.boundHover = '1';
+          modal.addEventListener('mouseenter', ()=>{ try{ clearTimeout(_b2LiveHoverCloseTimer); }catch(e){} });
+          modal.addEventListener('mouseleave', ()=>{ _b2LiveHoverLeave(); });
+        }
+      }catch(e){}
+      return;
+    }
+
+    const safeTitle = String(st.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const viewerCnt = Number.isFinite(st.viewerCnt) ? st.viewerCnt : (st.viewerCnt || '0');
+    const relTime = _b2LiveRelativeTime(st.broadStart);
+    const thumbHtml = st.thumb
+      ? `<img src="${st.thumb}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;background:#111" onerror="this.style.display='none'">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;background:#111;font-size:13px">미리보기 이미지 없음</div>`;
+
     ov.innerHTML = `
-      <div class="su-modal" style="width:min(620px, calc(100vw - 20px));height:min(400px, calc(100vh - 20px));overflow:hidden;display:flex;flex-direction:column">
+      <div class="su-modal" style="width:min(480px, calc(100vw - 20px));overflow:hidden;display:flex;flex-direction:column">
         <div class="su-modal-hd" style="display:flex;align-items:center;justify-content:space-between">
           <div style="font-weight:1000;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden">
             <span style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;line-height:1;flex-shrink:0">
@@ -180,12 +236,19 @@ function _b2LiveShowHoverPreview(anchorEl, id, name){
             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name || ''}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveEnlarge('${String(id).replace(/'/g,"\\'")}','${String(name||'').replace(/'/g,"\\'")}');_b2LiveHideHoverPreview(true)">시청하기</button>
             <button type="button" class="btn btn-r btn-sm" onclick="_b2LiveHideHoverPreview(true)">닫기</button>
           </div>
         </div>
-        <div class="su-modal-bd" style="padding:0;overflow:hidden;flex:1;min-height:0;height:100%">
-          <iframe src="${_b2LiveEmbedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
-            style="width:100%;height:100%;border:0;background:#000"></iframe>
+        <div class="su-modal-bd" style="padding:0;overflow:hidden">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;background:#111">
+            ${thumbHtml}
+            <div style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;background:rgba(30,30,30,.75);color:#fff;padding:3px 10px;border-radius:16px;font-size:13px;font-weight:800">
+              <span style="width:6px;height:6px;border-radius:50%;background:#ef4444"></span>${viewerCnt}
+            </div>
+            ${relTime ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;padding:3px 10px;border-radius:16px;font-size:12px">${relTime}</div>` : ''}
+          </div>
+          ${safeTitle ? `<div style="padding:8px 12px;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeTitle}</div>` : ''}
         </div>
       </div>
     `;
@@ -287,13 +350,23 @@ async function _b2LivePoll() {
   try {
     const results = await _b2LiveFetchStatus(ids);
     const now = Date.now();
+    let changed = false;
     Object.keys(results).forEach(id => {
+      const prevLive = !!(_b2LiveStatusCache[id] && _b2LiveStatusCache[id].live);
+      const nextLive = !!(results[id] && results[id].live);
+      if (prevLive !== nextLive) changed = true;
       _b2LiveStatusCache[id] = Object.assign({ ts: now }, results[id]);
     });
     // 폴링 도중 다른 탭으로 이동했을 수 있으니 재확인 후 반영
     const stillLive = document.getElementById('b2-content');
     if (stillLive && stillLive.querySelector('.b2-live-card[data-soop-id]')) {
-      _b2LiveApplyStatusToDom(stillLive);
+      if (changed && _b2LiveSortMode === 'tier' && typeof _b2LiveRefreshResultsOnly === 'function') {
+        // 라이브 여부가 바뀐 사람이 있으면 그리드를 다시 그려 라이브 우선 정렬을 반영
+        // (그리드에는 iframe이 없어 재생 중단 없이 안전하게 재생성 가능)
+        _b2LiveRefreshResultsOnly();
+      } else {
+        _b2LiveApplyStatusToDom(stillLive);
+      }
     }
   } finally {
     _b2LivePollInFlight = false;
@@ -442,20 +515,28 @@ function _b2LiveResultsHTML() {
 
   const tierOrder = typeof TIERS !== 'undefined' ? TIERS : [];
   const univOrder = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+  // (참고사이트 방식) 같은 그룹(티어/대학) 안에서는 방송 중인 스트리머를 먼저 보여준다
+  const _isLiveP = (p) => { const st = _b2LiveStatusCache[p._soopId]; return !!(st && st.live) ? 0 : 1; };
   const tierFiltered = searched.slice().sort((a, b) => {
     if (_b2LiveSortMode === 'name') {
+      const la = _isLiveP(a), lb = _isLiveP(b);
+      if (la !== lb) return la - lb;
       return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
     }
     if (_b2LiveSortMode === 'univ') {
       const ia = univOrder.indexOf(a.univ); const ib = univOrder.indexOf(b.univ);
       const ra = ia >= 0 ? ia : 999; const rb = ib >= 0 ? ib : 999;
       if (ra !== rb) return ra - rb;
+      const la = _isLiveP(a), lb = _isLiveP(b);
+      if (la !== lb) return la - lb;
       return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
     }
-    // 기본: 티어순
+    // 기본: 티어순 (같은 티어 안에서는 라이브 우선)
     const idxA = tierOrder.indexOf(a.tier); const idxB = tierOrder.indexOf(b.tier);
     const rankA = idxA >= 0 ? idxA : 999; const rankB = idxB >= 0 ? idxB : 999;
     if (rankA !== rankB) return rankA - rankB;
+    const la = _isLiveP(a), lb = _isLiveP(b);
+    if (la !== lb) return la - lb;
     return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
   });
 
@@ -463,8 +544,8 @@ function _b2LiveResultsHTML() {
 
   const sizeCfgMap = {
     // S: 프로필 이미지가 카드를 가득 채우는 포토카드형 (아바타 원형 대신 풀블리드 이미지 + 하단 그라데이션 오버레이)
-    s: { min: 70, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '9px',  tagFs: '7px', gap: 6 },
-    m: { min: 132, avatar: 50, stacked: false, fullImage: false, pad: '8px 9px',     nameFs: '12px',  tagFs: '9px', gap: 9 },
+    s: { min: 70, avatar: 34, stacked: true,  fullImage: true, pad: '0',              nameFs: '11px', tagFs: '7px', univLogoFs: '20px', gap: 6 },
+    m: { min: 132, avatar: 50, stacked: false, fullImage: false, pad: '8px 9px',     nameFs: '12px',  tagFs: '9px', univLogoFs: '13px', gap: 9 },
   };
   const sizeCfg = sizeCfgMap[_b2LiveCardSize] || sizeCfgMap.m;
   const cardMinPx = sizeCfg.min;
@@ -527,10 +608,11 @@ function _b2LiveResultsHTML() {
     }
 
     const btnSize = sizeCfg.stacked ? 26 : 24;
+    const btnAccentStyle = p.univ ? `border-color:${univColor}55;color:${univColor};background:${univColor}14;` : '';
     const enlargeBtn = `<button type="button" class="b2-live-iconbtn" onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')" title="확대보기" aria-label="${safeNameHtml} 확대보기"
-            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px;line-height:1;padding:0;flex-shrink:0">⛶</button>`;
+            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px;line-height:1;padding:0;flex-shrink:0;${btnAccentStyle}">⛶</button>`;
     const linkBtn = `<a href="https://ch.sooplive.co.kr/${p._soopId}" target="_blank" rel="noopener" class="b2-live-iconbtn"
-            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px" title="SOOP 채널로 이동" aria-label="${safeNameHtml} SOOP 채널로 이동">🔗</a>`;
+            style="width:${btnSize}px;height:${btnSize}px;border-radius:7px;font-size:${sizeCfg.stacked ? 12 : 10.5}px;${btnAccentStyle}" title="SOOP 채널로 이동" aria-label="${safeNameHtml} SOOP 채널로 이동">🔗</a>`;
 
     // M/L 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
@@ -547,8 +629,12 @@ function _b2LiveResultsHTML() {
       </div>`;
 
     const nameHtml = `<span class="b2-live-name" style="font-weight:900;font-size:${sizeCfg.nameFs};cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>`;
-    const univTag = p.univ ? `<span class="b2-live-tag" style="font-size:${sizeCfg.tagFs};padding:1px 6px;background:${univColor}20;color:${univColor};border:1px solid ${univColor}3d;white-space:nowrap">${p.univ}</span>` : '';
+    // 대학명 텍스트 대신 대학 로고를 노출 (무소속은 태그 자체를 숨김)
+    const univLogoSize = typeof getUnivLogoSizeStr === 'function' ? getUnivLogoSizeStr(p.univ, 'players', sizeCfg.univLogoFs) : sizeCfg.univLogoFs;
+    const univTag = p.univ ? `<span class="b2-live-tag" title="${String(p.univ).replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;font-size:${sizeCfg.tagFs};padding:0;background:transparent;color:${univColor};border:none;white-space:nowrap">${typeof gUI === 'function' ? gUI(p.univ, univLogoSize) : ''}</span>` : '';
     const tierTag = p.tier ? `<span class="b2-live-tag" style="font-size:${sizeCfg.tagFs};padding:1px 6px;background:${tierBg};color:${tierFg};white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : '';
+    // 카드 배경: 대학 색상의 연한 톤 (무소속은 흰색 유지)
+    const cardBg = p.univ ? `${univColor}28` : 'var(--white)';
 
     const cardBody = sizeCfg.fullImage
       // ── S(작게) 모드: 프로필 이미지가 카드를 가득 채우는 포토카드형
@@ -568,24 +654,24 @@ function _b2LiveResultsHTML() {
           <div style="position:absolute;left:0;right:0;bottom:0;padding:5px 6px;display:flex;flex-direction:column;gap:3px;z-index:1">
             <span class="b2-live-name" style="font-weight:900;font-size:${sizeCfg.nameFs};color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${p.name || ''}</span>
             <div style="display:flex;gap:3px;flex-wrap:wrap">
-              ${p.univ ? `<span class="b2-live-tag" style="font-size:${sizeCfg.tagFs};padding:1px 5px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.32);white-space:nowrap;backdrop-filter:blur(2px)">${p.univ}</span>` : ''}
-              ${p.tier ? `<span class="b2-live-tag" style="font-size:${sizeCfg.tagFs};padding:1px 5px;background:${tierBg};color:${tierFg};box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap">${typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier}</span>` : ''}
+              ${p.univ ? `<span class="b2-live-tag" title="${String(p.univ).replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;font-size:${sizeCfg.tagFs};padding:0;background:transparent;color:#fff;border:none;white-space:nowrap">${typeof gUI === 'function' ? gUI(p.univ, univLogoSize) : ''}</span>` : ''}
             </div>
           </div>
         </div>`
       // ── M/L 모드: 가로 정렬형 카드 — 축소된 크기에 맞춘 컴팩트 레이아웃
+      //    (카드 안 티어뱃지는 표시하지 않음 — 대학태그만 노출)
       : `
         <div style="display:flex;align-items:center;gap:9px">
           ${avatarBlock}
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1">
             <div style="min-width:0">${nameHtml}</div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap">${univTag}${tierTag}</div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${univTag}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">${enlargeBtn}${linkBtn}</div>
         </div>`;
 
     return groupHeader + `
-      <div class="b2-live-card${badgeInitDisplay==='inline-flex' ? ' is-live' : ''}" data-soop-id="${p._soopId}" style="position:relative;background:var(--white);border:1.5px solid var(--border2);border-radius:12px;overflow:hidden;padding:${sizeCfg.pad}">
+      <div class="b2-live-card${badgeInitDisplay==='inline-flex' ? ' is-live' : ''}" data-soop-id="${p._soopId}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:12px;overflow:hidden;padding:${sizeCfg.pad}">
         ${cardBody}
       </div>
     `;

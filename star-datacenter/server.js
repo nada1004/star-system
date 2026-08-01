@@ -310,10 +310,18 @@ async function _soopFetchOne(bjId) {
     if (!j && !r.ok) throw new Error(`HTTP ${r.status}`);
     const ch = (j && (j.CHANNEL || j)) || {};
     const result = Number(ch.RESULT);
+    // BNO(방송번호)로 썸네일 URL 구성 — player_live_api.php 는 비공식 API라 필드명이
+    // 문서화되어 있지 않음. BNO가 없으면 썸네일 없이(null) 진행(방어적 처리).
+    const bno = ch.BNO || ch.BROAD_NO || null;
+    const thumb = bno ? `https://liveimg.sooplive.com/m/${bno}` : null;
+    // 방송 시작시각도 비공식 API라 확정되지 않아 후보 필드명을 순서대로 시도
+    const broadStart = ch.BROAD_START || ch.START_TIME || ch.broad_start || null;
     const data = {
       live: result === 1,
       title: typeof ch.TITLE === 'string' ? ch.TITLE : null,
       viewerCnt: Number.isFinite(Number(ch.CTUSER)) ? Number(ch.CTUSER) : null,
+      thumb,
+      broadStart,
     };
     _soopStatusCache.set(bjId, { data, ts: Date.now() });
     return data;
