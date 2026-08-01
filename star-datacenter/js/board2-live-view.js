@@ -52,7 +52,7 @@ function _b2LiveEmbedUrl(id, autoplay) {
   // 기본값은 다시 자동재생 없음(autoPlay=n) — 화면(호버 미리보기/확대보기)은 뜨되
   // 재생은 사용자가 명시적으로 클릭했을 때만(autoplay 인자가 true일 때만) 시작됨.
   // SOOP 임베드 파라미터가 비공식이라 환경별 차이는 있을 수 있다.
-  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=${autoplay ? 'y' : 'n'}` : '';
+  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=${autoplay ? 'true' : 'false'}` : '';
 }
 
 function _b2LiveSetSort(mode) {
