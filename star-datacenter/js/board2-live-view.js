@@ -48,8 +48,11 @@ function _b2LiveSoopId(input) {
 
 function _b2LiveEmbedUrl(id) {
   // 라이브 탭은 항상 무음으로 시작되게 파라미터를 최대한 명시한다.
+  // (2026-08-01 변경) 과거엔 화면만 띄우고 자동재생은 막아 플레이어 안의
+  // 재생 버튼을 직접 눌러야 했는데, 그 버튼이 진하게(어둡게) 표시돼 방송중인지
+  // 아닌지 헷갈린다는 피드백을 받아 자동재생(음소거 유지)으로 전환.
   // SOOP 임베드 파라미터가 비공식이라 환경별 차이는 있을 수 있다.
-  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=true` : '';
+  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=y` : '';
 }
 
 function _b2LiveSetSort(mode) {
@@ -129,14 +132,6 @@ function _b2LiveEnlarge(id, name) {
   } catch (e) {}
 }
 
-function _b2LiveCanHoverPreview() {
-  // 일부 환경에서 matchMedia 판단이 빗나가 hover가 막히는 경우가 있어
-  // 데스크톱 브라우저 기준으로는 넉넉하게 허용한다.
-  try {
-    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return false;
-  } catch (e) {}
-  return true;
-}
 
 // 참고사이트(ssustar/live)처럼 경과시간을 "n분 전"/"n시간 전" 형태로 표시
 function _b2LiveRelativeTime(startTimeStr) {
@@ -158,33 +153,10 @@ function _b2LiveFindCard(anchorEl){
   try{ return anchorEl && anchorEl.closest ? anchorEl.closest('.b2-live-card') : null; }catch(e){ return null; }
 }
 
-// 미리보기를 "켜는" 영역(프로필 이미지, 썸네일)만 hover 존으로 취급.
-// 카드 전체를 기준으로 판단하면 프로필 이미지 아래(이름/버튼 등)로 마우스만 옮겨도
-// 계속 카드 안에 있는 것으로 인식되어 방송이 꺼지지 않는 문제가 있었음.
-function _b2LiveIsInHoverZone(card, target){
-  try{
-    if (!card || !target) return false;
-    const zones = card.querySelectorAll('.b2-live-hover-zone');
-    for (let i = 0; i < zones.length; i++) {
-      if (zones[i] === target || zones[i].contains(target)) return true;
-    }
-    return false;
-  }catch(e){ return false; }
-}
-
-function _b2LiveAnyHoverZoneActive(card){
-  try{
-    const zones = card.querySelectorAll('.b2-live-hover-zone');
-    for (let i = 0; i < zones.length; i++) {
-      if (zones[i].matches && zones[i].matches(':hover')) return true;
-    }
-    return false;
-  }catch(e){ return false; }
-}
-
+// 프로필 이미지에 마우스를 올리면 방송 화면을 보여줌 (자동재생 없음 — 정지 화면/버퍼링 상태로 대기)
 function _b2LiveShowInlinePreview(anchorEl, id) {
   try {
-    if (!_b2LiveCanHoverPreview() || !anchorEl || !id) return;
+    if (!anchorEl || !id) return;
     const card = _b2LiveFindCard(anchorEl);
     if (!card) return;
     if (_b2LiveInlineHideTimers[id]) { clearTimeout(_b2LiveInlineHideTimers[id]); _b2LiveInlineHideTimers[id] = null; }
@@ -201,16 +173,17 @@ function _b2LiveShowInlinePreview(anchorEl, id) {
   } catch (e) {}
 }
 
+// 마우스가 프로필 이미지를 벗어나면 다시 썸네일로 복귀
 function _b2LiveHideInlinePreview(anchorEl, id, e) {
   try {
     const card = _b2LiveFindCard(anchorEl);
     if (!card || !id) return;
     const related = e && e.relatedTarget;
-    if (_b2LiveIsInHoverZone(card, related)) return;
+    if (related && anchorEl.contains && anchorEl.contains(related)) return;
     if (_b2LiveInlineHideTimers[id]) clearTimeout(_b2LiveInlineHideTimers[id]);
     _b2LiveInlineHideTimers[id] = setTimeout(() => {
       try {
-        if (_b2LiveAnyHoverZoneActive(card)) return;
+        if (anchorEl.matches && anchorEl.matches(':hover')) return;
         const frameBox = card.querySelector('.b2-live-inline-box');
         const frame = card.querySelector('.b2-live-inline-frame');
         const cover = card.querySelector('.b2-live-cover-wrap');
@@ -220,6 +193,15 @@ function _b2LiveHideInlinePreview(anchorEl, id, e) {
         card.classList.remove('is-previewing');
       } catch (_) {}
     }, 120);
+  } catch (e) {}
+}
+
+// 방송화면(프로필 큰 이미지)을 클릭하면 바로 재생되도록 — 마우스 호버가 없는
+// 모바일/터치 환경에서도 탭 한 번으로 방송이 나오게 함(호버 중이면 이미 보이는 중이라 그대로 유지)
+function _b2LiveClickCover(el, id) {
+  try {
+    if (!el || !id) return;
+    _b2LiveShowInlinePreview(el, id);
   } catch (e) {}
 }
 
@@ -545,7 +527,7 @@ function _b2LiveResultsHTML() {
     // 아바타: 프로필 이미지 모양은 설정탭(⚙️ 프로필 이미지 모양)에서 지정한 대로 따르도록
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
     const avatarBlock = `
-      <div class="b2-live-hover-zone" style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
+      <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
         <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
           style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:2px solid rgba(255,255,255,.96);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.14)">
           ${avatarHtml}
@@ -561,12 +543,11 @@ function _b2LiveResultsHTML() {
 
     const cardBody = `
       <div style="display:flex;flex-direction:column">
-        <div class="b2-live-hover-zone" style="position:relative;width:100%;aspect-ratio:16/13;background:${univColor}12;overflow:hidden"
-          onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
+        <div style="position:relative;width:100%;aspect-ratio:16/13;background:${univColor}12;overflow:hidden" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
           <div class="b2-live-cover-wrap" style="position:absolute;inset:0;transition:opacity .15s ease">
             <img class="b2-live-cover" src="${coverUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async"
               style="width:100%;height:100%;object-fit:cover;display:${coverUrl ? 'block' : 'none'};cursor:pointer"
-              onclick="_b2LiveEnlarge('${p._soopId}','${safeName}')"
+              onclick="_b2LiveClickCover(this,'${p._soopId}')"
               onerror="this.style.display='none';const fb=this.parentNode.querySelector('.b2-live-cover-fallback');if(fb) fb.style.display='flex'">
             <div class="b2-live-cover-fallback" style="display:${coverUrl ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:26px;font-weight:1000;cursor:pointer" onclick="openPlayerModal&&openPlayerModal('${safeName}')">${safeNameHtml.slice(0,1) || '?'}</div>
             <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,.30),rgba(15,23,42,.08) 48%,rgba(15,23,42,0));pointer-events:none"></div>
