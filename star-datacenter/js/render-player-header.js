@@ -81,16 +81,16 @@ function buildPlayerHeaderCardHTML(opts){
   }[p.race] || { chip:'#475569' };
   const univAccent = /^#|^rgb|^hsl/i.test(String(col||'')) ? String(col) : quickValueCol;
   const gradeTheme = eloVal>=1500
-    ? { color:'#b45309' }
+    ? { color:'#9a3412' }
     : eloVal>=1400
-      ? { color:'#7e22ce' }
+      ? { color:'#6b21a8' }
       : eloVal>=1300
-        ? { color:'#0369a1' }
+        ? { color:'#075985' }
         : eloVal>=1200
-          ? { color:'#a16207' }
+          ? { color:'#854d0e' }
           : eloVal>=1100
-            ? { color:'#64748b' }
-            : { color:'#92400e' };
+            ? { color:'#475569' }
+            : { color:'#7c2d12' };
   const pointsVal = Number(p.points||0);
   const pointsColor = pointsVal>0 ? cWin : pointsVal<0 ? cLoss : '#64748b';
 
@@ -104,12 +104,12 @@ function buildPlayerHeaderCardHTML(opts){
   // ELO 패널(어두운 글래스 패널, 히어로 사진 위)용 별도 밝은 톤 — 위 eloGradeColor는 밝은 배경(등급 퀵카드)
   // 기준이라 어두운 패널 위에선 대비가 낮음(특히 SILVER 슬레이트 그레이가 거의 안 보임)
   const eloGradeColorOnDark = !_hasRecord ? 'rgba(255,255,255,.55)' : (
-    eloVal>=1500 ? '#fda4af' :
-    eloVal>=1400 ? '#d8b4fe' :
-    eloVal>=1300 ? '#7dd3fc' :
-    eloVal>=1200 ? '#fde047' :
-    eloVal>=1100 ? '#e2e8f0' :
-    '#fdba74'
+    eloVal>=1500 ? '#ff8095' :
+    eloVal>=1400 ? '#e879f9' :
+    eloVal>=1300 ? '#38bdf8' :
+    eloVal>=1200 ? '#fcd34d' :
+    eloVal>=1100 ? '#f8fafc' :
+    '#fb923c'
   );
 
   // 승률 바
@@ -150,7 +150,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:var(--r2);padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColorOnDark};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:10px;font-weight:1000;color:${eloGradeColorOnDark};letter-spacing:.8px;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${eloGrade}</div>
         ${eloSparkHTML?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
       </div>
     </div>`;
@@ -161,7 +161,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:1px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:24px;font-weight:1000;color:#fff;line-height:1.1">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColorOnDark}">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:10px;font-weight:1000;color:${eloGradeColorOnDark};letter-spacing:.8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${eloGrade}</div>
       </div>
       ${eloSparkHTML?`<div style="flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:7px 8px;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
     </div>`;

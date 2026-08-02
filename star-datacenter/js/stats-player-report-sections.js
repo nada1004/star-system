@@ -499,12 +499,12 @@ function _prHeroHTML(p){
           // 스트리머 상세 팝업과 동일한 ELO 등급 배지 — 숫자 칩과 등급 칩을 하나로 합쳐 깔끔하게
           const eloVal = Number(p.elo||1200);
           const GRADES = [
-            [1500,'LEGEND','👑','#b45309'],
-            [1400,'MASTER','🏅','#7e22ce'],
-            [1300,'DIAMOND','💎','#0369a1'],
-            [1200,'GOLD','🥇','#a16207'],
-            [1100,'SILVER','🥈','#64748b'],
-            [0,'BRONZE','🥉','#92400e'],
+            [1500,'LEGEND','👑','#9a3412'],
+            [1400,'MASTER','🏅','#6b21a8'],
+            [1300,'DIAMOND','💎','#075985'],
+            [1200,'GOLD','🥇','#854d0e'],
+            [1100,'SILVER','🥈','#475569'],
+            [0,'BRONZE','🥉','#7c2d12'],
           ];
           const [,label,icon,color] = GRADES.find(([min])=>eloVal>=min) || GRADES[GRADES.length-1];
           return `<span class="pr-chip" style="background:${color}16;color:${color};border:1.5px solid ${color}45;gap:5px;font-weight:900">${icon} ${label} <span style="opacity:.6;font-weight:700">· ELO ${eloVal}</span></span>`;
