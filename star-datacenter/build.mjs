@@ -334,6 +334,7 @@ const LAZY_CHUNKS = {
     'js/stats-univ-compare.js',
     'js/stats-sharecard.js',
     'js/stats-player-report-data.js',
+    'js/stats-player-level.js',
     'js/stats-player-report-sections.js',
     'js/stats-player-report-entry.js',
     'js/stats-player-report-canvas.js',

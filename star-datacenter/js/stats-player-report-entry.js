@@ -81,8 +81,6 @@ function statsPlayerReportHTML(){
 }
 
 /* ─── 섹션 바로가기 내비게이션 ─── */
-/* 자주 쓰는 섹션만 칩으로 노출하고, 상대적으로 덜 쓰는 섹션(티어상대전적/1:1비교)은
-   "더보기" 드롭다운(details/summary)으로 묶어 좁은 화면에서 칩이 두 줄 넘게 늘어지는 것을 방지 */
 function _prSectionNavHTML(){
   const items=[
     ['pr-sec-info','📋 기본정보'],
@@ -92,20 +90,10 @@ function _prSectionNavHTML(){
     ['pr-sec-allmatches','📋 전체경기'],
     ['pr-sec-recent','📋 최근경기'],
   ];
-  const moreItems=[
-    ['pr-sec-elo','📉 ELO 추이'],
-    ['pr-sec-monthly','📅 월별 승률'],
-    ['pr-sec-modes','🏆 대회·모드별 성적'],
-    ['pr-sec-tier','🎯 티어 성과 · 동일 티어 상대전적'],
-    ['pr-sec-vs','⚔️ 1:1 상대 비교'],
-  ];
   const chips = items.map(([id,lbl])=>
     `<button type="button" class="pr-nav-chip" onclick="_prScrollToSection('${id}')">${lbl}</button>`
   ).join('');
-  const moreChips = moreItems.map(([id,lbl])=>
-    `<button type="button" class="pr-nav-more-item" onclick="_prScrollToSection('${id}');_prCloseNavMore()">${lbl}</button>`
-  ).join('');
-  return `<div class="pr-nav-bar no-export">${chips}<details class="pr-nav-more" id="pr-nav-more"><summary class="pr-nav-chip pr-nav-more-btn">⋯ 더보기</summary><div class="pr-nav-more-panel">${moreChips}</div></details></div>`;
+  return `<div class="pr-nav-bar no-export">${chips}</div>`;
 }
 function _prCloseNavMore(){
   const d = document.getElementById('pr-nav-more');

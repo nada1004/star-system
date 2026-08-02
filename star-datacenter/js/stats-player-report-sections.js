@@ -470,6 +470,7 @@ function _prHeroHTML(p){
     <div style="flex:1;min-width:200px">
       <div class="pr-hero-name">${escHTML(p.name)} <span class="rbadge r${p.race||''}">${RACE_KO[p.race]||p.race||''}</span></div>
       <div class="pr-hero-wr-row">
+        ${(typeof _prLevelBadgeHTML==='function') ? _prLevelBadgeHTML(p) : ''}
         ${(()=>{
           const pointsVal = Number(p.points||0);
           const pointsColor = pointsVal>0 ? 'var(--score-win)' : pointsVal<0 ? 'var(--score-lose)' : 'var(--text2)';
