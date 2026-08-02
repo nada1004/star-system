@@ -113,16 +113,25 @@ function _prGradeFromLevel(level, extraWins){
   }
 }
 
-/* 등급 라벨별 컬러(문자 등급용 — Z→A로 갈수록 채도/명도 상승) */
+/* 등급 라벨별 컬러(문자 등급용) — 26등급을 5개 계급군(밴드)으로 나누고
+   밴드마다 서로 뚜렷이 다른 색상을 쓰되, 밴드 내에서는 옅음→짙음으로 살짝 그라데이션.
+   (기존엔 슬레이트→인디고→앰버 한 줄 보간이라 인접 등급끼리 색이 거의 안 구분됐음) */
+var PR_GRADE_BANDS = [
+  { letters: ['Z','Y','X','W','V'],         from: '#94a3b8', to: '#475569' }, // 그레이 (입문)
+  { letters: ['U','T','S','R','Q'],         from: '#d97706', to: '#92400e' }, // 브론즈
+  { letters: ['P','O','N','M','L'],         from: '#38bdf8', to: '#0369a1' }, // 실버(스틸블루)
+  { letters: ['K','J','I','H','G'],         from: '#fbbf24', to: '#b45309' }, // 골드
+  { letters: ['F','E','D','C','B','A'],     from: '#34d399', to: '#7c3aed' }, // 에메랄드→퍼플(SS로 자연스럽게 이어짐)
+];
 function _prLetterGradeColor(label){
-  var idx = PR_LETTER_GRADES.indexOf(label);
-  if (idx < 0) return '#64748b';
-  var t = idx / (PR_LETTER_GRADES.length - 1); // 0(Z) ~ 1(A)
-  // 슬레이트그레이(Z) → 인디고 → 앰버(A 근처 고등급) 계열로 보간
-  var stops = ['#64748b', '#6366f1', '#f59e0b'];
-  var seg = t < 0.5 ? 0 : 1;
-  var localT = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
-  return _prLerpHexColor(stops[seg], stops[seg + 1], localT);
+  for (var i = 0; i < PR_GRADE_BANDS.length; i++) {
+    var band = PR_GRADE_BANDS[i];
+    var idx = band.letters.indexOf(label);
+    if (idx < 0) continue;
+    var t = band.letters.length > 1 ? idx / (band.letters.length - 1) : 0;
+    return _prLerpHexColor(band.from, band.to, t);
+  }
+  return '#64748b';
 }
 function _prLerpHexColor(a, b, t){
   function hex2rgb(h){ h = h.replace('#',''); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
