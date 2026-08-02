@@ -63,12 +63,12 @@ function _prDrawEsportsCanvas(data){
     ctx.restore();
     px = px+logoS+10;
   }
-  [[data.univ,ACCENT,'#fff'],[data.tier,'#fff',ACCENT]].filter(([t])=>t).forEach(([txt,bg,fg],i)=>{
+  [[data.univ,ACCENT,'#fff',null],[data.tier,'#fff',ACCENT,ACCENT],[data.eloGrade,'#fff',data.eloGradeColor,data.eloGradeColor]].filter(([t])=>t).forEach(([txt,bg,fg,bd],i)=>{
     ctx.font=`700 16px ${FONT}`;
     const w=ctx.measureText(txt).width+26;
     ctx.fillStyle=bg;
     _prRoundRect(ctx, px, py, w, 34, 17); ctx.fill();
-    if(i===1){ ctx.strokeStyle=ACCENT; ctx.lineWidth=2; _prRoundRect(ctx, px, py, w, 34, 17); ctx.stroke(); }
+    if(bd){ ctx.strokeStyle=bd; ctx.lineWidth=2; _prRoundRect(ctx, px, py, w, 34, 17); ctx.stroke(); }
     ctx.fillStyle=fg;
     ctx.fillText(txt, px+13, py+23);
     px+=w+10;
@@ -239,6 +239,16 @@ function _prDrawMagazineCanvas(data){
   ctx.strokeStyle=_prHexToRgba(ACCENT,.5); ctx.lineWidth=1.5;
   _prRoundRect(ctx, bx, by, tierBw, 32, 16); ctx.stroke();
   ctx.fillStyle=ACCENT; ctx.fillText(tierTxt, bx+13, by+21);
+  bx += tierBw+10;
+  const gradeTxt = data.eloGrade||'';
+  if(gradeTxt){
+    ctx.font=`800 14px ${FONT}`;
+    const gradeBw = ctx.measureText(gradeTxt).width+26;
+    ctx.strokeStyle=_prHexToRgba(data.eloGradeColor||ACCENT,.6); ctx.lineWidth=1.5;
+    _prRoundRect(ctx, bx, by, gradeBw, 32, 16); ctx.stroke();
+    ctx.fillStyle=data.eloGradeColor||ACCENT; ctx.fillText(gradeTxt, bx+13, by+21);
+    bx += gradeBw+10;
+  }
   cy = by+32; /* = 200 */
 
   /* ── 승률 히어로 넘버 (겹침 버그 수정: 라벨→숫자→서브텍스트 순서로 커서를 확실히 내림) ── */
@@ -404,7 +414,7 @@ function _prDrawTicketCanvas(data){
   ctx.fillStyle='#292524'; ctx.font=`900 44px ${FONT}`;
   ctx.fillText(data.name, tx, 118);
   ctx.fillStyle='#78716c'; ctx.font=`700 16px ${FONT}`;
-  ctx.fillText(`${data.univ||'-'}  ·  ${data.tier||'-'}  ·  ELO ${data.elo}`, tx, 150);
+  ctx.fillText(`${data.univ||'-'}  ·  ${data.tier||'-'}  ·  ELO ${data.elo} (${data.eloGrade||''})`, tx, 150);
 
   const tag = data.wr>=60 ? 'PRIORITY BOARDING' : 'STREAMER PASS';
   ctx.font=`800 12px ${FONT}`;
@@ -453,7 +463,7 @@ function _prDrawTicketCanvas(data){
   ctx.fillStyle='#fff'; ctx.font=`900 24px ${FONT}`;
   ctx.fillText(data.name.length>7?data.name.slice(0,7)+'…':data.name, 0, 72);
   ctx.font=`700 13px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.7)';
-  ctx.fillText(data.tier||'-', 0, 98);
+  ctx.fillText([data.tier, data.eloGrade].filter(Boolean).join(' · ') || '-', 0, 98);
 
   ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=6;
   ctx.arc(0,180,52, 0, Math.PI*2); ctx.stroke();

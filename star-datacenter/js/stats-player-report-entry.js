@@ -479,8 +479,13 @@ async function _prBuildCardData(p){
   const univLogoUrl = univLogoUrl0 ? ((typeof toHttpsUrl==='function') ? toHttpsUrl(univLogoUrl0) : univLogoUrl0) : '';
   const univLogoImg = univLogoUrl ? await _prLoadImageEl(univLogoUrl) : null;
   const univColor = (p.univ && typeof gc==='function') ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb';
+  // 스트리머 상세 팝업과 동일한 ELO 등급(LEGEND/MASTER/DIAMOND/GOLD/SILVER/BRONZE)
+  const eloValForGrade = Number(p.elo||1200);
+  const eloGrade = eloValForGrade>=1500?'LEGEND':eloValForGrade>=1400?'MASTER':eloValForGrade>=1300?'DIAMOND':eloValForGrade>=1200?'GOLD':eloValForGrade>=1100?'SILVER':'BRONZE';
+  const eloGradeColor = eloValForGrade>=1500?'#b45309':eloValForGrade>=1400?'#7e22ce':eloValForGrade>=1300?'#0369a1':eloValForGrade>=1200?'#a16207':eloValForGrade>=1100?'#64748b':'#92400e';
   return {
     name: p.name||'스트리머', univ: p.univ||'', tier: p.tier||'', race: p.race||'', elo: p.elo||1200,
+    eloGrade, eloGradeColor,
     univColor, photoImg, univLogoImg, w, l, tot, wr,
     raceStats: raceStats.rv,
     bestWinStreak: (streak.win&&streak.win.n)||0,
