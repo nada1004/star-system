@@ -16,7 +16,8 @@ function rStats(C,T){
   const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','univwinbar','period','preport','sharecard']);
   window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
+    || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('stats'));
   if(window._statsFilterOpen===undefined) window._statsFilterOpen=_lockOpen;
   if(_lockOpen) window._statsFilterOpen = true;
   // UX 3: 마지막 방문 서브탭 복원
@@ -38,6 +39,7 @@ function rStats(C,T){
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
       {id:'playervs',lbl:'⚔️ 스트리머 비교'},
+      {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
     ]},
     {label:'🏛️ 대학',tabs:[
       {id:'radar',lbl:'🕸️ 대학 레이더'},
@@ -249,6 +251,7 @@ function rStats(C,T){
   else if(window.statsSub==='heatmap')  h+=_safeRender(()=>_cached('heatmap', statsHeatmapHTML), '활동 히트맵');
   else if(window.statsSub==='tierwin')  h+=_safeRender(()=>_cached('tierwin', statsTierWinHTML), '티어별 승률(개인)');
   else if(window.statsSub==='maprank')  h+=_safeRender(()=>_cached('maprank', statsMapRankHTML), '맵별 특화');
+  else if(window.statsSub==='promosim')h+=_safeRender(window.statsPromoSimHTML || (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">승급 시뮬레이션을 불러오지 못했습니다.</div></div>'), '승급 시뮬레이션');
   else if(window.statsSub==='race')     h+=_safeRender(()=>`<div class="ssec">${typeof raceSummaryHTML==='function'?raceSummaryHTML():''}</div>`, '종족 승률');
   else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
   else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
@@ -295,4 +298,3 @@ try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
    - "일반(스폰)" + "중요경기" + "실전보너스" 형태로 분해 표시
 ══════════════════════════════════════ */
 // 티어 랭킹 helper는 `stats-tier-rank-utils.js`로 분리
-

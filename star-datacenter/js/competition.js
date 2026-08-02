@@ -70,7 +70,8 @@ function rComp(C,T){
   T.innerText='🎖️ 대회';
   const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
+    || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('comp'));
   if(window._compFilterOpen===undefined) window._compFilterOpen=_lockOpen;
   if(_lockOpen) window._compFilterOpen=true;
   // [BUGFIX-HIGH-4] 비로그인 시 grpedit 진입 차단 - URL 파라미터/외부링크 직접 진입도 포함

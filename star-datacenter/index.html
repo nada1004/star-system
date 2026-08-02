@@ -27,7 +27,7 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const SWV = '20260708-01';
+    const SWV = '20260802-promosim10';
     try{
       const prev = localStorage.getItem('su_sw_v') || '';
       if(prev !== SWV && navigator.serviceWorker.controller){
@@ -37,7 +37,7 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
-    navigator.serviceWorker.register('/sw.js?v=20260708-01', { scope: '/' })
+    navigator.serviceWorker.register('/sw.js?v=20260802-promosim10', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
         try{ reg.update(); }catch(e){}
@@ -671,7 +671,7 @@ if ('serviceWorker' in navigator) {
 
 <script defer src="js/config.js"></script>
 <script defer src="js/match-store-idb.js?v=20260717-ds01"></script>
-<script defer src="js/constants-core.js?v=20260730-split6"></script>
+<script defer src="js/constants-core.js?v=20260802-promosim10"></script>
 <script defer src="js/constants-ui-vars.js?v=20260730-split6"></script>
 <script defer src="js/constants-tier-theme.js?v=20260730-split6"></script>
 <script defer src="js/constants-state.js?v=20260730-split6"></script>
