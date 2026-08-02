@@ -256,51 +256,52 @@ function rTier(C,T){
     });
     fh+=`</div></div>`;
   }
-  // ── 뷰 전환 버튼 (필터/정렬 아래 별도 행, 오른쪽 정렬) ──
-  const _viewModes=[
-    {id:'table',      icon:'📋', title:'테이블'},
-    {id:'magazine',   icon:'📷', title:'매거진/룩북'},
-    {id:'podium',     icon:'🏆', title:'포디움'},
-    {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
-    {id:'compact',    icon:'📝', title:'컴팩트'},
-  ];
-  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
-  fh+=`<div class="tier-view-row">`;
-  fh+=`<span class="tier-view-row-label">🎛️ 모드</span>`;
-  fh+=`<div class="tier-view-row-btns">`;
-  _viewModes.forEach(vm=>{
-    const on=window._tierViewMode===vm.id;
-    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
-  });
-  fh+=`</div>`;
-  // 모바일 전용: 위 5개 보기방식 아이콘버튼을 드롭다운 트리거로 대체
-  window._tierViewModeItems = _viewModes.map(vm=>({id:vm.id, icon:vm.icon, label:vm.title, action:`window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()`, active:window._tierViewMode===vm.id}));
-  const _curTierVm = _viewModes.find(vm=>vm.id===window._tierViewMode) || _viewModes[0];
-  fh+=`<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._tierViewModeItems)">
-    <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curTierVm.icon}</span><span class="mode-select-trigger-label">${_curTierVm.title}</span></span>
-    <span class="mode-select-trigger-caret">▾</span>
-  </button>`;
-  // ── 최소 경기수 빠른 선택 (모드 버튼 오른쪽) ──
-  const _minGamesQuick=[0,10,30,50];
-  fh+=`<span class="tier-view-row-sep"></span>`;
-  fh+=`<div class="tier-view-row-right">`;
-  fh+=`<span class="tier-view-row-label">🎯 최소경기</span>`;
-  fh+=`<div class="tier-view-row-btns">`;
-  _minGamesQuick.forEach(mg=>{
-    const on=(window._tierMinGames||0)===mg;
-    fh+=`<button class="tier-view-btn ${on?'on':''}" onclick="window._tierMinGames=${mg};render()"><span class="tier-view-btn-label">${mg===0?'전체':`최소 ${mg}경기`}</span></button>`;
-  });
-  if(_hasMinGamesFilter && !_minGamesQuick.includes(window._tierMinGames)){
-    fh+=`<span class="tier-view-btn on"><span class="tier-view-btn-label">최소 ${window._tierMinGames}경기</span></span>`;
-  }
-  fh+=`</div>`;
-  window._tierMinGamesItems = _minGamesQuick.map(mg=>({id:'mg'+mg, label: mg===0?'전체':`최소 ${mg}경기`, action:`window._tierMinGames=${mg};render()`, active:(window._tierMinGames||0)===mg}));
-  const _curMinGamesLabel = _hasMinGamesFilter ? `최소 ${window._tierMinGames}경기` : '전체';
-  fh+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'최소 경기수',window._tierMinGamesItems)">🎯 ${_curMinGamesLabel} ▾</button>`;
-  fh+=`</div>`;
-  fh+=`</div>`;
+  // ── 뷰 전환 버튼(모드)/최소경기: 필터 패널 안으로 이동(요청) — 아래 if(window._tierFilterOpen) 블록에서 렌더 ──
 
   if(window._tierFilterOpen){
+    const _viewModes=[
+      {id:'table',      icon:'📋', title:'테이블'},
+      {id:'magazine',   icon:'📷', title:'매거진/룩북'},
+      {id:'podium',     icon:'🏆', title:'포디움'},
+      {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
+      {id:'compact',    icon:'📝', title:'컴팩트'},
+    ];
+    if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
+    fh+=`<div class="tier-view-row">`;
+    fh+=`<span class="tier-view-row-label">🎛️ 모드</span>`;
+    fh+=`<div class="tier-view-row-btns">`;
+    _viewModes.forEach(vm=>{
+      const on=window._tierViewMode===vm.id;
+      fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()"><span class="tier-view-btn-icon">${vm.icon}</span><span class="tier-view-btn-label">${vm.title}</span></button>`;
+    });
+    fh+=`</div>`;
+    // 모바일 전용: 위 5개 보기방식 아이콘버튼을 드롭다운 트리거로 대체
+    window._tierViewModeItems = _viewModes.map(vm=>({id:vm.id, icon:vm.icon, label:vm.title, action:`window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()`, active:window._tierViewMode===vm.id}));
+    const _curTierVm = _viewModes.find(vm=>vm.id===window._tierViewMode) || _viewModes[0];
+    fh+=`<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._tierViewModeItems)">
+      <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curTierVm.icon}</span><span class="mode-select-trigger-label">${_curTierVm.title}</span></span>
+      <span class="mode-select-trigger-caret">▾</span>
+    </button>`;
+    // ── 최소 경기수 빠른 선택 (모드 버튼 오른쪽) ──
+    const _minGamesQuick=[0,10,30,50];
+    fh+=`<span class="tier-view-row-sep"></span>`;
+    fh+=`<div class="tier-view-row-right">`;
+    fh+=`<span class="tier-view-row-label">🎯 최소경기</span>`;
+    fh+=`<div class="tier-view-row-btns">`;
+    _minGamesQuick.forEach(mg=>{
+      const on=(window._tierMinGames||0)===mg;
+      fh+=`<button class="tier-view-btn ${on?'on':''}" onclick="window._tierMinGames=${mg};render()"><span class="tier-view-btn-label">${mg===0?'전체':`최소 ${mg}경기`}</span></button>`;
+    });
+    if(_hasMinGamesFilter && !_minGamesQuick.includes(window._tierMinGames)){
+      fh+=`<span class="tier-view-btn on"><span class="tier-view-btn-label">최소 ${window._tierMinGames}경기</span></span>`;
+    }
+    fh+=`</div>`;
+    window._tierMinGamesItems = _minGamesQuick.map(mg=>({id:'mg'+mg, label: mg===0?'전체':`최소 ${mg}경기`, action:`window._tierMinGames=${mg};render()`, active:(window._tierMinGames||0)===mg}));
+    const _curMinGamesLabel = _hasMinGamesFilter ? `최소 ${window._tierMinGames}경기` : '전체';
+    fh+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'최소 경기수',window._tierMinGamesItems)">🎯 ${_curMinGamesLabel} ▾</button>`;
+    fh+=`</div>`;
+    fh+=`</div>`;
+
     const _periodBtn = (id, label, from, to)=>{
       const on = (window._tierDatePreset||'all')===id && _tierDateFrom===from && _tierDateTo===to;
       return `<button class="pill ${on?'on':''}" style="flex-shrink:0" onclick="window._tierDatePreset='${id}';window._tierDateFrom='${from}';window._tierDateTo='${to}';render()">${label}</button>`;

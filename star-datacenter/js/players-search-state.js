@@ -710,7 +710,7 @@ function totalApplySearchFilter(){
   const cont=document.getElementById('rcont');
   if(!cont) return;
   const cards=[...cont.querySelectorAll('[data-player-card="1"]')];
-  if(!cards.length) return;
+  if(cards.length){
   const _visibleUnivsG=new Set();
   cards.forEach(card=>{
     if(!qHas){ card.style.display=''; _visibleUnivsG.add(card.getAttribute('data-univ')||''); return; }
@@ -730,6 +730,7 @@ function totalApplySearchFilter(){
     const u=h.getAttribute('data-gallery-univ-header')||'';
     h.style.display=_visibleUnivsG.has(u)?'':'none';
   });
+  }
   // 상세형 목록 필터
   const focusRows=[...cont.querySelectorAll('[data-focus-row="1"]')];
   focusRows.forEach(row=>{

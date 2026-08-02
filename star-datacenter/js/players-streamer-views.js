@@ -165,30 +165,8 @@ function rTotal(C,T){
   const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
   const _noRecordCount = Math.max(0, _visiblePlayers.length - _hasRecordCount);
-  const _kpiBar = totalViewMode==='gallery'
-    ? `<div class="streamer-kpi-grid">
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">표시 스트리머</div>
-          <div class="streamer-kpi-value">${_visiblePlayers.length}</div>
-          <div class="streamer-kpi-sub">현재 필터 기준 표시 인원</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">기록 보유</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_hasRecordCount}</div>
-          <div class="streamer-kpi-sub">전적 있음 ${_hasRecordCount}명 · 전적 없음 ${_noRecordCount}명</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">대학 분포</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_activeUnivCount}</div>
-          <div class="streamer-kpi-sub">현재 조건에서 보이는 대학 수</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">프로필 준비</div>
-          <div class="streamer-kpi-value" style="color:#7c3aed">${_photoCount}</div>
-          <div class="streamer-kpi-sub">사진 등록 ${_photoCount}명 · 직책자 ${_roleCount}명</div>
-        </article>
-      </div>`
-    : '';
+  // [삭제됨] 카드형(gallery) 상단 4칸 통계 카드(표시 스트리머/기록 보유/대학 분포/프로필 준비) — rlrj 요청으로 제거
+  const _kpiBar = '';
   // 뷰 전환(카드형/상세형/리스트/심플형) 버튼은 별도의 고정 세그먼트 컨트롤로 분리 —
   // 아래 필터바(가로 스크롤)에 섞여 있으면 모바일에서 원하는 뷰 버튼을 찾으려 계속 스크롤해야 하는 문제가 있었음
   const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">

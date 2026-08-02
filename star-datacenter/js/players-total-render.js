@@ -53,7 +53,7 @@ function rTotal(C,T){
   // 모바일에서는 컬럼을 순위/티어/이름[/관리]만 렌더링하는데, 이 값이 데스크톱 컬럼 수(10~11)로
   // 고정되어 있으면 table-layout:fixed 폭 계산이 깨져 "이름" 컬럼이 극단적으로 좁아지고,
   // 그 안의 프로필 사진이 잘려 보이고 이름이 가려지는 문제가 발생함.
-  const _ncols=_isMb ? (3+(isLoggedIn?1:0)+(_showBulk?1:0)) : ((isLoggedIn?11:10)+(_showBulk?1:0));
+  const _ncols=_isMb ? (3+(isLoggedIn?1:0)+(_showBulk?1:0)) : ((isLoggedIn?10:9)+(_showBulk?1:0));
   const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':(totalViewMode==='simple'?'심플형':'리스트형'));
   // [참고] p.hidden / p.hideFromBoard 는 이름과 달리 "현황판(board2)에서만" 숨기는 용도입니다
   // (cloud-board-render.js 숨김 버튼 문구: "현황판에서 숨김"). 그래서 스트리머탭(여기)에서는
@@ -69,34 +69,10 @@ function rTotal(C,T){
   const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
   const _photoCount = _visiblePlayers.filter(p=>String(p.photo||'').trim()).length;
   const _roleCount = _visiblePlayers.filter(p=>p.role && roleIsMain(p.role)).length;
-  const _liveCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='hot').length;
-  const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
   const _noRecordCount = Math.max(0, _visiblePlayers.length - _hasRecordCount);
-  const _kpiBar = totalViewMode==='gallery'
-    ? `<div class="streamer-kpi-grid">
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">표시 스트리머</div>
-          <div class="streamer-kpi-value">${_visiblePlayers.length}</div>
-          <div class="streamer-kpi-sub">현재 필터 기준 표시 인원</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">기록 보유</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_hasRecordCount}</div>
-          <div class="streamer-kpi-sub">전적 있음 ${_hasRecordCount}명 · 전적 없음 ${_noRecordCount}명</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">대학 분포</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_activeUnivCount}</div>
-          <div class="streamer-kpi-sub">현재 조건에서 보이는 대학 수</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">프로필 준비</div>
-          <div class="streamer-kpi-value" style="color:#7c3aed">${_photoCount}</div>
-          <div class="streamer-kpi-sub">사진 등록 ${_photoCount}명 · 직책자 ${_roleCount}명</div>
-        </article>
-      </div>`
-    : '';
+  // [삭제됨] 카드형(gallery) 상단 4칸 통계 카드(표시 스트리머/기록 보유/대학 분포/프로필 준비) — rlrj 요청으로 제거
+  const _kpiBar = '';
   // 뷰 전환(카드형/상세형/리스트/심플형) 버튼은 별도의 고정 세그먼트 컨트롤로 분리 —
   // 아래 필터바(가로 스크롤)에 섞여 있으면 모바일에서 원하는 뷰 버튼을 찾으려 계속 스크롤해야 하는 문제가 있었음
   const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">
@@ -172,11 +148,6 @@ function rTotal(C,T){
         <div class="streamer-quickstat-sub">보이는 대학 수</div>
       </article>
       <article class="streamer-quickstat">
-        <div class="streamer-quickstat-label">활동 상태</div>
-        <div class="streamer-quickstat-value">${_liveCount + _warmCount}</div>
-        <div class="streamer-quickstat-sub">활성 ${_liveCount} · 주목 ${_warmCount}</div>
-      </article>
-      <article class="streamer-quickstat">
         <div class="streamer-quickstat-label">프로필 준비</div>
         <div class="streamer-quickstat-value">${_photoCount}</div>
         <div class="streamer-quickstat-sub">사진 ${_photoCount} · 직책 ${_roleCount}</div>
@@ -232,7 +203,7 @@ function rTotal(C,T){
     ${_showBulk?'<col style="width:36px">':''}
     <col class="streamer-col-rank" style="width:52px"><col class="streamer-col-tier" style="width:80px"><col class="streamer-col-race col-hide-mobile" style="width:60px"><col class="streamer-col-name" style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col class="col-hide-mobile" style="width:52px"><col class="streamer-col-wr" style="width:52px">
-    <col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:80px"><col class="col-hide-mobile" style="width:60px">
+    <col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:80px">
     ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
@@ -245,7 +216,6 @@ function rTotal(C,T){
     <th class="streamer-th-wr num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">승률</th>
     <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">포인트</th>
     <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">ELO</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
 
@@ -258,7 +228,7 @@ function rTotal(C,T){
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
     C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
-      ${_renderTopChrome('카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어, 활동 상태와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.', true)}
+      ${_renderTopChrome('카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.', true)}
       <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
     </div>`;
     _syncTpSelectedCards();
@@ -485,7 +455,6 @@ function rTotal(C,T){
         </td>
         <td class="col-hide-mobile ${pC(points)}" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
         <td class="col-hide-mobile" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
-        <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
       tableHTML+=`
@@ -509,7 +478,7 @@ function rTotal(C,T){
   tableHTML+=`</tbody></table></div></div>`;
 
   C.innerHTML = `<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
-    ${_renderTopChrome('대학별 구성을 유지하면서도 검색, 필터, 순위, 활동 상태를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.', false)}
+    ${_renderTopChrome('대학별 구성을 유지하면서도 검색, 필터, 순위를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.', false)}
     ${tableHTML}
   </div>`;
   try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, 60, 96); }catch(e){}
