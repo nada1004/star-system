@@ -39,6 +39,20 @@ function buildPlayerHeaderCardHTML(opts){
   const recent10Wins = recent10.filter(h=>h?.result==='승').length;
   const recent10Losses = recent10.length - recent10Wins;
   const recent10Rate = recent10.length ? Math.round((recent10Wins/recent10.length)*100) : 0;
+
+  // 상태(활동중/비활동) — 최근 6개월 내 경기 기록이 있어야 '활동중'으로 표시
+  const _SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
+  let _lastMatchMs = null;
+  for (let i = 0; i < histAll.length; i++) {
+    const _dStr = histAll[i] && histAll[i].date;
+    if (typeof _dStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(_dStr)) {
+      const _ms = new Date(_dStr + 'T00:00:00').getTime();
+      if (!isNaN(_ms) && (_lastMatchMs === null || _ms > _lastMatchMs)) _lastMatchMs = _ms;
+    }
+  }
+  const _isRecentlyActive = _lastMatchMs !== null && (Date.now() - _lastMatchMs) <= _SIX_MONTHS_MS;
+  const _statusLabel = p.retired ? '은퇴' : (_isRecentlyActive ? '활동중' : '비활동');
+  const _statusColor = p.retired ? '#94a3b8' : (_isRecentlyActive ? '#0f172a' : '#94a3b8');
   const quickCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
   const quickCardBd = 'rgba(226,232,240,.92)';
   const quickLabelCol = '#475569';
@@ -69,9 +83,12 @@ function buildPlayerHeaderCardHTML(opts){
   const pointsVal = Number(p.points||0);
   const pointsColor = pointsVal>0 ? cWin : pointsVal<0 ? cLoss : '#64748b';
 
+  // 기록(경기) 자체가 없는 선수는 ELO가 기본값(1200)이라 '골드'처럼 보이는 게 부적절 → 등급 자체를 비워서 표시
+  const _hasRecord = tot > 0;
+
   // ELO 등급 레이블
-  const eloGrade = eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE';
-  const eloGradeColor = gradeTheme.color;
+  const eloGrade = !_hasRecord ? '-' : (eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE');
+  const eloGradeColor = !_hasRecord ? '#94a3b8' : gradeTheme.color;
 
   // 승률 바
   const wrBarW = Math.max(0, Math.min(100, wr));
@@ -98,7 +115,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
-        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${_statusColor}">${_statusLabel}</div>
       </div>
     </div>`;
 
