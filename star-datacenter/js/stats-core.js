@@ -553,7 +553,7 @@ function rStats(C,T){
         (async()=>{
           try{
             if(typeof window._loadScriptOnce==='function'){
-              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim11');
+              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim17');
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] promosim load fail', e); }catch(_){} }

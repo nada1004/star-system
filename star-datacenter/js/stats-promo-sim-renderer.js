@@ -48,6 +48,9 @@
       if(!h) return;
       const r = h.result;
       if(r!=='승' && r!=='패') return;
+      // (요청) 끝장전(및 프로리그끝장전 등 변형)은 승급 시뮬레이션 집계에서 제외
+      const mode = String(h.mode || h.type || '');
+      if(mode.includes('끝장전')) return;
       const d=_psIsoDate(h.date);
       if(d && d>=cutoffStr){
         out.push(h);
@@ -166,6 +169,24 @@
     }
   }
 
+  // (요청) 몬테카를로 결과가 렌더할 때마다 미세하게 흔들리지 않도록 입력값 기준으로 캐싱
+  window._psProbCache = window._psProbCache || {};
+  function _psPromotionProbabilitySeriesCached(cacheKey, selfElo, selfRs, oppPool){
+    try{
+      const poolSig = (oppPool||[]).filter(Boolean)
+        .map(o=>`${o.name}:${Math.round(o.elo)}:${o.rs?.tot||0}:${o.rs?.adjWr||0}`)
+        .sort().join('|');
+      const sig = `${Math.round(selfElo)}|${selfRs?.tot||0}|${selfRs?.adjWr||0}|${poolSig}`;
+      const cached = window._psProbCache[cacheKey];
+      if(cached && cached.sig === sig) return cached.val;
+      const val = _psPromotionProbabilitySeries(selfElo, selfRs, oppPool);
+      window._psProbCache[cacheKey] = {sig, val};
+      return val;
+    }catch(e){
+      return _psPromotionProbabilitySeries(selfElo, selfRs, oppPool);
+    }
+  }
+
   function _psTierIndex(t){
     const tiers = (typeof TIERS!=='undefined') ? TIERS : [];
     const i = tiers.indexOf(t||'미정');
@@ -227,17 +248,8 @@
     const q = String(window._psQuery||'').trim();
     const tiers = (typeof TIERS!=='undefined') ? TIERS : [];
     const allPlayers = (window.players||[]);
-    const namedPlayers = allPlayers.filter(p=>p && p.name && (p.history||[]).length);
-
-    const popular = namedPlayers.slice()
-      .sort((a,b)=>_psRecentStats(b.history).tot-_psRecentStats(a.history).tot)
-      .slice(0,7);
-    const popularHTML = popular.length
-      ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:700">인기 검색어</span>
-          ${popular.map(p=>`<button type="button" class="pill" onclick="window._psQuery='${_psEscJS(p.name)}';render()">${_psEsc(p.name)}</button>`).join('')}
-        </div>`
-      : '';
+    // (요청) 끝장전만 있는 선수는 승급 시뮬 집계상 0경기이므로 검색 목록에서도 제외해 정합성 유지
+    const namedPlayers = allPlayers.filter(p=>p && p.name && (p.history||[]).some(h=>h && !String(h.mode||h.type||'').includes('끝장전')));
 
     let resultHTML;
     if(!q){
@@ -277,7 +289,7 @@
               dormant, self:true,
             };
           })();
-          const promoProb = _psPromotionProbabilitySeries(targetElo, targetRecent, poolRows);
+          const promoProb = _psPromotionProbabilitySeriesCached(target.name, targetElo, targetRecent, poolRows);
           // 승급 확률 설명용(상위 %): 현재 티어에서의 위치로만 계산 (표기용)
           const topPct = 0; // 제거된 "현재 상위 X%" 문구에 사용하지 않음
 
@@ -373,14 +385,13 @@
               </div>
               ${targetEligible ? '' : `<div style="margin-top:8px;color:#b45309;font-weight:800">활동이 거의 없거나 휴면으로 판단되어, 현재 티어 순위표(랭킹) 집계에서 제외됩니다.</div>`}
             </div>
-            <h4 style="margin:0 0 10px">🏆 ${_psEsc(target.tier)} 티어 현재 순위표 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">(종합 점수 기준)</span></h4>
+            <h4 style="margin:0 0 10px">🏆 ${_psEsc(target.tier)} 티어 현재 순위표</h4>
             ${curTableRows.length===0 ? '<p style="color:var(--gray-l)">비교할 현재 티어 스트리머가 없습니다.</p>' : `
             <div style="overflow-x:auto"><table class="ps-table">
-              <thead><tr><th>순위</th><th>스트리머</th><th>대학</th><th>종합 점수</th><th>ELO</th><th>보정 승률</th><th>${_psWindowLabel()}</th><th>비고</th></tr></thead>
+              <thead><tr><th>순위</th><th>스트리머</th><th>대학</th><th>종합 점수</th><th>ELO</th><th>보정 승률</th><th>${_psWindowLabel()}</th></tr></thead>
               <tbody>
                 ${curTableRows.map((r,i)=>{
-                  const rk = (i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1));
-                  const note = r.dormant ? '휴면' : (r.tot < PROMO_SIM_STABLE_GAMES ? '표본 적음' : (r.tot>=20 ? '활동' : ''));
+                  const rk = (i===0?'🥇 1위':i===1?'🥈 2위':i===2?'🥉 3위':`${i+1}위`);
                   const trCls = `${r.self?'ps-self':''} ${r.dormant?'ps-dormant':''}`.trim();
                   const click = r.self ? '' : ` onclick="openPlayerModal('${_psEscJS(r.name)}')"`;
                   const photo = (typeof getPlayerPhotoHTML==='function')
@@ -391,7 +402,7 @@
                     <td data-label="스트리머" style="font-weight:900;color:${r.self?'var(--blue)':'var(--text)'}">
                       <span style="display:inline-flex;align-items:center;gap:8px;width:100%">
                         <span style="flex-shrink:0">${photo}</span>
-                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_psEsc(r.name)}${r.self?' (본인)':''}</span>
+                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_psEsc(r.name)}</span>
                       </span>
                     </td>
                     <td data-label="대학"><span class="ubadge" style="background:${_psUnivColor(r.univ)}">${_psEsc(r.univ)}</span></td>
@@ -399,7 +410,6 @@
                     <td data-label="ELO" style="font-weight:800">${r.elo}</td>
                     <td data-label="보정 승률">${r.adjWr}%</td>
                     <td data-label="${_psWindowLabel()}">${r.tot}경기 (${r.w}승 ${r.l}패)</td>
-                    <td data-label="비고" style="color:var(--gray-l)">${_psEsc(note)}</td>
                   </tr>`;
                 }).join('')}
               </tbody>
@@ -426,6 +436,10 @@
                 <div style="font-family:ui-monospace,monospace;font-size:12px;background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.25);padding:10px;border-radius:10px;margin-top:6px">
                   score = ELO + 승률가산(신뢰도 보정) + 활동량가산 - 저표본패널티 - 휴면패널티
                 </div>
+              </div>
+              <div style="margin-bottom:10px">
+                <div style="font-weight:900">집계 대상 경기</div>
+                <div style="color:var(--gray-l)">끝장전(프로리그끝장전 등 포함)은 정식 티어 전적으로 보지 않아 승급 시뮬레이션 집계에서 제외합니다.</div>
               </div>
               <div>
                 <div style="font-weight:900">휴면 판정</div>
@@ -473,16 +487,14 @@
     return `<div style="display:flex;flex-direction:column;gap:14px">
       <div class="ssec">
         <h4 style="margin:0 0 4px">🔮 승급 시뮬레이션</h4>
-        <p style="color:var(--gray-l);font-size:12px;margin:0 0 10px">선수의 현재 ELO와 ${_psWindowLabel()} 전적(경기수·승패·승률)을 바탕으로 현재 티어 경쟁력과 승급 가능성을 추정합니다.</p>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <input id="ps-search-input" list="ps-name-list" placeholder="선수 이름 검색" value="${_psEsc(q)}" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--border2);border-radius:8px" onkeydown="if(event.key==='Enter'){window._psQuery=this.value.trim();render();}">
           <datalist id="ps-name-list">${namedPlayers.map(p=>`<option value="${_psEsc(p.name)}">`).join('')}</datalist>
           <button class="btn btn-b" onclick="window._psQuery=(document.getElementById('ps-search-input')||{}).value.trim();render()">분석하기</button>
         </div>
-        ${popularHTML}
       </div>
       ${resultHTML}
-      <div id="ps-modal-overlay" class="ps-modal-overlay" onclick="if(event.target===this)window._psCloseModal()">
+      <div id="ps-modal-overlay" class="ps-modal-overlay" style="display:none" onclick="if(event.target===this)window._psCloseModal()">
         <div class="ps-modal">
           <div class="ps-modal-close" onclick="window._psCloseModal()">×</div>
           <h2 id="ps-modal-title">상세 분석</h2>

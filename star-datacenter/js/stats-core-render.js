@@ -32,6 +32,7 @@ function rStats(C,T){
       {id:'tierRank',lbl:'🚀 티어 랭킹'},
       {id:'levelRank',lbl:'🎮 레벨/등급 순위표'},
       {id:'starsystem',lbl:'⭐ 스타시스템'},
+      {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
       {id:'award',lbl:'🏆 이달의 스트리머'},
@@ -39,7 +40,6 @@ function rStats(C,T){
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
       {id:'playervs',lbl:'⚔️ 스트리머 비교'},
-      {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
     ]},
     {label:'🏛️ 대학',tabs:[
       {id:'radar',lbl:'🕸️ 대학 레이더'},
@@ -260,7 +260,7 @@ function rStats(C,T){
         (async()=>{
           try{
             if(typeof window._loadScriptOnce==='function'){
-              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim11');
+              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim17');
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] promosim load fail', e); }catch(_){} }
