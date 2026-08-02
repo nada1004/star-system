@@ -7,7 +7,7 @@ function rTier(C,T){
   if(typeof fTier==='undefined' && window.fTier===undefined) window.fTier='전체';
   const _fUniv = (typeof fUniv!=='undefined') ? fUniv : window.fUniv;
   const _fTier = (typeof fTier!=='undefined') ? fTier : window.fTier;
-  if(window._tierExcludeMale===undefined) window._tierExcludeMale=false;
+  if(window._tierGenderFilter===undefined) window._tierGenderFilter='전체'; // 전체 | M | F
   const _tiers = (typeof TIERS !== 'undefined' && Array.isArray(TIERS))
     ? TIERS
     : (Array.isArray(window.TIERS) ? window.TIERS : null);
@@ -197,7 +197,7 @@ function rTier(C,T){
     _fUniv!=='전체', _fTier!=='전체',
     _hasDateFilter,
     window._tierRaceFilter!=='전체',
-    window._tierHideNoRecord, window._tierExcludeMale,
+    window._tierHideNoRecord, window._tierGenderFilter!=='전체',
     _hasTypeFilter, _hasMinGamesFilter
   ].filter(Boolean).length;
   const _viewModeLabels={table:'테이블',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹',magazine:'매거진'};
@@ -218,7 +218,11 @@ function rTier(C,T){
   fh+=`<button type="button" class="pill mode-select-trigger" style="flex-shrink:0;white-space:nowrap" onclick="_toggleModePopover(this,'정렬 기준',window._tierSortModeItems)">${_curSortMode.lbl} ▾</button>`;
   fh+=`<span class="fbar-divider"></span>`;
   fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없음 제외</button>`;
-  fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
+  fh+=`<span class="fbar-divider"></span>`;
+  [['전체','전체'],['M','남자'],['F','여자']].forEach(([gv,glbl])=>{
+    const on=(window._tierGenderFilter||'전체')===gv;
+    fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierGenderFilter='${gv}';render()">${glbl}</button>`;
+  });
   fh+=`</div>`;
   // ── 뷰 전환 버튼 (필터/정렬 아래 별도 행, 오른쪽 정렬) ──
   const _viewModes=[
@@ -417,7 +421,7 @@ function rTier(C,T){
     if(_fTier!=='전체') _summaryChips.push({ cls:'is-tier', txt:`티어 ${getTierPillLabel(_fTier)}`, onclick:`sf('${_fUniv}','전체');` });
     if(window._tierRaceFilter!=='전체') _summaryChips.push({ cls:'is-race', txt:`종족 ${window._tierRaceFilter}`, onclick:`window._tierRaceFilter='전체';render()` });
     if(window._tierHideNoRecord) _summaryChips.push({ cls:'is-option', txt:'전적없음 숨김', onclick:`window._tierHideNoRecord=false;render()` });
-    if(window._tierExcludeMale) _summaryChips.push({ cls:'is-option', txt:'남자 제외', onclick:`window._tierExcludeMale=false;render()` });
+    if(window._tierGenderFilter&&window._tierGenderFilter!=='전체') _summaryChips.push({ cls:'is-option', txt:(window._tierGenderFilter==='M'?'남자만':'여자만'), onclick:`window._tierGenderFilter='전체';render()` });
     if(_hasTypeFilter){
       const _typeLabels = [...window._tierTypeSet]
         .map(id => modeSortBtns.find(m=>m.id===id)?.lbl)
@@ -426,7 +430,7 @@ function rTier(C,T){
     }
     fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center;padding-top:2px">
       ${_summaryChips.map(x=>`<span class="tier-chip-soft ${x.cls||''}">${x.txt}<button type="button" onclick="${x.onclick}" title="해제">×</button></span>`).join('')}
-      <button class="pill" style="padding:4px 10px;font-size:var(--fs-caption);background:#fff1f2;border-color:#fecdd3;color:#dc2626" onclick="sf('전체','전체');window._tierDatePreset='all';window._tierDateFrom='';window._tierDateTo='';window._tierRaceFilter='전체';window._tierHideNoRecord=false;window._tierExcludeMale=false;window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;window._tierMinGames=0;render()">전체 초기화</button>
+      <button class="pill" style="padding:4px 10px;font-size:var(--fs-caption);background:#fff1f2;border-color:#fecdd3;color:#dc2626" onclick="sf('전체','전체');window._tierDatePreset='all';window._tierDateFrom='';window._tierDateTo='';window._tierRaceFilter='전체';window._tierHideNoRecord=false;window._tierGenderFilter='전체';window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;window._tierMinGames=0;render()">전체 초기화</button>
     </div>`;
   }
   fh+=`</div></div>`;
@@ -555,7 +559,7 @@ function rTier(C,T){
   // 전적없는 선수 숨기기
   if(window._tierHideNoRecord) list=list.filter(p=>_tierWL(p).tot>0);
   // 남자 제외
-  if(window._tierExcludeMale) list=list.filter(p=>p.gender!=='M');
+  if(window._tierGenderFilter&&window._tierGenderFilter!=='전체') list=list.filter(p=>p.gender===window._tierGenderFilter);
   // 최소 경기수 필터 (버튼: 전체/30/50/100/200/500/1000경기)
   if(window._tierMinGames>0) list=list.filter(p=>_tierWL(p).tot>=window._tierMinGames);
 

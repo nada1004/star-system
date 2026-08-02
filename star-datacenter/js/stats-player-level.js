@@ -131,6 +131,24 @@ function _prLerpHexColor(a, b, t){
   return 'rgb(' + rc.join(',') + ')';
 }
 
+/* 색상 문자열("#rrggbb" 또는 "rgb(r,g,b)") → [r,g,b] 튜플
+   (이전 코드가 rgb(...) 문자열 뒤에 16진수 알파 접미사('45','16')를 그대로 이어붙여
+    "rgb(99,102,241)45" 같은 잘못된 CSS 값을 만들던 버그를 근본적으로 없애기 위한 유틸) */
+function _prColorRgb(c){
+  c = String(c || '').trim();
+  var m = c.match(/^rgba?\(([^)]+)\)$/i);
+  if(m){
+    var parts = m[1].split(',').map(function(x){ return parseFloat(x) || 0; });
+    return [parts[0]||0, parts[1]||0, parts[2]||0];
+  }
+  if(c[0] === '#'){
+    var h = c.slice(1);
+    if(h.length === 3) h = h.split('').map(function(ch){ return ch+ch; }).join('');
+    return [parseInt(h.slice(0,2),16)||0, parseInt(h.slice(2,4),16)||0, parseInt(h.slice(4,6),16)||0];
+  }
+  return [100,116,139]; // fallback: slate
+}
+
 /* 선수 객체 p (p.win 사용) → 히어로 배지에 쓸 최종 정보 */
 function _prPlayerLevelBadgeInfo(p){
   var info = _prLevelInfoFromWins(p && p.win);
@@ -149,8 +167,9 @@ function _prPlayerLevelBadgeInfo(p){
 function _prLevelBadgeHTML(p){
   var b = _prPlayerLevelBadgeInfo(p);
   var lvlTxt = b.isMaxed ? 'MAX' : ('Lv.' + b.level);
-  return '<span class="pr-level-badge" style="border-color:' + b.color + '45;background:' + b.color + '16" title="누적 ' + (Number(p && p.win) || 0) + '승 기준">'
-       + '<span class="pr-level-grade" style="color:' + b.color + '">' + escHTML(b.gradeLabel) + '</span>'
+  var rgb = _prColorRgb(b.color).join(',');
+  return '<span class="pr-level-badge" style="border-color:rgba(' + rgb + ',.32);background:rgba(' + rgb + ',.09)" title="누적 ' + (Number(p && p.win) || 0) + '승 기준">'
+       + '<span class="pr-level-grade" style="background:' + b.color + '">' + escHTML(b.gradeLabel) + '</span>'
        + '<span class="pr-level-num">' + lvlTxt + '</span>'
        + '<span class="pr-level-bar"><span class="pr-level-bar-fill" style="width:' + b.progressPct + '%;background:' + b.color + '"></span></span>'
        + '</span>';
