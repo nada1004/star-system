@@ -19,7 +19,7 @@ try{
   if(typeof document !== 'undefined' && !document.getElementById('pd-hero-levelbadge-style')){
     var _pdLvlStyleEl = document.createElement('style');
     _pdLvlStyleEl.id = 'pd-hero-levelbadge-style';
-    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}';
+    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}\n.pd-hero-levelbadge .pr-level-badge{border:none;background:none;padding:0}';
     document.head.appendChild(_pdLvlStyleEl);
   }
 }catch(e){}
@@ -100,6 +100,17 @@ function buildPlayerHeaderCardHTML(opts){
   const eloGrade = !_hasRecord ? '-' : (eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE');
   const eloGradeColor = !_hasRecord ? '#94a3b8' : gradeTheme.color;
 
+  // ELO 패널(어두운 글래스 패널, 히어로 사진 위)용 별도 밝은 톤 — 위 eloGradeColor는 밝은 배경(등급 퀵카드)
+  // 기준이라 어두운 패널 위에선 대비가 낮음(특히 SILVER 슬레이트 그레이가 거의 안 보임)
+  const eloGradeColorOnDark = !_hasRecord ? 'rgba(255,255,255,.55)' : (
+    eloVal>=1500 ? '#fda4af' :
+    eloVal>=1400 ? '#d8b4fe' :
+    eloVal>=1300 ? '#7dd3fc' :
+    eloVal>=1200 ? '#fde047' :
+    eloVal>=1100 ? '#e2e8f0' :
+    '#fdba74'
+  );
+
   // 승률 바
   const wrBarW = Math.max(0, Math.min(100, wr));
   const wrColor = wr>=60 ? '#16a34a' : wr>=50 ? '#0f766e' : wr>=40 ? '#b45309' : '#dc2626';
@@ -138,7 +149,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:var(--r2);padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColorOnDark};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
         ${eloSparkHTML?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
       </div>
     </div>`;
@@ -149,7 +160,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:1px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:24px;font-weight:1000;color:#fff;line-height:1.1">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor}">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColorOnDark}">${eloGrade}</div>
       </div>
       ${eloSparkHTML?`<div style="flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:7px 8px;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
     </div>`;
@@ -162,10 +173,10 @@ function buildPlayerHeaderCardHTML(opts){
     ${gUI(p.univ,'12px')}${pUnivSafe}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
-  const raceBadge = `<span class="pd-chip" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:5px">
+  const raceBadge = `<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35);display:inline-flex;align-items:center;gap:5px">
     <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||''} ${RNAME[p.race]||''}</span>`;
 
-  const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
+  const tierBadge = p.tier ? `<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.35)">${getTierLabel(p.tier)||p.tier}</span>` : '';
   const quickRail = `
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
