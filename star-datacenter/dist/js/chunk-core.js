@@ -7775,7 +7775,7 @@ function _bindPlayerHeaderDelegatedEvents(){window._playerHeaderDelegatedBound||
     ${p.univ&&p.univ!=="\uBB34\uC18C\uC18D"?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,"&quot;")}"`:""} 
     style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=="\uBB34\uC18C\uC18D"?";cursor:pointer":""}">
     ${gUI(p.univ,"12px")}${pUnivSafe}</span>`,_raceAccent={T:"#60a5fa",Z:"#c084fc",P:"#fbbf24",N:"#cbd5e1"}[p.race]||"#cbd5e1",raceBadge=`<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35);display:inline-flex;align-items:center;gap:5px">
-    <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||""} ${RNAME[p.race]||""}</span>`,tierBadge=p.tier?`<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.35)">${getTierLabel(p.tier)||p.tier}</span>`:"",quickRail=`
+    ${p.race||""} ${RNAME[p.race]||""}</span>`,tierBadge=p.tier?`<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.35)">${typeof _TIER_LABEL_MAP!="undefined"&&_TIER_LABEL_MAP[p.tier]||p.tier}</span>`:"",quickRail=`
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?"10px 10px 12px":"12px 14px 14px"};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">\uC18C\uC18D</div>
@@ -7797,14 +7797,18 @@ function _bindPlayerHeaderDelegatedEvents(){window._playerHeaderDelegatedBound||
     <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
       <div class="pd-hero-photo ph-swap" style="${photoBorder}">${photoHTML}</div>
       <div class="pd-hero-meta" style="min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,"11px"):""}
-          ${tierBadge}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${tierBadge}${raceBadge}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           ${_levelBadgeHTML}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${univBadge}${raceBadge}${channelHTML}
+          ${univBadge}${channelHTML}
         </div>
       </div>
       ${eloPanel}
@@ -7815,10 +7819,13 @@ function _bindPlayerHeaderDelegatedEvents(){window._playerHeaderDelegatedBound||
         <div class="pd-hero-meta" style="min-width:0;flex:1">
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
-            ${p.role?getRoleBadgeHTML(p.role,"10px"):""}${tierBadge}${_levelBadgeHTML}
+            ${p.role?getRoleBadgeHTML(p.role,"10px"):""}${tierBadge}${raceBadge}
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
+            ${_levelBadgeHTML}
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            ${univBadge}${raceBadge}${channelHTML}
+            ${univBadge}${channelHTML}
           </div>
         </div>
       </div>
