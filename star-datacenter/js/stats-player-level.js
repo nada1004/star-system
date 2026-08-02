@@ -147,11 +147,14 @@ function _prPlayerLevelBadgeInfo(p){
 
 /* 히어로 영역에 삽입할 레벨 배지 HTML */
 function _prLevelBadgeHTML(p){
-  var b = _prPlayerLevelBadgeInfo(p);
-  var lvlTxt = b.isMaxed ? 'MAX' : ('Lv.' + b.level);
-  return '<span class="pr-level-badge" style="border-color:' + b.color + '45;background:' + b.color + '16" title="누적 ' + (Number(p && p.win) || 0) + '승 기준">'
-       + '<span class="pr-level-grade" style="color:' + b.color + '">' + escHTML(b.gradeLabel) + '</span>'
-       + '<span class="pr-level-num">' + lvlTxt + '</span>'
-       + '<span class="pr-level-bar"><span class="pr-level-bar-fill" style="width:' + b.progressPct + '%;background:' + b.color + '"></span></span>'
+  const b = _prPlayerLevelBadgeInfo(p);
+  const lvlTxt = b.isMaxed ? 'MAX' : ('Lv.' + b.level);
+  const glow = b.isMaxed ? ',0 0 10px ' + b.color + '80' : '';
+  return '<span class="pr-level-badge" style="border-color:' + b.color + '45;box-shadow:0 1px 2px rgba(15,23,42,.05)' + glow + '" title="누적 ' + (Number(p && p.win) || 0) + '승 기준 · ' + escHTML(b.gradeLabel) + '등급">'
+       + '<span class="pr-level-gradebox" style="background:linear-gradient(150deg,' + b.color + 'e6,' + b.color + ')">' + escHTML(b.gradeLabel) + '</span>'
+       + '<span class="pr-level-info">'
+       +   '<span class="pr-level-num">' + lvlTxt + '</span>'
+       +   '<span class="pr-level-bar"><span class="pr-level-bar-fill" style="width:' + b.progressPct + '%;background:' + b.color + '"></span></span>'
+       + '</span>'
        + '</span>';
 }

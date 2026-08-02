@@ -77,6 +77,17 @@ function buildPlayerHeaderCardHTML(opts){
   const wrBarW = Math.max(0, Math.min(100, wr));
   const wrColor = wr>=60 ? '#16a34a' : wr>=50 ? '#0f766e' : wr>=40 ? '#b45309' : '#dc2626';
 
+  // 최근 6개월(약 183일) 내 경기 기록이 없으면 '활동중'으로 표시하지 않음(휴면 처리)
+  const _lastMatchDate = (histAll && histAll[0] && histAll[0].date) || '';
+  let _daysSinceLastMatch = Infinity;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(_lastMatchDate)){
+    const _t = new Date(_lastMatchDate + 'T00:00:00').getTime();
+    if(_t) _daysSinceLastMatch = Math.max(0, Math.floor((Date.now() - _t) / 86400000));
+  }
+  const _isDormant = !p.retired && _daysSinceLastMatch > 183;
+  const _statusLabel = p.retired ? '은퇴' : (_isDormant ? '휴면' : '활동중');
+  const _statusColor = p.retired ? '#94a3b8' : (_isDormant ? '#b45309' : '#0f172a');
+
   const statsBlock = `
     <div class="pd-hero-stats" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
       <div class="pd-hero-stat" data-pd-stat="record" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
@@ -98,7 +109,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
-        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${_statusColor}" title="${_lastMatchDate?('최근 경기: '+_lastMatchDate):'경기 기록 없음'}">${_statusLabel}</div>
       </div>
     </div>`;
 

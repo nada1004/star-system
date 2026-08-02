@@ -13,7 +13,7 @@ function rStats(C,T){
     return;
   }
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _coreIds = new Set(['overview','tierRank','award','radar','univwinbar','period','preport','sharecard']);
+  const _coreIds = new Set(['overview','tierRank','pointlevel','award','radar','univwinbar','period','preport','sharecard']);
   window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
@@ -29,6 +29,7 @@ function rStats(C,T){
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},
       {id:'tierRank',lbl:'🚀 티어 랭킹'},
+      {id:'pointlevel',lbl:'🏅 포인트/레벨 순위'},
       {id:'starsystem',lbl:'⭐ 스타시스템'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
@@ -235,6 +236,7 @@ function rStats(C,T){
 
   if(window.statsSub==='overview')    h+=_safeRender(()=>_cached('overview', statsOverviewHTML), '종합');
   else if(window.statsSub==='tierRank')h+=_safeRender(statsTierRankHTML, '티어 랭킹');
+  else if(window.statsSub==='pointlevel')h+=_safeRender(statsPointLevelRankHTML, '포인트/레벨 순위');
   else if(window.statsSub==='starsystem')h+=_safeRender(statsStarSystemHTML, '스타시스템');
   else if(window.statsSub==='elo')    h+=_safeRender(statsEloHTML, 'ELO 그래프');
   else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
