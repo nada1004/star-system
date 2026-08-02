@@ -187,6 +187,7 @@ function _doOpenPlayerModal(name, p){
     st.histFilters=[];
     st.seasonFilter='전체';
     st.seasonFilters=[];
+    st.mapFilter='';
   }
   document.getElementById('playerModalTitle').innerHTML=`<span class="detail-main">👤 ${name}</span>`;
   const mbody=document.getElementById('playerModalBody');

@@ -145,12 +145,14 @@ function preparePlayerRecentSectionData(opts){
   const curSeasons=(st.seasonFilters&&st.seasonFilters.length>0)
     ?(seasonsList||[]).filter(s=>st.seasonFilters.includes(s.id))
     :(curSeason?[curSeason]:[]);
-  const filteredHist = curSeasons.length>0
+  const filteredHistSeason = curSeasons.length>0
     ? modeHist.filter(hh=>{
         const d=hh.date||'';
         return curSeasons.some(season=>d>=(season.start||'') && d<=(season.end||'9999-99-99'));
       })
     : modeHist;
+  const mapFilter = st.mapFilter||'';
+  const filteredHist = mapFilter ? filteredHistSeason.filter(hh=>hh.map===mapFilter) : filteredHistSeason;
   const totalGames=filteredHist.length;
   const totalPages=Math.ceil(totalGames/pageSize)||1;
   if(typeof playerHistPage!=='number' || isNaN(playerHistPage)) playerHistPage=0;
@@ -161,7 +163,7 @@ function preparePlayerRecentSectionData(opts){
   const displayHist = sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
   const fromN = (curPage*pageSize+1);
   const toN = Math.min((curPage+1)*pageSize,totalGames);
-  return { seasonBar, filteredHist, totalGames, totalPages, curPage, displayHist, fromN, toN };
+  return { seasonBar, filteredHist, totalGames, totalPages, curPage, displayHist, fromN, toN, mapFilter };
 }
 
 try{

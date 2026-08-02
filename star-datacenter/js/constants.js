@@ -330,6 +330,7 @@ function resetPlayerDetailState(){
   st.seasonFilters = [];
   st.oppPage = 0;
   st.oppSort = 'tot';
+  st.mapFilter = '';
   return st;
 }
 

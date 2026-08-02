@@ -38,6 +38,7 @@ function rTier(C,T){
     {id:'winstreak',lbl:'🔥 승차순'},
     {id:'winrate',lbl:'📈 승률순'},
     {id:'revstreak',lbl:'❄️ 역승차순'},
+    {id:'mapwin',lbl:'🗺️ 맵별'},
   ];
   const modeSortBtns=[
     {id:'mini_win',lbl:'⚡ 미니 승',color:'#7c3aed'},
@@ -79,6 +80,10 @@ function rTier(C,T){
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
   if(!tierRankMode||!allModeIds.has(tierRankMode)) tierRankMode='tier';
   const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
+  const _tierMapList=[...new Set((typeof maps !== 'undefined' ? maps : (window.maps||[])).filter(mm=>mm&&mm!=='-'))].sort();
+  const _tierMapsWithGames = new Set((_pl||[]).flatMap(p=>(p.history||[]).map(h=>h.map).filter(mm=>mm&&mm!=='-')));
+  const _tierMapListShown = _tierMapList.filter(mp=>_tierMapsWithGames.has(mp));
+  if(window._tierRankSelMap===undefined || !_tierMapListShown.includes(window._tierRankSelMap)) window._tierRankSelMap=_tierMapListShown[0]||'';
   if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
   if(window._tierFilterOpen===undefined) window._tierFilterOpen=false;
   if(window._tierDatePreset===undefined) window._tierDatePreset='all';
@@ -190,6 +195,22 @@ function rTier(C,T){
       lastD: ''
     };
   }
+  function _tierMapWL(p){
+    const name = p && p.name;
+    const selMap = window._tierRankSelMap||'';
+    if(!name || !selMap) return {w:0,l:0,tot:0,wr:0};
+    const hist = Array.isArray(p.history) ? p.history : [];
+    let w=0,l=0;
+    hist.forEach(h=>{
+      if(!h || h.map!==selMap) return;
+      const rawDate = h.date || h.d || '';
+      if(_hasDateFilter && !_tierInDateRange(rawDate)) return;
+      if(h.result==='승') w++;
+      else if(h.result==='패') l++;
+    });
+    const tot=w+l;
+    return {w,l,tot,wr:tot?Math.round(w/tot*100):0};
+  }
   const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
   // 활성 필터 수 계산 (뱃지용)
   const _hasMinGamesFilter=(window._tierMinGames||0)>0;
@@ -224,6 +245,17 @@ function rTier(C,T){
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierGenderFilter='${gv}';render()">${glbl}</button>`;
   });
   fh+=`</div>`;
+  if(tierRankMode==='mapwin' && _curModeNoFilter && _tierMapListShown.length){
+    fh+=`<div class="tier-view-row">`;
+    fh+=`<span class="tier-view-row-label">🗺️ 맵</span>`;
+    fh+=`<div class="tier-view-row-btns" style="flex-wrap:wrap">`;
+    _tierMapListShown.forEach(mp=>{
+      const on=window._tierRankSelMap===mp;
+      const safeMp=String(mp).replace(/'/g,"\\'");
+      fh+=`<button class="tier-view-btn ${on?'on':''}" onclick="window._tierRankSelMap='${safeMp}';render()"><span class="tier-view-btn-label">${mp}</span></button>`;
+    });
+    fh+=`</div></div>`;
+  }
   // ── 뷰 전환 버튼 (필터/정렬 아래 별도 행, 오른쪽 정렬) ──
   const _viewModes=[
     {id:'table',      icon:'📋', title:'테이블'},
@@ -741,6 +773,10 @@ function rTier(C,T){
     _modePStats=_ps;
     list.sort((a,b)=>tierRankMode==='comp_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
   }
+  else if(tierRankMode==='mapwin'){
+    list=list.filter(p=>_tierMapWL(p).tot>0);
+    list.sort((a,b)=>{const sa=_tierMapWL(a), sb=_tierMapWL(b); return sb.wr-sa.wr||sb.w-sa.w||sa.l-sb.l;});
+  }
 
   const modeHeaders={
     tier:_hasDateFilter?'기간 포인트':'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',
@@ -748,7 +784,8 @@ function rTier(C,T){
     ind_win:'개인전승',ind_loss:'개인전패',gj_win:'끝장전승',gj_loss:'끝장전패',
     civ_win:'시빌워승',civ_loss:'시빌워패',tt_win:'티어대회승',tt_loss:'티어대회패',
     pro_win:'프로리그승',pro_loss:'프로리그패',univm_win:'대학대전승',univm_loss:'대학대전패',
-    elo:_hasDateFilter?'ELO 변동':'ELO'
+    elo:_hasDateFilter?'ELO 변동':'ELO',
+    mapwin:window._tierRankSelMap?`${window._tierRankSelMap} 승률`:'맵별'
   };
   const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
   const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
@@ -825,6 +862,10 @@ function rTier(C,T){
         return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${d>0?'var(--green)':d<0?'var(--red)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;
       }
       const e=p.elo||ELO_DEFAULT;return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${e>=1400?'#7c3aed':e>=1300?'var(--gold)':e>=1200?'var(--green)':'var(--red)'}">${e}</span>`;
+    }
+    if(tierRankMode==='mapwin'){
+      const mrec=_tierMapWL(p);
+      return`<span style="font-weight:800;color:${mrec.wr>=50?'var(--green)':'var(--red)'}">${mrec.w}승 ${mrec.l}패</span> <span style="font-size:11px;color:var(--gray-l)">${mrec.wr}%</span>`;
     }
     if(['mini_win','mini_loss','ck_win','ck_loss','comp_win','comp_loss','ind_win','ind_loss','gj_win','gj_loss','civ_win','civ_loss','tt_win','tt_loss','pro_win','pro_loss','univm_win','univm_loss'].includes(tierRankMode)){
       const _v=_modePStats?_modePStats[p.name]:null; const isWin=tierRankMode.endsWith('_win'); const cnt=_v?(isWin?_v.w:_v.l):0;

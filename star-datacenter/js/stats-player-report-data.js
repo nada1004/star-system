@@ -387,10 +387,11 @@ function _prInfoGridHTML(p){
 }
 /* ─── 맵별 성적 ─── */
 function _prMapStats(hist){
+  const _regMaps = (typeof maps !== 'undefined' ? maps : (window.maps||[]));
   const m={};
   (hist||[]).forEach(h=>{
     if(h.result!=='승' && h.result!=='패') return;
-    const map = (h.map && h.map!=='-') ? h.map : null;
+    const map = (h.map && h.map!=='-' && _regMaps.includes(h.map)) ? h.map : null;
     if(!map) return;
     if(!m[map]) m[map]={w:0,l:0};
     if(h.result==='승') m[map].w++; else m[map].l++;

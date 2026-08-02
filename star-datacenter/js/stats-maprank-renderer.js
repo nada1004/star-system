@@ -1,11 +1,9 @@
 (function(){
   function statsMapRankHTML(){
     const currentMap = String(window._mapRankSelMap||'');
-    const histMaps=[...new Set((window.players||[]).flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))];
-    const configMaps=((window.maps)||[]).filter(m=>m&&m!=='-');
-    const allMaps=[...new Set([...histMaps,...configMaps])].sort();
+    const configMaps=((typeof maps !== 'undefined' ? maps : (window.maps||[]))).filter(m=>m&&m!=='-');
+    const allMaps=[...new Set(configMaps)].sort();
     if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
-    if(!window._mapRankSelMap||!allMaps.includes(window._mapRankSelMap)) window._mapRankSelMap=allMaps[0];
     if(window._mapRankGenderFilter===undefined) window._mapRankGenderFilter='전체';
     const genderFilter=window._mapRankGenderFilter;
     const genderOk=p=>genderFilter==='전체'||(p&&p.gender===genderFilter);
@@ -62,6 +60,11 @@
       const total=Math.round(rawTotal/2);
       return{name:m,games:total,players:Object.keys(mapData[m]||{}).length};
     }).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name,'ko'));
+    const mapSummaryWithGames=mapSummary.filter(m=>m.games>0);
+
+    if(!window._mapRankSelMap||!allMaps.includes(window._mapRankSelMap)||!mapSummaryWithGames.some(m=>m.name===window._mapRankSelMap)){
+      window._mapRankSelMap=(mapSummaryWithGames[0]||mapSummary[0]||{}).name||allMaps[0];
+    }
 
     const selData=Object.entries(mapData[window._mapRankSelMap]||{})
       .map(([name,s])=>({name,w:s.w,l:s.l,univ:s.univ,tier:s.tier,tot:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}))
@@ -78,7 +81,7 @@
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${mapSummary.map(m=>`
+        ${mapSummaryWithGames.map(m=>`
           <button onclick="window._mapRankSelMap='${m.name.replace(/'/g,"\\'")}';render()"
             style="padding:6px 14px;border-radius:8px;border:2px solid ${window._mapRankSelMap===m.name?'var(--blue)':'var(--border2)'};background:${window._mapRankSelMap===m.name?'var(--blue-l)':'var(--white)'};font-size:var(--fs-sm);font-weight:${window._mapRankSelMap===m.name?'700':'500'};color:${window._mapRankSelMap===m.name?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
             ${m.name} <span style="font-size:10px;opacity:.6">${m.games}게임</span>

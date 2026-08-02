@@ -132,16 +132,22 @@ function buildPlayerRecentHistorySectionHTML(opts){
     seasonBar='',
     displayHist=[],
     curPage=0,
-    totalPages=1
+    totalPages=1,
+    mapFilter='',
+    histFilterBar=''
   } = opts || {};
   const selectAllCheckbox = bulkMode
     ? `<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" data-ph-action="hist-select-all" data-ph-name="${escJS(pName)}" data-ph-indices="[${displayHist.map(h=>h._origIdx).join(',')}]" style="cursor:pointer"></th>`
     : '';
   const manageHeader = isLoggedIn ? '<th class="no-export" style="width:48px">관리</th>' : '';
+  const mapFilterChip = mapFilter
+    ? `<button type="button" class="no-export" onclick="if(typeof _pdSetMapFilter==='function')_pdSetMapFilter('${escJS(pName)}','${escJS(mapFilter)}')" style="padding:3px 10px;border-radius:999px;border:1px solid var(--blue);background:var(--blue-l);color:var(--blue);font-size:10px;font-weight:900;cursor:pointer">🗺️ ${escHTML(mapFilter)} ✕</button>`
+    : '';
+  const histFilterBarInline = histFilterBar ? histFilterBar.replace('margin:0 0 8px;', 'margin:0;') : '';
   let h=`<div class="su-sec" style="--su-sec-accent:var(--blue)">
-    <div class="su-sec__title-row">
+    <div class="su-sec__title-row" style="flex-wrap:wrap">
       <div class="su-sec__title">최근 경기 기록 <small>(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</small></div>
-      ${isLoggedIn?`<div class="su-sec__tools"><button class="no-export" data-ph-action="hist-bulk-toggle" style="padding:2px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:900;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button></div>`:''}
+      <div class="su-sec__tools" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${histFilterBarInline}${mapFilterChip}${isLoggedIn?`<button class="no-export" data-ph-action="hist-bulk-toggle" style="padding:2px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:900;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>
     </div>`;
   h+=seasonBar;
   h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;

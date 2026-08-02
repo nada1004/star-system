@@ -4,6 +4,20 @@ function _rebuildPlayerDetailWithChart(name){
   try{ setTimeout(()=>initPEloChart(name,st.year||''),60); }catch(e){}
 }
 
+function _pdSetMapFilter(name, mapValue){
+  const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+  st.mapFilter = (st.mapFilter===mapValue) ? '' : (mapValue||'');
+  playerHistPage = 0;
+  if(st.mapFilter && st.pdTab!==undefined) st.pdTab = 'recent';
+  if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(name);
+  setTimeout(()=>{
+    try{
+      const t=document.getElementById('pd-jump-recent');
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){}
+  },80);
+}
+
 function _pdResetHistPaging(){
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
   st.oppPage = 0;
@@ -305,6 +319,7 @@ function buildPlayerSeasonFilterBar(opts){
 
 try{
   _pdBindDelegatedEvents();
+  window._pdSetMapFilter = _pdSetMapFilter;
   window._pdSetSingleModeFilter = _pdSetSingleModeFilter;
   window._pdSetSingleYearFilter = _pdSetSingleYearFilter;
   window._playerHistSetAll = _playerHistSetAll;
