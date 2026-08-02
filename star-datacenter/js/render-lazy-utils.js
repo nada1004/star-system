@@ -154,7 +154,6 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-player-report-data.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
-  await _loadScriptOnce('js/stats-point-level-rank.js?v=20260802-lvl2');
   await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
@@ -201,7 +200,6 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-player-report-data.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
-  await _loadScriptOnce('js/stats-point-level-rank.js?v=20260802-lvl2');
   await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');

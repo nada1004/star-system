@@ -335,7 +335,6 @@ const LAZY_CHUNKS = {
     'js/stats-sharecard.js',
     'js/stats-player-report-data.js',
     'js/stats-player-level.js',
-    'js/stats-point-level-rank.js',
     'js/stats-player-report-sections.js',
     'js/stats-player-report-entry.js',
     'js/stats-player-report-canvas.js',
