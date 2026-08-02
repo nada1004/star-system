@@ -543,12 +543,49 @@ function rStats(C,T){
   else if(window.statsSub==='heatmap')  h+=_safeRender(()=>_cached('heatmap', statsHeatmapHTML), '활동 히트맵');
   else if(window.statsSub==='tierwin')  h+=_safeRender(()=>_cached('tierwin', statsTierWinHTML), '티어별 승률(개인)');
   else if(window.statsSub==='maprank')  h+=_safeRender(()=>_cached('maprank', statsMapRankHTML), '맵별 특화');
-  else if(window.statsSub==='promosim')h+=_safeRender(window.statsPromoSimHTML || (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">승급 시뮬레이션을 불러오지 못했습니다.</div></div>'), '승급 시뮬레이션');
+  else if(window.statsSub==='promosim'){
+    if(typeof window.statsPromoSimHTML==='function'){
+      h+=_safeRender(window.statsPromoSimHTML, '승급 시뮬레이션');
+    }else{
+      // lazy-load 레이스/캐시 이슈 방지: 없으면 로드 시도 후 재렌더
+      h+=`<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">승급 시뮬레이션을 불러오는 중...</div></div>`;
+      try{
+        (async()=>{
+          try{
+            if(typeof window._loadScriptOnce==='function'){
+              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim11');
+            }
+            if(typeof render==='function') render(true);
+          }catch(e){ try{ console.error('[lazy] promosim load fail', e); }catch(_){} }
+        })();
+      }catch(e){}
+    }
+  }
   else if(window.statsSub==='race')     h+=_safeRender(()=>`<div class="ssec">${typeof raceSummaryHTML==='function'?raceSummaryHTML():''}</div>`, '종족 승률');
   else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
   else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
   else if(window.statsSub==='csvexport')h+=_safeRender(statsCsvExportHTML, 'CSV 내보내기');
-  else if(window.statsSub==='preport')   h+=_safeRender(statsPlayerReportHTML, '스트리머 리포트');
+  else if(window.statsSub==='preport'){
+    if(typeof window.statsPlayerReportHTML==='function'){
+      h+=_safeRender(window.statsPlayerReportHTML, '스트리머 리포트');
+    }else{
+      h+=`<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">스트리머 리포트를 불러오는 중...</div></div>`;
+      try{
+        (async()=>{
+          try{
+            if(typeof window._loadScriptOnce==='function'){
+              // 리포트 모듈만 최소 로드
+              await window._loadScriptOnce('js/stats-player-report-data.js?v=20260802-mapfix3');
+              await window._loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
+              await window._loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
+              await window._loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
+            }
+            if(typeof render==='function') render(true);
+          }catch(e){ try{ console.error('[lazy] preport load fail', e); }catch(_){} }
+        })();
+      }catch(e){}
+    }
+  }
   else if(window.statsSub==='sharecard')h+=_safeRender(statsShareCardHTML, '공유 카드');
   else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');

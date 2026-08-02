@@ -125,7 +125,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260724-fix1');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260802-mapfix4');
-  await _loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim10');
+  await _loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim11');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
