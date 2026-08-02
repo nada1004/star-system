@@ -2,6 +2,16 @@
    통계 - Star System 설정/계산 (stats-core.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// (개선) 점수 로직 상수를 한 곳에서 관리 — spec 안내문/모달이 이 값을 그대로 참조해 표기 불일치를 방지
+window.SS_CONST = window.SS_CONST || {
+  START: 100,
+  PROMO_THRESHOLD: 130,
+  DEMOTE_THRESHOLD: 70,
+  PTS_SAME: 3,
+  PTS_UP: 5,
+  PTS_DOWN: 2,
+};
+
 window.starSystemSetEnabled = function(on){
   const v = on ? '1' : '0';
   try{ localStorage.setItem('su_starSystem_enabled', v); }catch(e){}
@@ -14,10 +24,20 @@ window.starSystemSetKeywords = function(v){
   render();
 };
 function _ssKeywords(){
-  const dflt = '대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트';
+  const dflt = '대학대전,대학CK,CK,교수,코치,주관,미니대전,프로리그,티어대회,대회,토너먼트';
   try{
     const raw = (localStorage.getItem('su_starSystem_keywords') || dflt).trim();
-    return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+    const list = raw.split(/[\n,]+/).map(s=>s.trim()).filter(s=>s && s.length>=2);
+    // 중복 제거(대소문자 무시)
+    const seen = new Set();
+    const out = [];
+    list.forEach(k=>{
+      const key = k.toUpperCase();
+      if(seen.has(key)) return;
+      seen.add(key);
+      out.push(k);
+    });
+    return out.length ? out : dflt.split(',');
   }catch(e){ return dflt.split(','); }
 }
 function _ssTierToNum(t){
@@ -41,13 +61,14 @@ function _ssCalcFairPoints(tierDiff, result){
   const td = Number.isFinite(tierDiff) ? Math.max(-99, Math.min(99, Math.trunc(tierDiff))) : 0;
   const r = String(result||'').toUpperCase();
   const isWin = (r==='WIN');
+  const C = window.SS_CONST;
   // (최선책) 제로섬(Zero-sum): 승자 +X / 패자 -X
   // - 동일 티어: ±3
   // - 상위 티어 상대(업셋): ±5
   // - 하위 티어 상대(기대승): ±2
-  if(td===0) return isWin ? 3 : -3;
-  if(td>0) return isWin ? 5 : -5;
-  return isWin ? 2 : -2;
+  if(td===0) return isWin ? C.PTS_SAME : -C.PTS_SAME;
+  if(td>0) return isWin ? C.PTS_UP : -C.PTS_UP;
+  return isWin ? C.PTS_DOWN : -C.PTS_DOWN;
 }
 function _ssDaysAgo(dateStr){
   const d=(dateStr||'');
@@ -57,8 +78,9 @@ function _ssDaysAgo(dateStr){
   return Math.max(0, Math.floor((Date.now()-t)/86400000));
 }
 function _ssStatus(points){
-  if(points>=130) return '승급 검증';
-  if(points<70) return '강등 위기';
+  const C = window.SS_CONST;
+  if(points>=C.PROMO_THRESHOLD) return '승급 검증';
+  if(points<C.DEMOTE_THRESHOLD) return '강등 위기';
   return '정상';
 }
 var _ssCacheTime='', _ssCacheKey='', _ssCache=null;
@@ -72,9 +94,9 @@ function _ssComputeAll(){
 
   const kws=_ssKeywords();
   const matchOfficial = (mode) => {
-    const m=String(mode||'');
+    const m=String(mode||'').toUpperCase();
     if(!m) return false;
-    return kws.some(k=>k && m.includes(k));
+    return kws.some(k=>k && m.includes(k.toUpperCase()));
   };
 
   const _players = Array.isArray(players) ? players : [];
@@ -82,16 +104,18 @@ function _ssComputeAll(){
   _players.forEach(p=>{
     const myTierNum=_ssTierToNum(p.tier);
     if(myTierNum==null) return;
-    let pts=100;
+    let pts=window.SS_CONST.START;
     let games=0;
     let last='';
     const hist = statsNonProHist(p).filter(h=>matchOfficial(h.mode||h.type||''));
     const sorted=[...hist].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
     sorted.forEach(h=>{
       const opp = statsP(h.opp);
-      const oppTierNum = _ssTierToNum(opp?.tier);
-      if(oppTierNum==null) return;
-      const tierDiff = oppTierNum - myTierNum;
+      // (개선) 기록 시점의 티어 스냅샷이 있으면 그걸 우선 사용, 없으면(과거 기록) 현재 티어로 대체
+      const myTierNumAtMatch = h.tierAtMatch ? (_ssTierToNum(h.tierAtMatch) ?? myTierNum) : myTierNum;
+      const oppTierNumAtMatch = h.oppTierAtMatch ? _ssTierToNum(h.oppTierAtMatch) : _ssTierToNum(opp?.tier);
+      if(oppTierNumAtMatch==null) return;
+      const tierDiff = oppTierNumAtMatch - myTierNumAtMatch;
       const res = (h.result==='승') ? 'WIN' : (h.result==='패') ? 'LOSS' : '';
       if(!res) return;
       pts += _ssCalcFairPoints(tierDiff, res);

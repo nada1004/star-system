@@ -5,6 +5,7 @@
 function statsStarSystemHTML(){
   const enabled = (localStorage.getItem('su_starSystem_enabled') ?? '0') === '1';
   const kwsRaw = (localStorage.getItem('su_starSystem_keywords') || '').trim();
+  const C = window.SS_CONST;
   const spec = `프로젝트 개요
 목적: 스타크래프트 스트리머의 실력을 가장 정직하게 반영하는 티어 산정 및 관리 시스템.
 핵심 원칙:
@@ -12,15 +13,15 @@ function statsStarSystemHTML(){
 2. 승급은 어렵고, 강등과 복귀 검증은 엄격하게 처리.
 3. 데이터의 공신력을 위해 수치 기반의 제로섬(Zero-sum) 로직 적용.
 
-티어 유지 및 점수 로직 (제로섬 3점 체제)
-모든 사용자는 각 티어별 기본 100점에서 시작하며, 경기 결과에 따라 점수를 가감한다.
+티어 유지 및 점수 로직 (제로섬 ${C.PTS_SAME}점 체제)
+모든 사용자는 각 티어별 기본 ${C.START}점에서 시작하며, 경기 결과에 따라 점수를 가감한다.
 [포인트 계산]
-동일 티어(0): 승 +3 / 패 -3
-상위 티어(+1): 승 +5 / 패 -5
-하위 티어(-1): 승 +2 / 패 -2
+동일 티어(0): 승 +${C.PTS_SAME} / 패 -${C.PTS_SAME}
+상위 티어(+1): 승 +${C.PTS_UP} / 패 -${C.PTS_UP}
+하위 티어(-1): 승 +${C.PTS_DOWN} / 패 -${C.PTS_DOWN}
 [승강급 기준]
-승급: 130점 도달 시 ‘승급 검증’
-강등: 70점 미만 시 ‘강등 위기’
+승급: ${C.PROMO_THRESHOLD}점 도달 시 ‘승급 검증’
+강등: ${C.DEMOTE_THRESHOLD}점 미만 시 ‘강등 위기’
 
 활동/강등 예외
 0~1티어: 강등 없음(명예) — 1년 미참여 시 비활성
@@ -33,6 +34,7 @@ function statsStarSystemHTML(){
 패배 페널티: 즉시 -10점, 상태 VERIFY_DOWNGRADE
 한 단계 낮은 티어의 상~중위권과 다음 검증전을 배치 (승리할 때까지 하향 반복)
 `;
+
 
   const css = `<style>
     .ss-tier{margin-top:10px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--white)}
@@ -64,8 +66,8 @@ function statsStarSystemHTML(){
     <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px">
       <div style="font-size:var(--fs-sm);font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input type="text" value="${escHTML(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
-        <button class="btn btn-w btn-sm" onclick="starSystemSetKeywords('대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트')">기본값</button>
+        <input type="text" value="${escHTML(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,프로리그..." style="flex:1;min-width:260px">
+        <button class="btn btn-w btn-sm" onclick="starSystemSetKeywords('대학대전,대학CK,CK,교수,코치,주관,미니대전,프로리그,티어대회,대회,토너먼트')">기본값</button>
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
     </div>
@@ -111,7 +113,7 @@ function statsStarSystemHTML(){
   }).join('');
 
   return header + `<div class="ssec" style="margin-top:10px">
-    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:8px">※ 현재는 “현재 티어 기준”으로 상대 티어 차이를 계산합니다(과거 티어 변동까지 반영하려면 기록에 tierAtMatch 저장이 필요).</div>
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:8px">※ 2026-08-02 이후 등록되는 경기부터는 "경기 당시 티어" 스냅샷을 저장해 상대 티어 차이를 정확히 계산합니다. 그 이전 기록은 스냅샷이 없어 현재 티어로 대체 계산됩니다.</div>
   </div>` + tiersHTML;
 }
 

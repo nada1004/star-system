@@ -24,14 +24,14 @@ function rStats(C,T){
   const _savedSub=localStorage.getItem('su_statsSub');
   window.statsSub = window.statsSub || 'overview';
   if(_savedSub&&window.statsSub==='overview'&&_savedSub!=='overview'){
-    if(_savedSub!=='csvexport'||_li) window.statsSub=_savedSub;
+    if((_savedSub!=='csvexport'||_li) && (_savedSub!=='starsystem'||_li)) window.statsSub=_savedSub;
   }
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},
       {id:'tierRank',lbl:'🚀 티어 랭킹'},
       {id:'levelRank',lbl:'🎮 레벨/등급 순위표'},
-      {id:'starsystem',lbl:'⭐ 스타시스템'},
+      ...(_li?[{id:'starsystem',lbl:'⭐ 스타시스템'}]:[]),
       {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
@@ -107,7 +107,7 @@ function rStats(C,T){
   h+=`<div class="stats-modebar fbar no-export">
     <div class="stats-modeseg">
       <button class="pill ${window._statsViewMode==='core'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='core';window.statsSub='${_coreIds.has(window.statsSub||'')?(window.statsSub||'overview'):'overview'}';localStorage.setItem('su_statsSub',window.statsSub);render()">⚡ 핵심 통계</button>
-      <button class="pill ${window._statsViewMode==='advanced'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='advanced';window.statsSub='${_coreIds.has(window.statsSub||'overview')?'starsystem':(window.statsSub||'starsystem')}';localStorage.setItem('su_statsSub',window.statsSub);render()">🧠 심화 분석</button>
+      <button class="pill ${window._statsViewMode==='advanced'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='advanced';window.statsSub='${_coreIds.has(window.statsSub||'overview')?(_li?'starsystem':'promosim'):(window.statsSub||(_li?'starsystem':'promosim'))}';localStorage.setItem('su_statsSub',window.statsSub);render()">🧠 심화 분석</button>
     </div>
     <span class="stats-modebar-hint">${window._statsViewMode==='core'?'자주 보는 핵심 지표 중심':'세부 비교·추세·매트릭스 중심'}</span>
   </div>`;
@@ -239,7 +239,13 @@ function rStats(C,T){
   if(window.statsSub==='overview')    h+=_safeRender(()=>_cached('overview', statsOverviewHTML), '종합');
   else if(window.statsSub==='tierRank')h+=_safeRender(statsTierRankHTML, '티어 랭킹');
   else if(window.statsSub==='levelRank')h+=_safeRender(statsLevelRankHTML, '레벨/등급 순위표');
-  else if(window.statsSub==='starsystem')h+=_safeRender(statsStarSystemHTML, '스타시스템');
+  else if(window.statsSub==='starsystem'){
+    if(_li){
+      h+=_safeRender(statsStarSystemHTML, '스타시스템');
+    }else{
+      h+=`<div class="ssec"><p style="color:var(--gray-l);padding:30px;text-align:center">⭐ 스타시스템은 로그인 후 이용할 수 있습니다.</p></div>`;
+    }
+  }
   else if(window.statsSub==='elo')    h+=_safeRender(statsEloHTML, 'ELO 그래프');
   else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
   else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이달의 스트리머');
@@ -260,7 +266,7 @@ function rStats(C,T){
         (async()=>{
           try{
             if(typeof window._loadScriptOnce==='function'){
-              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim17');
+              await window._loadScriptOnce('js/stats-promo-sim-renderer.js?v=20260802-promosim19');
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] promosim load fail', e); }catch(_){} }

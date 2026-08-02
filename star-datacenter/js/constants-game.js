@@ -426,8 +426,8 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
   const modeNorm = _normalizeStoredMode(mode);
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm});
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm,tierAtMatch:w.tier||'',oppTierAtMatch:l.tier||''});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm,tierAtMatch:l.tier||'',oppTierAtMatch:w.tier||''});
 }
 
 // (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록

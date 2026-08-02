@@ -105,7 +105,7 @@ window.openStarSystemInfo = function(){
           </div>
 
           <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 3점 체제)</div>
+            <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 ${(window.SS_CONST||{PTS_SAME:3}).PTS_SAME}점 체제)</div>
             <div style="overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:#fff">
               <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
                 <thead>
@@ -116,22 +116,24 @@ window.openStarSystemInfo = function(){
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">동일 티어 (0)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+3</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-3</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">상위 티어 (+1)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+5</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-5</td></tr>
-                  <tr><td style="padding:8px">하위 티어 (-1)</td><td style="padding:8px;color:#16a34a;font-weight:900">+2</td><td style="padding:8px;color:#dc2626;font-weight:900">-2</td></tr>
+                  ${(()=>{ const C=window.SS_CONST||{PTS_SAME:3,PTS_UP:5,PTS_DOWN:2}; return `
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">동일 티어 (0)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+${C.PTS_SAME}</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-${C.PTS_SAME}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">상위 티어 (+1)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+${C.PTS_UP}</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-${C.PTS_UP}</td></tr>
+                  <tr><td style="padding:8px">하위 티어 (-1)</td><td style="padding:8px;color:#16a34a;font-weight:900">+${C.PTS_DOWN}</td><td style="padding:8px;color:#dc2626;font-weight:900">-${C.PTS_DOWN}</td></tr>
+                  `; })()}
                 </tbody>
               </table>
             </div>
             <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.55">
               ※ 제로섬(Zero-sum): 승자 +X / 패자 -X (경기 단위로 총점 보존)<br>
-              ※ 현재 버전은 “현재 티어 기준”으로 상대 티어 차이를 계산합니다. (경기 당시 티어까지 정확히 하려면 기록에 tierAtMatch 저장이 필요)
+              ※ 2026-08-02 이후 등록된 경기는 “경기 당시 티어” 스냅샷으로 정확히 계산합니다. 그 이전 기록(스냅샷 없음)은 현재 티어로 대체 계산됩니다.
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">4) 승강급 기준</div>
             <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">
-              시작점수 100점. <b>130점</b> 도달 시 <b>승급 검증</b>, <b>70점 미만</b>이면 <b>강등 위기</b>.
+              ${(()=>{ const C=window.SS_CONST||{START:100,PROMO_THRESHOLD:130,DEMOTE_THRESHOLD:70}; return `시작점수 ${C.START}점. <b>${C.PROMO_THRESHOLD}점</b> 도달 시 <b>승급 검증</b>, <b>${C.DEMOTE_THRESHOLD}점 미만</b>이면 <b>강등 위기</b>.`; })()}
             </div>
           </div>
         </div>
