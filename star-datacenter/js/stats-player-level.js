@@ -8,6 +8,23 @@
      (만렙 이후 추가 승수 누적으로 승급, 정규 레벨 공식과 별개)
    ══════════════════════════════════════════════════════════════ */
 
+/* ─── 배지 스타일 자체 주입 (1회) — 이 파일이 코어 번들(스트리머 상세 팝업 등)에서도
+   단독으로 쓰이므로, 통계탭 리포트 CSS(stats-player-report-data.js)와 별개로 자체 보유 ─── */
+try{
+  if(typeof document !== 'undefined' && !document.getElementById('pr-level-badge-style')){
+    var _prLvlStyleEl = document.createElement('style');
+    _prLvlStyleEl.id = 'pr-level-badge-style';
+    _prLvlStyleEl.textContent = [
+      '.pr-level-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:999px;border:1.5px solid;line-height:1}',
+      '.pr-level-grade{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:-.01em;color:#fff;flex-shrink:0;box-shadow:0 1px 3px rgba(15,23,42,.22)}',
+      '.pr-level-num{font-size:11px;font-weight:800;color:var(--text2)}',
+      '.pr-level-bar{width:34px;height:5px;border-radius:999px;background:var(--border2);overflow:hidden;display:inline-block}',
+      '.pr-level-bar-fill{display:block;height:100%;border-radius:999px}',
+    ].join('\n');
+    document.head.appendChild(_prLvlStyleEl);
+  }
+}catch(e){}
+
 var PR_LEVEL_MAX = 1000;
 var PR_LEVEL_PTS_PER_LEVEL = 10;
 var PR_LEVEL_BRACKETS = [

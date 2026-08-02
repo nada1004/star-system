@@ -14,6 +14,16 @@ function _bindPlayerHeaderDelegatedEvents(){
   });
 }
 
+// pr-level-num은 밝은 배경 기준 어두운 회색이라, 어두운 히어로 헤더 위에서는 흰색으로 덮어씀 (1회만 주입)
+try{
+  if(typeof document !== 'undefined' && !document.getElementById('pd-hero-levelbadge-style')){
+    var _pdLvlStyleEl = document.createElement('style');
+    _pdLvlStyleEl.id = 'pd-hero-levelbadge-style';
+    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}';
+    document.head.appendChild(_pdLvlStyleEl);
+  }
+}catch(e){}
+
 function buildPlayerHeaderCardHTML(opts){
   const {
     player, hdrBg='', hdrBgLayer=null, photoHTML='', channelHTML='', col='',
@@ -93,6 +103,9 @@ function buildPlayerHeaderCardHTML(opts){
   // 승률 바
   const wrBarW = Math.max(0, Math.min(100, wr));
   const wrColor = wr>=60 ? '#16a34a' : wr>=50 ? '#0f766e' : wr>=40 ? '#b45309' : '#dc2626';
+
+  // 승수 기반 레벨/등급 배지 (통계탭 레벨/등급 순위표와 동일 로직) — 이름 옆에 간단히 표시
+  const _levelBadgeHTML = (typeof _prLevelBadgeHTML === 'function') ? `<span class="pd-hero-levelbadge">${_prLevelBadgeHTML(p)}</span>` : '';
 
   const statsBlock = `
     <div class="pd-hero-stats" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
@@ -188,6 +201,7 @@ function buildPlayerHeaderCardHTML(opts){
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
           ${tierBadge}
+          ${_levelBadgeHTML}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           ${univBadge}${raceBadge}${channelHTML}
@@ -203,7 +217,7 @@ function buildPlayerHeaderCardHTML(opts){
         <div class="pd-hero-meta" style="min-width:0;flex:1">
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
-            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
+            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}${_levelBadgeHTML}
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
             ${univBadge}${raceBadge}${channelHTML}

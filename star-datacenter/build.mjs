@@ -124,6 +124,7 @@ const CORE_FILES = [
   'js/render-merged-tabs.js',
   'js/render-standalone-utils.js',
   'js/render-player-filters.js',
+  'js/stats-player-level.js',
   'js/render-player-header.js',
   'js/render-player-compute.js',
   'js/render-player-style-prep.js',
