@@ -431,7 +431,8 @@ function _prVsCompareHTML(p){
 /* ─── 최근 경기 표 (기존 렌더 함수 재사용 · 읽기 전용) ─── */
 function _prRecentTableHTML(p){
   const hist = _statsAllHist(p).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  const filtered = _prExcludeFilter(hist);
+  let filtered = _prExcludeFilter(hist);
+  if(window._prRecentMapFilter) filtered = filtered.filter(h=>h.map===window._prRecentMapFilter);
   const shown = filtered.slice(0, window._prTableLimit||20);
   if(!shown.length) return _prEmptyStateHTML('경기 기록이 없습니다');
   let h=`<div class="pr-recent-table" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
@@ -549,6 +550,7 @@ function _prSelectPlayer(name){
   window._prName = name;
   window._prVsOpp = '';
   window._prTableLimit = 20;
+  window._prRecentMapFilter = '';
   _prSaveRecent(name);
   render();
 }

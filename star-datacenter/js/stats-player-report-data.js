@@ -22,6 +22,7 @@ if(window._prExcludeTier===undefined) window._prExcludeTier = false;
 if(window._prExcludeNormalTour===undefined) window._prExcludeNormalTour = false;
 if(window._prVsOpp===undefined) window._prVsOpp = '';
 if(window._prTableLimit===undefined) window._prTableLimit = 20;
+if(window._prRecentMapFilter===undefined) window._prRecentMapFilter = '';
 if(window._prStripExpanded===undefined) window._prStripExpanded = false;
 
 var PR_RECENT_KEY = 'su_prReportRecent';
@@ -415,6 +416,22 @@ function _prMapBarsHTML(mapStats){
       <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color}">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
       <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
     </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+/* ─── 맵별 전적(클릭 시 최근 경기 표를 해당 맵으로 필터링) ─── */
+function _prRecentMapWinLossHTML(mapStats){
+  if(!mapStats.length) return _prEmptyStateHTML('맵 기록이 없습니다');
+  const sel = window._prRecentMapFilter||'';
+  const chip = (label, on, onclick, rec)=>`<button type="button" onclick="${onclick}"
+    style="padding:6px 14px;border-radius:8px;border:2px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue-l)':'var(--white)'};font-size:var(--fs-sm);font-weight:${on?'700':'500'};color:${on?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
+    ${escHTML(label)}${rec?` <span style="opacity:.7">${rec}</span>`:''}
+  </button>`;
+  let h=`<div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  h+=chip('전체', !sel, "window._prRecentMapFilter='';window._prTableLimit=20;render()");
+  mapStats.forEach(m=>{
+    h+=chip(m.map, sel===m.map, `window._prRecentMapFilter='${escJS(m.map)}';window._prTableLimit=20;render()`, `${m.w}승 ${m.l}패`);
   });
   h+=`</div>`;
   return h;

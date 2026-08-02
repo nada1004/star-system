@@ -74,7 +74,10 @@ function statsPlayerReportHTML(){
 
   h += `<div class="ssec" id="pr-sec-vs"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
 
-  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
+  const recentMapStats = _prMapStats(_prExcludeFilter(histAll));
+  h += `<div class="ssec" id="pr-sec-mapwl"><div class="pr-sec-head"><h4>🗺️ 맵별 전적 <span class="pr-sec-sub">(클릭하면 아래 최근 경기가 해당 맵으로 필터링됩니다)</span></h4></div>${_prRecentMapWinLossHTML(recentMapStats)}</div>`;
+
+  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기${window._prRecentMapFilter?` · <span style="color:var(--blue)">${escHTML(window._prRecentMapFilter)}</span>`:''}</h4></div>${_prRecentTableHTML(p)}</div>`;
   h += `</div>`;
 
   return h;
@@ -88,6 +91,7 @@ function _prSectionNavHTML(){
     ['pr-sec-map','🗺️ 맵'],
     ['pr-sec-insights','📈 핵심분석'],
     ['pr-sec-allmatches','📋 전체경기'],
+    ['pr-sec-mapwl','🗺️ 맵별전적'],
     ['pr-sec-recent','📋 최근경기'],
   ];
   const chips = items.map(([id,lbl])=>
