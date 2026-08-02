@@ -483,37 +483,33 @@ function buildPlayerDetailHTML(p){
       </div>
     </div>`;
   }else if(_layoutMode==='analyst'){
-    const _anIdx = _jumpTargets.length ? `<nav class="pd-an-side">
+    const _anSecs = [
+      ['mode','모드별', _secModeStats],
+      ['map','맵별', _secMapStats],
+      ['race','종족별', _secRaceStats],
+      ['vsuniv','상대 대학', _secVsUniv],
+      ['opp','상대 전적', _secOppTable],
+      ['recent','최근 경기', `${_secYearBar}${_secHistFilterBar}${_secRecent}`],
+      ['mvp','요약 하이라이트', _secMvpHistory],
+      ['elo','레이팅 추이', _secEloChart],
+      ['team','팀원', _secTeammates],
+      ['memo','메모', _secMemo]
+    ].filter(([,,html]) => !!html && !!String(html).trim());
+    const _anUid = 'pdan' + Math.random().toString(36).slice(2,8);
+    const _anIdx = _anSecs.length ? `<nav class="pd-an-side">
       <div class="pd-an-side-title">INDEX</div>
-      ${_jumpTargets.map(([id,label],i)=>`<button type="button" class="pd-an-side-item" onclick="const t=document.getElementById('${id}');if(t)t.scrollIntoView({behavior:'smooth',block:'start'})"><span class="pd-an-side-num">${String(i+1).padStart(2,'0')}</span>${label}</button>`).join('')}
+      ${_anSecs.map(([key,label],i)=>`<button type="button" class="pd-an-side-item${i===0?' is-active':''}" data-an-tab="${key}" onclick="if(window.pdAnalystSelect)window.pdAnalystSelect(this,'${_anUid}','${key}')"><span class="pd-an-side-num">${String(i+1).padStart(2,'0')}</span><span class="pd-an-side-label">${label}</span></button>`).join('')}
     </nav>` : '';
-    const _anBlock = (code, label, html) => {
-      if(!html || !html.trim()) return '';
-      return `<div class="pd-an-block">
-        <div class="pd-an-block-head"><span class="pd-an-code">${code}</span><span class="pd-an-label">${label}</span></div>
+    const _anBlock = ([key,label,html],i) => `<section class="pd-an-block${i===0?' is-active':''}" data-an-panel="${key}">
+        <div class="pd-an-block-head"><span class="pd-an-label">${label}</span></div>
         <div class="pd-an-block-body">${html}</div>
-      </div>`;
-    };
-    h = `<div class="pd-layout pd-layout--analyst">
-      <div class="pd-an-topbar">
-        <span class="pd-an-dot"></span>
-        <span class="pd-an-topbar-title">PERFORMANCE ANALYTICS CONSOLE</span>
-        <span class="pd-an-topbar-meta">v2 · LIVE DATA</span>
-      </div>
+      </section>`;
+    h = `<div class="pd-layout pd-layout--analyst" data-an-uid="${_anUid}">
       <div class="pd-an-hero">${_secHeader}${_secStrip}</div>
       <div class="pd-an-main">
         ${_anIdx}
         <div class="pd-an-content">
-          ${_anBlock('A01','HIGHLIGHTS', _secMvpHistory)}
-          ${_anBlock('A02','ELO TREND', _secEloChart)}
-          ${_anBlock('B01','BY MODE', _secModeStats)}
-          ${_anBlock('B02','BY MAP', _secMapStats)}
-          ${_anBlock('B03','BY RACE', _secRaceStats)}
-          ${_anBlock('C01','VS UNIVERSITY', _secVsUniv)}
-          ${_anBlock('C02','HEAD TO HEAD', _secOppTable)}
-          ${_anBlock('D01','MATCH LOG', `${_secYearBar}${_secHistFilterBar}${_secRecent}`)}
-          ${_anBlock('E01','TEAMMATES', _secTeammates)}
-          ${_anBlock('E02','NOTES', _secMemo)}
+          ${_anSecs.map(_anBlock).join('')}
         </div>
       </div>
     </div>`;
@@ -563,4 +559,23 @@ function buildPlayerDetailHTML(p){
 
 try{
   window.buildPlayerDetailHTML = buildPlayerDetailHTML;
+}catch(e){}
+
+/* 애널리스트 콘솔: 좌측 INDEX 클릭 시 우측 패널만 전환 (좌측 목록은 유지) */
+try{
+  window.pdAnalystSelect = function(btn, uid, key){
+    const root = document.querySelector('.pd-layout--analyst[data-an-uid="'+uid+'"]') ||
+                 (btn && btn.closest ? btn.closest('.pd-layout--analyst') : null);
+    if(!root) return;
+    root.querySelectorAll('.pd-an-side-item').forEach(function(el){
+      el.classList.toggle('is-active', el.getAttribute('data-an-tab')===key);
+    });
+    root.querySelectorAll('.pd-an-block').forEach(function(el){
+      el.classList.toggle('is-active', el.getAttribute('data-an-panel')===key);
+    });
+    const content = root.querySelector('.pd-an-content');
+    if(content && content.scrollIntoView && window.innerWidth<=768){
+      content.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  };
 }catch(e){}
