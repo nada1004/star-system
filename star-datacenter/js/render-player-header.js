@@ -15,11 +15,12 @@ function _bindPlayerHeaderDelegatedEvents(){
 }
 
 // pr-level-num은 밝은 배경 기준 어두운 회색이라, 어두운 히어로 헤더 위에서는 흰색으로 덮어씀 (1회만 주입)
+// + 게이지 트랙이 밝은 배경(var(--border2)) 기준이라 어두운 히어로 위에서 거의 안 보이던 문제 수정
 try{
   if(typeof document !== 'undefined' && !document.getElementById('pd-hero-levelbadge-style')){
     var _pdLvlStyleEl = document.createElement('style');
     _pdLvlStyleEl.id = 'pd-hero-levelbadge-style';
-    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}\n.pd-hero-levelbadge .pr-level-badge{border:none;background:none;padding:0}';
+    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}\n.pd-hero-levelbadge .pr-level-badge{border:1px solid rgba(255,255,255,.22)!important;background:rgba(255,255,255,.1)!important;backdrop-filter:blur(10px);padding:5px 12px 5px 6px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.18)}\n.pd-hero-levelbadge .pr-level-bar{width:56px;height:6px;background:rgba(0,0,0,.28);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}\n.pd-hero-levelbadge .pr-level-bar-fill{box-shadow:0 0 5px rgba(255,255,255,.55);min-width:2px}';
     document.head.appendChild(_pdLvlStyleEl);
   }
 }catch(e){}
@@ -167,16 +168,17 @@ function buildPlayerHeaderCardHTML(opts){
 
   const photoBorder = `width:${pmPhotoSz+14}px;height:${pmPhotoSz+14}px;border-radius:var(--su_profile_radius,${pmPhotoR+6}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.14);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 10px 28px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.1));backdrop-filter:blur(8px)`;
 
+  const _glassChipShadow = 'box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.18);';
   const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
-    style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}">
+    style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.22);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(10px);${_glassChipShadow}${p.univ&&p.univ!=='무소속'?'cursor:pointer':''}">
     ${gUI(p.univ,'12px')}${pUnivSafe}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
-  const raceBadge = `<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35);display:inline-flex;align-items:center;gap:5px">
-    ${p.race||''} ${RNAME[p.race]||''}</span>`;
-
-  const tierBadge = p.tier ? `<span style="font-size:${pmMetaFs+1}px;font-weight:800;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.35)">${(typeof _TIER_LABEL_MAP!=='undefined' && _TIER_LABEL_MAP[p.tier]) || p.tier}</span>` : '';
+  // 티어 + 종족을 하나의 유리질감 칩으로 묶어 ELO 패널과 톤을 통일 (따로 떠 있던 플레인 텍스트 → 그룹핑된 칩)
+  const tierRaceBadge = (p.tier || p.race) ? `<span style="display:inline-flex;align-items:center;gap:7px;padding:4px 13px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);font-size:${pmMetaFs+1}px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);${_glassChipShadow}">
+    ${p.tier?`<span>${(typeof _TIER_LABEL_MAP!=='undefined' && _TIER_LABEL_MAP[p.tier]) || p.tier}</span>`:''}${(p.tier&&p.race)?'<span style="opacity:.4">·</span>':''}${p.race?`<span>${p.race} ${RNAME[p.race]||''}</span>`:''}
+  </span>` : '';
   const quickRail = `
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
@@ -213,7 +215,7 @@ function buildPlayerHeaderCardHTML(opts){
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-          ${tierBadge}${raceBadge}
+          ${tierRaceBadge}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           ${_levelBadgeHTML}
@@ -232,7 +234,7 @@ function buildPlayerHeaderCardHTML(opts){
         <div class="pd-hero-meta" style="min-width:0;flex:1">
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
-            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}${raceBadge}
+            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierRaceBadge}
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${_levelBadgeHTML}
