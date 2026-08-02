@@ -194,7 +194,7 @@ function _prLevelBadgeHTML(p){
   var b = _prPlayerLevelBadgeInfo(p);
   var lvlTxt = b.isMaxed ? 'MAX' : ('Lv.' + b.level);
   var rgb = _prColorRgb(b.color).join(',');
-  return '<span class="pr-level-badge" style="border-color:rgba(' + rgb + ',.32);background:rgba(' + rgb + ',.09)" title="누적 ' + (Number(p && p.win) || 0) + '승 기준">'
+  return '<span class="pr-level-badge" style="border-color:rgba(' + rgb + ',.25);background:rgba(' + rgb + ',.06)" title="누적 ' + (Number(p && p.win) || 0) + '승 기준">'
        + '<span class="pr-level-grade" style="background:' + b.color + '">' + escHTML(b.gradeLabel) + '</span>'
        + '<span class="pr-level-num">' + lvlTxt + '</span>'
        + '<span class="pr-level-bar"><span class="pr-level-bar-fill" style="width:' + b.progressPct + '%;background:' + b.color + '"></span></span>'

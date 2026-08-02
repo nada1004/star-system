@@ -20,7 +20,7 @@ try{
   if(typeof document !== 'undefined' && !document.getElementById('pd-hero-levelbadge-style')){
     var _pdLvlStyleEl = document.createElement('style');
     _pdLvlStyleEl.id = 'pd-hero-levelbadge-style';
-    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:#fff}\n.pd-hero-levelbadge .pr-level-badge{border:1px solid rgba(255,255,255,.22)!important;background:rgba(255,255,255,.1)!important;backdrop-filter:blur(10px);padding:5px 12px 5px 6px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.18)}\n.pd-hero-levelbadge .pr-level-bar{width:56px;height:6px;background:rgba(0,0,0,.28);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}\n.pd-hero-levelbadge .pr-level-bar-fill{box-shadow:0 0 5px rgba(255,255,255,.55);min-width:2px}';
+    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:rgba(255,255,255,.92)}\n.pd-hero-levelbadge .pr-level-badge{border:1px solid rgba(255,255,255,.14)!important;background:rgba(255,255,255,.05)!important;backdrop-filter:blur(6px);padding:2px 10px 2px 4px!important;box-shadow:0 2px 8px rgba(0,0,0,.08)}\n.pd-hero-levelbadge .pr-level-bar{width:56px;height:6px;background:rgba(0,0,0,.22);box-shadow:inset 0 1px 2px rgba(0,0,0,.28)}\n.pd-hero-levelbadge .pr-level-bar-fill{box-shadow:0 0 4px rgba(255,255,255,.4);min-width:2px}';
     document.head.appendChild(_pdLvlStyleEl);
   }
 }catch(e){}
@@ -168,15 +168,15 @@ function buildPlayerHeaderCardHTML(opts){
 
   const photoBorder = `width:${pmPhotoSz+14}px;height:${pmPhotoSz+14}px;border-radius:var(--su_profile_radius,${pmPhotoR+6}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.14);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 10px 28px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.1));backdrop-filter:blur(8px)`;
 
-  const _glassChipShadow = 'box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.18);';
+  const _glassChipShadow = 'box-shadow:0 2px 8px rgba(0,0,0,.08);';
   const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
-    style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.22);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(10px);${_glassChipShadow}${p.univ&&p.univ!=='무소속'?'cursor:pointer':''}">
+    style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.14);font-size:${pmMetaFs}px;padding:2px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:600;backdrop-filter:blur(6px);${_glassChipShadow}${p.univ&&p.univ!=='무소속'?'cursor:pointer':''}">
     ${gUI(p.univ,'12px')}${pUnivSafe}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
   // 티어 + 종족을 하나의 유리질감 칩으로 묶어 ELO 패널과 톤을 통일 (따로 떠 있던 플레인 텍스트 → 그룹핑된 칩)
-  const tierRaceBadge = (p.tier || p.race) ? `<span style="display:inline-flex;align-items:center;gap:7px;padding:4px 13px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);font-size:${pmMetaFs+1}px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);${_glassChipShadow}">
+  const tierRaceBadge = (p.tier || p.race) ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:2px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);font-size:${pmMetaFs}px;font-weight:600;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.2);${_glassChipShadow}">
     ${p.tier?`<span>${(typeof _TIER_LABEL_MAP!=='undefined' && _TIER_LABEL_MAP[p.tier]) || p.tier}</span>`:''}${(p.tier&&p.race)?'<span style="opacity:.4">·</span>':''}${p.race?`<span>${p.race} ${RNAME[p.race]||''}</span>`:''}
   </span>` : '';
   const quickRail = `
