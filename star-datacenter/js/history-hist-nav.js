@@ -4,10 +4,9 @@
 
 function rHist(C,T){
   T.innerText='📅 대전 기록';
-  // (A안) 하위 탭/기간 필터를 접기/펼치기
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
-  if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
-  if(_lockOpen) window._histFilterOpen = true;
+  // (요청사항) 대전기록탭: 필터 항상 열기로 고정 (접기 버튼 제거)
+  const _lockOpen = true;
+  window._histFilterOpen = true;
 
   const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
   const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
