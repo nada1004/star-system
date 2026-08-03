@@ -73,6 +73,19 @@
 :is(body.dark,html.dark) [style*="background:#ede9fe;color:#5b21b6"]{ background:#3b2f5e !important; color:#d8b4fe !important; }
 :is(body.dark,html.dark) [style*="background:#fef3c7;color:#92400e"]{ background:#4a3a1f !important; color:#fcd34d !important; }
 :is(body.dark,html.dark) [style*="background:#e2e8f0;color:#64748b"]{ background:#334155 !important; color:#cbd5e1 !important; }
+/* darkfix13-2: 랭킹 변동 "NEW" 뱃지(getRankChangeBadge)와 "⏸️ 휴학" 뱃지가 라이트 하드코딩이라
+   다크모드에서도 밝게 남던 문제 수정. 전 탭(스트리머탭 등) 공용 함수라 여기 한 곳만 고치면 전체 반영됨 */
+:is(body.dark,html.dark) [style*="background:#ede9fe"]{ background:#3b2f5e !important; }
+:is(body.dark,html.dark) [style*="color:#7c3aed"]{ color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="background:#fff7ed"]{ background:#4a2e1a !important; }
+:is(body.dark,html.dark) [style*="color:#9a3412"]{ color:#fdba74 !important; }
+/* darkfix13-2: 티어 뱃지(.tbadge / getTierBadge)는 대학 색상에 따라 배경색이 자동 계산되는데,
+   남색·짙은 회색 계열 티어색은 다크모드 카드 배경(#1e293b 등)과 명도 차이가 작아 뱃지 자체가
+   배경에 묻혀 티어 구분이 잘 안 되는 문제 신고 — 다크모드에서만 옅은 테두리를 추가해 항상 구분되게 함 */
+:is(body.dark,html.dark) .tbadge{
+  outline:1px solid rgba(255,255,255,.30);
+  outline-offset:-1px;
+}
 :is(body.dark,html.dark) :is(.modal,.mbox,#b2-content,.tabpane,.tab-pane)
   :is([style*="background:#fff"],[style*="background: #fff"],[style*="background-color:#fff"],[style*="background-color: #fff"],
      [style*="background:#f8fafc"],[style*="background: #f8fafc"],[style*="background:#f1f5f9"],[style*="background: #f1f5f9"],
