@@ -1657,6 +1657,12 @@ body.dark #playerModal .pd-hero-stat{
 }
 body.dark #playerModal .pd-hero-stat-label{ color:#94a3b8 !important; }
 body.dark #playerModal .pd-hero-stat-val{ color:#e2e8f0 !important; }
+body.dark #playerModal .pd-strip{
+  background: linear-gradient(135deg,#1e293b,#0f172a) !important;
+  border-color: rgba(148,163,184,.20) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22) !important;
+  color: #e2e8f0 !important;
+}
 
 body.dark #playerModal .pd-hero-quickrail{
   background: linear-gradient(180deg,rgba(15,23,42,.35),rgba(15,23,42,.18)) !important;

@@ -71,8 +71,12 @@ function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="event.stopPropagation();openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
-    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
-    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
+    const RMAP={
+      T:{bg:'var(--pph-fb-t-bg,#dbeafe)',col:'var(--pph-fb-t-col,#1e40af)'},
+      Z:{bg:'var(--pph-fb-z-bg,#ede9fe)',col:'var(--pph-fb-z-col,#5b21b6)'},
+      P:{bg:'var(--pph-fb-p-bg,#fef3c7)',col:'var(--pph-fb-p-col,#92400e)'}
+    };
+    const rm=RMAP[p?.race]||{bg:'var(--pph-fb-n-bg,#e2e8f0)',col:'var(--pph-fb-n-col,#64748b)'};
     const txt=p?.race||'?';
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
   }

@@ -47,21 +47,24 @@ function prepareUnivDetailStyleData(univName){
     const aa=Math.max(0,Math.min(1,Number(a)||0));
     return `rgba(${c.r},${c.g},${c.b},${aa})`;
   };
+  const isDarkMode = !!(typeof document!=='undefined' && document.body && document.body.classList && document.body.classList.contains('dark'));
+  const _wref = isDarkMode ? '#1e293b' : '#ffffff';
+  const _textRef = isDarkMode ? '#e2e8f0' : '#0b1020';
   let modalBgVars = null;
   let pastelVars = null;
   let hdrBgEff = `linear-gradient(135deg,${col},${col}cc)`;
   const bgScope = ['header','body','cards'].includes(udStyle.univ_bg_scope) ? udStyle.univ_bg_scope : 'cards';
   if(designMode==='pastel'){
     const base = col || '#6366f1';
-    const bg1 = _mix(base, '#ffffff', .92);
-    const bg2 = _mix(base, '#ffffff', .84);
-    const card = _mix(base, '#ffffff', .965);
-    const border = _mix(base, '#ffffff', .70);
-    const accent1 = _mix(base, '#ffffff', .36);
-    const accent2 = _mix(base, '#ffffff', .18);
-    const accent3 = _mix(base, '#ffffff', .52);
-    const text1 = _mix(base, '#0b1020', .78);
-    const text2 = _mix(base, '#0b1020', .62);
+    const bg1 = _mix(base, _wref, .92);
+    const bg2 = _mix(base, _wref, .84);
+    const card = _mix(base, _wref, .965);
+    const border = _mix(base, _wref, .70);
+    const accent1 = _mix(base, _wref, .36);
+    const accent2 = _mix(base, _wref, .18);
+    const accent3 = _mix(base, _wref, .52);
+    const text1 = _mix(base, _textRef, .78);
+    const text2 = _mix(base, _textRef, .62);
     pastelVars = {
       '--su-pastel-bg1': bg1,
       '--su-pastel-bg2': bg2,
@@ -81,7 +84,7 @@ function prepareUnivDetailStyleData(univName){
     const tintRaw = parseInt(udStyle.univ_bg_tint ?? 18, 10);
     const tint = isNaN(tintRaw) ? 18 : Math.max(0, Math.min(60, tintRaw));
     const usePastel = udStyle.univ_bg_pastel!==undefined ? !!udStyle.univ_bg_pastel : true;
-    const baseBg = usePastel ? _mix(col || '#6366f1', '#ffffff', .58) : (col || '#6366f1');
+    const baseBg = usePastel ? _mix(col || '#6366f1', _wref, .58) : (col || '#6366f1');
     const headerStrong = Math.max(0.06, tint/100);
     const headerSoft = Math.max(0.02, headerStrong*.38);
     const bodyTop = Math.max(0.03, headerStrong*.52);
@@ -89,17 +92,18 @@ function prepareUnivDetailStyleData(univName){
     const boxBottom = Math.max(0.018, headerStrong*.22);
     const cardTop = Math.max(0.04, headerStrong*.56);
     const cardBottom = Math.max(0.02, headerStrong*.24);
+    const _bodyMidRef = isDarkMode ? '#162032' : '#f8fafc';
     modalBgVars = {
-      '--su-ud-modal-box-bg': `linear-gradient(180deg,rgba(255,255,255,.988),${_rgba(baseBg, boxBottom)})`,
+      '--su-ud-modal-box-bg': `linear-gradient(180deg,${_rgba(_wref,.988)},${_rgba(baseBg, boxBottom)})`,
       '--su-ud-modal-box-border': _rgba(baseBg, Math.max(.16, headerStrong*.95)),
-      '--su-ud-modal-title-bg': `linear-gradient(135deg,${_rgba(baseBg, headerStrong)},rgba(255,255,255,.94) 72%,${_rgba(baseBg, headerSoft)})`,
-      '--su-ud-modal-body-bg': `linear-gradient(180deg,${_rgba(baseBg, bodyTop)},rgba(248,250,252,.94) 28%,${_rgba(baseBg, bodyBottom)} 100%)`,
-      '--su-ud-hero-bg': `linear-gradient(180deg,${_rgba(baseBg, cardTop)},rgba(255,255,255,.96) 56%,${_rgba(baseBg, cardBottom)} 100%)`,
-      '--su-ud-card-bg': `linear-gradient(180deg,rgba(255,255,255,.985),${_rgba(baseBg, cardTop)})`,
+      '--su-ud-modal-title-bg': `linear-gradient(135deg,${_rgba(baseBg, headerStrong)},${_rgba(_wref,.94)} 72%,${_rgba(baseBg, headerSoft)})`,
+      '--su-ud-modal-body-bg': `linear-gradient(180deg,${_rgba(baseBg, bodyTop)},${_rgba(_bodyMidRef,.94)} 28%,${_rgba(baseBg, bodyBottom)} 100%)`,
+      '--su-ud-hero-bg': `linear-gradient(180deg,${_rgba(baseBg, cardTop)},${_rgba(_wref,.96)} 56%,${_rgba(baseBg, cardBottom)} 100%)`,
+      '--su-ud-card-bg': `linear-gradient(180deg,${_rgba(_wref,.985)},${_rgba(baseBg, cardTop)})`,
       '--su-ud-card-border': _rgba(baseBg, Math.max(.14, headerStrong*.78)),
-      '--su-ud-card-btn-bg': `linear-gradient(135deg,${_rgba(baseBg, Math.max(.16, headerStrong*.9))},rgba(255,255,255,.92))`,
+      '--su-ud-card-btn-bg': `linear-gradient(135deg,${_rgba(baseBg, Math.max(.16, headerStrong*.9))},${_rgba(_wref,.92)})`,
       '--su-ud-card-btn-border': _rgba(baseBg, Math.max(.24, headerStrong*1.15)),
-      '--su-ud-card-btn-text': _mix(col || '#6366f1', '#0b1020', .42)
+      '--su-ud-card-btn-text': _mix(col || '#6366f1', _textRef, .42)
     };
   }
   const univBtnEnabled = !!udStyle.univ_btn_enabled;

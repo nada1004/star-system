@@ -198,7 +198,7 @@ function buildUnivMembersTableHTML(opts){
     const tw=rec.tot||0;
     const twr=rec.wr||0;
     const isEven = i%2===0;
-    h+=`<tr data-uds-action="open-player" data-uds-player="${escJS(p.name)}" data-uds-hover-bg="${gcHex8(p.univ,.14)}" data-uds-base-univ="${String(p.univ).replace(/"/g,'&quot;')}" style="cursor:pointer;transition:background .15s;background:${isEven?gcHex8(p.univ,.04):'rgba(255,255,255,.98)'}">
+    h+=`<tr data-uds-action="open-player" data-uds-player="${escJS(p.name)}" data-uds-hover-bg="${gcHex8(p.univ,.14)}" data-uds-base-univ="${String(p.univ).replace(/"/g,'&quot;')}" style="cursor:pointer;transition:background .15s;background:${isEven?gcHex8(p.univ,.04):'transparent'}">
       <td style="text-align:center;padding:5px 4px;white-space:nowrap">${p.role?getRoleBadgeHTML(p.role,'10px'):''}</td>
       <td style="text-align:center">${getTierBadge(p.tier)}</td>
       <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>

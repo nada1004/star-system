@@ -1,11 +1,22 @@
 /* =========================================================================
-   dark-mode-fixes.css  (v20260803-darkfix9)
+   dark-mode-fixes.css  (v20260803-darkfix13)
    목적: 다크모드에서 밝게 남아있던 영역 일괄 보정
         - 브리핑 탭(히어로/모드카드/헤더/저장바)
         - 경기 상세 팝업(#histDetModal / #compMatchDetailModal / .modal--matchdetail)
         - 각종 탭/모달/드롭다운/배지의 하드코딩 라이트 배경
+        - 사진 없는 선수의 프로필 이미지(종족 이니셜 원형 아바타) — getPlayerPhotoHTML()
+          모든 탭(스트리머/현황판/대전기록/개인전·끝장전/대학전/대회·티어·프로리그·통계)과
+          대학상세 팝업에서 공용으로 쓰이는 함수라 여기 한 곳만 고치면 전체에 반영됨
    주의: 이 파일은 항상 마지막에 로드되어야 합니다.
    ========================================================================= */
+
+/* ── 0. 프로필 사진 없음 폴백 아바타(종족 이니셜) ────────────────── */
+:is(body.dark,html.dark){
+  --pph-fb-t-bg:#1e3a5f; --pph-fb-t-col:#93c5fd;   /* 테란 */
+  --pph-fb-z-bg:#3b2f5e; --pph-fb-z-col:#d8b4fe;   /* 저그 */
+  --pph-fb-p-bg:#4a3a1a; --pph-fb-p-col:#fcd34d;   /* 프로토스 */
+  --pph-fb-n-bg:#334155; --pph-fb-n-col:#cbd5e1;   /* 종족 미정 */
+}
 
 /* ── 1. 경기 상세 팝업 ───────────────────────────────────────────── */
 :is(body.dark,html.dark) .modal--matchdetail .cmd-mid{
@@ -54,6 +65,14 @@
 :is(body.dark,html.dark) #share-card [style*="background:#d8e2f0"]{ background:#334155 !important; }
 :is(body.dark,html.dark) #share-card [style*="background:#e5ebf5"]{ background:#334155 !important; }
 :is(body.dark,html.dark) #share-card [style*="background:#c7d2fe"]{ background:#3a4f6a !important; }
+
+/* ── 4-1. 프로필 이미지 없는 선수의 종족색 이니셜 아바타 (getPlayerPhotoHTML fallback) ──
+   대학 상세 멤버 테이블 / 스트리머 상세 / 공유카드 등 어디서든 사진이 없으면
+   라이트 파스텔 배경(#dbeafe 등)이 그대로 고정되어 있어 다크모드에서도 밝게 남음 */
+:is(body.dark,html.dark) [style*="background:#dbeafe;color:#1e40af"]{ background:#1e3a5f !important; color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="background:#ede9fe;color:#5b21b6"]{ background:#3b2f5e !important; color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="background:#fef3c7;color:#92400e"]{ background:#4a3a1f !important; color:#fcd34d !important; }
+:is(body.dark,html.dark) [style*="background:#e2e8f0;color:#64748b"]{ background:#334155 !important; color:#cbd5e1 !important; }
 :is(body.dark,html.dark) :is(.modal,.mbox,#b2-content,.tabpane,.tab-pane)
   :is([style*="background:#fff"],[style*="background: #fff"],[style*="background-color:#fff"],[style*="background-color: #fff"],
      [style*="background:#f8fafc"],[style*="background: #f8fafc"],[style*="background:#f1f5f9"],[style*="background: #f1f5f9"],
@@ -442,7 +461,7 @@
 :is(body.dark,html.dark) #cfgModal .cfg-modal-close {
   background: rgba(30, 41, 59,.15) !important;
 }
-:is(body.dark,html.dark) #playerModal .mbox, :is(body.dark,html.dark) #univModal .mbox, :is(body.dark,html.dark) #emModal .mbox {
+:is(body.dark,html.dark) #playerModal .mbox, :is(body.dark,html.dark) #univModal .mbox, :is(body.dark,html.dark) #univModal .umbox, :is(body.dark,html.dark) #emModal .mbox {
   background: linear-gradient(180deg,#1e293b,#162032) !important;
 }
 :is(body.dark,html.dark) #playerModal .mtitle, :is(body.dark,html.dark) #univModal .mtitle {
@@ -450,6 +469,20 @@
 }
 :is(body.dark,html.dark) #playerModalBody, :is(body.dark,html.dark) #univModalBody {
   background: linear-gradient(180deg,#162032,#1a2436) !important;
+}
+/* darkfix13: 대학상세 팝업(univModal)에 JS로 주입되는 프리미엄 스타일(#univModal #univModalTitle,
+   #univModal #univModalBody — 2개 ID 선택자)이 다크모드 규칙보다 명시도가 높아 항상 이겨서
+   대학상세 팝업이 다크모드에서도 밝은 배경으로 남는 문제 수정. 동일하게 2개 ID로 명시도를 맞춰 이김 */
+:is(body.dark,html.dark) #univModal #univModalTitle {
+  background: linear-gradient(180deg,#1e293b,#162032) !important;
+}
+:is(body.dark,html.dark) #univModal #univModalBody {
+  background: linear-gradient(180deg,#162032,#1a2436) !important;
+}
+/* 대학상세 팝업 "소속 스트리머" 표 래퍼가 흰색으로 하드코딩되어 있던 문제 수정 */
+:is(body.dark,html.dark) #univModal .ud-members-table-wrap {
+  background: linear-gradient(180deg,#1e293b,#162032) !important;
+  border-color: rgba(148,163,184,.18) !important;
 }
 :is(body.dark,html.dark) #emModal .mbtns {
   background: linear-gradient(180deg,#162032,#1a2436) !important;
