@@ -1227,7 +1227,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           <div class="rec-meta-row">
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:""}
             ${m.n&&mode!=="comp"?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:""}
-            ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">\u{1F399}\uFE0F ${m.caster}</span>`:""}
+            ${m.caster?`<span class="rec-meta-chip rec-meta-chip--amber2">\u{1F399}\uFE0F ${m.caster}</span>`:""}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             ${_pms.length&&mode!=="tt"?`<button class="btn btn-w btn-xs rc-mem-btn" onclick="event.stopPropagation();openProMembersPopup('\uCC38\uC5EC\uC790', '${_pmCol}', ${_pmJson})">\u{1F465} ${_pms.length}</button>`:""}
@@ -1394,10 +1394,10 @@ function buildDetailHTML(m,mode,labelA,labelB,ca,cb,aWin,bWin){const _mdDesignMo
           </div>
           ${editBtn}
         </div>
-      </div>`}const loseA=hasWinner&&!winA,loseB=hasWinner&&!winB,mapDot=g.map?`<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${g.map}</span>`:"",photoAHtml=photoA?`<span class="cmd-photo ${loseA?"is-lose":""}">${photoA}</span>`:"",photoBHtml=photoB?`<span class="cmd-photo ${loseB?"is-lose":""}">${photoB}</span>`:"",nameStyleA=loseA?"opacity:.7;color:#64748b;":"opacity:1;",nameStyleB=loseB?"opacity:.7;color:#64748b;":"opacity:1;";return`<div data-si="${si}" data-gi="${gi}" style="display:flex;flex-direction:column;gap:3px;padding:5px 2px;">
+      </div>`}const loseA=hasWinner&&!winA,loseB=hasWinner&&!winB,mapDot=g.map?`<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${g.map}</span>`:"",photoAHtml=photoA?`<span class="cmd-photo ${loseA?"is-lose":""}">${photoA}</span>`:"",photoBHtml=photoB?`<span class="cmd-photo ${loseB?"is-lose":""}">${photoB}</span>`:"",nameStyleA=loseA?"opacity:.7;color:var(--text3,#64748b);":"opacity:1;",nameStyleB=loseB?"opacity:.7;color:var(--text3,#64748b);":"opacity:1;";return`<div data-si="${si}" data-gi="${gi}" style="display:flex;flex-direction:column;gap:3px;padding:5px 2px;">
       <div style="display:flex;align-items:center;gap:5px;">
         <span style="color:var(--gray-l);font-size:var(--fs-caption);min-width:40px;font-weight:700;flex-shrink:0;text-align:center">\uACBD\uAE30${gi+1}</span>
-        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+"18":loseA?"linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))":pca+"12"};border:${winA?"1.5px solid "+pca+"55":loseA?"1px solid rgba(148,163,184,.26)":"1px solid "+pca+"33"};min-width:0;">
+        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+"18":loseA?"linear-gradient(180deg, rgba(148,163,184,.14), var(--white))":pca+"12"};border:${winA?"1.5px solid "+pca+"55":loseA?"1px solid rgba(148,163,184,.26)":"1px solid "+pca+"33"};min-width:0;">
           <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
             ${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}
             <strong style="font-size:var(--fs-base);color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${nameHtmlA}</strong>
@@ -1405,7 +1405,7 @@ function buildDetailHTML(m,mode,labelA,labelB,ca,cb,aWin,bWin){const _mdDesignMo
           ${photoAHtml}
         </div>
         <span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:800;flex-shrink:0">vs</span>
-        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?pcb+"18":loseB?"linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))":pcb+"12"};border:${winB?"1.5px solid "+pcb+"55":loseB?"1px solid rgba(148,163,184,.26)":"1px solid "+pcb+"33"};min-width:0;">
+        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?pcb+"18":loseB?"linear-gradient(180deg, rgba(148,163,184,.14), var(--white))":pcb+"12"};border:${winB?"1.5px solid "+pcb+"55":loseB?"1px solid rgba(148,163,184,.26)":"1px solid "+pcb+"33"};min-width:0;">
           ${photoBHtml}
           <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
             ${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}
@@ -1415,15 +1415,15 @@ function buildDetailHTML(m,mode,labelA,labelB,ca,cb,aWin,bWin){const _mdDesignMo
         ${editBtn}
       </div>
       ${mapDot?`<div style="padding-left:48px;font-size:10px;color:var(--text3)">${mapDot}</div>`:""}
-    </div>`},setBlocks=[];m.sets.forEach((set,si)=>{const isAce=si===m.sets.length-1&&m.sets.length>=3,sLabel=isAce?"\u{1F3AF} \uC5D0\uC774\uC2A4\uC804":`${si+1}\uC138\uD2B8`,swA=set.scoreA||0,swB=set.scoreB||0,setAWin=swA>swB,setBWin=swB>swA,head=`<div class="cmd-set-head" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?"#f5f3ff":"var(--blue-l)"};border-radius:7px;border:1px solid ${isAce?"#ddd6fe":"var(--blue-ll)"}">
+    </div>`},setBlocks=[];m.sets.forEach((set,si)=>{const isAce=si===m.sets.length-1&&m.sets.length>=3,sLabel=isAce?"\u{1F3AF} \uC5D0\uC774\uC2A4\uC804":`${si+1}\uC138\uD2B8`,swA=set.scoreA||0,swB=set.scoreB||0,setAWin=swA>swB,setBWin=swB>swA,head=`<div class="cmd-set-head${isAce?" cmd-set-head--ace":""}" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?"":"var(--blue-l)"};border-radius:7px;border:1px solid ${isAce?"":"var(--blue-ll)"}">
       <span class="set-row-title ${isAce?"ace-t":""}" style="margin-bottom:0;font-size:var(--fs-sm)">${sLabel}</span>
-      <span class="ubadge${setAWin?"":" loser"}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint=="function"?getMatchWinTint(ca):ca+"18"}, rgba(255,255,255,.92))`};color:${setAWin?"#fff":"#334155"};border-color:${setAWin?ca:ca+"33"};font-size:10px">${labelA}</span>
+      <span class="ubadge${setAWin?"":" loser"}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint=="function"?getMatchWinTint(ca):ca+"18"}, var(--white))`};color:${setAWin?"#fff":"var(--text2,#334155)"};border-color:${setAWin?ca:ca+"33"};font-size:10px">${labelA}</span>
       <span style="font-weight:800;font-size:14px">
         <span class="${setAWin?"wt":setBWin?"lt":"pt-z"}">${swA}</span>
         <span style="color:var(--border2)"> : </span>
         <span class="${setBWin?"wt":setAWin?"lt":"pt-z"}">${swB}</span>
       </span>
-      <span class="ubadge${setBWin?"":" loser"}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint=="function"?getMatchWinTint(cb):cb+"18"}, rgba(255,255,255,.92))`};color:${setBWin?"#fff":"#334155"};border-color:${setBWin?cb:cb+"33"};font-size:10px">${labelB}</span>
+      <span class="ubadge${setBWin?"":" loser"}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint=="function"?getMatchWinTint(cb):cb+"18"}, var(--white))`};color:${setBWin?"#fff":"var(--text2,#334155)"};border-color:${setBWin?cb:cb+"33"};font-size:10px">${labelB}</span>
     </div>`,gamesArr=[];set.games&&set.games.length&&set.games.forEach((g,gi)=>{const card=_buildGameCard(g,si,gi);card&&gamesArr.push(card)});const gamesHtml=gamesArr.length?gamesArr.join(""):'<div style="font-size:var(--fs-caption);color:var(--gray-l);padding:4px 0">\uC0C1\uC138 \uACBD\uAE30 \uAE30\uB85D \uC5C6\uC74C</div>',html=`<div class="set-row cmd-set" id="${`md-set-${si+1}`}" data-si="${si}" data-is-ace="${isAce?"1":"0"}">${head}${gamesHtml}</div>`;setBlocks.push({si,isAce,sLabel,swA,swB,setAWin,setBWin,gamesArr,html})});const _matchScore=()=>{const a=m.sa!=null?m.sa:null,b=m.sb!=null?m.sb:null;if(a!=null&&b!=null)return{a:Number(a)||0,b:Number(b)||0};let wa=0,wb=0;return(m.sets||[]).forEach(s=>{const sa=Number((s==null?void 0:s.scoreA)||0),sb=Number((s==null?void 0:s.scoreB)||0);sa>sb?wa++:sb>sa&&wb++}),{a:wa,b:wb}},_playerTallyHTML=(()=>{const tally={};(m.sets||[]).forEach(set=>{(set.games||[]).forEach(g=>{if(!g)return;const namesA=_gameSideNames(g,"A"),namesB=_gameSideNames(g,"B");if(namesA.length!==1||namesB.length!==1)return;const nameA=namesA[0],nameB=namesB[0];!nameA||!nameB||!g.winner||(tally[nameA]||(tally[nameA]={w:0,l:0,side:"A"}),tally[nameB]||(tally[nameB]={w:0,l:0,side:"B"}),g.winner==="A"?(tally[nameA].w++,tally[nameB].l++):g.winner==="B"&&(tally[nameB].w++,tally[nameA].l++))})});const entries=Object.entries(tally).filter(([,s])=>s.w+s.l>0);if(!entries.length)return"";const sortFn=(a,b)=>b[1].w-b[1].l-(a[1].w-a[1].l)||b[1].w-a[1].w,sideEntries=side=>entries.filter(([,s])=>s.side===side).sort(sortFn),_row=(name,s,col,alignRight)=>{const photoHtml=typeof getPlayerPhotoHTML=="function"?getPlayerPhotoHTML(name,"26px","border:1.5px solid "+col+";box-shadow:0 1px 5px "+col+"40;"):"",click=`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(name)}'); })()" data-player-link="1"`,recordHtml=`<span class="cmd-pt-record"><b class="wt">${s.w}\uC2B9</b>${s.l>0?`<span class="cmd-pt-sep">\xB7</span><b class="lt">${s.l}\uD328</b>`:""}</span>`,nameHtml=`<span class="cmd-pt-name">${_escHtml(name)}</span>`,idCellHtml=`<span class="cmd-pt-idcell"><span class="cmd-pt-photo">${photoHtml}</span>${nameHtml}</span>`;return`<div class="cmd-pt-row${alignRight?" is-right":""}" ${click} style="--pt-col:${col}">
         ${idCellHtml}
         ${recordHtml}
@@ -1707,7 +1707,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           <div class="rec-topline">
             <div class="rec-meta-row">
               <span class="rec-meta-chip">\u{1F4C5} ${tm.d||"\uB0A0\uC9DC \uBBF8\uC815"}</span>
-              <span class="rec-meta-chip" style="background:#e0f2fe;border-color:#bae6fd;color:#0284c7">\uD300\uC804</span>
+              <span class="rec-meta-chip rec-meta-chip--blue">\uD300\uC804</span>
               <span class="rec-meta-chip" style="background:${aWin?colA:bWin?colB:"#64748b"};border-color:${aWin?colA:bWin?colB:"#64748b"};color:#fff;cursor:pointer" onclick="window.openProCompRecordDetailPopup('${_teamDetailPayload}')" title="\uACBD\uAE30 \uC0C1\uC138 \uC5F4\uAE30">${tm.sa||0}:${tm.sb||0}</span>
               <span class="rec-meta-chip">${games.length}\uACBD\uAE30</span>
             </div>
@@ -1759,7 +1759,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           </div>
         </div>
       `}).join("");modal.innerHTML=`
-      <div class="mbox" style="background:#ffffff;border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div class="mbox" style="background:var(--white);border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
         <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:move;user-select:none">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};flex-shrink:0"></span>

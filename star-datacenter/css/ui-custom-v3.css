@@ -1021,6 +1021,8 @@ body.dark .tier-toolbar-card .fbar .pill[onclick*="_tierRaceFilter='P'"]{color:#
 /* 스트리머 테이블: 줄무늬 + 숫자 컬럼 헤더/셀 우측 정렬 여백 보정 */
 .streamer-table tbody tr.streamer-row.zebra{background:rgba(148,163,184,.05)}
 body.dark .streamer-table tbody tr.streamer-row.zebra{background:rgba(148,163,184,.06)}
+body.dark #heatmap-day-popup .hm-player-wins{background:rgba(34,197,94,.16);color:#4ade80}
+body.dark #heatmap-day-popup .hm-popup-close:hover{background:rgba(148,163,184,.18)}
 .streamer-table tbody tr.streamer-row.zebra:hover{background:rgba(37,99,235,.06)}
 .streamer-table thead th.num{color:var(--text3)}
 

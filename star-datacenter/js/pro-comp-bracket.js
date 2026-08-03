@@ -491,8 +491,8 @@ function proCompTourMatchInput(tn){
       </span>`;
     };
     const _srcChip = item.src==='bkt'
-      ? `<span class="rec-meta-chip" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca">🗂️ 대진표</span>`
-      : `<span class="rec-meta-chip" style="background:#f1f5f9;border-color:#cbd5e1;color:#475569">📝 입력</span>`;
+      ? `<span class="rec-meta-chip rec-meta-chip--indigo">🗂️ 대진표</span>`
+      : `<span class="rec-meta-chip rec-meta-chip--gray">📝 입력</span>`;
     const _detailPayload = encodeURIComponent(JSON.stringify({
       title:'프로리그 대회 조별리그 대진표 기록',
       subtitle:`${tn.name||''} · ${_cardRound} · ${displayNo}경기`,

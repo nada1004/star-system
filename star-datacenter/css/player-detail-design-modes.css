@@ -362,6 +362,106 @@
   background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:2px 7px; z-index:2;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   다크모드 강제 오버라이드
+   - pd-mode="dashboard/mono"는 라이트 스타일 고정이라 body.dark에서도 하얗게 보임
+   - 다크모드에서는 배경/카드/테이블을 공통 다크 토큰으로 강제 적용
+───────────────────────────────────────────────────────────── */
+body.dark #playerModal[data-pd-mode="dashboard"] .umbox,
+body.dark #playerModal[data-pd-mode="mono"] .umbox{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  box-shadow:0 28px 72px rgba(0,0,0,.46) !important;
+}
+body.dark #playerModal[data-pd-mode="dashboard"] #playerModalTitle,
+body.dark #playerModal[data-pd-mode="mono"] #playerModalTitle{
+  background:#162032 !important;
+  border-bottom:1px solid #2d3f55 !important;
+  color:#e2e8f0 !important;
+}
+body.dark #playerModal[data-pd-mode="dashboard"] #playerModalBody,
+body.dark #playerModal[data-pd-mode="mono"] #playerModalBody{
+  background:#0f172a !important;
+}
+body.dark #playerModal[data-pd-mode="dashboard"] .detail-act,
+body.dark #playerModal[data-pd-mode="mono"] .detail-act{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  color:#cbd5e1 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero,
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-strip,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-strip,
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-elo-chart-card,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-elo-chart-card{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.22) !important;
+  color:#e2e8f0 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-top,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-top{
+  background:linear-gradient(135deg,#0f172a,#1e3a8a) !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-name,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-name{
+  color:#e2e8f0 !important;
+  text-shadow:none !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-stats,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-stats{
+  background:transparent !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-stat,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-stat{
+  background:#162032 !important;
+  border-color:#2d3f55 !important;
+  color:#e2e8f0 !important;
+  box-shadow:none !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-stat-label,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-stat-label{
+  color:#94a3b8 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-hero-stat-val,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-hero-stat-val{
+  color:#e2e8f0 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .pd-chip,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .pd-chip,
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .mode-filter-chip,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .mode-filter-chip,
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] .year-filter-chip,
+body.dark .pd-premium-shell[data-pd-mode="mono"] .year-filter-chip{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  color:#cbd5e1 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] table,
+body.dark .pd-premium-shell[data-pd-mode="mono"] table{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  color:#e2e8f0 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] th,
+body.dark .pd-premium-shell[data-pd-mode="mono"] th{
+  background:#162032 !important;
+  color:#94a3b8 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] td,
+body.dark .pd-premium-shell[data-pd-mode="mono"] td{
+  border-color:#2d3f55 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] tr:nth-child(even) td,
+body.dark .pd-premium-shell[data-pd-mode="mono"] tr:nth-child(even) td{
+  background:#141e30 !important;
+}
+body.dark .pd-premium-shell[data-pd-mode="dashboard"] tr:hover td,
+body.dark .pd-premium-shell[data-pd-mode="mono"] tr:hover td{
+  background:#243248 !important;
+}
+
 /* ══════════════════════════════════════════════════════════
    5. MONO — 모노크롬 브루탈리스트 스타일
 ══════════════════════════════════════════════════════════ */
@@ -1543,4 +1643,67 @@
   .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side{position:static;display:flex;gap:4px;overflow-x:auto;padding:6px}
   .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side-title{display:none}
   .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side-item{width:auto;white-space:nowrap}
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [다크모드 보정] 스트리머 상세(선수 모달) 공통 레이아웃
+   - render-player-header.js 에서 background:linear-gradient(180deg,#ffffff,#f8fafc) 등
+     인라인 스타일로 라이트 팔레트를 직접 넣는 부분이 있어 body.dark에서도 하얗게 남는 문제 수정
+   - 인라인 스타일보다 우선하도록 !important 사용
+───────────────────────────────────────────────────────────── */
+body.dark #playerModal .pd-hero{
+  background: linear-gradient(180deg,#1e293b,#0f172a) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  box-shadow: 0 26px 70px rgba(0,0,0,.44), 0 0 0 1px rgba(255,255,255,.04) !important;
+}
+body.dark #playerModal .pd-hero-stats{
+  background: linear-gradient(180deg,#1e293b,#162032) !important;
+  border-top: 1px solid rgba(255,255,255,.06) !important;
+}
+body.dark #playerModal .pd-hero-stat{
+  background: rgba(15,23,42,.45) !important;
+  border-color: rgba(148,163,184,.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+body.dark #playerModal .pd-hero-stat-label{ color:#94a3b8 !important; }
+body.dark #playerModal .pd-hero-stat-val{ color:#e2e8f0 !important; }
+
+body.dark #playerModal .pd-hero-quickrail{
+  background: linear-gradient(180deg,rgba(15,23,42,.35),rgba(15,23,42,.18)) !important;
+  border-top: 1px solid rgba(255,255,255,.06) !important;
+}
+body.dark #playerModal .pd-hero-quickcard{
+  background: rgba(30,41,59,.78) !important;
+  border-color: rgba(148,163,184,.20) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 14px 28px rgba(0,0,0,.25) !important;
+  color: #e2e8f0 !important;
+}
+
+/* 칩/필터류(모드바/연도/종족 등) */
+body.dark #playerModal :is(.pd-chip,.mode-filter-chip,.year-filter-chip,.pd-teammate-chip){
+  background: rgba(30,41,59,.86) !important;
+  border-color: rgba(148,163,184,.22) !important;
+  color: #cbd5e1 !important;
+}
+body.dark #playerModal :is(.mode-filter-chip.active,.year-filter-chip.active){
+  background: rgba(37,99,235,.28) !important;
+  border-color: rgba(96,165,250,.35) !important;
+  color: #e2e8f0 !important;
+}
+
+/* 분석(analyst) 레이아웃: 카드/헤더가 #fff로 고정 */
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-block{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  color:#e2e8f0 !important;
+}
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-block-head{
+  background:#162032 !important;
+  border-bottom-color:#334155 !important;
+}
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-label{ color:#e2e8f0 !important; }
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side-item{ color:#cbd5e1 !important; }
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side-item:hover{ background:rgba(148,163,184,.14) !important; color:#e2e8f0 !important; }
+body.dark #playerModal .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side-item.is-active{
+  background:rgba(37,99,235,.28) !important; color:#e2e8f0 !important;
 }

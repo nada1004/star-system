@@ -179,6 +179,103 @@
   background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:2px 7px; z-index:2;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   다크모드 강제 오버라이드
+   - ud-mode="dashboard/mono"가 라이트 스타일 고정이라 body.dark에서도 하얗게 보임
+───────────────────────────────────────────────────────────── */
+body.dark #univModal[data-ud-mode="dashboard"] .umbox,
+body.dark #univModal[data-ud-mode="mono"] .umbox{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  box-shadow:0 28px 72px rgba(0,0,0,.46) !important;
+}
+body.dark #univModal[data-ud-mode="dashboard"] #univModalTitle,
+body.dark #univModal[data-ud-mode="mono"] #univModalTitle{
+  background:#162032 !important;
+  border-bottom:1px solid #2d3f55 !important;
+  color:#e2e8f0 !important;
+}
+body.dark #univModal[data-ud-mode="dashboard"] #univModalBody,
+body.dark #univModal[data-ud-mode="mono"] #univModalBody{
+  background:#0f172a !important;
+}
+body.dark #univModal[data-ud-mode="dashboard"] .detail-act,
+body.dark #univModal[data-ud-mode="mono"] .detail-act{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  color:#cbd5e1 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.22) !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-top,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-top{
+  background:linear-gradient(135deg,#0f172a,#1e3a8a) !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-name,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-name{
+  color:#e2e8f0 !important;
+  text-shadow:none !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-stats,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-stats{
+  background:transparent !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-stat,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-stat{
+  background:#162032 !important;
+  border-color:#2d3f55 !important;
+  color:#e2e8f0 !important;
+  box-shadow:none !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-stat-label,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-stat-label{
+  color:#94a3b8 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-hero-stat-val,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-hero-stat-val{
+  color:#e2e8f0 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-opp-card,
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-match-card,
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-ace-card,
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] .ud-members-table-wrap,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-opp-card,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-match-card,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-ace-card,
+body.dark .ud-premium-shell[data-ud-mode="mono"] .ud-members-table-wrap{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  color:#e2e8f0 !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.22) !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] table,
+body.dark .ud-premium-shell[data-ud-mode="mono"] table{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+  color:#e2e8f0 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] th,
+body.dark .ud-premium-shell[data-ud-mode="mono"] th{
+  background:#162032 !important;
+  color:#94a3b8 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] td,
+body.dark .ud-premium-shell[data-ud-mode="mono"] td{
+  border-color:#2d3f55 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] tr:nth-child(even) td,
+body.dark .ud-premium-shell[data-ud-mode="mono"] tr:nth-child(even) td{
+  background:#141e30 !important;
+}
+body.dark .ud-premium-shell[data-ud-mode="dashboard"] tr:hover td,
+body.dark .ud-premium-shell[data-ud-mode="mono"] tr:hover td{
+  background:#243248 !important;
+}
+
 /* ══════════════════════════════════════════════════════════
    5. MONO — 모노크롬 브루탈리스트 스타일
 ══════════════════════════════════════════════════════════ */
@@ -686,4 +783,13 @@
   border:1px solid rgba(15,23,42,.12) !important;
   border-radius:var(--r2) !important;
   box-shadow:0 8px 18px rgba(15,23,42,.05) !important;
+}
+
+/* [다크모드 보정] 대학 상세 페이지 - 기본(스킨 미적용) 퀵카드/멤버 테이블 반투명 다크 */
+body.dark .ud-hero-quickcard{
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.6)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 22px rgba(0,0,0,.22) !important;
+}
+body.dark .ud-members-table-wrap{
+  background:linear-gradient(180deg,rgba(15,23,42,.68),rgba(15,23,42,.58)) !important;
 }

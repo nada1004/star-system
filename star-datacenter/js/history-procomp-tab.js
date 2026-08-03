@@ -570,7 +570,7 @@ function histProCompTeamHTML(_omitBar) {
           <div class="rec-topline">
             <div class="rec-meta-row">
               <span class="rec-meta-chip">📅 ${tm.d||'날짜 미정'}</span>
-              <span class="rec-meta-chip" style="background:#e0f2fe;border-color:#bae6fd;color:#0284c7">팀전</span>
+              <span class="rec-meta-chip rec-meta-chip--blue">팀전</span>
               <span class="rec-meta-chip" style="background:${aWin?colA:bWin?colB:'#64748b'};border-color:${aWin?colA:bWin?colB:'#64748b'};color:#fff;cursor:pointer" onclick="window.openProCompRecordDetailPopup('${_teamDetailPayload}')" title="경기 상세 열기">${tm.sa||0}:${tm.sb||0}</span>
               <span class="rec-meta-chip">${games.length}경기</span>
             </div>
@@ -730,7 +730,7 @@ function openProMembersPopup(teamLabel, teamColor, members){
     }).join('');
 
     modal.innerHTML = `
-      <div class="mbox" style="background:#ffffff;border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div class="mbox" style="background:var(--white);border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
         <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:move;user-select:none">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};flex-shrink:0"></span>

@@ -70,7 +70,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
           <div class="rec-meta-row">
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
-            ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">🎙️ ${m.caster}</span>`:''}
+            ${m.caster?`<span class="rec-meta-chip rec-meta-chip--amber2">🎙️ ${m.caster}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             ${(_pms.length && mode!=='tt')?`<button class="btn btn-w btn-xs rc-mem-btn" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 ${_pms.length}</button>`:''}

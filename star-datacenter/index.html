@@ -11,23 +11,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260730-histall1"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260803-darkfix7"><!-- /* [Z-IDX] */ -->
 <link rel="stylesheet" href="css/ui-improvements.css?v=20260717-ds03">
 <link rel="stylesheet" href="css/design-improvements.css?v=20260717-ds02">
 <link rel="stylesheet" href="css/ui-fix-empty-classes.css?v=20260717-ds03">
 <link rel="stylesheet" href="css/ui-custom-v3.css?v=20260717-ds03">
-<link rel="stylesheet" href="css/player-detail-design-modes.css?v=20260802-an01">
+<link rel="stylesheet" href="css/player-detail-design-modes.css?v=20260803-darkfix7">
 <link rel="stylesheet" href="css/univ-detail-design-modes.css?v=20260729-layout02">
-<link rel="stylesheet" href="css/match-detail-design-modes.css?v=20260728-md03poster">
+<link rel="stylesheet" href="css/match-detail-design-modes.css?v=20260803-darkfix7">
 <link rel="stylesheet" href="css/rec-card-minimal.css?v=20260705-v01">
-<link rel="stylesheet" href="css/board2-briefing.css?v=20260730-split7">
+<link rel="stylesheet" href="css/board2-briefing.css?v=20260803-darkfix7">
 <link rel="stylesheet" href="css/tier-rank.css?v=20260730-split12">
 <link rel="stylesheet" href="css/stats-core.css?v=20260730-split25">
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const SWV = '20260802-promosim20';
+    const SWV = '20260803-darkfix7';
     try{
       const prev = localStorage.getItem('su_sw_v') || '';
       if(prev !== SWV && navigator.serviceWorker.controller){
@@ -37,7 +37,7 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
-    navigator.serviceWorker.register('/sw.js?v=20260802-promosim20', { scope: '/' })
+    navigator.serviceWorker.register('/sw.js?v=20260803-darkfix7', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
         try{ reg.update(); }catch(e){}

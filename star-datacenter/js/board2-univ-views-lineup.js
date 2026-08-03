@@ -7,7 +7,7 @@ function _b2LineupCard3(p, col) {
   const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
-  const wrCol = wr==null ? '#0f172a' : (wr>=50 ? '#16a34a' : '#dc2626');
+  const wrCol = wr==null ? 'var(--text, #0f172a)' : (wr>=50 ? '#16a34a' : '#dc2626');
   const eloDefault = (typeof ELO_DEFAULT!=='undefined'?ELO_DEFAULT:1200);
   const elo = Number(p.elo || eloDefault);
   const eloCol = elo >= eloDefault ? '#2563eb' : '#dc2626';
@@ -21,9 +21,9 @@ function _b2LineupCard3(p, col) {
     if (sorted[0] && sorted[0].date) dateLine = `최근 기록 · ${sorted[0].date}`;
   } catch(e){}
   const boxes = [
-    [games ? `${win}승 ${loss}패` : '기록 없음', '전적', '#0f172a'],
+    [games ? `${win}승 ${loss}패` : '기록 없음', '전적', 'var(--text, #0f172a)'],
     [wr==null ? '-' : `${wr}%`, '승률', wrCol],
-    [pS(points), '포인트', '#0f172a'],
+    [pS(points), '포인트', 'var(--text, #0f172a)'],
     [elo, 'ELO', eloCol]
   ];
   const _lc3SecondRaw = String(p.secondProfileFile || '').trim();
@@ -73,7 +73,6 @@ function _b2LineupCard3(p, col) {
     '.b2-lc4 tbody tr:hover td{background:var(--lc-col,#64748b)16!important}',
     '.b2-lc4 tbody tr{cursor:pointer;position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease;transform-origin:center center}',
     '.b2-lc4 tbody tr:hover{transform:scale(1.025);box-shadow:0 10px 22px rgba(15,23,42,.18);z-index:30}',
-    '.b2-lc4 tbody tr:hover td{background:var(--white,#fff)!important}',
     '.b2-lc4-head{display:flex;align-items:center;gap:8px;padding:9px 12px}',
     '.b2-lc4-head img{width:24px;height:24px;object-fit:contain;border-radius:6px;flex-shrink:0}',
     '.b2-lc4-head span{font-size:var(--fs-sm);font-weight:900;color:#0f172a}',
@@ -86,7 +85,13 @@ function _b2LineupCard3(p, col) {
     '.b2-lc4-wrcell{display:flex;align-items:center;justify-content:flex-end;gap:7px}',
     '.b2-lc4-bartrack{width:44px;height:5px;border-radius:999px;background:var(--lc-col,#64748b)18;overflow:hidden}',
     '.b2-lc4-barfill{height:100%;border-radius:999px}',
-    '.b2-lc4-wr{font-weight:950;width:32px;text-align:right}'
+    '.b2-lc4-wr{font-weight:950;width:32px;text-align:right}',
+    ':is(body.dark,html.dark) .b2-lc4-wrap{background:rgba(15,23,42,.4)}',
+    ':is(body.dark,html.dark) .b2-lc4 thead th{color:#94a3b8;border-bottom-color:rgba(255,255,255,.08)}',
+    ':is(body.dark,html.dark) .b2-lc4 tbody td{border-bottom-color:rgba(255,255,255,.06);background:rgba(15,23,42,.5)!important}',
+    ':is(body.dark,html.dark) .b2-lc4 tbody tr:hover td{background:var(--lc-col,#64748b)26!important}',
+    ':is(body.dark,html.dark) .b2-lc4-head span{color:#e2e8f0}',
+    ':is(body.dark,html.dark) .b2-lc4-name{color:#e2e8f0}'
   ].join('');
   document.head.appendChild(s);
 })();

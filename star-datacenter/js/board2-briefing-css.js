@@ -51,7 +51,32 @@ function _b2BriefingCSS(){
         --b2w-gold: #e0b45a;
         --b2w-gold-soft: rgba(224,180,90,.16);
         --text3: #b8c2cf;
+        /* 브리핑 카드/박스/테이블 배경을 반투명 다크 톤으로 통일 */
+        --b2w-paper: rgba(15,23,42,.55);
+        --b2w-paper-alt: rgba(15,23,42,.62);
+        --b2w-paper-warm: rgba(15,23,42,.5);
+        --b2w-rule: rgba(148,163,184,.20);
+        --b2w-rule-hard: rgba(148,163,184,.45);
+        --b2w-rule-soft: rgba(148,163,184,.14);
+        --b2w-ink: #f1f5f9;
+        --b2w-ink-mid: #cbd5e1;
+        --b2w-ink-soft: #94a3b8;
+        --b2w-tag-bg: rgba(30,41,59,.7);
+        --b2w-tag-border: rgba(148,163,184,.22);
+        --b2w-tag-text: #cbd5e1;
+        --b2w-tag-muted: #94a3b8;
+        --b2w-tag-accent-bg: rgba(37,99,235,.18);
       }
+      body.dark .b2w2-wrap .b2w2-tbl tr:hover td,
+      body.dark .b2w2-wrap .b2w2-race-row {
+        background: rgba(15,23,42,.55);
+      }
+      body.dark .b2w2-wrap .b2w2-table-wrap {
+        background: rgba(15,23,42,.5);
+      }
+      body.dark .b2w2-wrap .b2w2-race-pill.win { background: rgba(220,38,38,.22); color:#fca5a5 }
+      body.dark .b2w2-wrap .b2w2-race-pill.loss { background: rgba(100,116,139,.28); color:#cbd5e1 }
+      body.dark .b2w2-wrap .b2w2-mvp-worst .b2w2-mvp-top-badge { background: rgba(239,68,68,.35) }
       .b2w2-wrap *, .b2w2-wrap *::before, .b2w2-wrap *::after { box-sizing: border-box; }
       .b2w2-wrap b, .b2w2-wrap strong { font-weight: 800 }
 

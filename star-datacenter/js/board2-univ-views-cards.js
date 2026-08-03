@@ -245,7 +245,12 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
     '.b2-lc3-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px 10px 10px}',
     '.b2-lc3-box{border-radius:var(--r);padding:7px 4px;background:var(--lc-col,#64748b)14;text-align:center}',
     '.b2-lc3-box-value{font-size:var(--fs-base);font-weight:950;color:#0f172a}',
-    '.b2-lc3-box-label{font-size:10px;font-weight:800;color:#475569;margin-top:2px}'
+    '.b2-lc3-box-label{font-size:10px;font-weight:800;color:#475569;margin-top:2px}',
+    ':is(body.dark,html.dark) .b2-lc3{background:linear-gradient(165deg,var(--lc-col,#64748b)33 0%,var(--lc-col,#64748b)14 34%,rgba(15,23,42,.88) 58%);border-color:var(--lc-col,#64748b)44}',
+    ':is(body.dark,html.dark) .b2-lc3-photo{background:linear-gradient(160deg,var(--lc-col,#64748b)3d 0%,var(--lc-col,#64748b)1a 100%)}',
+    ':is(body.dark,html.dark) .b2-lc3-box{background:rgba(15,23,42,.55)}',
+    ':is(body.dark,html.dark) .b2-lc3-box-value{color:#e2e8f0}',
+    ':is(body.dark,html.dark) .b2-lc3-box-label{color:#94a3b8}'
   ].join('');
   document.head.appendChild(s);
 })();
