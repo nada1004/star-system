@@ -45,7 +45,15 @@
   color:#e2e8f0 !important;
 }
 
-/* ── 2. 인라인 스타일로 박힌 라이트 배경 (팝업/탭 공통 안전망) ────── */
+/* ── 4. 공유카드 로딩 스켈레톤 (모달이 열리자마자 잠깐 보이는 상태) ── */
+:is(body.dark,html.dark) #share-card > div[style*="linear-gradient(180deg,#f8fafc,#eef2ff)"]{
+  background:linear-gradient(180deg,#1e293b,#162032) !important;
+}
+:is(body.dark,html.dark) #share-card [style*="background:#dbe4f0"]{ background:#334155 !important; }
+:is(body.dark,html.dark) #share-card [style*="background:#e2e8f0"]{ background:#334155 !important; }
+:is(body.dark,html.dark) #share-card [style*="background:#d8e2f0"]{ background:#334155 !important; }
+:is(body.dark,html.dark) #share-card [style*="background:#e5ebf5"]{ background:#334155 !important; }
+:is(body.dark,html.dark) #share-card [style*="background:#c7d2fe"]{ background:#3a4f6a !important; }
 :is(body.dark,html.dark) :is(.modal,.mbox,#b2-content,.tabpane,.tab-pane)
   :is([style*="background:#fff"],[style*="background: #fff"],[style*="background-color:#fff"],[style*="background-color: #fff"],
      [style*="background:#f8fafc"],[style*="background: #f8fafc"],[style*="background:#f1f5f9"],[style*="background: #f1f5f9"],

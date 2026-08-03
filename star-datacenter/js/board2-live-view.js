@@ -324,8 +324,9 @@ function _b2LiveView() {
     univList.sort();
   }
 
+  const _liveDark = (typeof document !== 'undefined' && document.body && document.body.classList.contains('dark'));
   const genderBtn = (v, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2LiveSetGender('${v}')" title="${label}" aria-pressed="${_b2LiveGenderFilter===v}"
-    style="padding:8px 14px;border-radius:20px;border:1.5px solid ${_b2LiveGenderFilter===v?'#2563eb':'var(--border2)'};background:${_b2LiveGenderFilter===v?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LiveGenderFilter===v?'#1d4ed8':'var(--text2)'};font-size:var(--fs-base);font-weight:${_b2LiveGenderFilter===v?900:700};cursor:pointer;margin-bottom:0;white-space:nowrap">${label}</button>`;
+    style="padding:8px 14px;border-radius:20px;border:1.5px solid ${_b2LiveGenderFilter===v?(_liveDark?'#60a5fa':'#2563eb'):'var(--border2)'};background:${_b2LiveGenderFilter===v?(_liveDark?'linear-gradient(135deg,#1e3a5f,#1e293b)':'linear-gradient(135deg,#eff6ff,#dbeafe)'):'var(--white)'};color:${_b2LiveGenderFilter===v?(_liveDark?'#93c5fd':'#1d4ed8'):'var(--text2)'};font-size:var(--fs-base);font-weight:${_b2LiveGenderFilter===v?900:700};cursor:pointer;margin-bottom:0;white-space:nowrap">${label}</button>`;
 
   const filterBar = `
     <style>

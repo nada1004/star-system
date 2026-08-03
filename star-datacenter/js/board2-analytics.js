@@ -349,9 +349,9 @@ function _b2SummaryView() {
     body.dark .b2s-hero-badge,
     body.dark .b2s-kpi,
     body.dark .b2s-panel {
-      background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62));
-      border-color:#334155;
-      box-shadow:0 12px 22px rgba(0,0,0,.20);
+      background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62)) !important;
+      border-color:#334155 !important;
+      box-shadow:0 12px 22px rgba(0,0,0,.20) !important;
     }
     body.dark .b2s-univ-row + .b2s-univ-row { border-top-color:#334155; }
     body.dark .b2s-bar-track { background:#334155; }

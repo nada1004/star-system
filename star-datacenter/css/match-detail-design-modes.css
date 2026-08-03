@@ -1796,3 +1796,50 @@ body.dark :is(#histDetModal, #compMatchDetailModal)[data-md-mode="mono"] .cmd-pl
   color:#e2e8f0 !important;
 }
 
+
+/* ─────────────────────────────────────────────────────────────
+   다크모드 강제 오버라이드 (나머지 모드 일괄)
+   - md-mode 프리셋들이 라이트 톤을 !important로 고정해서
+     body.dark에서도 하얗게 보이는 문제를 일괄 보정
+───────────────────────────────────────────────────────────── */
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .mbox--matchdetail{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  box-shadow:0 32px 80px rgba(0,0,0,.55) !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-head,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-scorebar,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-body,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-actions{
+  background:#162032 !important;
+  border-color:#334155 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-title{
+  color:#e2e8f0 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-sub{
+  color:#94a3b8 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-hbtn,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-close{
+  border-color:#64748b !important;
+  color:#e2e8f0 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-score,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-detail-shell .cmd-player,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-single-summary,
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-player-tally{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  color:#e2e8f0 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-detail-shell .cmd-set-head{
+  background:#0f172a !important;
+  border-top:1px solid #334155 !important;
+  border-bottom:1px solid #334155 !important;
+  color:#cbd5e1 !important;
+}
+body.dark :is(#histDetModal, #compMatchDetailModal):is([data-md-mode="glass"],[data-md-mode="holo"],[data-md-mode="neon"],[data-md-mode="paper"],[data-md-mode="retro"],[data-md-mode="sunset"],[data-md-mode="terminal"],[data-md-mode="aurora"]) .cmd-detail-shell .cmd-midbox{
+  border-left:1px solid rgba(100,116,139,.45) !important;
+  border-right:1px solid rgba(100,116,139,.45) !important;
+}
