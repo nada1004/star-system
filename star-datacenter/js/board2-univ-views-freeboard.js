@@ -308,11 +308,19 @@ function _b2FreeView() {
 
   const defCol = '#64748b';
   const _fvMode = _b2GetFreeViewMode();
+  const _fvIsDark = (typeof document!=='undefined' && document.body && document.body.classList.contains('dark'));
+  const _fvWrapBg = _fvIsDark
+    ? 'linear-gradient(180deg,rgba(15,23,42,.98),rgba(10,17,32,.96))'
+    : 'linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96))';
+  const _fvWrapBorder = _fvIsDark ? 'rgba(148,163,184,.20)' : 'rgba(148,163,184,.16)';
+  const _fvBodyBg = _fvIsDark
+    ? 'linear-gradient(180deg,rgba(15,23,42,.92),rgba(10,17,32,.86))'
+    : 'linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90))';
   const _fvModeBtn = (mode, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeViewMode('${mode}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvMode===mode?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvMode===mode?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
   const _fvGenderBtn = (g, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeGenderFilter('${g}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvGenderFilter===g?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvGenderFilter===g?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
-  let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
+  let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid ${_fvWrapBorder};background:${_fvWrapBg};box-shadow:0 18px 32px rgba(15,23,42,.06)">
     <div style="background:linear-gradient(135deg,${defCol} 0%,#475569 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,0) 58%);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
@@ -348,7 +356,7 @@ function _b2FreeView() {
       </div>
       </div>
     </div>
-    <div style="background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90));padding:16px">`;
+    <div style="background:${_fvBodyBg};padding:16px">`;
 
   if (_fvMode === 'stat') {
     let _statHtml = '';
@@ -373,7 +381,11 @@ function _b2FreeView() {
     const _allFree = roledFree.concat(orderedTierKeys.flatMap(t => tierGroups[t].slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}))));
     h += _b2LineupTable(_allFree, defCol);
   } else {
-    const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
+    const _frowPanelBg = _fvIsDark
+      ? 'linear-gradient(180deg,rgba(30,41,59,.92),rgba(22,32,50,.88))'
+      : 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+    const _frowPanelBorder = _fvIsDark ? 'rgba(148,163,184,.20)' : 'rgba(148,163,184,.14)';
+    const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:${_frowPanelBg};border:1px solid ${_frowPanelBorder};border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
     const _fl = (text, isRole) => `<span style="font-size:var(--fs-sm);font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:var(--r2) 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
 
     roledFree.forEach(p => {

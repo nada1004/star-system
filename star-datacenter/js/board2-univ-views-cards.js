@@ -6,6 +6,16 @@
 function _b2PastelBg(hex, ratio) {
   const { r, g, b } = (typeof _hexToRgbObj === 'function') ? _hexToRgbObj(hex) : { r: 100, g: 116, b: 139 };
   const t = (typeof ratio === 'number') ? ratio : 0.10;
+  const isDark = (typeof document !== 'undefined') && (
+    (document.body && document.body.classList && document.body.classList.contains('dark')) ||
+    (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('dark'))
+  );
+  if (isDark) {
+    // 다크모드: 흰색 대신 짙은 남색(#0f172a) 베이스로 혼합
+    const base = { r: 15, g: 23, b: 42 };
+    const mix = (bc, c) => Math.round(bc * (1 - t) + c * t);
+    return `rgb(${mix(base.r, r)},${mix(base.g, g)},${mix(base.b, b)})`;
+  }
   const mix = c => Math.round(255 * (1 - t) + c * t);
   return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
 }

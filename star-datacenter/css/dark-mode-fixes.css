@@ -664,3 +664,23 @@
 :is(body.dark,html.dark) .tier-act-dot.hot {
   background: linear-gradient(135deg,#4a2226,#5a262b) !important;
 }
+
+/* ── 공유카드 모달(sharecard-modal-box) chrome 다크모드 강제 보정 ──
+   #share-card 내부(실제 캡처되는 카드 콘텐츠)는 의도적으로 라이트 유지,
+   그 바깥 모달 껍데기(헤더/닫기버튼/저장버튼 영역)는 다크 배경이어야 함 */
+:is(body.dark,html.dark) .sharecard-modal-box {
+  background: linear-gradient(180deg,#1e293b 0%,#0f172a 100%) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  color: #e2e8f0 !important;
+}
+:is(body.dark,html.dark) .sharecard-modal-hdr {
+  border-bottom-color: rgba(148,163,184,.18) !important;
+}
+:is(body.dark,html.dark) .sharecard-modal-hdr > div:first-child {
+  color: #60a5fa !important;
+}
+:is(body.dark,html.dark) .sharecard-modal-close {
+  background: rgba(239,68,68,.14) !important;
+  color: #f87171 !important;
+  border-color: rgba(239,68,68,.28) !important;
+}
