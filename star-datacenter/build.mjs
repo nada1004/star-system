@@ -406,6 +406,7 @@ const CSS_FILES = [
   'css/board2-briefing.css',
   'css/tier-rank.css',
   'css/stats-core.css',
+  'css/dark-mode-fixes.css',
 ];
 
 
