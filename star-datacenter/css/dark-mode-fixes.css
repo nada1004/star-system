@@ -1,5 +1,5 @@
 /* =========================================================================
-   dark-mode-fixes.css  (v20260804-darkfix14)
+   dark-mode-fixes.css  (v20260804-darkfix20)
    목적: 다크모드에서 밝게 남아있던 영역 일괄 보정
         - 브리핑 탭(히어로/모드카드/헤더/저장바)
         - 경기 상세 팝업(#histDetModal / #compMatchDetailModal / .modal--matchdetail)
@@ -695,7 +695,7 @@
   background: #1e293b !important;
 }
 :is(body.dark,html.dark) .streamer-table .streamer-avatar {
-  background: linear-gradient(160deg,#334155,#cbd5e1) !important;
+  background: linear-gradient(160deg,#334155,#1e293b) !important;
 }
 :is(body.dark,html.dark) .streamer-focus-chip {
   background: rgba(30, 41, 59,.16) !important;
@@ -1782,4 +1782,716 @@
 :is(body.dark,html.dark) .pq-photo-wrap,
 :is(body.dark,html.dark) .pq-type-input{
   background:var(--surface) !important;
+}
+
+/* ── 10. 전 탭/팝업 공통: 스트리머 프로필 사진 다크모드 톤다운
+   (밝은 배경의 실제 업로드 사진을 티어순위표처럼 살짝 어둡게 눌러서
+   다크모드 화면과 어우러지게 함. 텍스트/배지는 건드리지 않고 <img>에만 적용) ── */
+:is(body.dark,html.dark) .pph-avatar-img,
+:is(body.dark,html.dark) .streamer-avatar img,
+:is(body.dark,html.dark) .streamer-simple-avatar img,
+:is(body.dark,html.dark) .streamer-focus-photo img,
+:is(body.dark,html.dark) .streamer-focus-card2-photo img,
+:is(body.dark,html.dark) .streamer-gallery-card img,
+:is(body.dark,html.dark) .streamer-simple-avatar-wrap img,
+:is(body.dark,html.dark) .stats-award-avatar img,
+:is(body.dark,html.dark) .b2-femco-avatar img,
+:is(body.dark,html.dark) .share-player-photo-wrap img,
+:is(body.dark,html.dark) .pd-hero-photo img,
+:is(body.dark,html.dark) .hist-all-mc-avatar-frame img,
+:is(body.dark,html.dark) .hm-player-img,
+:is(body.dark,html.dark) .rec-side-profiles img,
+:is(body.dark,html.dark) .b2-lc4-avatar img,
+:is(body.dark,html.dark) .b2hm2-pcard-avatar img,
+:is(body.dark,html.dark) .ud-hero-top-avatars img,
+:is(body.dark,html.dark) .tier-podium-bg,
+:is(body.dark,html.dark) .tier-podium-rest-photo,
+:is(body.dark,html.dark) .tier-group-photo,
+:is(body.dark,html.dark) .tier-mag-photo {
+  filter: brightness(.8) saturate(.92) !important;
+}
+
+/* =========================================================================
+   ── 11. darkfix19 일괄 점검: 통계탭 상세분석 / 검색·붙여넣기 팝업 / 대전기록 /
+        대회·프로리그·티어대회 / 히스토리 / 현황판 / 설정 탭에서 다크모드 미대응이던
+        라이트 파스텔 배지·박스 배경 일괄 수정.
+   (매거진커버·미니멀포스터 등 공유카드 "캡처 전용 고정 테마"와 디자인 프리셋
+    미리보기 스와치는 의도된 라이트 색상이라 이 섹션에서 제외함)
+   ========================================================================= */
+
+/* 11-1. 텍스트색 + 배경색 조합이 확실한 배지류 (기존 컨벤션과 동일하게 조합 셀렉터로 처리) */
+:is(body.dark,html.dark) [style*="background:#dcfce7;color:#16a34a"]{ background:#14301f !important; color:#86efac !important; }
+:is(body.dark,html.dark) [style*="background:#dcfce7;color:#15803d"]{ background:#14301f !important; color:#86efac !important; }
+:is(body.dark,html.dark) [style*="background:#fffbeb;color:#92400e"]{ background:#4a3a1a !important; color:#fcd34d !important; }
+:is(body.dark,html.dark) [style*="background:#e0f2fe;color:#0369a1"]{ background:#1e3a4a !important; color:#7dd3fc !important; }
+:is(body.dark,html.dark) [style*="background:#e0f2fe;color:#0284c7"]{ background:#1e3a4a !important; color:#7dd3fc !important; }
+:is(body.dark,html.dark) [style*="background:#e0f2fe;color:#075985"]{ background:#1e3a4a !important; color:#7dd3fc !important; }
+:is(body.dark,html.dark) [style*="background:#fff1f2;color:#dc2626"]{ background:#4a1f24 !important; color:#fca5a5 !important; }
+:is(body.dark,html.dark) [style*="background:#fee2e2;color:#991b1b"]{ background:#4a1f1f !important; color:#fca5a5 !important; }
+:is(body.dark,html.dark) [style*="background:#fef2f2;color:#ef4444"]{ background:#3a1414 !important; color:#fca5a5 !important; }
+:is(body.dark,html.dark) [style*="background:#dbeafe;color:#1d4ed8"]{ background:#1e3a5f !important; color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="background:#dbeafe;color:#2563eb"]{ background:#1e3a5f !important; color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="background:#eff6ff;color:#1d4ed8"]{ background:#1e3a5f !important; color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="background:#EFF6FF;color:#1d4ed8"]{ background:#1e3a5f !important; color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="background:#ecfeff;color:#0e7490"]{ background:#1e3a4a !important; color:#67e8f9 !important; }
+:is(body.dark,html.dark) [style*="background:#f3e8ff;color:#7c3aed"]{ background:#3b2f5e !important; color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="background:#f5f3ff;color:#5b21b6"]{ background:#3b2f5e !important; color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="background:#d1fae5;color:#064e3b"]{ background:#0f2e1e !important; color:#6ee7b7 !important; }
+:is(body.dark,html.dark) [style*="background:#FEF3C7;color:#92400E"]{ background:#4a3a1a !important; color:#fcd34d !important; }
+:is(body.dark,html.dark) [style*="background:#FEF3C7;color:#92400e"]{ background:#4a3a1a !important; color:#fcd34d !important; }
+
+/* 11-2. 종족 배지 클래스 (스트리머탭 simple 뷰) — .streamer-simple-race.race-* */
+:is(body.dark,html.dark) .streamer-simple-race.race-T{ background:#1e3a5f !important; color:#93c5fd !important; border-color:#2c4f75 !important; }
+:is(body.dark,html.dark) .streamer-simple-race.race-Z{ background:#3b2f5e !important; color:#d8b4fe !important; border-color:#4a3d6e !important; }
+:is(body.dark,html.dark) .streamer-simple-race.race-P{ background:#4a3a1a !important; color:#fcd34d !important; border-color:#5c4826 !important; }
+:is(body.dark,html.dark) .streamer-simple-race.race-N{ background:#334155 !important; color:#cbd5e1 !important; border-color:#475569 !important; }
+
+/* 11-3. 단독 배경 하드코딩 (var() 텍스트와 짝을 이루거나 비인접이라 위 조합 셀렉터로 못 잡는 것들) —
+   배경만 어둡게 눌러주고 텍스트는 이미 var()나 기존 규칙으로 다크대응됨 */
+:is(body.dark,html.dark) [style*="background:#fef2f2"]{ background:#3a1414 !important; }
+:is(body.dark,html.dark) [style*="background:#f0fdf4"]{ background:#14301f !important; }
+:is(body.dark,html.dark) [style*="background:#f5f3ff"]{ background:#3b2f5e !important; }
+:is(body.dark,html.dark) [style*="background:#eff6ff"]{ background:#1e3a5f !important; }
+:is(body.dark,html.dark) [style*="background:#dcfce7"]{ background:#14301f !important; }
+:is(body.dark,html.dark) [style*="background:#e0f2fe"]{ background:#1e3a4a !important; }
+:is(body.dark,html.dark) [style*="background:#E0F2FE"]{ background:#1e3a4a !important; }
+:is(body.dark,html.dark) [style*="background:#fffbeb"]{ background:#4a3a1a !important; }
+:is(body.dark,html.dark) [style*="background:#fff1f2"]{ background:#4a1f24 !important; }
+:is(body.dark,html.dark) [style*="background:#dbeafe"]{ background:#1e3a5f !important; }
+:is(body.dark,html.dark) [style*="background:#ecfeff"]{ background:#1e3a4a !important; }
+:is(body.dark,html.dark) [style*="background:#f3e8ff"]{ background:#3b2f5e !important; }
+:is(body.dark,html.dark) [style*="background:#d1fae5"]{ background:#0f2e1e !important; }
+:is(body.dark,html.dark) [style*="background:#fef3c7"]{ background:#4a3a1a !important; }
+:is(body.dark,html.dark) [style*="background:#FEF3C7"]{ background:#4a3a1a !important; }
+:is(body.dark,html.dark) [style*="background:#fef08a"]{ background:#78350f !important; }
+:is(body.dark,html.dark) [style*="background:#f5f5f5"]{ background:#1e293b !important; color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="background:#f9fafb"]{ background:#1e293b !important; }
+:is(body.dark,html.dark) [style*="background:#f0f4ff"]{ background:#1e3a5f !important; }
+:is(body.dark,html.dark) [style*="background:#f0f6ff"]{ background:#1e3a5f !important; }
+:is(body.dark,html.dark) [style*="background:#fff7d6"]{ background:#4a3a1a !important; }
+:is(body.dark,html.dark) [style*="background:#f7f9fc"]{ background:#1e293b !important; }
+:is(body.dark,html.dark) [style*="background:#fbfdff"]{ background:#1e293b !important; }
+:is(body.dark,html.dark) [style*="background:#eef6ff"]{ background:#1e3a5f !important; }
+
+/* 11-4. 히스토리 탭 WIN/LOSE, 조별리그/토너먼트 태그 등 — 위 11-1/11-3 규칙으로 배경은 이미 커버되고
+   여기선 대비가 약해지는 텍스트색만 보정 */
+:is(body.dark,html.dark) [style*="color:#0891b2"]{ color:#67e8f9 !important; }
+:is(body.dark,html.dark) [style*="color:#0369a1"]{ color:#7dd3fc !important; }
+:is(body.dark,html.dark) [style*="color:#0284c7"]{ color:#7dd3fc !important; }
+:is(body.dark,html.dark) [style*="color:#1d4ed8"]{ color:#93c5fd !important; }
+:is(body.dark,html.dark) [style*="color:#92400e"]{ color:#fcd34d !important; }
+:is(body.dark,html.dark) [style*="color:#92400E"]{ color:#fcd34d !important; }
+:is(body.dark,html.dark) [style*="color:#991b1b"]{ color:#fca5a5 !important; }
+:is(body.dark,html.dark) [style*="color:#16a34a"]{ color:#86efac !important; }
+:is(body.dark,html.dark) [style*="color:#15803d"]{ color:#86efac !important; }
+:is(body.dark,html.dark) [style*="color:#064e3b"]{ color:#6ee7b7 !important; }
+:is(body.dark,html.dark) [style*="color:#0e7490"]{ color:#67e8f9 !important; }
+:is(body.dark,html.dark) [style*="color:#5b21b6"]{ color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="color:#6b21a8"]{ color:#d8b4fe !important; }
+:is(body.dark,html.dark) [style*="color:#475569"]{ color:#cbd5e1 !important; }
+:is(body.dark,html.dark) [style*="color:#94a3b8"]{ color:#94a3b8 !important; }
+
+/* 11-5. 통계탭 매치업 매트릭스 셀(cellStyle) — 중립 회색 배경 */
+:is(body.dark,html.dark) [style*="background:#f8fafc;color:#94a3b8"]{ background:#1e293b !important; color:#64748b !important; }
+:is(body.dark,html.dark) [style*="background:#f8fafc;color:#374151"]{ background:#1e293b !important; color:#94a3b8 !important; }
+
+/* ── 추가: 상세팝업 디자인 스킨(모드)별 다크모드 대응 (정밀 재검사 반영) ──
+   대상: match-detail / player-detail 팝업의 각 스킨 중 다크 전용 오버라이드가
+   실제로 없는 항목만 선별 (paper/editorial/luxury/poster 텍스처 컨셉 스킨은 제외)
+   ────────────────────────────────────────────────────────────── */
+
+
+/* --- match-detail-design-modes.css --- */
+/* cute */
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-actions .btn{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-close{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-game-row{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-set-head{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-detail-shell .cmd-single-summary__row{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-hbtn{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-single-summary{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="cute"] .cmd-team{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* magazine */
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-actions{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .cmd-body{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="magazine"] .mbox--matchdetail{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* midnight */
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-mode="midnight"] .cmd-detail-shell .cmd-win{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* mono */
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-mode="mono"] .cmd-actions{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-mode="mono"] .cmd-detail-shell .cmd-midbox{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-mode="mono"] .cmd-detail-shell .cmd-player.is-win .cmd-player-name::after{
+  background:#243447 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-mode="mono"] .cmd-detail-shell .cmd-win{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* nintendo */
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-actions{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-actions .btn{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-body{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-close{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-game-row{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-detail-shell .cmd-single-summary__row{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-hbtn{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-mid{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-scorebar{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .cmd-single-summary{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) :is(#histDetModal, #compMatchDetailModal)[data-md-layout="nintendo"] .mbox--matchdetail{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+
+/* --- player-detail-design-modes.css --- */
+/* analyst */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-layout="analyst"] .pd-an-hero{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-layout="analyst"] .pd-an-side{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* arcade */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="arcade"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* aurora */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-elo-panel-inner{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-hero-photo{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="aurora"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* blush */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="blush"] .pd-elo-panel-inner{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* botanical */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="botanical"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* brief */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-layout="brief"] .pd-br-doc{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* dashboard */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="dashboard"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* glass */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-elo-panel-inner{
+  background:rgba(15,23,42,.35) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-map-card{
+  background:rgba(15,23,42,.32) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-memo-input{
+  background:rgba(15,23,42,.3) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-mode-card{
+  background:rgba(15,23,42,.32) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-race-card{
+  background:rgba(15,23,42,.32) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-teammate-chip{
+  background:rgba(15,23,42,.35) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .pd-univ-card{
+  background:rgba(15,23,42,.32) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="glass"] .su-sec > div:not([class]) > div{
+  background:rgba(15,23,42,.32) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.3) !important;
+}
+/* holo */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-elo-panel-inner{
+  background:rgba(30,41,59,0.65) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-map-card{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-memo-input{
+  background:rgba(30,41,59,0.8) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-mode-card{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-race-card{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-teammate-chip{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .pd-univ-card{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="holo"] .su-sec > div:not([class]) > div{
+  background:rgba(30,41,59,0.7) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* mono */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="mono"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* neon */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-elo-panel-inner{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-hero-photo{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="neon"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* obsidian */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="obsidian"] .pd-elo-panel-inner{
+  background:rgba(30,41,59,0.95) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* pastel */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="pastel"] .pd-elo-panel-inner{
+  background:rgba(30,41,59,0.6) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* report */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-layout="report"] .pd-secblock{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* studio */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="studio"] .pd-elo-panel-inner{
+  background:rgba(30,41,59,0.92) !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* sunset */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-elo-panel-inner{
+  background:#243447 !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="sunset"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+/* terminal */
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-elo-panel-inner{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-hero-photo{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-map-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-memo-input{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-mode-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-race-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-teammate-chip{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .pd-univ-card{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+:is(body.dark,html.dark) .pd-premium-shell[data-pd-mode="terminal"] .su-sec > div:not([class]) > div{
+  background:#1e293b !important;
+  color:#e2e8f0 !important;
+  border-color:rgba(148,163,184,.22) !important;
 }
