@@ -708,7 +708,7 @@ function _b2BubbleView() {
       const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
       ttip.innerHTML=\`
         <div style="font-weight:900;font-size:var(--fs-base);color:\${b.color};margin-bottom:6px">\${b.name}</div>
-        <div style="font-size:var(--fs-sm);font-weight:700;color:#334155;margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
         \${b.wr!==null?'<div style="font-size:var(--fs-sm);font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
         \${b.topTier?'<div style="font-size:var(--fs-caption);margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
         <div style="font-size:10px;color:#94a3b8;margin-top:6px">클릭 → 상세 정보</div>

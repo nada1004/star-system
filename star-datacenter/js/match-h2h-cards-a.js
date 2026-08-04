@@ -238,8 +238,8 @@ function _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
     <div style="background:linear-gradient(135deg,${p1col}66,${p1col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;${!win1&&win2?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       ${av(s.p1, p1col)}
       <div style="min-width:0">
-        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
-        <div style="font-size:10px;color:rgba(15,23,42,.62);font-weight:800">${p1.univ||''}</div>
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--white);min-width:${isMb?74:86}px">
@@ -252,8 +252,8 @@ function _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
     </div>
     <div style="background:linear-gradient(225deg,${p2col}66,${p2col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;justify-content:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       <div style="min-width:0">
-        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
-        <div style="font-size:10px;color:rgba(15,23,42,.62);font-weight:800">${p2.univ||''}</div>
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
       </div>
       ${av(s.p2, p2col)}
     </div>

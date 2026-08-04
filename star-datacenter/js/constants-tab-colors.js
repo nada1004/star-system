@@ -69,7 +69,7 @@ function getTabColorStyle(ctx, id){
     return `background:${softBg} !important;border-color:${main}44 !important;color:${main} !important;box-shadow:0 8px 18px ${main}18 !important,inset 0 0 0 1px ${main}16 !important;`;
   }
   if(mode==='outline'){
-    return `background:linear-gradient(180deg,#ffffff,#f8fafc) !important;border:1.5px solid ${main}55 !important;color:${main} !important;box-shadow:0 6px 16px ${main}16 !important,inset 0 0 0 1px ${from}14 !important;`;
+    return `background:linear-gradient(180deg,var(--white),var(--surface)) !important;border:1.5px solid ${main}55 !important;color:${main} !important;box-shadow:0 6px 16px ${main}16 !important,inset 0 0 0 1px ${from}14 !important;`;
   }
   if(mode==='solid'){
     return `background:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 52%, rgba(15,23,42,${darkB}) 86%, rgba(15,23,42,${darkA}) 100%), ${main} !important;border-color:${main}66 !important;color:#fff !important;box-shadow:0 12px 24px ${main}30 !important;`;

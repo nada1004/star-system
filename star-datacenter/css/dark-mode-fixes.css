@@ -2772,3 +2772,73 @@
   background:rgba(30,41,59,.85) !important;
   border-color:rgba(148,163,184,.22) !important;
 }
+
+/* ── 경기 세트 편집 화면(대진표/조별리그/일반전/프로리그) "2대2 수동 입력 가능" 안내 박스 —
+   흰/연하늘색 배경 + 어두운 글자가 고정돼 있어 다크모드 편집 화면에서 혼자 하얗게 뜨던 문제 ── */
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,rgba(238,242,255,.96)"],
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98))"]{
+  background:linear-gradient(135deg,rgba(30,41,59,.9),rgba(15,23,42,.95)) !important;
+  border-color:rgba(99,102,241,.32) !important;
+  color:#cbd5e1 !important;
+}
+:is(body.dark,html.dark) [style*="background:#e0e7ff"][style*="color:#4338ca"]{
+  background:rgba(99,102,241,.28) !important;
+  color:#c7d2fe !important;
+}
+
+/* ── 공용 간이 액션 메뉴(#suCtxMenu / openSimpleActionMenu) — 경기기록/대회관리 등에서
+   쓰이는 우클릭·⋮메뉴가 흰 배경+어두운 글자로 고정돼 있던 문제 ── */
+:is(body.dark,html.dark) #suCtxMenu{
+  background:linear-gradient(180deg,rgba(30,41,59,.98),rgba(15,23,42,.98)) !important;
+  border-color:#334155 !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.4) !important;
+}
+:is(body.dark,html.dark) #suCtxMenu [style*="color:#334155"]{ color:#cbd5e1 !important; }
+:is(body.dark,html.dark) #suCtxMenu [style*="background:linear-gradient(180deg,rgba(255,255,255"]{
+  background:rgba(255,255,255,.06) !important;
+}
+
+/* ── 붙여넣기 자동인식 미리보기(paste-pick/reg/del-btn) 마우스오버 —
+   JS가 this.style.background='#hex'로 직접 지정하는 호버 색은 브라우저가
+   rgb()로 재직렬화해 기존 [style*="#hex"] 매칭을 벗어나므로 클래스로 별도 처리 ── */
+:is(body.dark,html.dark) .paste-pick-btn:hover{ background:rgba(196,181,253,.28) !important; }
+:is(body.dark,html.dark) .paste-reg-btn:hover{ background:rgba(134,239,172,.22) !important; }
+:is(body.dark,html.dark) .paste-del-btn:hover{ background:rgba(252,165,165,.22) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   darkfix25g: 스트리머탭 파스텔 디자인 스킨(오로라/블러시/큐트/페이퍼/모노)
+   다크모드 미대응 잔존분 — 다른 스킨(글래스/비비드/옵시디언)은 다크 전용
+   규칙이 있는데 이 5개 스킨은 히어로/칩/테이블/KPI가 항상 밝은 배경으로
+   고정되어 다크모드에서 스킨만 하얗게 붕 뜨던 문제
+   ═══════════════════════════════════════════════════════════════════════ */
+body.dark .streamer-shell[data-st-mode="aurora"] .streamer-hero{background:linear-gradient(135deg,#0c4a56,#3b2f7a,#7a2f52);border-color:rgba(255,255,255,.14)}
+body.dark .streamer-shell[data-st-mode="aurora"] .streamer-hero-kicker,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-hero-title,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-hero-desc{color:#f1f5f9}
+body.dark .streamer-shell[data-st-mode="aurora"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-content-card,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-focus-sidebar,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-focus-main{background:linear-gradient(180deg,#1a1330,#150f26);border-color:rgba(167,139,250,.24)}
+body.dark .streamer-shell[data-st-mode="aurora"] .streamer-search,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-summary-chip,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-elo-chip,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-act-chip,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-subgrp-chip,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-table thead th,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-table tbody td,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-kpi-card,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-quickstat,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-focus-stat,body.dark .streamer-shell[data-st-mode="aurora"] .streamer-focus-note{background:linear-gradient(180deg,#1e1738,#17122b);border-color:rgba(167,139,250,.2);color:#e2e8f0}
+body.dark .streamer-shell[data-st-mode="aurora"] .streamer-name-link{color:#c4b5fd}
+
+body.dark .streamer-shell[data-st-mode="blush"] .streamer-hero{background:linear-gradient(135deg,#2a1116,#3a1620,#2e1a0c);border-color:rgba(251,113,133,.22)}
+body.dark .streamer-shell[data-st-mode="blush"] .streamer-hero-title{color:#fecdd3}
+body.dark .streamer-shell[data-st-mode="blush"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="blush"] .streamer-content-card,body.dark .streamer-shell[data-st-mode="blush"] .streamer-focus-sidebar,body.dark .streamer-shell[data-st-mode="blush"] .streamer-focus-main{background:linear-gradient(180deg,#22141a,#1b1014);border-color:rgba(251,113,133,.2)}
+body.dark .streamer-shell[data-st-mode="blush"] .streamer-search,body.dark .streamer-shell[data-st-mode="blush"] .streamer-summary-chip,body.dark .streamer-shell[data-st-mode="blush"] .streamer-elo-chip,body.dark .streamer-shell[data-st-mode="blush"] .streamer-act-chip,body.dark .streamer-shell[data-st-mode="blush"] .streamer-subgrp-chip,body.dark .streamer-shell[data-st-mode="blush"] .streamer-table thead th,body.dark .streamer-shell[data-st-mode="blush"] .streamer-table tbody td,body.dark .streamer-shell[data-st-mode="blush"] .streamer-kpi-card,body.dark .streamer-shell[data-st-mode="blush"] .streamer-quickstat,body.dark .streamer-shell[data-st-mode="blush"] .streamer-focus-stat,body.dark .streamer-shell[data-st-mode="blush"] .streamer-focus-note{background:linear-gradient(180deg,#241419,#1c1013);border-color:rgba(251,113,133,.18);color:#e2e8f0}
+body.dark .streamer-shell[data-st-mode="blush"] .streamer-name-link{color:#fda4af}
+
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-hero{background:linear-gradient(135deg,#2a1030,#0f2b28,#332a0d);border-color:rgba(244,114,182,.24)}
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-hero-kicker,body.dark .streamer-shell[data-st-mode="cute"] .streamer-hero-title{color:#fbcfe8}
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-hero-desc{color:#f5d0e8}
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-hero-badge{background:rgba(244,114,182,.16);border-color:rgba(244,114,182,.3);color:#fbcfe8}
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-search,body.dark .streamer-shell[data-st-mode="cute"] .streamer-summary-chip,body.dark .streamer-shell[data-st-mode="cute"] .streamer-elo-chip,body.dark .streamer-shell[data-st-mode="cute"] .streamer-act-chip,body.dark .streamer-shell[data-st-mode="cute"] .streamer-subgrp-chip,body.dark .streamer-shell[data-st-mode="cute"] .streamer-table thead th,body.dark .streamer-shell[data-st-mode="cute"] .streamer-table tbody td,body.dark .streamer-shell[data-st-mode="cute"] .streamer-kpi-card,body.dark .streamer-shell[data-st-mode="cute"] .streamer-quickstat,body.dark .streamer-shell[data-st-mode="cute"] .streamer-focus-stat,body.dark .streamer-shell[data-st-mode="cute"] .streamer-focus-note{background:linear-gradient(180deg,#241026,#1c0f20);border-color:rgba(244,114,182,.18);color:#e2e8f0}
+body.dark .streamer-shell[data-st-mode="cute"] .streamer-name-link{color:#f9a8d4}
+
+body.dark .streamer-shell[data-st-mode="paper"] .streamer-hero{background:linear-gradient(135deg,#2a2118,#231b12,#1d160e);border-color:rgba(180,130,50,.24)}
+body.dark .streamer-shell[data-st-mode="paper"] .streamer-hero-title{color:#f2e9d8}
+body.dark .streamer-shell[data-st-mode="paper"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="paper"] .streamer-content-card,body.dark .streamer-shell[data-st-mode="paper"] .streamer-focus-sidebar,body.dark .streamer-shell[data-st-mode="paper"] .streamer-focus-main{background:linear-gradient(180deg,#231c14,#1c160f);border-color:rgba(180,130,50,.2)}
+body.dark .streamer-shell[data-st-mode="paper"] .streamer-search,body.dark .streamer-shell[data-st-mode="paper"] .streamer-summary-chip,body.dark .streamer-shell[data-st-mode="paper"] .streamer-elo-chip,body.dark .streamer-shell[data-st-mode="paper"] .streamer-act-chip,body.dark .streamer-shell[data-st-mode="paper"] .streamer-subgrp-chip,body.dark .streamer-shell[data-st-mode="paper"] .streamer-table thead th,body.dark .streamer-shell[data-st-mode="paper"] .streamer-table tbody td,body.dark .streamer-shell[data-st-mode="paper"] .streamer-kpi-card,body.dark .streamer-shell[data-st-mode="paper"] .streamer-quickstat,body.dark .streamer-shell[data-st-mode="paper"] .streamer-focus-stat,body.dark .streamer-shell[data-st-mode="paper"] .streamer-focus-note{background:linear-gradient(180deg,#251e15,#1e1811);border-color:rgba(180,130,50,.18);color:#e8dfc8}
+body.dark .streamer-shell[data-st-mode="paper"] .streamer-name-link{color:#d6a86a}
+
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-hero{background:linear-gradient(135deg,#1a1a1a,#111214);border-color:rgba(226,232,240,.14)}
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-hero-title{color:#f1f5f9}
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-toolbar-card .pill.on{background:#e2e8f0;border-color:#e2e8f0;color:#0f172a}
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="mono"] .streamer-content-card,body.dark .streamer-shell[data-st-mode="mono"] .streamer-focus-sidebar,body.dark .streamer-shell[data-st-mode="mono"] .streamer-focus-main{background:linear-gradient(180deg,#191a1c,#131415);border-color:rgba(226,232,240,.12)}
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-search,body.dark .streamer-shell[data-st-mode="mono"] .streamer-summary-chip,body.dark .streamer-shell[data-st-mode="mono"] .streamer-elo-chip,body.dark .streamer-shell[data-st-mode="mono"] .streamer-act-chip,body.dark .streamer-shell[data-st-mode="mono"] .streamer-subgrp-chip,body.dark .streamer-shell[data-st-mode="mono"] .streamer-table thead th,body.dark .streamer-shell[data-st-mode="mono"] .streamer-table tbody td,body.dark .streamer-shell[data-st-mode="mono"] .streamer-kpi-card,body.dark .streamer-shell[data-st-mode="mono"] .streamer-quickstat,body.dark .streamer-shell[data-st-mode="mono"] .streamer-focus-stat,body.dark .streamer-shell[data-st-mode="mono"] .streamer-focus-note{background:linear-gradient(180deg,#1c1d1f,#151617);border-color:rgba(226,232,240,.1);color:#e2e8f0}
+body.dark .streamer-shell[data-st-mode="mono"] .streamer-name-link{color:#e2e8f0}

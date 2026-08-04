@@ -157,7 +157,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
     <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
-    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('')}
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:${_isDark?'#1e293b':'#fff'}" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:var(--fs-caption);color:${_isDark?'#cbd5e1':'#334155'};white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
   const _wmSpec = (() => {
@@ -205,7 +205,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
-  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('');
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:${_isDark?'#1e293b':'#fff'}" onerror="this.style.display='none'">`).join('');
   const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:14px 16px 16px;background:${_hasBgImg?(_isDark?'linear-gradient(180deg,rgba(15,23,42,.4),rgba(15,23,42,.28))':'linear-gradient(180deg,rgba(255,255,255,.28),rgba(248,250,252,.14))'):(_isDark?'linear-gradient(180deg,rgba(15,23,42,.7),rgba(15,23,42,.6))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.86))')};border-top:1px solid ${_isDark?'rgba(148,163,184,.2)':'rgba(148,163,184,.16)'}">
     <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_bimgHtmls||_bnote)?'10px':'0'}">하단 메모</div>
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${_bnote?'8px':'0'}">${_bimgHtmls}</div>`:''}
