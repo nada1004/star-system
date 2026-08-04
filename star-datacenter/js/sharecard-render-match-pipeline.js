@@ -49,7 +49,7 @@
     const matchTypeLabel = ['ind','gj','progj'].includes(String(m&&m._matchType||'')) ? '일반' : variant.hero.replace(/^[^\s]+\s*/,'');
     const summaryCards = [
       {label:'매치 타입', value:matchTypeLabel, tone:winnerColor},
-      {label:'승부 결과', value:draw?'무승부':winnerTeam||'결과 대기', tone:draw?'#64748b':winnerColor},
+      {label:'승부 결과', value:draw?'무승부':winnerTeam||'결과 대기', tone:draw?'#64748b':winnerColor, toneDark:draw?'#94a3b8':winnerColor},
       {label:'세트/경기', value:`${(m.sets||[]).length||1}세트 · ${(Array.isArray(m.sets)?m.sets.reduce((n,s)=>n+((s&&s.games)||[]).filter(g=>g.playerA||g.playerB).length,0):0)||1}경기`, tone:theme.accentDark}
     ];
     const summaryHTML = (typeof window._buildShareMatchSummaryHTML==='function')

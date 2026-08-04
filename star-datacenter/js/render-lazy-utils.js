@@ -114,7 +114,7 @@ async function _ensureRouletteLoaded(){
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
@@ -135,10 +135,10 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
-  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260804-darkfix23');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-core-cache-utils.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-core-render.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
@@ -174,7 +174,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260729-sclay1');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260725-redesign01');
@@ -182,10 +182,10 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
-  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260804-darkfix23');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-core-cache-utils.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-core-render.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));

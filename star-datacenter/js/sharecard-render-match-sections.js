@@ -70,11 +70,13 @@
     const entries=Object.entries(tally).filter(([,s])=>s.w+s.l>0);
     if(!entries.length) return '';
     entries.sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l)||b[1].w-a[1].w);
+    const isDarkCard = !!(theme && theme.isDarkCard);
+    const chipBg = (theme && theme.surfaceBg) || 'rgba(255,255,255,.9)';
     const chips=entries.map(([name,s])=>{
       const photo=getPlayerPhotoHTML?`<span style="display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(name,'18px','flex-shrink:0')}</span>`:'';
-      return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid ${theme.divider};font-size:11px;font-weight:800;white-space:nowrap">
+      return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:${chipBg};border:1px solid ${theme.divider};font-size:11px;font-weight:800;white-space:nowrap">
         ${photo}<span style="color:${theme.text}">${name}</span>
-        <span style="color:#16a34a">${s.w}승</span><span style="color:${theme.textDim}">·</span><span style="color:#dc2626">${s.l}패</span>
+        <span style="color:${isDarkCard?'#4ade80':'#16a34a'}">${s.w}승</span><span style="color:${theme.textDim}">·</span><span style="color:${isDarkCard?'#f87171':'#dc2626'}">${s.l}패</span>
       </span>`;
     }).join('');
     return `<div class="share-match-tally" style="margin-top:10px;padding-top:10px;border-top:1px dashed ${theme.divider}">
@@ -85,10 +87,14 @@
 
   function buildShareMatchSummaryHTML(args){
     const { variant, theme, winnerColor, summaryCards, setsHTML, teamMode } = args || {};
+    const isDarkCard = !!(theme && theme.isDarkCard);
+    const boxBg = (theme && theme.surfaceBg) || 'rgba(255,255,255,.88)';
+    const boxBorder = (theme && theme.surfaceBorder) || variant.setBorder;
+    const boxShadow = isDarkCard ? '0 8px 22px rgba(0,0,0,.32)' : '0 8px 22px rgba(15,23,42,.06)';
     return `<div class="share-match-summary-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:${setsHTML||teamMode?'12':'0'}px">
-      ${(summaryCards||[]).map(it=>`<div style="padding:10px 10px 9px;border-radius:14px;background:rgba(255,255,255,.88);border:1px solid ${variant.setBorder};box-shadow:0 8px 22px rgba(15,23,42,.06)">
+      ${(summaryCards||[]).map(it=>`<div style="padding:10px 10px 9px;border-radius:14px;background:${boxBg};border:1px solid ${boxBorder};box-shadow:${boxShadow}">
         <div style="font-size:9px;font-weight:800;color:${theme.textDim};letter-spacing:.3px;margin-bottom:4px">${it.label}</div>
-        <div class="share-match-summary-value" style="font-size:var(--fs-sm);font-weight:900;color:${it.tone||winnerColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.value}</div>
+        <div class="share-match-summary-value" style="font-size:var(--fs-sm);font-weight:900;color:${isDarkCard&&it.toneDark?it.toneDark:(it.tone||winnerColor)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.value}</div>
       </div>`).join('')}
     </div>`;
   }

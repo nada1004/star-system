@@ -73,6 +73,9 @@
   window._makeShareCardTheme = window._makeShareCardTheme || function(hex, opts){
     const color = hexNorm(hex||'#475569');
     const draw = !!(opts&&opts.draw);
+    // (darkfix23) 공유카드 자체 디자인 모드(다크/포스터/미드나잇)가 카드 배경을 어둡게 만드는데,
+    // theme.text/textDim 등은 항상 라이트 카드용 값이라 이름/맵 텍스트가 안 보이던 문제 → 모드별 다크 텍스트 세트 적용
+    const isDarkCard = !!(opts && ['dark','poster','midnight'].includes(opts.cardMode));
     function hexToHsl(raw){
       let h=String(raw||'').replace('#','');
       if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -91,19 +94,22 @@
       }
       return {h:Math.round(hue*360),s:Math.round(sat*100),l:Math.round(lit*100)};
     }
+    const _darkOverride = isDarkCard ? {bodyBg:'#0f172a', text:'#e8edf5', textDim:'rgba(226,232,240,.62)', divider:'rgba(148,163,184,.24)', isDarkCard:true, surfaceBg:'rgba(15,23,42,.62)', surfaceBorder:'rgba(255,255,255,.14)'} : {isDarkCard:false, surfaceBg:'rgba(255,255,255,.88)', surfaceBorder:null};
     if(draw){
       return {
         headerBg:'#334155', bodyBg:'#f8fafc',
-        accentHex:'#475569', accentDark:'#1e293b',
-        text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)'
+        accentHex:'#475569', accentDark: isDarkCard?'#e8edf5':'#1e293b',
+        text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)',
+        ..._darkOverride
       };
     }
     const hsl=hexToHsl(color);
     if(!hsl){
       return {
         headerBg:'#1e293b', bodyBg:'#f8fafc',
-        accentHex:color, accentDark:'#1e293b',
-        text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)'
+        accentHex:color, accentDark: isDarkCard?'#e8edf5':'#1e293b',
+        text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)',
+        ..._darkOverride
       };
     }
     const {h,s,l}=hsl;
@@ -112,7 +118,12 @@
     const accentDark=`hsl(${h},${Math.min(s+10,95)}%,${Math.max(l-15,15)}%)`;
     const divider=`hsla(${h},${Math.min(s*0.5,35)}%,${Math.max(l-20,30)}%,.18)`;
     const textDim=`hsla(${h},${Math.min(s*0.4,30)}%,${Math.max(l-45,12)}%,.6)`;
-    return {headerBg, bodyBg, accentHex:color, accentDark, text:`hsl(${h},${Math.min(s*0.6,45)}%,${Math.max(l-52,8)}%)`, textDim, divider};
+    return {
+      headerBg, bodyBg, accentHex:color,
+      accentDark: isDarkCard?'#e8edf5':accentDark,
+      text:`hsl(${h},${Math.min(s*0.6,45)}%,${Math.max(l-52,8)}%)`, textDim, divider,
+      ..._darkOverride
+    };
   };
 
   window._getShareCardVariantKey = window._getShareCardVariantKey || function(m){

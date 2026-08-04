@@ -146,7 +146,7 @@
     const cb=tc?tc.b:(isCivil?civColor:resolveSideColor(pb, teamMode?dispB:b, gc(teamMode?dispB:b)));
     const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
     const draw=!aWin&&!bWin;
-    const theme = makeTheme(aWin ? ca : bWin ? cb : '#475569', {draw});
+    const theme = makeTheme(aWin ? ca : bWin ? cb : '#475569', {draw, cardMode: scp.mode});
     const variantKey = getVariantKey(m);
     const winnerTeam=aWin?a:bWin?b:'';
     const winnerColor=aWin?ca:bWin?cb:'#475569';
