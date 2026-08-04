@@ -962,7 +962,7 @@ function rGrpEditInner(){
     const gl=GL[gi]||gi;const col=['var(--blue)','var(--red)','var(--green)','var(--gold)','var(--god)','#0891b2'][gi%6];
     const availU=isTier
       ?(players||[]).filter(p=>p.name&&!grp.univs.includes(p.name)).map(p=>p.name)
-      :getAllUnivs().map(u=>u.name).filter(n=>!grp.univs.includes(n));
+      :getAllUnivs().filter(u=>!u.dissolved).map(u=>u.name).filter(n=>!grp.univs.includes(n));
     const _badgeCol=(name)=>isTier?gc((players||[]).find(p=>p.name===name)?.univ||''):gc(name);
     h+=`<div style="background:${col}08;border:2px solid ${col}44;border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
