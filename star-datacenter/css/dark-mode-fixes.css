@@ -2723,3 +2723,52 @@
 :is(body.dark,html.dark) [style*="background:#e0e7ff"]:not(.share-card-host):not(.share-card-host *){ background:#2a2f5e !important; }
 :is(body.dark,html.dark) [style*="background:#fefce8"]:not(.share-card-host):not(.share-card-host *){ background:#4a3a1a !important; }
 :is(body.dark,html.dark) [style*="background:#ece7da"]:not(.share-card-host):not(.share-card-host *){ background:#3a352a !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   darkfix25b: 전체 탭/서브메뉴/모드/팝업/공유카드 재점검에서 발견된
+   미대응 잔존분 (개인 순위·프로리그·경기그룹 편집 화면 위주)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 순위/토너먼트 버튼 우클릭 컨텍스트 메뉴(#rank-context-menu, #tournament-context-menu) —
+   JS 인라인 스타일로 흰 배경+어두운 텍스트가 완전 고정되어 있어 다크모드에서
+   전혀 대응되지 않던 문제. (통계/순위 탭) ── */
+:is(body.dark,html.dark) #rank-context-menu,
+:is(body.dark,html.dark) #tournament-context-menu{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.45) !important;
+}
+:is(body.dark,html.dark) #rank-context-menu div,
+:is(body.dark,html.dark) #tournament-context-menu div{
+  color:var(--text1) !important;
+  background:transparent !important;
+}
+:is(body.dark,html.dark) #rank-context-menu div[style*="background:#f5f3ff"]{
+  background:rgba(124,58,237,.22) !important;
+}
+
+/* ── 대진표/조별리그 편집 화면의 "병합 선택" 체크박스 라벨 —
+   흰 배경이 다크 카드 위에 그대로 떠서 하얗게 튀던 문제.
+   (프로리그/티어대회 등 경기 편집 화면) ── */
+:is(body.dark,html.dark) label[style*="position:absolute"][style*="background:#fff"][style*="top:8px;left:8px"]{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+}
+
+/* ── 개인 순위 상세 확장 박스(.sr-box / .sr-det) — 흰 배경 하드코딩으로
+   다크모드에서 대응되지 않던 문제. (통계/순위 탭 선수 상세 확장) ── */
+:is(body.dark,html.dark) .sr-det td{
+  background:linear-gradient(175deg,#1a2436,#151f30) !important;
+}
+:is(body.dark,html.dark) .sr-box{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+:is(body.dark,html.dark) .sr-row:hover{
+  background:rgba(148,163,184,.10) !important;
+}
+:is(body.dark,html.dark) .sr-tag{
+  background:rgba(30,41,59,.85) !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
