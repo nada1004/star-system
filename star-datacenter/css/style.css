@@ -6871,7 +6871,10 @@ body.design-v2:not(.dark) .mobile-match-sheet-footer{
   opacity: 0; pointer-events: none; transform: translateY(10px);
   transition: opacity .2s, transform .2s;
 }
-.fab-sub-list.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+/* [FIX-FAB-1] 리스트 컨테이너 자체는 계속 pointer-events:none 유지.
+   버튼 사이 여백(gap)까지 클릭을 가로채서 근처 우측 UI가 안눌리던 문제 수정 —
+   실제 클릭 가능해야 하는 .fab-sub-item에만 개별적으로 pointer-events:auto 부여 */
+.fab-sub-list.open { opacity: 1; transform: translateY(0); }
 .fab-sub-item {
   display: flex; align-items: center; gap: 8px;
   background: var(--white, #fff); border: 1px solid var(--border, #e2e8f0);
@@ -6881,6 +6884,7 @@ body.design-v2:not(.dark) .mobile-match-sheet-footer{
   white-space: nowrap; color: var(--text, #1e293b);
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   transition: transform .1s, box-shadow .1s;
+  pointer-events: auto;
 }
 .fab-sub-item:active { transform: scale(.94); }
 .fab-sub-title{

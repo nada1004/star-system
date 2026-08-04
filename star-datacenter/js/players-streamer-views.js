@@ -955,7 +955,8 @@ function _buildSimpleView(rankMap){
     '.streamer-simple-medal.is-none .streamer-simple-medal-value{color:var(--gray-l)}',
     '@media (max-width:768px){.streamer-simple-row{gap:8px;padding:6px 8px}.streamer-simple-avatar{width:34px;height:34px}.streamer-simple-name-text{font-size:var(--fs-sm)}.streamer-simple-tier,.streamer-simple-record,.streamer-simple-race{font-size:9.5px;padding:2.5px 6px}.streamer-simple-medal{min-width:40px}.streamer-simple-medal-value{font-size:12.5px}.streamer-simple-medal-label{font-size:7px}}',
     'body.dark .streamer-simple-row{background:#0f172a;border-color:rgba(255,255,255,.08)}',
-    'body.dark .streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 10%, #0f172a)}'
+    'body.dark .streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 10%, #0f172a)}',
+    'body.dark .streamer-simple-avatar{background:color-mix(in srgb, var(--c,#6366f1) 26%, #0f172a)}'
   ].join('');
   document.head.appendChild(s);
 })();
