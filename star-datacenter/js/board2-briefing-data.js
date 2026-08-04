@@ -152,7 +152,8 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   // 브리핑 집계 제외 모드: 개인전 / 끝장전 / 프로리그 기록은 반영하지 않음
   const isBriefingExcluded = mode => {
     const m = String(mode||'').trim();
-    return m.indexOf('프로리그') !== -1 || m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1;
+    return m.indexOf('프로리그') !== -1 || m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1
+      || m.indexOf('시빌워') !== -1 || m.indexOf('내전') !== -1;
   };
 
   // ── 외부 소스에서 플레이어별 경기 목록 구성 ──────────────────
@@ -239,6 +240,8 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   const _scanTeamMatches = (arr, modeLabel) => {
     try { (Array.isArray(arr)?arr:[]).forEach(m=>{
       if (!m || !m.d) return;
+      // 시빌워(내전)는 브리핑 MVP/집계에서 제외 (miniM 배열을 미니대전과 공유)
+      if (String(m.type||'') === 'civil') return;
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
           if (!g || !g.winner) return;
