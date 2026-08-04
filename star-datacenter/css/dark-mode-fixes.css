@@ -1807,8 +1807,28 @@
 :is(body.dark,html.dark) .tier-podium-bg,
 :is(body.dark,html.dark) .tier-podium-rest-photo,
 :is(body.dark,html.dark) .tier-group-photo,
-:is(body.dark,html.dark) .tier-mag-photo {
-  filter: brightness(.8) saturate(.92) !important;
+:is(body.dark,html.dark) .tier-mag-photo,
+/* [darkfix22-2] 스트리머탭/현황판탭에서 놓쳤던 프로필 사진 컨테이너들
+   (라인업 기본형/통계카드형 카드, 현황판 기본 태그 모드, 대학별 포스터/글래스/프레임/랭크/히트 모드,
+   라이브탭 아바타 버튼) — 클래스가 아예 없거나(=img 태그에 별도 class 없음) 톤다운 목록에서
+   빠져있어서 다크모드에서도 원본 밝기 그대로 표시되던 부분들 */
+:is(body.dark,html.dark) .b2-players-card img,
+:is(body.dark,html.dark) .b2-players-main-image,
+:is(body.dark,html.dark) .b2-lc3-photo img,
+:is(body.dark,html.dark) .b2-lineup-card-photo,
+:is(body.dark,html.dark) .b2-def-tag-item img,
+:is(body.dark,html.dark) .b2-univ-poster-card img,
+:is(body.dark,html.dark) .b2-univ-glass-card img,
+:is(body.dark,html.dark) .b2-univ-frame-card img,
+:is(body.dark,html.dark) .b2-univ-rank-row img,
+:is(body.dark,html.dark) .b2-univ-heat-card img,
+:is(body.dark,html.dark) .b2-live-avatar-btn img,
+:is(body.dark,html.dark) .b2rt-av img,
+:is(body.dark,html.dark) .b2rt-card img {
+  /* [darkfix22-2] 기존 brightness(.8) saturate(.92)는 "살짝"만 어두워져서
+     실제 업로드 사진(밝은 조명)이 다크 UI 사이에서 여전히 튀어보인다는 피드백 반영 —
+     체감상 확실히 어두워지도록 값 강화 */
+  filter: brightness(.68) saturate(.82) !important;
 }
 
 /* =========================================================================
@@ -2494,4 +2514,62 @@
   background:#1e293b !important;
   color:#e2e8f0 !important;
   border-color:rgba(148,163,184,.22) !important;
+}
+
+/* ===== darkfix21: 남아있던 밝은 요소 정리 ===== */
+/* 프로필 이미지 흰 배경/흰 테두리 제거 */
+:is(body.dark,html.dark) img.pph-avatar-img,
+:is(body.dark,html.dark) .ph-swap > img,
+:is(body.dark,html.dark) .modal img[onclick*="openPlayerModal"],
+:is(body.dark,html.dark) img[onclick*="openPlayerModal"]{
+  background:rgba(148,163,184,.10) !important;
+  border-color:rgba(148,163,184,.28) !important;
+}
+:is(body.dark,html.dark) span[onclick*="openPlayerModal"]{
+  border-color:rgba(148,163,184,.28) !important;
+}
+/* 대학 로고/이미지 흰 배경 */
+:is(body.dark,html.dark) .modal img[src],
+:is(body.dark,html.dark) .card img[src]{
+  background-color:transparent;
+}
+
+/* 현황판 대학별 좌측 직책/티어 라벨 */
+:is(body.dark,html.dark) .b2-univ-row-label,
+:is(body.dark,html.dark) .b2-univ-row-label *{
+  color:#e2e8f0 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.55);
+}
+/* 스트리머 탭 소그룹 칩 */
+:is(body.dark,html.dark) .streamer-subgrp-chip,
+:is(body.dark,html.dark) .streamer-subgrp-chip *{
+  color:#e2e8f0 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+}
+:is(body.dark,html.dark) .clickable-univ.streamer-univ-badge{
+  border-color:rgba(148,163,184,.28) !important;
+}
+
+/* 대전기록 날짜 헤더 */
+:is(body.dark,html.dark) .rec-date-header,
+:is(body.dark,html.dark) .rec-date-header *{
+  color:#93c5fd !important;
+}
+/* 참가 인원 버튼 / 더보기 버튼 */
+:is(body.dark,html.dark) .rc-mem-btn,
+:is(body.dark,html.dark) .rc-mem-btn *,
+:is(body.dark,html.dark) .rec-morebtn,
+:is(body.dark,html.dark) .rec-morebtn *{
+  color:#e2e8f0 !important;
+}
+:is(body.dark,html.dark) .rc-mem-btn,
+:is(body.dark,html.dark) .rec-morebtn,
+:is(body.dark,html.dark) .btn.btn-w{
+  background:#1e293b !important;
+  border-color:rgba(148,163,184,.26) !important;
+}
+
+/* 대학 상세 팝업 히어로 카드 */
+:is(body.dark,html.dark) .ud-hero-quickcard{
+  border-color:rgba(148,163,184,.30) !important;
 }
