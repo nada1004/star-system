@@ -1,5 +1,5 @@
 /* =========================================================================
-   dark-mode-fixes.css  (v20260804-darkfix20)
+   dark-mode-fixes.css  (v20260804-darkfix25)
    목적: 다크모드에서 밝게 남아있던 영역 일괄 보정
         - 브리핑 탭(히어로/모드카드/헤더/저장바)
         - 경기 상세 팝업(#histDetModal / #compMatchDetailModal / .modal--matchdetail)
@@ -2572,4 +2572,140 @@
 /* 대학 상세 팝업 히어로 카드 */
 :is(body.dark,html.dark) .ud-hero-quickcard{
   border-color:rgba(148,163,184,.30) !important;
+}
+
+/* ── N. darkfix24: 전체 탭/서브메뉴/모드/팝업/공유카드 하드코딩 라이트 색상 일괄 보정
+   (js 렌더러 전역에서 style="background:#xxxxxx" / "color:#xxxxxx" 형태로
+   하드코딩된 라이트 팔레트를 자동 추출 후 색상별로 다크 등가색 매핑) ── */
+:is(body.dark,html.dark) [style*="background:#fdfcf9"]{ background:#473d1f !important; }
+:is(body.dark,html.dark) [style*="background:#fbf6e9"]{ background:#4a3d1c !important; }
+:is(body.dark,html.dark) [style*="background:#ffffff"]{ background:#24282e !important; }
+:is(body.dark,html.dark) [style*="background:#faf6e9"]{ background:#4a3f1c !important; }
+:is(body.dark,html.dark) [style*="background:#fbf8f2"]{ background:#493a1d !important; }
+:is(body.dark,html.dark) [style*="background:#f5faf6"]{ background:#25412b !important; }
+:is(body.dark,html.dark) [style*="background:#eaf7ee"]{ background:#21452c !important; }
+:is(body.dark,html.dark) [style*="background:#ece0c8"]{ background:#473a1f !important; }
+:is(body.dark,html.dark) [style*="background:#fff8f3"]{ background:#4a2f1c !important; }
+:is(body.dark,html.dark) [style*="background:#f6fbf7"]{ background:#23432a !important; }
+:is(body.dark,html.dark) [style*="background:#f0f2f5"]{ background:#2b313b !important; }
+:is(body.dark,html.dark) [style*="background:#fff1e6"]{ background:#4a301c !important; }
+:is(body.dark,html.dark) [style*="background:#e7f7ee"]{ background:#1f4730 !important; }
+:is(body.dark,html.dark) [style*="background:#f7fdff"]{ background:#1c3e4a !important; }
+:is(body.dark,html.dark) [style*="background:#f2e9d8"]{ background:#47391f !important; }
+:is(body.dark,html.dark) [style*="background:#fff9d6"]{ background:#4a431c !important; }
+:is(body.dark,html.dark) [style*="background:#fdfbf5"]{ background:#4a3e1c !important; }
+:is(body.dark,html.dark) [style*="background:#f8f9ff"]{ background:#1c234a !important; }
+:is(body.dark,html.dark) [style*="background:#f5f4ff"]{ background:#201c4a !important; }
+:is(body.dark,html.dark) [style*="background:#fdfcfa"]{ background:#443922 !important; }
+:is(body.dark,html.dark) [style*="background:#faf9f6"]{ background:#3f3927 !important; }
+:is(body.dark,html.dark) [style*="background:#dbe9ff"]{ background:#1c2e4a !important; }
+:is(body.dark,html.dark) [style*="background:#ecdcff"]{ background:#311c4a !important; }
+:is(body.dark,html.dark) [style*="background:#fbe6b0"]{ background:#4a3d1c !important; }
+:is(body.dark,html.dark) [style*="background:#e5e9ef"]{ background:#29313d !important; }
+:is(body.dark,html.dark) [style*="background:#f8faff"]{ background:#1c294a !important; }
+:is(body.dark,html.dark) [style*="background:#dde2eb"]{ background:#28303e !important; }
+:is(body.dark,html.dark) [style*="background:#cffafe"]{ background:#1c464a !important; }
+:is(body.dark,html.dark) [style*="background:#f5f2ea"]{ background:#413a25 !important; }
+:is(body.dark,html.dark) [style*="background:#e3f5e8"]{ background:#20462a !important; }
+:is(body.dark,html.dark) [style*="background:#fff066"]{ background:#4a451c !important; }
+:is(body.dark,html.dark) [style*="background:#fff7f8"]{ background:#4a1c22 !important; }
+:is(body.dark,html.dark) [style*="background:#f7f5ff"]{ background:#251c4a !important; }
+:is(body.dark,html.dark) [style*="background:#fffaf0"]{ background:#4a3b1c !important; }
+:is(body.dark,html.dark) [style*="background:#eee3c8"]{ background:#493c1d !important; }
+:is(body.dark,html.dark) [style*="background:#eafbf0"]{ background:#1c4a2c !important; }
+:is(body.dark,html.dark) [style*="background:#fef1f1"]{ background:#4a1c1c !important; }
+:is(body.dark,html.dark) [style*="background:#d1d5db"]{ background:#2e3238 !important; }
+:is(body.dark,html.dark) [style*="background:#fffff8"]{ background:#4a4a1c !important; }
+:is(body.dark,html.dark) [style*="background:#ffffeb"]{ background:#4a4a1c !important; }
+:is(body.dark,html.dark) [style*="background:#fff1f1"]{ background:#4a1c1c !important; }
+:is(body.dark,html.dark) [style*="background:#f1f1f1"]{ background:#24282e !important; }
+:is(body.dark,html.dark) [style*="background:#a7f3d0"]{ background:#1c4a35 !important; }
+:is(body.dark,html.dark) [style*="background:#fde047"]{ background:#4a431c !important; }
+:is(body.dark,html.dark) [style*="background:#a5f3fc"]{ background:#1c454a !important; }
+:is(body.dark,html.dark) [style*="color:#b91c1c"]{ color:#e6a8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#111827"]{ color:#b1bfdd !important; }
+:is(body.dark,html.dark) [style*="color:#1a1a1a"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#c2410c"]{ color:#e6baa8 !important; }
+:is(body.dark,html.dark) [style*="color:#1e3a8a"]{ color:#a8b8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#312e81"]{ color:#aeace2 !important; }
+:is(body.dark,html.dark) [style*="color:#4b3621"]{ color:#ddc7b1 !important; }
+:is(body.dark,html.dark) [style*="color:#4c1d95"]{ color:#c0a8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#7f1d1d"]{ color:#e6a8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#000"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#065f46"]{ color:#a8e6d4 !important; }
+:is(body.dark,html.dark) [style*="color:#1e1b4b"]{ color:#b0ade1 !important; }
+:is(body.dark,html.dark) [style*="color:#5c4813"]{ color:#e6d5a8 !important; }
+:is(body.dark,html.dark) [style*="color:#c0274a"]{ color:#e6a8b6 !important; }
+:is(body.dark,html.dark) [style*="color:#1f2937"]{ color:#b6c4d8 !important; }
+:is(body.dark,html.dark) [style*="color:#db2777"]{ color:#e6a8c3 !important; }
+:is(body.dark,html.dark) [style*="color:#7c2d12"]{ color:#e6b8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#1c1917"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#111"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#4f46e5"]{ color:#aca8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#431407"]{ color:#e6b5a8 !important; }
+:is(body.dark,html.dark) [style*="color:#9f1239"]{ color:#e6a8b9 !important; }
+:is(body.dark,html.dark) [style*="color:#292524"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#9f1d1d"]{ color:#e6a8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#be185d"]{ color:#e6a8c2 !important; }
+:is(body.dark,html.dark) [style*="color:#6b4f2a"]{ color:#dfcaae !important; }
+:is(body.dark,html.dark) [style*="color:#831843"]{ color:#e6a8c1 !important; }
+:is(body.dark,html.dark) [style*="color:#333"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#1a202c"]{ color:#b6c1d8 !important; }
+:is(body.dark,html.dark) [style*="color:#0b0f1a"]{ color:#b0bcde !important; }
+:is(body.dark,html.dark) [style*="color:#18181b"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#52525b"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#9d174d"]{ color:#e6a8c1 !important; }
+:is(body.dark,html.dark) [style*="color:#7f1414"]{ color:#e6a8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#222"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#451a03"]{ color:#e6bea8 !important; }
+:is(body.dark,html.dark) [style*="color:#9c27b0"]{ color:#dda8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#4c47a8"]{ color:#b2b0de !important; }
+:is(body.dark,html.dark) [style*="color:#86198f"]{ color:#e1a8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#3a2a0a"]{ color:#e6d1a8 !important; }
+:is(body.dark,html.dark) [style*="color:#1c1305"]{ color:#e6cea8 !important; }
+:is(body.dark,html.dark) [style*="color:#d32f2f"]{ color:#e6a8a8 !important; }
+:is(body.dark,html.dark) [style*="color:#be123c"]{ color:#e6a8b7 !important; }
+:is(body.dark,html.dark) [style*="color:#1e1e1e"]{ color:#e2e8f0 !important; }
+:is(body.dark,html.dark) [style*="color:#1a3a8a"]{ color:#a8bae6 !important; }
+:is(body.dark,html.dark) [style*="color:#1e1b0e"]{ color:#dbd4b3 !important; }
+:is(body.dark,html.dark) [style*="color:#854d0e"]{ color:#e6c9a8 !important; }
+:is(body.dark,html.dark) [style*="color:#7e22ce"]{ color:#c9a8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#a21caf"]{ color:#e0a8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#3b5a8f"]{ color:#b0c1de !important; }
+:is(body.dark,html.dark) [style*="color:#581c87"]{ color:#cba8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#701a75"]{ color:#e2a8e6 !important; }
+:is(body.dark,html.dark) [style*="color:#022c11"]{ color:#a8e6be !important; }
+:is(body.dark,html.dark) [style*="color:#44403c"]{ color:#e2e8f0 !important; }
+
+/* ── darkfix24-2: 미니게임/룰렛 팝업 등에서 반복되는 라이트 그라디언트 배경 보정 ── */
+:is(body.dark,html.dark) [style*="background:linear-gradient(180deg,#fff,#f8fafc)"],
+:is(body.dark,html.dark) [style*="background:linear-gradient(180deg,#ffffff,#f8fafc)"],
+:is(body.dark,html.dark) [style*="background:linear-gradient(180deg,#fff,#f8fbff)"]{
+  background:linear-gradient(180deg,#1e293b,#162032) !important;
+}
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,#FFF0F3,#FFF8FA)"],
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,#fff1f2,#fff7fb)"]{
+  background:linear-gradient(135deg,#3a2530,#2a1f2a) !important;
+}
+:is(body.dark,html.dark) [style*="background:linear-gradient(180deg,#f8fafc,#f1f5f9)"]{
+  background:linear-gradient(180deg,#1e293b,#162032) !important;
+}
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,#fef3c7,#fde68a)"]{
+  background:linear-gradient(135deg,#4a3a1f,#3d2f18) !important;
+}
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,#fee2e2,#fecaca)"]{
+  background:linear-gradient(135deg,#4a2020,#3d1a1a) !important;
+}
+:is(body.dark,html.dark) [style*="background:linear-gradient(135deg,#fde68a,#fbbf24)"]{
+  background:linear-gradient(135deg,#4a3a1f,#7a5a1f) !important;
+}
+
+/* ── darkfix24-3: 최상위 탭(.tab) 기본 상태(비활성/비호버) 배경이
+   라이트 rgba(255,255,255,.72)로 남아있던 문제 보정 ── */
+:is(body.dark,html.dark) .tab{
+  background:rgba(30,41,59,.78) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+:is(body.dark,html.dark) .subtab-btn{
+  background:rgba(30,41,59,.78) !important;
 }

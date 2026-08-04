@@ -8940,7 +8940,7 @@ let totalRaceFilter="\uC804\uCCB4",totalSearch="",totalHideNoRecord=!1,totalGend
       <div class="streamer-univ-banner" style="background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;">
         <div class="streamer-univ-meta">
           ${_hdrTextPos==="left"?_textHtml:""}
-          <span class="clickable-univ streamer-univ-badge" onclick="openUnivModal('${escJS(u.name)}')" style="background:${u.color}">${gUI(u.name,typeof getUnivLogoSizeStr=="function"?getUnivLogoSizeStr(u.name,"players","26px"):"26px")}${u.name}</span>
+          <span class="clickable-univ streamer-univ-badge" onclick="openUnivModal('${escJS(u.name)}')" style="background:${u.color}">${gUI(u.name,typeof getUnivLogoSizeStr=="function"?getUnivLogoSizeStr(u.name,"players","26px"):"26px")}<span style="color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.55)">${u.name}</span></span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">\u{1F3DA}\uFE0F \uD574\uCCB4${u.dissolvedDate?" "+u.dissolvedDate:""}</span>`:""}
           ${_isHiddenUniv?'<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">\u{1F6AB} \uBC29\uBB38\uC790 \uC228\uAE40</span>':""}
         </div>
