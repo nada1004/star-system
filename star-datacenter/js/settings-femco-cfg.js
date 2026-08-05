@@ -101,6 +101,93 @@ window.cfgRunSettingsSelfCheck = function(){
     if(out) out.innerHTML = `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
   }
 };
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 메뉴별(아코디언 단위) 기능 작동 점검
+// - 각 [data-cfg-sec] 메뉴(설정탭 안의 개별 항목들) 안에서 쓰이는
+//   onclick/onchange/oninput 핸들러 함수가 실제로 존재하는지 확인
+// - 결과를 메뉴 제목(summary) 옆에 점(●)으로 표시: 파란색=정상, 빨간색=오류
+// - 실데이터를 건드리지 않는 존재여부 점검(=클릭/변경 없이 판정)
+// ─────────────────────────────────────────────────────────────
+window.cfgRunMenuFuncCheck = function(){
+  const out = document.getElementById('cfg-selfcheck-out');
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:var(--fs-sm)">메뉴별 점검 중...</div>';
+  try{
+    const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
+    const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+    const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
+    const results = [];
+
+    secs.forEach(sec=>{
+      const id = sec.getAttribute('data-cfg-sec') || '';
+      const summary = sec.querySelector(':scope > summary.cfg-sec-summary');
+      const titleEl = summary ? summary.querySelector('h4') : null;
+      const title = (titleEl ? titleEl.textContent : id).trim() || id;
+
+      const html = sec.outerHTML;
+      const found = new Set();
+      let m; re.lastIndex = 0;
+      while((m = re.exec(html))){
+        const fn = m[1];
+        if(!JS_KEYWORDS.has(fn)) found.add(fn);
+      }
+      const okList = Array.from(found).filter(fn => typeof window[fn] === 'function').sort();
+      const missing = Array.from(found).filter(fn => typeof window[fn] !== 'function').sort();
+      const hasHandlers = found.size > 0;
+      const pass = hasHandlers ? (missing.length === 0) : null; // null = 점검 대상 없음(핸들러 미사용 메뉴)
+      results.push({id, title, okList, missing, pass});
+
+      // 메뉴 제목 옆 점(뱃지) 표시/갱신
+      if(summary){
+        let badge = summary.querySelector('.cfg-func-badge');
+        if(!badge){
+          badge = document.createElement('span');
+          badge.className = 'cfg-func-badge';
+          badge.style.cssText = 'display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;flex-shrink:0;vertical-align:middle;';
+          if(titleEl) titleEl.insertBefore(badge, titleEl.firstChild);
+          else summary.appendChild(badge);
+        }
+        if(pass === null){
+          badge.style.background = 'var(--border2, #cbd5e1)';
+          badge.title = '점검 대상 함수 없음';
+        }else if(pass){
+          badge.style.background = '#2563eb';
+          badge.title = `정상 (함수 ${okList.length}개 확인됨)`;
+        }else{
+          badge.style.background = '#dc2626';
+          badge.title = `오류 ${missing.length}개: ${missing.join(', ')}`;
+        }
+      }
+    });
+
+    const checked = results.filter(r => r.pass !== null);
+    const passN = checked.filter(r => r.pass).length;
+    const failN = checked.filter(r => !r.pass).length;
+
+    if(out){
+      out.innerHTML = `
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <div style="font-size:var(--fs-sm);font-weight:1000;color:${failN ? '#dc2626' : '#2563eb'}">메뉴별 점검: 🔵 정상 ${passN}개 / 🔴 오류 ${failN}개 (총 ${checked.length}개 메뉴)</div>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 각 메뉴 제목 왼쪽 점(●) 색상도 함께 갱신됩니다 — 파란색=정상, 빨간색=오류, 회색=점검대상 없음</span>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
+          ${checked.map(r => `
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border)">
+              <span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${r.pass ? '#2563eb' : '#dc2626'}"></span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${esc(r.title)}</div>
+                ${r.missing.length ? `<div style="font-size:var(--fs-caption);color:#dc2626;font-family:ui-monospace,monospace;white-space:pre-wrap">누락된 함수: ${r.missing.map(esc).join(', ')}</div>` : ''}
+                <div style="font-size:var(--fs-caption);color:var(--gray-l)">확인된 함수 ${r.okList.length}개${r.missing.length ? ` · 누락 ${r.missing.length}개` : ''}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+  }catch(e){
+    if(out) out.innerHTML = `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000">점검 실패: ${String(e)}</div>`;
+  }
+};
+
 function _cfgMenuSave(v){
   try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
 }

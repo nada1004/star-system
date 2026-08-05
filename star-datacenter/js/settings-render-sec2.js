@@ -141,7 +141,8 @@ function _cfgSecGroup2(ctx){
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b btn-sm" onclick="cfgRunSettingsSelfCheck()">🔎 설정 핸들러 점검</button>
       <button class="btn btn-g btn-sm" onclick="cfgRunFullQaDryRun()">🧪 전체 QA(드라이런) 점검</button>
-      <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 실제 데이터는 건드리지 않고, 임시 더미 데이터로 동작만 확인합니다.</span>
+      <button class="btn btn-b btn-sm" onclick="cfgRunMenuFuncCheck()">🔵🔴 메뉴별 작동 점검</button>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 실제 데이터는 건드리지 않고, 임시 더미 데이터로 동작만 확인합니다. 메뉴별 점검은 각 메뉴 제목 옆에 파란색(정상)/빨간색(오류) 점으로도 표시됩니다.</span>
     </div>
     <div id="cfg-selfcheck-out" style="margin-top:10px"></div>
   </details>

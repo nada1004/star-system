@@ -100,7 +100,15 @@ window.addEventListener('error', (event)=>{
     const msg = (event && event.message) ? String(event.message) : '';
     // "Script error."는 cross-origin 스크립트의 CORS 보안 메시지 — 실제 오류 내용이 없으므로 무시
     if(!msg || msg === 'Script error.' || msg === 'Script error') return;
-    const message = `오류가 발생했습니다: ${msg}`;
+    // 파일명/줄/열 정보를 함께 표시 — 어디서 난 오류인지 바로 알 수 있도록
+    let loc = '';
+    try{
+      const fname = event && event.filename ? String(event.filename).split('/').pop() : '';
+      if(fname) loc = ` (${fname}:${event.lineno||'?'}:${event.colno||'?'})`;
+    }catch(e2){}
+    const message = `오류가 발생했습니다: ${msg}${loc}`;
+    // 콘솔에도 상세히 남겨서 개발자가 스택트레이스까지 확인 가능하도록
+    try{ console.error('[전역 오류]', msg, loc, event && event.error); }catch(e3){}
     window._showGlobalAppError(message);
   }catch(e){}
 });
