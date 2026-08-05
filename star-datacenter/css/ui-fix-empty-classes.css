@@ -270,11 +270,11 @@ body.dark .su-sec--details summary {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(15,23,42,.34);
-  backdrop-filter: blur(6px) saturate(1.15);
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: none;
+  backdrop-filter: none;
   color: rgba(255,255,255,.88);
   font-size: 10.5px;
   font-weight: 850;
@@ -282,10 +282,17 @@ body.dark .su-sec--details summary {
   max-width: 100%;
   white-space: nowrap;
   text-decoration: none !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.55);
+}
+.sg-pill:not(:last-child)::after {
+  content: '·';
+  margin-left: 4px;
+  opacity: .6;
+  font-weight: 700;
 }
 .streamer-gallery-card.is-selected .sg-pill {
-  border-color: rgba(255,255,255,.18) !important;
-  background: rgba(15,23,42,.34) !important;
+  border-color: transparent !important;
+  background: none !important;
   color: rgba(255,255,255,.88) !important;
   box-shadow: none !important;
 }

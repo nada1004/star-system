@@ -2027,7 +2027,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .rec-summary.rec-mode-ck .rec-sum-vs .ubadge,
   .rec-summary.rec-mode-pro .rec-sum-vs .ubadge,
   .rec-summary.rec-mode-tt .rec-sum-vs .ubadge{
-    font-size:var(--fs-caption) !important;
+    font-size:calc(var(--fs-caption) * var(--rc-univ-font-scale,1)) !important;
     padding:5px 8px !important;
     border-radius:14px !important;
     max-width:120px !important;
@@ -2643,7 +2643,7 @@ body.team-btn--badge .rec-summary .ubadge{
   border-radius: 4px !important;
   border-top: 3px solid rgba(255,255,255,.45) !important;
   box-shadow: 0 3px 10px rgba(0,0,0,.14) !important;
-  font-size: 10.5px !important;
+  font-size: calc(10.5px * var(--rc-univ-font-scale,1)) !important;
   letter-spacing: .3px !important;
   text-transform: uppercase !important;
 }
@@ -2661,7 +2661,7 @@ body.team-btn--chip-xl .rec-sum-vs .ubadge,
 body.team-btn--chip-xl .rec-summary .ubadge{
   border-radius:var(--r2) !important;
   padding: 5px 16px !important;
-  font-size:var(--fs-base) !important;
+  font-size:calc(var(--fs-base) * var(--rc-univ-font-scale,1)) !important;
   font-weight: 1000 !important;
   box-shadow: 0 6px 18px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.3) !important;
   letter-spacing: -.2px !important;
@@ -2682,7 +2682,7 @@ body.team-btn--neon .rec-summary .ubadge{
   border-radius: 8px !important;
   box-shadow: 0 0 8px rgba(var(--rec-side-left-rgb,59,130,246), .55), inset 0 0 6px rgba(var(--rec-side-left-rgb,59,130,246), .12) !important;
   text-shadow: 0 0 8px rgba(255,255,255,.6) !important;
-  font-size:var(--fs-caption) !important;
+  font-size:calc(var(--fs-caption) * var(--rc-univ-font-scale,1)) !important;
   letter-spacing: .3px !important;
 }
 
@@ -3217,8 +3217,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   flex-shrink:0;
   border-radius:14px;
   overflow:hidden;
-  background:rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.32);
+  background:transparent;
+  border:none;
 }
 .modal--matchdetail .cmd-team img.cmd-uicon{
   object-fit:contain !important;
@@ -3315,8 +3315,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   border-color:#cbd5e1 !important;
 }
 .modal--matchdetail .cmd-team.is-lose .cmd-uicon{
-  background:rgba(148,163,184,.12) !important;
-  border-color:rgba(148,163,184,.24) !important;
+  background:transparent !important;
+  border-color:transparent !important;
   box-shadow:none !important;
   filter:grayscale(1) saturate(.25);
 }
@@ -4143,7 +4143,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     /* 모바일에서도 '대학/팀 버튼 크기' 설정값 반영 */
     min-height:calc(32px * var(--rc-match-btn-scale,1)) !important;
     padding:calc(5px * var(--rc-match-btn-scale,1)) calc(9px * var(--rc-match-btn-scale,1)) !important;
-    font-size:calc(11px * var(--rc-match-btn-scale,1)) !important;
+    font-size:calc(11px * var(--rc-match-btn-scale,1) * var(--rc-univ-font-scale,1)) !important;
   }
   .sharecard-preview-wrap{
     padding:10px;
@@ -11992,7 +11992,7 @@ body.rc-shape--compact .rec-victor-chip {
 }
 body.rc-shape--compact .rec-sum-vs { gap: calc(var(--rc-vs-gap, 12px) * 0.65); }
 body.rc-shape--compact .rec-sum-score { font-size:var(--fs-lg) !important; }
-body.rc-shape--compact .rec-sum-vs .ubadge { font-size: 10px !important; padding: 2px 6px !important; }
+body.rc-shape--compact .rec-sum-vs .ubadge { font-size: calc(10px * var(--rc-univ-font-scale,1)) !important; padding: 2px 6px !important; }
 
 /* ── wide: 좌우로 넓게, 패딩 여유롭게, 큰 카드 ── */
 body.rc-shape--wide .rec-summary {
@@ -12006,7 +12006,7 @@ body.rc-shape--wide .rec-sum-header--stack {
 }
 body.rc-shape--wide .rec-sum-score { font-size: 30px !important; }
 body.rc-shape--wide .rec-sum-vs .ubadge {
-  font-size:var(--fs-base) !important;
+  font-size:calc(var(--fs-base) * var(--rc-univ-font-scale,1)) !important;
   padding: 5px 14px !important;
   border-radius: 8px !important;
 }
@@ -15181,13 +15181,16 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-mobile-stats { display: flex; flex-wrap: wrap; gap: 6px; }
   .streamer-mobile-stats .sm-stat {
     font-size: 10.5px; font-weight: 700; color: var(--text2);
-    background: rgba(148,163,184,.10); border-radius: 7px; padding: 2px 7px;
+    background: none; border-radius: 0; padding: 0;
     white-space: nowrap;
   }
+  .streamer-mobile-stats .sm-stat:not(:last-child)::after {
+    content: '·'; margin-left: 6px; opacity: .5; font-weight: 700;
+  }
   .streamer-mobile-stats .sm-stat b { font-weight: 900; color: var(--text3); margin-right: 3px; font-size: 9.5px; }
-  .streamer-mobile-stats .sm-stat-wr { font-weight: 900; background: rgba(148,163,184,.14); }
+  .streamer-mobile-stats .sm-stat-wr { font-weight: 900; background: none; }
   .streamer-mobile-stats .sm-stat-wr b { color: inherit; opacity: .75; }
-  body.dark .streamer-mobile-stats .sm-stat { background: rgba(255,255,255,.06); }
+  body.dark .streamer-mobile-stats .sm-stat { background: none; }
   /* 메인 행과 정보 요약 행 사이 구분선 제거 (같은 스트리머 묶음으로 보이도록, 펼쳐진 경우에만) */
   .streamer-table tbody tr.streamer-row:has(+ .streamer-mobile-info-row.is-open) td { border-bottom: none !important; }
 

@@ -77,7 +77,8 @@
         return false;
       }
     };
-    const hideTeamUnivOnTop = ['tt','pro','procomp-bkt','procomp-team'].includes(String(m&&m._matchType||''));
+    // (요청사항) 티어대회(tt)는 실제 대학팀끼리의 경기이므로 대학 로고/이름을 표시 (CK/프로/개인전 계열만 생략)
+    const hideTeamUnivOnTop = ['pro','procomp-bkt','procomp-team'].includes(String(m&&m._matchType||''));
     const univColor = player?.univ && typeof window.gc==='function' ? (window.gc(player.univ) || col) : col;
     const univLogoTone = isWin ? '' : 'filter:grayscale(1) brightness(.82) contrast(.9);opacity:.82;';
     const loseTone = Math.max(.44, 1-(scp.loserGray||.55)*0.78);
@@ -90,10 +91,12 @@
     const raceSpan = race ? `<span class="rbadge r${player.race}" style="font-size:${Math.round(9*(scp.fontScale||1))}px;padding:1px 6px;opacity:${isWin?'1':'.82'}">${race}</span>` : '';
     const titleLogo = (!hideTeamUnivOnTop && player?.univ && hasUnivLogo(player.univ)) ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:${Math.round(24*(scp.fontScale||1))}px;height:${Math.round(24*(scp.fontScale||1))}px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'',`${Math.round(22*(scp.logoSize||1))}px`)}</span>` : '';
     const univTextColor = isWin ? univColor : `rgba(203,213,225,${Math.max(.40, loseTone-.06).toFixed(2)})`;
+    // (요청사항) 좌측(A팀)은 대학명→로고, 우측(B팀)은 로고→대학명 순서로 배치(로고가 중앙 스코어 쪽을 향하도록)
+    const _univLogoSpan = hasUnivLogo(player.univ) ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:${Math.round(28*(scp.fontScale||1))}px;height:${Math.round(28*(scp.fontScale||1))}px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'',`${Math.round(24*(scp.logoSize||1))}px`)}</span>` : '';
+    const _univNameSpan = `<span style="font-size:${Math.round(12*(scp.fontScale||1)*(scp.univScale||1))}px;font-weight:900;color:${univTextColor};line-height:1.22;word-break:keep-all;white-space:normal;overflow-wrap:anywhere">${player.univ}</span>`;
     const univLine = (!hideTeamUnivOnTop && player?.univ)
-      ? `<div style="margin-top:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;max-width:100%">
-          ${hasUnivLogo(player.univ) ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:${Math.round(34*(scp.fontScale||1))}px;height:${Math.round(34*(scp.fontScale||1))}px;flex-shrink:0;${univLogoTone}">${univIconHTML(player.univ||'',`${Math.round(30*(scp.logoSize||1))}px`)}</span>` : ''}
-          <span style="font-size:${Math.round(12*(scp.fontScale||1)*(scp.univScale||1))}px;font-weight:900;color:${univTextColor};line-height:1.22;word-break:keep-all;white-space:normal;overflow-wrap:anywhere">${player.univ}</span>
+      ? `<div style="margin-top:6px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;text-align:center;max-width:100%">
+          ${isA ? (_univNameSpan+_univLogoSpan) : (_univLogoSpan+_univNameSpan)}
         </div>`
       : '';
     const safeName = String(name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');

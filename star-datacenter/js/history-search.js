@@ -924,7 +924,7 @@ function openHistDetailModal(key){
         const _icon = (name)=>{
           try{
             const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
-            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`;
+            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;background:transparent;border:none;border-radius:0;padding:0" onerror="this.style.display='none'">`;
           }catch(e){}
           return '';
         };

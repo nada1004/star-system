@@ -414,7 +414,8 @@
     radial-gradient(140px 70px at 82% 15%, rgba(30, 41, 59,.10), transparent 62%) !important;
 }
 :is(body.dark,html.dark) .modal--matchdetail .cmd-team .cmd-uicon {
-  background: rgba(30, 41, 59,.18) !important;
+  background: transparent !important;
+  border: none !important;
 }
 :is(body.dark,html.dark) .modal--matchdetail .cmd-team.is-lose .cmd-head-race {
   background: #334155 !important;

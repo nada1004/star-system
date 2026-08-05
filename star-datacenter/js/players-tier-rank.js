@@ -903,7 +903,7 @@ function rTier(C,T){
   })();
   function _getUnivIconHTML(p){
     const url=_univIconUrlCache.get(p.univ)||'';
-    return url?`<img src="${toHttpsUrl(url)}" style="width:22px;height:22px;object-fit:contain;border-radius:var(--su_univ_logo_radius,6px);flex-shrink:0" onerror="this.style.display='none'">`:``; 
+    return url?`<img src="${toHttpsUrl(url)}" style="width:22px;height:22px;object-fit:contain;border-radius:0;background:none;flex-shrink:0" onerror="this.style.display='none'">`:``; 
   }
 
   const _vm = window._tierViewMode || 'table';
