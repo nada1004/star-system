@@ -535,6 +535,73 @@ async function patchLazyUtils() {
 // 메인
 // ──────────────────────────────────────────
 
+// ──────────────────────────────────────────
+// index.html 기준 자동 동기화
+//  - dist 번들에서 스크립트가 누락되면(예: 설정 파일 분할 후 목록 갱신 누락)
+//    해당 기능(설정 저장/반영 등)이 배포판에서 조용히 죽는다.
+//  - 그래서 "무엇을/어떤 순서로" 담을지는 index.html의 defer script 순서를
+//    단일 진실 소스(single source of truth)로 사용한다.
+// ──────────────────────────────────────────
+
+function readHtmlScriptOrder() {
+  const html = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
+  const re = /<script\s+defer\s+src="(js\/[^"?]+)(?:\?[^"]*)?"[^>]*><\/script>/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(html))) {
+    if (!out.includes(m[1])) out.push(m[1]);
+  }
+  return out;
+}
+
+/** 명시 목록에 없는 신규(분할) 파일을 파일명 규칙으로 청크에 배정 */
+function guessChunk(file) {
+  const n = file.replace(/^js\//, '');
+  if (/^(board2|cloud-board)/.test(n) || /^sync\//.test(n)) return 'board';
+  if (/^pro-comp/.test(n)) return 'procomp';
+  if (/^(competition|history|match)/.test(n)) return 'match';
+  if (/^(search|players)/.test(n)) return 'search';
+  return 'core';
+}
+
+/** index.html 순서를 기준으로 청크 목록을 재구성 */
+function syncChunksWithHtml(groups, lazyChunks) {
+  const order = readHtmlScriptOrder();
+  const idx = new Map(order.map((f, i) => [f, i]));
+  const lazySet = new Set(Object.values(lazyChunks).flat());
+
+  const assign = new Map();
+  for (const [name, files] of Object.entries(groups)) {
+    for (const f of files) {
+      if (!idx.has(f)) {
+        if (!lazySet.has(f)) console.warn(`  ⚠️  ${name} 목록의 ${f} 는 index.html에 없음 → 번들 제외`);
+        continue;
+      }
+      assign.set(f, name);
+    }
+  }
+
+  const added = [];
+  for (const f of order) {
+    // index.html에 defer script로 있으면 lazy 목록에 있어도 반드시 번들에 포함
+    if (assign.has(f)) continue;
+    if (lazySet.has(f)) console.warn(`  ⚠️  ${f} 는 lazy 목록에도 있으나 index.html 로딩이 우선 → 번들 포함`);
+    const g = guessChunk(f);
+    assign.set(f, g);
+    added.push(`${f} → chunk-${g}`);
+  }
+  if (added.length) {
+    console.log(`  🔄 index.html에만 있던 ${added.length}개 파일을 자동 배정:`);
+    added.forEach(t => console.log(`      + ${t}`));
+  }
+
+  const synced = {};
+  for (const name of Object.keys(groups)) {
+    synced[name] = order.filter(f => assign.get(f) === name);
+  }
+  return synced;
+}
+
 async function main() {
   console.log('🚀 빌드 시작...\n');
   const t0 = Date.now();
@@ -542,13 +609,26 @@ async function main() {
   // dist 폴더 준비
   fs.mkdirSync(path.join(DIST, 'js'), { recursive: true });
 
+  console.log('🔎 index.html script 순서와 청크 목록 동기화:');
+  const synced = syncChunksWithHtml(
+    {
+      core: CORE_FILES,
+      match: MATCH_FILES,
+      search: SEARCH_FILES,
+      procomp: PROCOMP_FILES,
+      board: BOARD_FILES,
+    },
+    LAZY_CHUNKS
+  );
+
   const chunks = [
-    ['chunk-core.js',    CORE_FILES],
-    ['chunk-match.js',   MATCH_FILES],
-    ['chunk-search.js',  SEARCH_FILES],
-    ['chunk-procomp.js', PROCOMP_FILES],
-    ['chunk-board.js',   BOARD_FILES],
+    ['chunk-core.js',    synced.core],
+    ['chunk-match.js',   synced.match],
+    ['chunk-search.js',  synced.search],
+    ['chunk-procomp.js', synced.procomp],
+    ['chunk-board.js',   synced.board],
   ];
+  console.log('');
 
   console.log('📦 코어/기능 청크 빌드:');
   const results = [];
