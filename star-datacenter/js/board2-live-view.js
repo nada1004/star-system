@@ -233,6 +233,10 @@ function _b2LiveApplyStatusToDom(container) {
   cards.forEach(card => {
     const id = card.getAttribute('data-soop-id');
     const st = _b2LiveStatusCache[id];
+    const isLive = !!(st && st.live);
+    card.classList.toggle('is-live', isLive);
+    const avatarBtn = card.querySelector('.b2-live-avatar-btn');
+    if (avatarBtn) avatarBtn.classList.toggle('is-live', isLive);
     const coverImg = card.querySelector('.b2-live-cover');
     const coverFallback = card.querySelector('.b2-live-cover-fallback');
     const titleEl = card.querySelector('.b2-live-title');
@@ -385,6 +389,9 @@ function _b2LiveView() {
       <div style="display:flex;gap:4px;align-items:center">
         ${genderBtn('전체','전체')}${genderBtn('F','♀ 여자만')}${genderBtn('M','♂ 남자만')}
       </div>
+      <a href="https://www.sooplive.com/live/group/game?categoryNo=00040001&amp;categoryName=%EC%8A%A4%ED%83%80%ED%81%AC%EB%9E%98%ED%94%84%ED%8A%B8"
+        target="_blank" rel="noopener noreferrer" class="b2-toolbar-btn"
+        style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:20px;border:1.5px solid #16a34a;background:${_liveDark?'linear-gradient(135deg,#052e1a,#0a3d24)':'linear-gradient(135deg,#f0fdf4,#dcfce7)'};color:${_liveDark?'#4ade80':'#15803d'};font-size:var(--fs-base);font-weight:900;text-decoration:none;white-space:nowrap">📡 SOOP 라이브</a>
       <input id="b2-live-search" type="text" placeholder="🔍 이름 검색" value="${(_b2LiveSearch||'').replace(/"/g,'&quot;')}"
         oninput="_b2LiveSearch=this.value;_b2LiveRefreshResultsOnly&&_b2LiveRefreshResultsOnly()"
         style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);width:150px">
@@ -532,7 +539,7 @@ function _b2LiveResultsHTML() {
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
     const avatarBlock = `
       <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
-        <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
+        <button type="button" class="b2-live-avatar-btn${(stKnown && stKnown.live) ? ' is-live' : ''}" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
           style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:2px solid rgba(255,255,255,.96);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.14)">
           ${avatarHtml}
         </button>
@@ -577,7 +584,7 @@ function _b2LiveResultsHTML() {
       </div>`;
 
     return groupHeader + `
-      <div class="b2-live-card" data-soop-id="${p._soopId}" data-photo-url="${photoUrl}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:16px;overflow:hidden;padding:${sizeCfg.pad}">
+      <div class="b2-live-card${(stKnown && stKnown.live) ? ' is-live' : ''}" data-soop-id="${p._soopId}" data-photo-url="${photoUrl}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:16px;overflow:hidden;padding:${sizeCfg.pad}">
         ${cardBody}
       </div>
     `;
