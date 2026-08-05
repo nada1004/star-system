@@ -154,7 +154,7 @@
       const teamLogoBox = Math.round(58*scp.logoSize);
       const teamHeaderLayout = ['stack','inline','badge','cover'].includes(String(scp.logoLayout||'')) ? String(scp.logoLayout) : 'stack';
       const matchType = String(m&&m._matchType||'');
-      const hideTopUnivMeta = ['mini','univ','comp','ck','tt','pro','progj','procomp-team','procomp-bkt'].includes(matchType);
+      const hideTopUnivMeta = ['univ','comp','ck','tt','pro','progj','procomp-team','procomp-bkt'].includes(matchType);
       const hasUnivLogo = (name)=>{
         try{
           const key = String(name||'').trim();
@@ -379,20 +379,39 @@
               ? `<span class="ph-swap" style="position:absolute;inset:0;display:block">${`<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="position:absolute;inset:0;${_posterImgStyle}">`}${_posterSecondHtml}</span>`
               : `<img class="share-poster-media" ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="${_posterImgStyle}">`)
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));"><span style="font-size:74px;font-weight:1000;color:#fff">${title.slice(0,1)}</span></div>`;
-        const titleColor = isWin ? repUnivColor : (hideTopUnivMeta ? 'rgba(226,232,240,.78)' : 'rgba(203,213,225,.78)');
+        // 사진 배경 위에서 어두운 대학 컬러(예: 검정 계열)가 묻혀 안 보이는 문제 방지:
+        // 너무 어두운 브랜드 컬러는 화이트 쪽으로 블렌딩해 최소 명도를 보장한다.
+        const _titleColorLuminance = (hex)=>{
+          try{
+            const h=String(hex||'').replace('#','');
+            if(!/^[0-9a-fA-F]{6}$/.test(h)) return 1;
+            const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+            return (0.299*r+0.587*g+0.114*b)/255;
+          }catch(e){ return 1; }
+        };
+        const _readableTitleColor = (hex)=>{
+          const lum = _titleColorLuminance(hex);
+          if(lum >= 0.42) return hex;
+          const mixAmt = lum < 0.18 ? .74 : .55;
+          return (typeof _scMixHex==='function') ? _scMixHex(hex, '#ffffff', mixAmt) : hex;
+        };
+        const titleColor = isWin ? _readableTitleColor(repUnivColor) : (hideTopUnivMeta ? 'rgba(226,232,240,.78)' : 'rgba(203,213,225,.78)');
         const titleLong = title.length >= 7;
         const logoBox = isWin ? (titleLong?56:52) : (titleLong?29:27);
         const logoSize = isWin ? (titleLong?'52px':'48px') : (titleLong?'27px':'23px');
         const logoMarkup = (!hideTopUnivMeta && logoUniv) ? directUnivIconHTML(logoUniv, logoSize) : '';
         const titleStack = !!String(logoMarkup||'').trim();
-        const summaryColor = ['ck','tt','pro'].includes(matchType) ? (isWin?'rgba(255,255,255,.92)':'rgba(203,213,225,.78)') : (isWin?repUnivColor:'rgba(203,213,225,.78)');
+        const summaryColor = ['ck','tt','pro'].includes(matchType) ? (isWin?'rgba(255,255,255,.92)':'rgba(203,213,225,.78)') : (isWin?titleColor:'rgba(203,213,225,.78)');
         const logoTitleGap = 0;
+        // 이름 텍스트가 놓이는 하단 영역 전용 스크림: 사진이 밝은 부분이어도 텍스트 대비를 보장
+        const nameScrimH = isWin ? 108 : 88;
         return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'248px':'201px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 20px rgba(2,6,23,.10);transform:translateY(${isWin?'-3':'2'}px) scale(${isWin?'1.043':'.971'});transform-origin:center center">
           ${media}
           <div style="position:absolute;inset:0;background:${isWin?'linear-gradient(180deg,rgba(2,6,23,.02),rgba(15,23,42,.05) 24%,rgba(15,23,42,.24))':'linear-gradient(180deg,rgba(2,6,23,.05),rgba(15,23,42,.10) 24%,rgba(15,23,42,.42))'};pointer-events:none"></div>
+          <div style="position:absolute;inset:auto 0 0 0;height:${nameScrimH}px;background:linear-gradient(180deg,rgba(15,23,42,0),rgba(15,23,42,.5) 45%,rgba(15,23,42,.72));pointer-events:none"></div>
           <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:4px">
-            <div class="share-poster-name" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${titleStack?logoTitleGap:4}px;min-width:0;font-size:${Math.round((isWin?'28':'20')*(scp.titleScale||1))}px;font-weight:${isWin?1000:900};color:${titleColor};line-height:1.05;text-shadow:0 5px 18px rgba(0,0,0,.54),0 1px 0 rgba(0,0,0,.22);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${titleStack?`<span style="display:inline-flex;align-items:flex-end;justify-content:center;width:${logoBox}px;height:${logoBox}px;flex-shrink:0;background:transparent;border:none;box-shadow:none;line-height:1;${repLogoTone}">${logoMarkup}</span>`:''}<span style="min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${title}</span></div>
-            ${showRepSummary&&repSummary?`<div class="share-poster-summary" style="font-size:${isWin?12:11}px;font-weight:800;color:${summaryColor};line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.22)">${repSummary}</div>`:''}
+            <div class="share-poster-name" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${titleStack?logoTitleGap:4}px;min-width:0;font-size:${Math.round((isWin?'28':'20')*(scp.titleScale||1))}px;font-weight:${isWin?1000:900};color:${titleColor};line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.75),0 5px 18px rgba(0,0,0,.6);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${titleStack?`<span style="display:inline-flex;align-items:flex-end;justify-content:center;width:${logoBox}px;height:${logoBox}px;flex-shrink:0;background:transparent;border:none;box-shadow:none;line-height:1;${repLogoTone}">${logoMarkup}</span>`:''}<span style="min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${title}</span></div>
+            ${showRepSummary&&repSummary?`<div class="share-poster-summary" style="font-size:${isWin?12:11}px;font-weight:800;color:${summaryColor};line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.5)">${repSummary}</div>`:''}
             ${repNote(side)?`<div><span style="display:inline-flex;align-items:center;gap:4px;background:${isWin?`rgba(${rgb},.38)`:'rgba(255,255,255,.12)'};border:1px solid ${isWin?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px">${repNote(side)}</span></div>`:''}
           </div>
         </div>`;

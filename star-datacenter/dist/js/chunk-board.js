@@ -2888,22 +2888,31 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           <section class="b2w2-ace-list">${list.map(_renderCard).join("")}</section>
         </div>
       </div>`}).join("");return`${filterBar}<div style="margin-top:14px">${cards}</div>`}try{window._b2RenderMvpArchiveBody=_b2RenderMvpArchiveBody}catch(e){}function _b2TierRankTooltip(tier){try{const list=typeof TIERS!="undefined"&&Array.isArray(TIERS)&&TIERS.length?TIERS:["G","K","JA","J","S","0\uD2F0\uC5B4","1\uD2F0\uC5B4","2\uD2F0\uC5B4","3\uD2F0\uC5B4","4\uD2F0\uC5B4","5\uD2F0\uC5B4","6\uD2F0\uC5B4","7\uD2F0\uC5B4","8\uD2F0\uC5B4","\uC720\uC2A4","\uBBF8\uC815"],idx=list.indexOf(tier),order=list.join(" > ");return idx===-1?`\uD2F0\uC5B4 \uC21C\uC704: ${order}`:`\uD2F0\uC5B4 \uC21C\uC704(\uB192\uC74C\u2192\uB0AE\uC74C): ${order}
-\uD604\uC7AC "${tier}" = \uC0C1\uC704 ${idx+1}\uBC88\uC9F8 \uB4F1\uAE09`}catch(e){return""}}try{window._b2TierRankTooltip=_b2TierRankTooltip}catch(e){}function _b2WeeklyForm(hist){const sorted=[...hist].sort((a,b)=>{const da=parseInt(String(a.date||"").replace(/[-\.\/]/g,""))||0,db=parseInt(String(b.date||"").replace(/[-\.\/]/g,""))||0;return da!==db?da-db:(a.time||0)-(b.time||0)}).slice(-5),pad=5-sorted.length;let out="";for(let i=0;i<pad;i++)out+='<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border,#e2e8f0);flex-shrink:0"></span>';return out+=sorted.map(h=>{const c=h.result==="\uC2B9"?"var(--win-col,#dc2626)":h.result==="\uD328"?"var(--lose-col,#2563eb)":"#94a3b8",t=h.result==="\uC2B9"?"W":h.result==="\uD328"?"L":"-";return`<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:${c};font-size:9px;color:#fff;font-weight:900;flex-shrink:0">${t}</span>`}).join(""),out}function _b2WeeklyBarChart(univStats){const visible=univStats.filter(ud=>ud.tg>0).slice(0,10);if(!visible.length)return"";const maxGames=Math.max(...visible.map(ud=>ud.tg),1),ROW_H=34,BAR_H=13,LEFT=90,RIGHT=160,TOP=14,H=visible.length*ROW_H+TOP+10,MAX_W=520-LEFT-RIGHT,rows=visible.map((ud,i)=>{const y=TOP+i*ROW_H,color=(gc?gc(ud.u.name):"#64748b")||"#64748b",totalW=Math.max(2,Math.round(ud.tg/maxGames*MAX_W)),winW=ud.tg>0?Math.round(totalW*ud.tw/ud.tg):0,lossW=Math.max(0,totalW-winW),wr=ud.wr!==null?`${ud.wr}%`:"-",wrColor=ud.wr===null?"#94a3b8":ud.wr>=60?"#10b981":ud.wr>=40?"#f59e0b":"#ef4444",name=ud.u.name.length>6?ud.u.name.slice(0,6)+"\u2026":ud.u.name,clipId=`b2wbar-clip-${i}`;return`
-      <text x="${LEFT-6}" y="${y+BAR_H*.9}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
-      <defs><clipPath id="${clipId}"><rect x="${LEFT}" y="${y}" width="${totalW}" height="${BAR_H}" rx="4"/></clipPath></defs>
-      <rect x="${LEFT}" y="${y}" width="${MAX_W}" height="${BAR_H}" rx="4" fill="var(--border,#e2e8f0)" opacity="0.35"/>
-      <g clip-path="url(#${clipId})">
-        ${winW>0?`<rect x="${LEFT}" y="${y}" width="${winW}" height="${BAR_H}" fill="${color}"/>`:""}
-        ${lossW>0?`<rect x="${LEFT+winW}" y="${y}" width="${lossW}" height="${BAR_H}" fill="${color}" opacity="0.32"/>`:""}
-      </g>
-      <text x="${LEFT}" y="${y+BAR_H+12}" font-size="10" font-weight="800" fill="${color}">${ud.tw}\uC2B9</text>
-      <text x="${LEFT+32}" y="${y+BAR_H+12}" font-size="10" fill="${color}" opacity="0.65">${ud.tl}\uD328</text>
-      <text x="${520-RIGHT+8}" y="${y+BAR_H*.9}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
-      <text x="${520-RIGHT+50}" y="${y+BAR_H*.9}" font-size="11" fill="var(--text3)">${ud.tg}\uC804 ${ud.active.length}\uBA85</text>`}).join("");return`<div style="width:100%;overflow:hidden;padding:4px 0">
-    <svg viewBox="0 0 520 ${H}" width="100%" style="overflow:visible;display:block">
-      ${rows}
-    </svg>
-  </div>`}function _b2WeeklyRaceStats(raceCount){return`<div class="b2w2-race-table">
+\uD604\uC7AC "${tier}" = \uC0C1\uC704 ${idx+1}\uBC88\uC9F8 \uB4F1\uAE09`}catch(e){return""}}try{window._b2TierRankTooltip=_b2TierRankTooltip}catch(e){}function _b2WeeklyForm(hist){const sorted=[...hist].sort((a,b)=>{const da=parseInt(String(a.date||"").replace(/[-\.\/]/g,""))||0,db=parseInt(String(b.date||"").replace(/[-\.\/]/g,""))||0;return da!==db?da-db:(a.time||0)-(b.time||0)}).slice(-5),pad=5-sorted.length;let out="";for(let i=0;i<pad;i++)out+='<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border,#e2e8f0);flex-shrink:0"></span>';return out+=sorted.map(h=>{const c=h.result==="\uC2B9"?"var(--win-col,#dc2626)":h.result==="\uD328"?"var(--lose-col,#2563eb)":"#94a3b8",t=h.result==="\uC2B9"?"W":h.result==="\uD328"?"L":"-";return`<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:${c};font-size:9px;color:#fff;font-weight:900;flex-shrink:0">${t}</span>`}).join(""),out}function _b2WeeklyBarChart(univStats){const visible=univStats.filter(ud=>ud.tg>0).slice(0,10);if(!visible.length)return"";const maxGames=Math.max(...visible.map(ud=>ud.tg),1),MEDAL=["gold","silver","bronze"];return`<div class="b2w2-rank-list">${visible.map((ud,i)=>{const color=(gc?gc(ud.u.name):"#64748b")||"#64748b",totalPct=Math.max(4,Math.round(ud.tg/maxGames*100)),winPct=ud.tg>0?Math.round(ud.tw/ud.tg*100):0,lossPct=Math.max(0,100-winPct),wr=ud.wr!==null?`${ud.wr}%`:"-",wrColor=ud.wr===null?"#94a3b8":ud.wr>=60?"#10b981":ud.wr>=40?"#f59e0b":"#ef4444",rankCls=MEDAL[i]||"plain",nameEsc=typeof window.escHTML=="function"?window.escHTML(ud.u.name):String(ud.u.name||""),nameAttr=ud.u.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'"),logo=typeof gUI=="function"?gUI(ud.u.name,"20px"):"";return`
+      <div class="b2w2-rank-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${nameAttr}')">
+        <div class="b2w2-rank-badge ${rankCls}">${i+1}</div>
+        <span class="b2w2-rank-logo">${logo}</span>
+        <div class="b2w2-rank-main">
+          <div class="b2w2-rank-top">
+            <span class="b2w2-rank-name">${nameEsc}</span>
+            <span class="b2w2-rank-wr" style="color:${wrColor}">${wr}</span>
+          </div>
+          <div class="b2w2-rank-track">
+            <div class="b2w2-rank-track-fill" style="width:${totalPct}%">
+              <div class="b2w2-rank-bar-win" style="width:${winPct}%;background:${color}"></div>
+              <div class="b2w2-rank-bar-loss" style="width:${lossPct}%;background:${color}"></div>
+            </div>
+          </div>
+          <div class="b2w2-rank-bottom">
+            <span style="color:${color};font-weight:800">${ud.tw}\uC2B9</span>
+            <span style="opacity:.65">${ud.tl}\uD328</span>
+            <span class="b2w2-rank-dot">\xB7</span>
+            <span>${ud.tg}\uC804</span>
+            <span class="b2w2-rank-dot">\xB7</span>
+            <span>${ud.active.length}\uBA85</span>
+          </div>
+        </div>
+      </div>`}).join("")}</div>`}function _b2WeeklyRaceStats(raceCount){return`<div class="b2w2-race-table">
     <div class="b2w2-race-head">
       <span>\uC0C1\uB300 \uC885\uC871</span>
       <span>\uC2B9</span>

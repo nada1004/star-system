@@ -783,45 +783,52 @@ function _b2WeeklyForm(hist) {
   return out;
 }
 
-// ─── 막대 차트 SVG ────────────────────────────
+// ─── 대학별 전적 순위표 ────────────────────────
 function _b2WeeklyBarChart(univStats) {
   const visible = univStats.filter(ud => ud.tg > 0).slice(0, 10);
   if (!visible.length) return '';
   const maxGames = Math.max(...visible.map(ud => ud.tg), 1);
-  const ROW_H = 34, BAR_H = 13, LEFT = 90, RIGHT = 160, TOP = 14, BOT = 10;
-  const H = visible.length * ROW_H + TOP + BOT;
-  const MAX_W = 520 - LEFT - RIGHT;
+  const MEDAL = ['gold', 'silver', 'bronze'];
 
   const rows = visible.map((ud, i) => {
-    const y = TOP + i * ROW_H;
     const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
-    // 승+패를 하나의 막대에 이어붙여서 그림 — 전체 길이(=totalW)가 팀 간 총 전적 비교 기준이 됨
-    const totalW = Math.max(2, Math.round(ud.tg / maxGames * MAX_W));
-    const winW   = ud.tg > 0 ? Math.round(totalW * ud.tw / ud.tg) : 0;
-    const lossW  = Math.max(0, totalW - winW);
+    const totalPct = Math.max(4, Math.round(ud.tg / maxGames * 100));
+    const winPct   = ud.tg > 0 ? Math.round(ud.tw / ud.tg * 100) : 0;
+    const lossPct  = Math.max(0, 100 - winPct);
     const wr = ud.wr !== null ? `${ud.wr}%` : '-';
     const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
-    const name = ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name;
-    const clipId = `b2wbar-clip-${i}`;
+    const rankCls = MEDAL[i] || 'plain';
+    const nameEsc = (typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''));
+    const nameAttr = ud.u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const logo = typeof gUI==='function' ? gUI(ud.u.name,'20px') : '';
     return `
-      <text x="${LEFT-6}" y="${y+BAR_H*0.9}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
-      <defs><clipPath id="${clipId}"><rect x="${LEFT}" y="${y}" width="${totalW}" height="${BAR_H}" rx="4"/></clipPath></defs>
-      <rect x="${LEFT}" y="${y}" width="${MAX_W}" height="${BAR_H}" rx="4" fill="var(--border,#e2e8f0)" opacity="0.35"/>
-      <g clip-path="url(#${clipId})">
-        ${winW>0?`<rect x="${LEFT}" y="${y}" width="${winW}" height="${BAR_H}" fill="${color}"/>`:''}
-        ${lossW>0?`<rect x="${LEFT+winW}" y="${y}" width="${lossW}" height="${BAR_H}" fill="${color}" opacity="0.32"/>`:''}
-      </g>
-      <text x="${LEFT}" y="${y+BAR_H+12}" font-size="10" font-weight="800" fill="${color}">${ud.tw}승</text>
-      <text x="${LEFT+32}" y="${y+BAR_H+12}" font-size="10" fill="${color}" opacity="0.65">${ud.tl}패</text>
-      <text x="${520-RIGHT+8}" y="${y+BAR_H*0.9}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
-      <text x="${520-RIGHT+50}" y="${y+BAR_H*0.9}" font-size="11" fill="var(--text3)">${ud.tg}전 ${ud.active.length}명</text>`;
+      <div class="b2w2-rank-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${nameAttr}')">
+        <div class="b2w2-rank-badge ${rankCls}">${i+1}</div>
+        <span class="b2w2-rank-logo">${logo}</span>
+        <div class="b2w2-rank-main">
+          <div class="b2w2-rank-top">
+            <span class="b2w2-rank-name">${nameEsc}</span>
+            <span class="b2w2-rank-wr" style="color:${wrColor}">${wr}</span>
+          </div>
+          <div class="b2w2-rank-track">
+            <div class="b2w2-rank-track-fill" style="width:${totalPct}%">
+              <div class="b2w2-rank-bar-win" style="width:${winPct}%;background:${color}"></div>
+              <div class="b2w2-rank-bar-loss" style="width:${lossPct}%;background:${color}"></div>
+            </div>
+          </div>
+          <div class="b2w2-rank-bottom">
+            <span style="color:${color};font-weight:800">${ud.tw}승</span>
+            <span style="opacity:.65">${ud.tl}패</span>
+            <span class="b2w2-rank-dot">·</span>
+            <span>${ud.tg}전</span>
+            <span class="b2w2-rank-dot">·</span>
+            <span>${ud.active.length}명</span>
+          </div>
+        </div>
+      </div>`;
   }).join('');
 
-  return `<div style="width:100%;overflow:hidden;padding:4px 0">
-    <svg viewBox="0 0 520 ${H}" width="100%" style="overflow:visible;display:block">
-      ${rows}
-    </svg>
-  </div>`;
+  return `<div class="b2w2-rank-list">${rows}</div>`;
 }
 
 // ─── 종족별 통계 렌더 ─────────────────────────
