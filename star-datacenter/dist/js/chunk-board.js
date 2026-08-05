@@ -2911,9 +2911,9 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       <span>\uCD1D\uC804</span>
       <span>\uC2B9\uB960</span>
     </div>
-    ${[{key:"P",label:"\uD504\uB85C\uD1A0\uC2A4",ico:"\u{1F52E}",color:"#8b5cf6"},{key:"T",label:"\uD14C\uB780",ico:"\u2694\uFE0F",color:"#3b82f6"},{key:"Z",label:"\uC800\uADF8",ico:"\u{1F98E}",color:"#f59e0b"}].map(({key,label,ico,color})=>{const{w,l}=raceCount[key],t=w+l,wr=t?Math.round(w/t*100):null,wrColor=wr===null?"#94a3b8":wr>=60?"#10b981":wr>=40?"#f59e0b":"#ef4444";return`<div class="b2w2-race-row">
+    ${[{key:"P",label:"\uD504\uB85C\uD1A0\uC2A4",ico:"P",color:"#8b5cf6"},{key:"T",label:"\uD14C\uB780",ico:"T",color:"#3b82f6"},{key:"Z",label:"\uC800\uADF8",ico:"Z",color:"#f59e0b"}].map(({key,label,ico,color})=>{const{w,l}=raceCount[key],t=w+l,wr=t?Math.round(w/t*100):null,wrColor=wr===null?"#94a3b8":wr>=60?"#10b981":wr>=40?"#f59e0b":"#ef4444";return`<div class="b2w2-race-row">
       <div class="b2w2-race-cell b2w2-race-cell-main">
-        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0">${ico}</span>
+        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0;font-weight:900;color:${color}">${ico}</span>
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text2);white-space:nowrap">${label}</span>
       </div>
       <div class="b2w2-race-cell"><span class="b2w2-race-pill win">${w}</span></div>

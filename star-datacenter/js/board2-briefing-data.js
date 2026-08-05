@@ -827,9 +827,9 @@ function _b2WeeklyBarChart(univStats) {
 // ─── 종족별 통계 렌더 ─────────────────────────
 function _b2WeeklyRaceStats(raceCount) {
   const races = [
-    { key:'P', label:'프로토스', ico:'🔮', color:'#8b5cf6' },
-    { key:'T', label:'테란',     ico:'⚔️', color:'#3b82f6' },
-    { key:'Z', label:'저그',     ico:'🦎', color:'#f59e0b' }
+    { key:'P', label:'프로토스', ico:'P', color:'#8b5cf6' },
+    { key:'T', label:'테란',     ico:'T', color:'#3b82f6' },
+    { key:'Z', label:'저그',     ico:'Z', color:'#f59e0b' }
   ];
   const rows = races.map(({ key, label, ico, color }) => {
     const { w, l } = raceCount[key];
@@ -838,7 +838,7 @@ function _b2WeeklyRaceStats(raceCount) {
     const wrColor = wr===null ? '#94a3b8' : wr>=60 ? '#10b981' : wr>=40 ? '#f59e0b' : '#ef4444';
     return `<div class="b2w2-race-row">
       <div class="b2w2-race-cell b2w2-race-cell-main">
-        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0">${ico}</span>
+        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0;font-weight:900;color:${color}">${ico}</span>
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text2);white-space:nowrap">${label}</span>
       </div>
       <div class="b2w2-race-cell"><span class="b2w2-race-pill win">${w}</span></div>

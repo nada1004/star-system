@@ -928,11 +928,10 @@ function _b2WeeklyBriefingView() {
           if(sub)sub.style.display=show?'none':'flex';
         })()">
           <div class="b2w2-card-title">
-            <span class="b2w2-card-dot" style="background:${color}"></span>
             <div style="min-width:0">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <div class="b2w2-card-name">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</div>
-                <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;border:1.5px solid ${color};background:var(--b2w-paper-alt);color:${color};cursor:pointer;white-space:nowrap;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08)">🏫 대학상세</button>
+                <span class="b2w2-card-univ-logo" style="display:inline-flex;flex-shrink:0">${typeof gUI==='function'?gUI(u.name,'18px'):''}</span>
+                <div class="b2w2-card-name" style="cursor:pointer" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</div>
               </div>
               <div id="b2w2-sub-${ui}" class="b2w2-card-sub" style="display:none">
                 <span>활동 ${active.length}명</span>
