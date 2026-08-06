@@ -4,7 +4,16 @@
 
 function indRecordsHTML(){
   _restoreStableIndGj('ind');
-  if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  // [UX-FIX] 빈 화면 대신 공용 empty-state + 끝장전으로 바로 이동하는 안내 제공
+  if(!indM.length){
+    const _gjCnt = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM.length : 0;
+    return `<div class="empty-state">`
+      + `<div class="empty-state-icon">🎮</div>`
+      + `<div class="empty-state-title">개인전 기록이 없습니다</div>`
+      + `<div class="empty-state-desc">${_gjCnt ? `현재 데이터에는 개인전 기록이 없습니다. 끝장전 기록 ${_gjCnt.toLocaleString()}건은 확인할 수 있습니다.` : '기록이 추가되면 여기에 표시됩니다.'}</div>`
+      + (_gjCnt ? `<div style="margin-top:12px"><button class="btn btn-w btn-sm" onclick="try{indSub='records';window._mergedIndSub='gj';if(typeof gjSub!=='undefined')gjSub='records';}catch(e){};try{render()}catch(e){}">⚔️ 끝장전 기록 보기</button></div>` : '')
+      + `</div>`;
+  }
   _rememberStableIndGj('ind', indM);
   const sessions=[];
   const sidPairMap=new Map();

@@ -14,7 +14,6 @@ function rStats(C,T){
   }
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','univwinbar','period','preport','sharecard']);
-  window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
     || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('stats'));
@@ -26,6 +25,9 @@ function rStats(C,T){
   if(_savedSub&&window.statsSub==='overview'&&_savedSub!=='overview'){
     if((_savedSub!=='csvexport'||_li) && (_savedSub!=='starsystem'||_li)) window.statsSub=_savedSub;
   }
+  // [UX-FIX] 상단 '핵심 통계 / 심화 분석' 표시와 실제 서브탭이 어긋나지 않도록
+  // 저장된 서브탭 복원이 끝난 뒤에 보기 모드를 계산한다.
+  window._statsViewMode = _coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced';
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},

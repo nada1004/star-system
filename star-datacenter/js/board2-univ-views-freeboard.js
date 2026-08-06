@@ -128,7 +128,12 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     const px = Math.max(80, Math.min(1200, Math.round(parseInt(m[2],10) * sc)));
     return `min(${pct}%,${px}px) auto`;
   })();
-  const _bgOpacity2 = _bgIsLogo ? String(Math.min(0.48, parseFloat(_bgOpacity)||0.48).toFixed(2)) : _bgOpacity;
+  // [UX-FIX] 화면에서는 가운데 로고가 스트리머 이름/티어 라벨과 겹쳐 가독성을 떨어뜨리므로
+  // 로고 배경일 때 투명도를 크게 낮춘다. 이미지 저장(forExport)에는 기존 값을 유지.
+  const _bgOpacityLogoScreen = 0.18;
+  const _bgOpacity2 = _bgIsLogo
+    ? String((forExport ? Math.min(0.48, parseFloat(_bgOpacity)||0.48) : _bgOpacityLogoScreen).toFixed(2))
+    : _bgOpacity;
   const _profileViewMode = _b2GetUnivProfileViewMode();
   const bgImgHtml = uCfg.bgImg
     ? forExport

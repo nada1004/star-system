@@ -1232,6 +1232,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     }
     catch(e){ return String(rel || ''); }
   };
+  // [FIX-404] 존재하지 않는 월별 파일을 매번 다시 요청하지 않도록 세션 단위 miss 캐시.
+  //  index.json 의 historyMonths 에 실제로 존재하지 않는 월이 남아 있어도
+  //  같은 URL 을 반복 요청하지 않고 조용히 건너뛴다.
+  const _monthMiss = (window.__suMonthMissCache = window.__suMonthMissCache || new Set());
+  const _fetchMonthJsonSafe = async (url)=>{
+    if(_monthMiss.has(url)) return null;
+    try{ return await _fetchAutoJson(url); }
+    catch(e){ _monthMiss.add(url); return null; }
+  };
   const _recoverMatchArraysFromPlayerHistoryLocal = (baseData, monthParts)=>{
     const out = {...(baseData||{})};
     if(!Array.isArray(out.indM)) out.indM = [];
@@ -1440,10 +1449,18 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const histKeys = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
     histKeys.forEach(k=>{ merged[k] = Array.isArray(core[k]) ? [...core[k]] : []; });
     const months = Array.isArray(idx.historyMonths) ? idx.historyMonths : [];
+    let _monthSkipAll = false;
     for(const month of months){
+      if(_monthSkipAll) break;
       try{
         const monthUrl = _resolveAutoUrl(historyDirUrl, `${month}.json`);
-        const part = await _fetchAutoJson(monthUrl);
+        const part = await _fetchMonthJsonSafe(monthUrl);
+        if(!part){
+          // [FIX-404] 첫 월부터 실패하고 성공한 월이 하나도 없으면 월별 저장소가
+          // 배포에 포함되지 않은 것으로 보고 남은 월 요청을 중단한다(404 연쇄 방지).
+          if(!monthParts.length){ _monthSkipAll = true; break; }
+          continue;
+        }
         monthParts.push(part);
         histKeys.forEach(k=>{
           if(Array.isArray(part[k]) && part[k].length) merged[k].push(...part[k]);
@@ -1551,7 +1568,11 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
           const historyDir = String(idxFallback.historyDir || 'data/history/').replace(/\/?$/, '/');
           const monthParts = [];
           for(const month of (Array.isArray(idxFallback.historyMonths) ? idxFallback.historyMonths : [])){
-            try{ monthParts.push(await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, `${historyDir}${month}.json`))); }catch(e){}
+            try{
+              const _mp = await _fetchMonthJsonSafe(_resolveAutoUrl(loadedFromUrl, `${historyDir}${month}.json`));
+              if(_mp) monthParts.push(_mp);
+              else if(!monthParts.length) break; // [FIX-404] 월별 저장소 없음 → 나머지 요청 중단
+            }catch(e){}
           }
           const repaired = _recoverMatchArraysFromPlayerHistoryLocal({
             ...coreFallback3,
