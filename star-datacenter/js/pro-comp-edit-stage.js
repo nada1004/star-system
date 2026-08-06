@@ -65,10 +65,10 @@ window.pcSaveStageRec = function(tnId, round, idx, mid){
   // 후보가 있는데 못 고른 경우 안내(저장은 진행)
   try{
     if(aInfo && aInfo.match==='none' && aInfo.candidates && aInfo.candidates.length){
-      console.log('[대진표 기록] A 후보:', aInfo.candidates.map(x=>x.name).join(', '));
+      window.LOG('대진표 기록', 'A 후보:', aInfo.candidates.map(x=>x.name).join(', '));
     }
     if(bInfo && bInfo.match==='none' && bInfo.candidates && bInfo.candidates.length){
-      console.log('[대진표 기록] B 후보:', bInfo.candidates.map(x=>x.name).join(', '));
+      window.LOG('대진표 기록', 'B 후보:', bInfo.candidates.map(x=>x.name).join(', '));
     }
   }catch(e){}
   const prev = (idx>=0 && arr[idx]) ? arr[idx] : null;

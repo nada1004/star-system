@@ -152,16 +152,16 @@ async function _autoSyncCheck() {
     // 원격에 더 새로운 데이터가 있으면 자동으로 불러오기
     if (remoteAt > localSavedAt + 3000) { // 3초 여유
       if (_autoSyncShouldDefer()) {
-        console.log('[autoSync] 모달/입력 중 - 이번 주기는 보류 (다음 30초에 재시도)');
+        window.LOG('autoSync', '모달/입력 중 - 이번 주기는 보류 (다음 30초에 재시도)');
         return;
       }
-      console.log('[autoSync] 원격에 새 데이터 감지 - 자동 동기화 시작');
+      window.LOG('autoSync', '원격에 새 데이터 감지 - 자동 동기화 시작');
       
       // 자동으로 데이터 불러오기 (confirm 없이 조용히)
       if (typeof window._autoSyncApply === 'function') {
         try {
           await window._autoSyncApply();
-          console.log('[autoSync] 자동 동기화 완료');
+          window.LOG('autoSync', '자동 동기화 완료');
           // 알림 토스트
           if (typeof showToast === 'function') {
             showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);
@@ -194,7 +194,7 @@ async function _autoSyncCheck() {
 function startAutoSync() {
   if (_autoSyncTimer) clearInterval(_autoSyncTimer);
   _autoSyncTimer = setInterval(_autoSyncCheck, 30 * 1000); // 30초
-  console.log('[autoSync] 자동 동기화 시작 (30초 간격)');
+  window.LOG('autoSync', '자동 동기화 시작 (30초 간격)');
 }
 
 // 자동 동기화 중지
@@ -202,7 +202,7 @@ function stopAutoSync() {
   if (_autoSyncTimer) {
     clearInterval(_autoSyncTimer);
     _autoSyncTimer = null;
-    console.log('[autoSync] 자동 동기화 중지');
+    window.LOG('autoSync', '자동 동기화 중지');
   }
 }
 

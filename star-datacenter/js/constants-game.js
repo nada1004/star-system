@@ -802,6 +802,25 @@ function _rebuildAllPlayerHistoryCore() {
           count++;
         });
       });
+      // (안전장치) 프로리그대회 재생성 필드 누락 방지용 자체 점검.
+      // 위에서 실제로 처리하는 tn의 필드 목록을 여기 한 곳에 명시해두고,
+      // tn에 매치/기록성 데이터로 보이는 배열/객체 필드가 있는데 목록에 없으면
+      // "또 다른 필드를 추가해놓고 재생성 로직 반영을 깜빡한 경우"로 간주해 경고한다.
+      // (constants-game.js 여러 줄에 로직이 흩어져 있어 생기기 쉬운 실수를 잡기 위함 —
+      //  새 필드를 추가했다면 이 목록에도 함께 추가할 것)
+      try {
+        const _PROTOUR_HANDLED_FIELDS = ['groups', 'thirdPlace', 'teamMatches', 'stageRecords', 'gjMatches'];
+        const _PROTOUR_IGNORE_FIELDS = ['id', '_id', 'name', 'type', 'date', 'd', 'createdAt', 'updatedAt', 'settings', 'meta', 'options', 'note', 'notes'];
+        Object.keys(tn || {}).forEach(k => {
+          if (_PROTOUR_HANDLED_FIELDS.includes(k) || _PROTOUR_IGNORE_FIELDS.includes(k) || k.startsWith('_')) return;
+          const v = tn[k];
+          const looksLikeRecordData = (Array.isArray(v) && v.length && typeof v[0] === 'object')
+            || (v && typeof v === 'object' && (Array.isArray(v.games) || Array.isArray(v.sets)));
+          if (looksLikeRecordData && typeof window.WARN === 'function') {
+            window.WARN('rebuildAllPlayerHistory', `proTourneys 필드 '${k}'가 재생성 로직에 반영되지 않은 것 같습니다 — 스트리머 전적 누락 가능성. constants-game.js의 _PROTOUR_HANDLED_FIELDS 목록 확인 필요`, { tnId: tn.id, tnName: tn.name });
+          }
+        });
+      } catch (e) {}
     });
   }
 

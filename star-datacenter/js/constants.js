@@ -39,7 +39,7 @@ function _checkDataVersion(){
     
     const savedVer = Number(localStorage.getItem('su_data_version')) || 0;
     if(savedVer !== DATA_VERSION){
-      console.log('[Cache] 데이터 버전 변경됨:', savedVer, '->', DATA_VERSION, '- 캐시 초기화');
+      window.LOG('Cache', '데이터 버전 변경됨:', savedVer, '->', DATA_VERSION, '- 캐시 초기화');
       _clearCacheByVersionChange();
     }else{
       // 버전이 같으면 체크 완료 플래그 설정
@@ -67,7 +67,7 @@ function _clearCacheByVersionChange(){
     try{ sessionStorage.setItem('su_force_autoload', '1'); }catch(e){}
     try{ if(window.MatchStore && typeof window.MatchStore.clear === 'function') window.MatchStore.clear(); }catch(e){}
     try{ if(window.PlayerStore && typeof window.PlayerStore.clear === 'function') window.PlayerStore.clear(); }catch(e){}
-    console.log('[Cache] 캐시 초기화 완료');
+    window.LOG('Cache', '캐시 초기화 완료');
     // (요청) 버전 변경 시 강제 새로고침은 하지 않음
     // - 일부 환경에서 localStorage/sessionStorage 반영 타이밍 문제로 "계속 새로고침"처럼 느껴질 수 있음
     // - 대신 이번 세션에서는 체크 완료로 표시하고, 사용자에게 필요 시 수동 새로고침을 안내
@@ -82,7 +82,7 @@ window.clearAppCache = function(){
   if(!confirm('앱 캐시를 초기화하시겠습니까?\n\n⚠️ 저장된 모든 데이터가 삭제됩니다.')) return;
   try{
     localStorage.clear();
-    console.log('[Cache] 전체 캐시 삭제 완료');
+    window.LOG('Cache', '전체 캐시 삭제 완료');
     location.reload();
   }catch(e){
     alert('캐시 삭제 실패: ' + e.message);
@@ -95,7 +95,7 @@ window.clearSpecificCache = function(keys){
     keys.forEach(key => {
       try{ localStorage.removeItem(key); }catch(e){}
     });
-    console.log('[Cache] 특정 캐시 삭제 완료:', keys);
+    window.LOG('Cache', '특정 캐시 삭제 완료:', keys);
     return true;
   }catch(e){
     console.error('[Cache] 특정 캐시 삭제 실패:', e);

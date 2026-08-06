@@ -476,12 +476,13 @@ async function buildChunk(outName, files) {
     .reduce((a, b) => a + b, 0);
   const newSize = Buffer.byteLength(combined, 'utf8');
   const saved = origSize > 0 ? (((origSize - newSize) / origSize) * 100).toFixed(1) : '?';
+  const hash = crypto.createHash('md5').update(combined).digest('hex').slice(0, 10);
 
   console.log(
     `  ✅ ${outName.padEnd(22)} ${String(files.length - missing).padStart(3)}개 파일  ` +
     `${fmtSize(origSize).padStart(9)} → ${fmtSize(newSize).padStart(9)}  (-${saved}%)`
   );
-  return { outName, files: files.length - missing, origSize, newSize };
+  return { outName, files: files.length - missing, origSize, newSize, hash };
 }
 
 async function buildCssBundle(files) {
@@ -522,7 +523,38 @@ async function buildCssBundle(files) {
   return { origSize, newSize, hash };
 }
 
+// ─────────────────────────────────────────
+// sw.js의 CACHE_VERSION을 빌드 산출물 해시 기반으로 자동 갱신.
+// (예전엔 배포마다 수동으로 CACHE_VERSION 문자열을 올려야 했고, 깜빡하면
+//  사용자 브라우저에 이전 캐시가 그대로 남아 새 빌드가 반영되지 않는 문제가 있었다.
+//  → 모든 청크/CSS 해시를 합쳐 하나의 버전 문자열을 만들고, 내용이 실제로
+//  달라졌을 때만 sw.js 파일을 갱신한다.)
+function patchServiceWorker(results, cssHash) {
+  const swPath = path.join(SRC, 'sw.js');
+  if (!fs.existsSync(swPath)) {
+    console.warn('  ⚠️  sw.js 없음 — CACHE_VERSION 자동 갱신 건너뜀');
+    return;
+  }
+  const allHashes = results.map(r => r.hash).concat([cssHash]).join('');
+  const combinedHash = crypto.createHash('md5').update(allHashes).digest('hex').slice(0, 10);
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const newVersion = `v${dateStr}-${combinedHash}`;
 
+  let sw = fs.readFileSync(swPath, 'utf8');
+  const versionRe = /const CACHE_VERSION = '([^']*)';/;
+  const m = sw.match(versionRe);
+  if (!m) {
+    console.warn('  ⚠️  sw.js에서 CACHE_VERSION 선언을 찾지 못함 — 자동 갱신 건너뜀');
+    return;
+  }
+  if (m[1] === newVersion) {
+    console.log(`  ℹ️  sw.js CACHE_VERSION 변경 없음 (${newVersion})`);
+    return;
+  }
+  sw = sw.replace(versionRe, `const CACHE_VERSION = '${newVersion}';`);
+  fs.writeFileSync(swPath, sw, 'utf8');
+  console.log(`  🔄 sw.js CACHE_VERSION 갱신: ${m[1]} → ${newVersion}`);
+}
 
 function patchIndexHtml(stats, cssHash) {
   const htmlPath = path.join(SRC, 'index.html');
@@ -776,6 +808,9 @@ async function main() {
 
   // index.html 패치
   patchIndexHtml(results, cssResult.hash);
+
+  // sw.js CACHE_VERSION 자동 갱신 (내용 해시 기반)
+  patchServiceWorker(results, cssResult.hash);
 
   console.log(`\n✨ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
   console.log('\n사용 방법:');

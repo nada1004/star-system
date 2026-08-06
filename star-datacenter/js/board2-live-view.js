@@ -4,11 +4,9 @@
    - 대학별 / 티어별 필터 + 이름검색 + 정렬 + 카드크기 조절
    - IntersectionObserver로 화면에 보이는 카드만 iframe 로드(성능)
    - 카드 확대보기 모달 지원
-   - 라이브 상태 자동감지:
-     서버(/api/soop-live-status)가 SOOP player_live_api.php를 대신 호출해
-     방송중 여부를 조회(CORS 우회). 주기적으로 폴링해 카드 테두리 강조(is-live)와
-     정렬만 갱신하며, 이미 로드된 iframe은 다시 만들지 않음(방송 새로고침 방지).
-     (LIVE 텍스트 뱃지는 v27에서 제거됨)
+   - (2026-08 제거) 방송중 여부 자동감지용 SOOP 비공식 API 폴링(/api/soop-live-status)은
+     삭제됨. 카드는 항상 프로필 사진을 기본 커버로 표시하며, is-live 강조/정렬은
+     더 이상 사용하지 않는다. 호버/클릭 시 실제 방송 화면 미리보기(iframe)는 그대로 동작.
    ══════════════════════════════════════════════════════════════ */
 
 var _b2LiveUnivFilter = '전체';
@@ -18,12 +16,6 @@ var _b2LiveSearch = '';
 var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort') || 'tier'; }catch(e){ return 'tier'; } })(); // 'tier' | 'name' | 'univ'
 var _b2LiveCardSize = 's';
 var _b2LiveObserver = null;
-
-// ── 라이브 상태(뱃지) ──
-var _b2LiveStatusCache = {};        // soopId -> { live, title, viewerCnt, ts }
-var _b2LivePollTimer = null;        // setInterval 핸들
-var _b2LivePollInFlight = false;    // 중복 폴링 방지
-var _b2LivePollIntervalMs = 45000;  // 자동 새로고침 주기
 var _b2LiveHoverOpenTimer = null;
 var _b2LiveHoverCloseTimer = null;
 var _b2LiveHoverOpenId = '';
@@ -208,105 +200,6 @@ function _b2LiveClickCover(el, id) {
   } catch (e) {}
 }
 
-// 서버 프록시(/api/soop-live-status)로 방송상태 일괄 조회
-async function _b2LiveFetchStatus(ids) {
-  if (!ids || !ids.length) return {};
-  try {
-    const res = await fetch('/api/soop-live-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids }),
-    });
-    if (!res.ok) return {};
-    const data = await res.json().catch(() => null);
-    return (data && data.results) || {};
-  } catch (e) {
-    return {};
-  }
-}
-
-// 캐시된 상태를 이미 렌더된 카드 DOM에 반영 (뱃지 표시)
-// ※ innerHTML을 다시 쓰지 않음 — iframe이 재로드되어 방송이 끊기는 것 방지
-function _b2LiveApplyStatusToDom(container) {
-  if (!container) return;
-  const cards = container.querySelectorAll('.b2-live-card[data-soop-id]');
-  cards.forEach(card => {
-    const id = card.getAttribute('data-soop-id');
-    const st = _b2LiveStatusCache[id];
-    const isLive = !!(st && st.live);
-    card.classList.toggle('is-live', isLive);
-    const avatarBtn = card.querySelector('.b2-live-avatar-btn');
-    if (avatarBtn) avatarBtn.classList.toggle('is-live', isLive);
-    const coverImg = card.querySelector('.b2-live-cover');
-    const coverFallback = card.querySelector('.b2-live-cover-fallback');
-    const titleEl = card.querySelector('.b2-live-title');
-    const photoUrl = card.getAttribute('data-photo-url') || '';
-    const thumbUrl = st && st.thumb ? st.thumb : '';
-    const coverUrl = thumbUrl || photoUrl;
-    if (coverImg) {
-      if (coverUrl) {
-        if (coverImg.getAttribute('src') !== coverUrl) coverImg.setAttribute('src', coverUrl);
-        coverImg.style.display = 'block';
-        if (coverFallback) coverFallback.style.display = 'none';
-      } else {
-        coverImg.removeAttribute('src');
-        coverImg.style.display = 'none';
-        if (coverFallback) coverFallback.style.display = 'flex';
-      }
-    }
-    if (titleEl) {
-      const title = String((st && st.title) || '').trim();
-      titleEl.textContent = title || '';
-      titleEl.style.display = title ? '-webkit-box' : 'none';
-    }
-  });
-}
-
-// 현재 렌더된 카드들의 상태를 조회하고 DOM에 반영
-async function _b2LivePoll() {
-  if (_b2LivePollInFlight) return;
-  const container = document.getElementById('b2-content');
-  const cards = container ? container.querySelectorAll('.b2-live-card[data-soop-id]') : null;
-  if (!container || !cards || !cards.length) { _b2LiveStopPoll(); return; }
-  const ids = Array.from(cards).map(c => c.getAttribute('data-soop-id')).filter(Boolean);
-  _b2LivePollInFlight = true;
-  try {
-    const results = await _b2LiveFetchStatus(ids);
-    const now = Date.now();
-    let changed = false;
-    Object.keys(results).forEach(id => {
-      const prevLive = !!(_b2LiveStatusCache[id] && _b2LiveStatusCache[id].live);
-      const nextLive = !!(results[id] && results[id].live);
-      if (prevLive !== nextLive) changed = true;
-      const prev = _b2LiveStatusCache[id] || {};
-      _b2LiveStatusCache[id] = Object.assign({}, prev, results[id], { ts: now });
-    });
-    // 폴링 도중 다른 탭으로 이동했을 수 있으니 재확인 후 반영
-    const stillLive = document.getElementById('b2-content');
-    if (stillLive && stillLive.querySelector('.b2-live-card[data-soop-id]')) {
-      if (changed && _b2LiveSortMode === 'tier' && typeof _b2LiveRefreshResultsOnly === 'function') {
-        // 라이브 여부가 바뀐 사람이 있으면 그리드를 다시 그려 라이브 우선 정렬을 반영
-        // (그리드에는 iframe이 없어 재생 중단 없이 안전하게 재생성 가능)
-        _b2LiveRefreshResultsOnly();
-      } else {
-        _b2LiveApplyStatusToDom(stillLive);
-      }
-    }
-  } finally {
-    _b2LivePollInFlight = false;
-  }
-}
-
-function _b2LiveStartPoll() {
-  _b2LiveStopPoll();
-  _b2LivePoll();
-  _b2LivePollTimer = setInterval(_b2LivePoll, _b2LivePollIntervalMs);
-}
-
-function _b2LiveStopPoll() {
-  if (_b2LivePollTimer) { clearInterval(_b2LivePollTimer); _b2LivePollTimer = null; }
-}
-
 function _b2LiveView() {
   // SOOP 채널 등록된 스트리머만 추출 (대학 소속이거나 무소속탭에 있는 멤버만 — 'YB' 표기만 제외)
   const soopPlayers = (typeof players !== 'undefined' ? players : []).filter(p => {
@@ -435,28 +328,20 @@ function _b2LiveResultsHTML() {
 
   const tierOrder = typeof TIERS !== 'undefined' ? TIERS : [];
   const univOrder = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
-  // (참고사이트 방식) 같은 그룹(티어/대학) 안에서는 방송 중인 스트리머를 먼저 보여준다
-  const _isLiveP = (p) => { const st = _b2LiveStatusCache[p._soopId]; return !!(st && st.live) ? 0 : 1; };
   const tierFiltered = searched.slice().sort((a, b) => {
     if (_b2LiveSortMode === 'name') {
-      const la = _isLiveP(a), lb = _isLiveP(b);
-      if (la !== lb) return la - lb;
       return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
     }
     if (_b2LiveSortMode === 'univ') {
       const ia = univOrder.indexOf(a.univ); const ib = univOrder.indexOf(b.univ);
       const ra = ia >= 0 ? ia : 999; const rb = ib >= 0 ? ib : 999;
       if (ra !== rb) return ra - rb;
-      const la = _isLiveP(a), lb = _isLiveP(b);
-      if (la !== lb) return la - lb;
       return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
     }
-    // 기본: 티어순 (같은 티어 안에서는 라이브 우선)
+    // 기본: 티어순
     const idxA = tierOrder.indexOf(a.tier); const idxB = tierOrder.indexOf(b.tier);
     const rankA = idxA >= 0 ? idxA : 999; const rankB = idxB >= 0 ? idxB : 999;
     if (rankA !== rankB) return rankA - rankB;
-    const la = _isLiveP(a), lb = _isLiveP(b);
-    if (la !== lb) return la - lb;
     return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
   });
 
@@ -499,14 +384,11 @@ function _b2LiveResultsHTML() {
     const univColor = typeof gc === 'function' ? gc(p.univ) : '#6b7280';
     const tierBg = typeof getTierBtnColor === 'function' ? getTierBtnColor(p.tier) : '#64748b';
     const tierFg = typeof getTierBtnTextColor === 'function' ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
-    const safeName = String(p.name || '').replace(/'/g, "\\'");
+    const safeName = (typeof escJS === 'function') ? escJS(p.name) : String(p.name || '').replace(/'/g, "\\'");
     const safeNameHtml = String(p.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const stKnown = _b2LiveStatusCache[p._soopId];
     const photoUrl = p.photo ? ((typeof toHttpsUrl === 'function' ? toHttpsUrl(p.photo) : p.photo).replace(/"/g, '&quot;')) : '';
-    const thumbUrl = stKnown && stKnown.thumb ? String(stKnown.thumb).replace(/"/g, '&quot;') : '';
-    const coverUrl = thumbUrl || photoUrl;
-    const titleText = String((stKnown && stKnown.title) || '').trim();
-    const titleHtml = titleText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const coverUrl = photoUrl;
+    const titleHtml = '';
     const avatarHtml = photoUrl
       ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`
@@ -539,7 +421,7 @@ function _b2LiveResultsHTML() {
     // 하드코딩된 원형(50%) 대신 --su_profile_radius / --su_profile_clip CSS 변수 사용
     const avatarBlock = `
       <div style="position:relative;flex-shrink:0" onmouseenter="_b2LiveShowInlinePreview(this,'${p._soopId}')" onmouseleave="_b2LiveHideInlinePreview(this,'${p._soopId}',event)">
-        <button type="button" class="b2-live-avatar-btn${(stKnown && stKnown.live) ? ' is-live' : ''}" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
+        <button type="button" class="b2-live-avatar-btn" onclick="openPlayerModal&&openPlayerModal('${safeName}')" title="선수 상세"
           style="width:${sizeCfg.avatar}px;height:${sizeCfg.avatar}px;padding:0;border:2px solid rgba(255,255,255,.96);border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--white);cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.14)">
           ${avatarHtml}
         </button>
@@ -584,20 +466,11 @@ function _b2LiveResultsHTML() {
       </div>`;
 
     return groupHeader + `
-      <div class="b2-live-card${(stKnown && stKnown.live) ? ' is-live' : ''}" data-soop-id="${p._soopId}" data-photo-url="${photoUrl}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:16px;overflow:hidden;padding:${sizeCfg.pad}">
+      <div class="b2-live-card" data-soop-id="${p._soopId}" data-photo-url="${photoUrl}" style="position:relative;background:${cardBg};border:1.5px solid var(--border2);border-radius:16px;overflow:hidden;padding:${sizeCfg.pad}">
         ${cardBody}
       </div>
     `;
   }).join('');
-
-  setTimeout(() => {
-    try{
-      const el = document.getElementById('b2-content');
-      // (요청사항) 라이브 탭 진입 시 방송이 자동으로 로드되지 않도록 iframe 미사용
-      _b2LiveApplyStatusToDom(el); // 기존 캐시로 즉시 뱃지/숨김 반영(깜빡임 방지)
-      _b2LiveStartPoll();          // 최신 상태 폴링 시작(다른 탭 이동 시 자동 중단)
-    }catch(e){}
-  }, 0);
 
   return `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${cardMinPx}px,1fr));gap:${sizeCfg.gap}px">

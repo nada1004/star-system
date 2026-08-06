@@ -378,7 +378,7 @@ function rCompGrpRankFull(tn){
       const rowClass=i===0?'grp-rank-top1':i===1?'grp-rank-top2':'';
       h+=`<tr class="${rowClass}">
         <td>${i===0?`<span class="rk1">1위</span>`:i===1?`<span class="rk2">2위</span>`:i===2?`<span class="rk3">3위</span>`:`${i+1}위`}</td>
-        <td><span class="ubadge ${isTier?'':'clickable-univ'}" style="background:${uc};font-size:var(--fs-caption)" ${isTier?'':`onclick="openUnivModal('${name}')"`}>${name}</span></td>
+        <td><span class="ubadge ${isTier?'':'clickable-univ'}" style="background:${uc};font-size:var(--fs-caption)" ${isTier?'':`onclick="openUnivModal('${escJS(name)}')"`}>${name}</span></td>
         <td style="color:var(--gray-l)">${s.played}</td><td class="wt">${s.w}</td><td class="lt">${s.l}</td>
         <td class="wt">${s.gw}</td><td class="lt">${s.gl2}</td>
         <td><span style="display:inline-flex;align-items:center;gap:2px;padding:2px 9px;border-radius:20px;font-weight:800;font-size:var(--fs-sm);background:${diff>0?'color-mix(in srgb, var(--red) 14%, var(--white))':diff<0?'var(--surface)':'transparent'};color:${diff>0?'var(--red)':diff<0?'var(--text3)':'var(--gray-l)'}">${diff>0?'▲':diff<0?'▼':''}${diff>=0?'+':''}${diff}</span></td>
@@ -947,7 +947,7 @@ function _rCompTourTree(tn){
     const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _bktSideRgbVars=`--rec-side-left-rgb:${_hexRgb(aC)};--rec-side-right-rgb:${_hexRgb(bC)};`;
     const _bktFxCls=(_bktFxOn&&a?.univ&&b?.univ)?` grp-match-card grp-sidefx grp-sidefx--${_bktFxMode}`:'';
-    return `<div class="grp-match-card tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1px solid ${isDone?_winCol+'40':'var(--border)'};border-radius:16px;overflow:hidden;width:max-content;min-width:150px;max-width:100%;flex-shrink:0;box-shadow:0 6px 18px rgba(15,23,42,.09), 0 1px 3px rgba(15,23,42,.06)">
+    return `<div class="grp-match-card tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1px solid ${isDone?_winCol+'40':'var(--border)'};border-radius:16px;overflow:hidden;width:max-content;min-width:150px;max-width:min(220px,100%);flex-shrink:0;box-shadow:0 6px 18px rgba(15,23,42,.09), 0 1px 3px rgba(15,23,42,.06)">
       ${teamRow(a,b,aWin,bWin,rnd,mi,aSc,bSc,detDone)}
       ${footer}
     </div>`;

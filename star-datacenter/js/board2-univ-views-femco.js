@@ -776,7 +776,7 @@ async function _saveB2FemcoInternal(){
   const fname = '펨코현황판_전체_' + new Date().toISOString().slice(0,10) + '.png';
 
   try{
-    console.log('[펨코] 이미지 저장 시작');
+    window.LOG('펨코', '이미지 저장 시작');
     if (typeof window._captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await window._captureAndSave(tmpDiv, w, h, fname);
     

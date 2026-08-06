@@ -137,7 +137,7 @@ async function fbCloudSave(opts) {
       if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ ${warnLabel} — 곧 저장 실패할 수 있습니다`; }
       console.warn('[fbCloudSave] 크기 경고:', (warnBytes/1024).toFixed(0)+'KB');
     }
-    console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
+    window.LOG('fbCloudSave', '페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
   // 🔧 Firebase는 undefined 값 저장 불가 → 전송 전 재귀적으로 undefined 제거
   function _removeUndefined(obj) {
@@ -163,7 +163,7 @@ async function fbCloudSave(opts) {
     const jsonStr = JSON.stringify(clean);
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
-    console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
+    window.LOG('fbCloudSave', '원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
     return window.fbSet(payload);
   };
   try {
@@ -309,7 +309,7 @@ async function _fetchGithubData(){
 // 가져온 데이터를 전역 상태에 적용 + 탭/캐시 초기화 + init() 재실행까지 공통 처리
 function _applyFetchedCloudData(d){
   _applyCloudData(d);
-  console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
+  window.LOG('불러오기', '데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
   localSave();
   fixPoints();

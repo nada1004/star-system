@@ -199,7 +199,7 @@ async function _mergeTierGeneralRestore(){
       try{ if(typeof save==='function') save(); }catch(e){}
       try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
       try{ if(typeof render==='function') render(); }catch(e){}
-      console.log('[티어대회 일반 기록 복구] 추가:', added, '원본:', arr.length);
+      window.LOG('티어대회 일반 기록 복구', '추가:', added, '원본:', arr.length);
     }
     _ttGeneralRestoreLoading = false;
   }catch(e){

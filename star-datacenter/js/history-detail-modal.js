@@ -388,8 +388,8 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
       const winBorderA=pca+'66',winBorderB=pcb+'66';
       const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;`;
       const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;`;
-      const cA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
-      const cB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cA=g.playerA?`onclick="openPlayerModal('${escJS(g.playerA)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cB=g.playerB?`onclick="openPlayerModal('${escJS(g.playerB)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
       const mapStr=g.map?`<span style="background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px">${g.map}</span>`:'';
       const teamANameHTML = `${_histSearchTeamBadge(sideA)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideA)}</strong>`;
       const teamBNameHTML = `${_histSearchTeamBadge(sideB)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideB)}</strong>`;

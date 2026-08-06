@@ -231,7 +231,7 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       if(hasRecordKeys && hasPlayerIdbData) return;
     }
   }catch(e){}
-  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  window.LOG('자동 불러오기', '로컬 데이터 없음 → GitHub 자동 로드');
   const _fetchAutoJson = async (url)=>{
     const res = await Promise.race([
       fetch(url, {cache:'no-store', mode:'cors'}),
@@ -524,8 +524,8 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     try{
       d = await _fetchAutoJson(url);
       d = await _mergeSplitStoreData(d, url);
-      if(d){ loadedFromUrl = url; console.log('[자동 불러오기] 성공:', url); break; }
-    }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
+      if(d){ loadedFromUrl = url; window.LOG('자동 불러오기', '성공:', url); break; }
+    }catch(e){ window.LOG('자동 불러오기', '실패:', url, e.message); continue; }
   }
   if(d){
     try{

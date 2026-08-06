@@ -64,7 +64,7 @@ function rUnivBodyHTML(){
     else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base)">${i+1}위</span>`;
     h+=`<tr style="background:${col}08">
       <td style="text-align:left">${rnkHTML}</td>
-      <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${name}')">${name}</span></td>
+      <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${escJS(name)}')">${name}</span></td>
       <td style="color:var(--gray-l)">${s.cnt}명</td>
       <td class="wt" style="font-size:var(--fs-md);font-weight:800">${s.w}</td>
       <td class="lt" style="font-size:var(--fs-md);font-weight:800">${s.l}</td>
