@@ -874,29 +874,27 @@ function _rCompTourTree(tn){
     const bLogo = bTbd?'':gUI(bName,'20px');
     if(isLoggedIn){
       return `<div style="display:flex;align-items:center;justify-content:center;height:38px;padding:0 6px">
-        ${a?.grpName?`<span style="background:${a.color||aCol};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;margin-right:3px;border-radius:3px;flex-shrink:0">${a.rank}</span>`:''}
-        <span style="display:flex;align-items:center;gap:5px;padding:0 6px 0 4px">
+        <span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:5px;padding:0 6px 0 4px">
           <select onchange="setBracketSlot('${tnId}',${rnd},${mi},'a',this.value)"
-            style="flex:0 0 auto;width:auto;max-width:110px;height:100%;border:none;background:transparent;font-size:var(--fs-sm);font-weight:${aFw};color:${aTextCol};padding:0;cursor:pointer;outline:none;text-align:right;text-align-last:right">
+            style="flex:0 1 auto;min-width:0;width:auto;max-width:110px;height:100%;border:none;background:transparent;font-size:var(--fs-sm);font-weight:${aFw};color:${aTextCol};padding:0;cursor:pointer;outline:none;text-align:right;text-align-last:right">
             <option value="">— 미정 —</option>
             ${allU.map(u=>`<option value="${u.name}"${aName===u.name?' selected':''}>${u.name}</option>`).join('')}
           </select>${aLogo}
         </span>
         ${midEl}
-        <span style="display:flex;align-items:center;gap:5px;padding:0 4px 0 6px">${bLogo}
+        <span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:5px;padding:0 4px 0 6px">${bLogo}
           <select onchange="setBracketSlot('${tnId}',${rnd},${mi},'b',this.value)"
-            style="flex:0 0 auto;width:auto;max-width:110px;height:100%;border:none;background:transparent;font-size:var(--fs-sm);font-weight:${bFw};color:${bTextCol};padding:0;cursor:pointer;outline:none;text-align:left">
+            style="flex:0 1 auto;min-width:0;width:auto;max-width:110px;height:100%;border:none;background:transparent;font-size:var(--fs-sm);font-weight:${bFw};color:${bTextCol};padding:0;cursor:pointer;outline:none;text-align:left">
             <option value="">— 미정 —</option>
             ${allU.map(u=>`<option value="${u.name}"${bName===u.name?' selected':''}>${u.name}</option>`).join('')}
           </select>
         </span>
-        ${b?.grpName?`<span style="background:${b.color||bCol};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;margin-left:3px;border-radius:3px;flex-shrink:0">${b.rank}</span>`:''}
       </div>`;
     }
     return `<div style="display:flex;align-items:center;justify-content:center;height:auto;min-height:38px;padding:6px">
-      <span style="display:flex;align-items:center;gap:5px;padding:0 6px 0 4px;font-size:var(--fs-sm);font-weight:${aFw};color:${aTextCol};white-space:nowrap">${aTbd?'미정':aName}${aLogo}</span>
+      <span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:5px;padding:0 6px 0 4px;font-size:var(--fs-sm);font-weight:${aFw};color:${aTextCol};white-space:nowrap">${aTbd?'미정':aName}${aLogo}</span>
       ${midEl}
-      <span style="display:flex;align-items:center;gap:5px;padding:0 4px 0 6px;font-size:var(--fs-sm);font-weight:${bFw};color:${bTextCol};white-space:nowrap">${bLogo}${bTbd?'미정':bName}</span>
+      <span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:5px;padding:0 4px 0 6px;font-size:var(--fs-sm);font-weight:${bFw};color:${bTextCol};white-space:nowrap">${bLogo}${bTbd?'미정':bName}</span>
     </div>`;
   }
 
@@ -947,7 +945,7 @@ function _rCompTourTree(tn){
     const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _bktSideRgbVars=`--rec-side-left-rgb:${_hexRgb(aC)};--rec-side-right-rgb:${_hexRgb(bC)};`;
     const _bktFxCls=(_bktFxOn&&a?.univ&&b?.univ)?` grp-match-card grp-sidefx grp-sidefx--${_bktFxMode}`:'';
-    return `<div class="grp-match-card tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1px solid ${isDone?_winCol+'40':'var(--border)'};border-radius:16px;overflow:hidden;width:max-content;min-width:150px;max-width:min(220px,100%);flex-shrink:0;box-shadow:0 6px 18px rgba(15,23,42,.09), 0 1px 3px rgba(15,23,42,.06)">
+    return `<div class="grp-match-card tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1px solid ${isDone?_winCol+'40':'var(--border)'};border-radius:16px;overflow:hidden;width:220px;min-width:150px;max-width:min(220px,100%);flex-shrink:0;box-shadow:0 6px 18px rgba(15,23,42,.09), 0 1px 3px rgba(15,23,42,.06)">
       ${teamRow(a,b,aWin,bWin,rnd,mi,aSc,bSc,detDone)}
       ${footer}
     </div>`;
