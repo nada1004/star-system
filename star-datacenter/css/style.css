@@ -49,8 +49,8 @@
   --tc-hd-a: .12;
   --tc-bw: 4px;
   --tc-uicon: 34px;
-  --tc-line-w: 2px;        /* 브라켓 연결선 두께 */
-  --tc-line-a: .70;        /* 브라켓 연결선 진하기 */
+  --tc-line-w: 1.5px;        /* 브라켓 연결선 두께 */
+  --tc-line-a: .60;        /* 브라켓 연결선 진하기 */
   --tc-line-rgb: 147,197,253; /* 기본 연결선 색 */
   /* 전역 폰트(설정에서 변경) */
   --app-font: "Segoe UI","Malgun Gothic","Apple SD Gothic Neo",'Noto Sans KR',sans-serif,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";
@@ -15372,3 +15372,45 @@ body.dark .pd-univ-card{
 /* 경기기록 상세 - 에이스전(3세트 결정전) 세트 헤더 색상 */
 .cmd-set-head--ace{ background:#f5f3ff; border-color:#ddd6fe; }
 body.dark .cmd-set-head--ace{ background:rgba(124,58,237,.18); border-color:rgba(196,181,253,.3); }
+
+/* ══════════════════════════════════════
+   대진표 브로드캐스트형 모드 개선 (2026-08)
+   - 방송 그래픽 느낌 강화 / LIVE·다음경기 강조 / 모바일 최적화
+══════════════════════════════════════ */
+.bc-row{position:relative}
+.bc-row--flag{margin-top:9px}
+.bc-card{display:flex;align-items:stretch;border-radius:9px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.bc-card--live{outline:2px solid var(--red);outline-offset:1px}
+.bc-card--next{outline:2px solid var(--blue);outline-offset:1px}
+.bc-side{flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;min-width:0}
+.bc-side-b{justify-content:flex-end}
+.bc-logo-ph{width:26px;height:26px;border-radius:50%;background:#33415588;flex-shrink:0}
+.bc-name{color:#fff;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-mid{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 14px;background:#0f172a;color:#fff;min-width:64px}
+.bc-mid-score{font-weight:900;font-size:var(--fs-sm)}
+.bc-mid-date{font-size:8px;color:#94a3b8;font-weight:700;margin-top:1px}
+.bc-status-tag{position:absolute;top:-9px;left:14px;color:#fff;font-size:9px;font-weight:900;letter-spacing:1px;padding:2px 8px;border-radius:999px;z-index:1}
+.bc-status-live{background:var(--red);box-shadow:0 2px 6px rgba(220,38,38,.5);animation:bktLivePulse 1.6s infinite}
+.bc-status-next{background:var(--blue);box-shadow:0 2px 6px rgba(37,99,235,.5)}
+.bc-round-badge{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:#fff;background:linear-gradient(135deg,#1e293b,#0f172a);padding:5px 16px 5px 12px;border-radius:999px;letter-spacing:1.5px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.bc-round-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+.bc-round-line{flex:1;height:2px;background:linear-gradient(90deg,rgba(15,23,42,.15),transparent)}
+@keyframes bktLivePulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.55)}70%{box-shadow:0 0 0 8px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+@media (prefers-reduced-motion: reduce){ .bc-status-live{animation:none} }
+@media (max-width:768px){
+  .bc-side{padding:8px 10px;gap:6px}
+  .bc-logo-ph{width:20px;height:20px}
+  .bc-name{font-size:12px}
+  .bc-mid{padding:4px 8px;min-width:52px}
+  .bc-mid-score{font-size:12px}
+  .bc-status-tag{font-size:8px;padding:2px 6px;left:8px}
+  .bc-round-badge{padding:4px 12px 4px 10px;font-size:11px;letter-spacing:1px}
+}
+@media (max-width:420px){
+  .bc-side{padding:7px 8px}
+  .bc-name{font-size:11px}
+  .bc-mid{min-width:46px;padding:3px 6px}
+  .bc-mid-score{font-size:11px}
+}
+
+/* 대회 - 대학 정보 탭 */
