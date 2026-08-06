@@ -160,6 +160,25 @@ let proTourneys = _matchLegacyLoadEnabled ? (J('su_ptn') || []) : [];
 let curProComp  = J('su_ptc') || '';
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
 let tourneys   = _matchLegacyLoadEnabled ? (J('su_tn') || []) : [];
+// (버그픽스,2026-08-06) 결과를 하나도 안 넣었는데 sa=0,sb=0으로 저장돼 "0:0 완료 경기"로
+// 조별순위/브라켓에 승점이 잘못 반영되던 기존 데이터 정리. 실제 게임 결과가 있는 매치는 건드리지 않음.
+(function _fixPhantomZeroMatches(){
+  const hasResult = m => (m.sets||[]).some(st => (st.games||[]).some(g => g.winner==='A'||g.winner==='B'));
+  let touched=false;
+  (tourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(m && m.sa===0 && m.sb===0 && !hasResult(m)){ m.sa=null; m.sb=null; touched=true; }
+      });
+    });
+    if(tn.bracket && tn.bracket.matchDetails){
+      Object.values(tn.bracket.matchDetails).forEach(m=>{
+        if(m && m.sa===0 && m.sb===0 && !hasResult(m)){ m.sa=null; m.sb=null; touched=true; }
+      });
+    }
+  });
+  if(touched) window.addEventListener('DOMContentLoaded',()=>{ if(typeof save==='function') save(); });
+})();
 let ttM        = _matchLegacyLoadEnabled ? (J('su_ttm') || []) : [];
 let _ttCurComp = J('su_ttcur') || '';
 let _ttSub     = 'records';

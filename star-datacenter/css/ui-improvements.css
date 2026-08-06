@@ -278,9 +278,13 @@
    7. 조별리그 순위표
    ════════════════════════════ */
 .grp-rank-table { border-radius:var(--r2) !important; overflow: hidden !important; box-shadow: 0 4px 20px rgba(15,23,42,.08) !important; border: var(--card-border) !important; }
-.grp-rank-table th { background: linear-gradient(135deg,#0f172a,#1d4ed8 60%,#3b82f6) !important; padding: 11px 14px !important; font-size:var(--fs-caption) !important; font-weight: 900 !important; letter-spacing: .5px !important; color: #dbeafe !important; text-shadow: 0 1px 4px rgba(0,0,0,.3) !important; }
+.grp-rank-table th { background: color-mix(in srgb, var(--grt-col, var(--blue)) 16%, var(--white)) !important; padding: 11px 14px !important; font-size:var(--fs-caption) !important; font-weight: 900 !important; letter-spacing: .5px !important; color: var(--grt-col, var(--blue)) !important; border-bottom: 2px solid color-mix(in srgb, var(--grt-col, var(--blue)) 45%, transparent) !important; text-shadow: none !important; }
+body.dark .grp-rank-table th { background: color-mix(in srgb, var(--grt-col, var(--blue)) 28%, var(--white)) !important; color: color-mix(in srgb, var(--grt-col, var(--blue)) 70%, white) !important; border-bottom: 2px solid color-mix(in srgb, var(--grt-col, var(--blue)) 55%, transparent) !important; }
 .grp-rank-table td { padding: 10px 14px !important; font-size:var(--fs-base) !important; transition: background var(--tr-f) !important; }
 .grp-rank-table tr:hover td { background: rgba(239,246,255,.55) !important; }
+.grp-rank-table th:not(:last-child), .grp-rank-table td:not(:last-child) { border-right: 1px solid var(--border) !important; }
+body.dark .grp-rank-table th:not(:last-child), body.dark .grp-rank-table td:not(:last-child) { border-right-color: #2d3f55 !important; }
+.grp-rank-table th:first-child, .grp-rank-table td:first-child { width: 54px !important; text-align: center !important; padding-left: 4px !important; padding-right: 4px !important; }
 
 /* ════════════════════════════
    8. 토너먼트 뱃지

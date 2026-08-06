@@ -229,10 +229,10 @@ function bktSaveMatch(){
   const matchId=m._id||genId();
   if(m._id)revertMatchRecord({...m,_id:matchId});
   m._id=matchId;
-  let sa=0,sb=0;
+  let sa=0,sb=0,hasResult=false;
   (m.sets||[]).forEach(set=>{
     let sA=0,sB=0;
-    (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+    (set.games||[]).forEach(g=>{if(g.winner==='A'){sA++;hasResult=true;}else if(g.winner==='B'){sB++;hasResult=true;}});
     set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
@@ -242,7 +242,8 @@ function bktSaveMatch(){
     sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
     sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);
   }
-  m.sa=sa;m.sb=sb;
+  // (버그픽스) 게임 결과 없이 저장된 빈 매치가 0:0 완료 경기로 취급되던 문제 → 결과 없으면 null 유지
+  m.sa=hasResult?sa:null;m.sb=hasResult?sb:null;
   const tn=tourneys.find(t=>t.id===tnId);
   if(tn&&rnd!==-1){
     const br=getBracket(tn);

@@ -10592,8 +10592,9 @@ body.rc-bgfx-off .grp-match-card.match-card-v3 .grp-badge{
   box-shadow: 0 4px 16px rgba(15,23,42,0.07) !important;
 }
 .grp-rank-table th {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%) !important;
-  color: #e0f2fe !important;
+  background: color-mix(in srgb, var(--grt-col, var(--blue)) 16%, var(--white)) !important;
+  color: var(--grt-col, var(--blue)) !important;
+  border-bottom: 2px solid color-mix(in srgb, var(--grt-col, var(--blue)) 45%, transparent) !important;
   padding: 10px 12px !important;
   font-size:var(--fs-caption) !important;
   font-weight: 800 !important;
@@ -10613,8 +10614,9 @@ body.rc-bgfx-off .grp-match-card.match-card-v3 .grp-badge{
   background: linear-gradient(90deg, #f8fafc, rgba(248,250,252,0.3)) !important;
 }
 body.dark .grp-rank-table th {
-  background: linear-gradient(135deg, #060d1f, #0f1e3d 50%, #1e3a8a 100%) !important;
-  color: #93c5fd !important;
+  background: color-mix(in srgb, var(--grt-col, var(--blue)) 28%, var(--white)) !important;
+  color: color-mix(in srgb, var(--grt-col, var(--blue)) 70%, white) !important;
+  border-bottom: 2px solid color-mix(in srgb, var(--grt-col, var(--blue)) 55%, transparent) !important;
 }
 body.dark .grp-rank-table td {
   background: #1a2335 !important;

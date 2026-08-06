@@ -278,10 +278,10 @@ function grpSaveMatch(){
   const matchId=m._id||genId();
   if(m._id)revertMatchRecord({...m,_id:matchId});
   m._id=matchId;
-  let sa=0,sb=0;
+  let sa=0,sb=0,hasResult=false;
   (m.sets||[]).forEach(set=>{
     let sA=0,sB=0;
-    (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+    (set.games||[]).forEach(g=>{if(g.winner==='A'){sA++;hasResult=true;}else if(g.winner==='B'){sB++;hasResult=true;}});
     set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
@@ -291,7 +291,9 @@ function grpSaveMatch(){
     sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
     sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);
   }
-  m.sa=sa;m.sb=sb;
+  // (버그픽스) 게임 결과가 하나도 없는 빈 매치를 저장하면 sa/sb가 0으로 남아
+  // "0:0 완료된 무승부"로 취급돼 조별 순위에 승점이 잘못 반영되던 문제 → 결과 없으면 null 유지
+  m.sa=hasResult?sa:null;m.sb=hasResult?sb:null;
   const _modeLabel=tn.type==='tier'?'티어대회':'조별리그';
   (m.sets||[]).forEach((set, si)=>{
     (set.games||[]).forEach((g, gi)=>{

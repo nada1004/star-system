@@ -372,7 +372,7 @@ function rCompGrpRankFull(tn){
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${played}/${grp.matches.length}경기 완료</span>
         <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap">${grp.univs.map(u=>`<span class="ubadge" style="background:${gc(u)};font-size:var(--fs-caption)">${isTier?'':gUI(u,'10px')}${u}</span>`).join('')}</div>
       </div>
-      <table class="grp-rank-table"><thead><tr><th>순위</th><th>${isTier?'선수':'대학'}</th><th>경기</th><th>승</th><th>패</th><th>득</th><th>실</th><th>득실</th><th>승점</th></tr></thead><tbody>`;
+      <table class="grp-rank-table" style="--grt-col:${col}"><thead><tr><th>순위</th><th>${isTier?'선수':'대학'}</th><th>경기</th><th>승</th><th>패</th><th>득</th><th>실</th><th>득실</th><th>승점</th></tr></thead><tbody>`;
     sorted.forEach(([name,s],i)=>{
       const uc=gc(name);const diff=s.gw-s.gl2;const isTop=i<2;
       const rowClass=i===0?'grp-rank-top1':i===1?'grp-rank-top2':'';
@@ -381,7 +381,7 @@ function rCompGrpRankFull(tn){
         <td><span class="ubadge ${isTier?'':'clickable-univ'}" style="background:${uc};font-size:var(--fs-caption)" ${isTier?'':`onclick="openUnivModal('${name}')"`}>${name}</span></td>
         <td style="color:var(--gray-l)">${s.played}</td><td class="wt">${s.w}</td><td class="lt">${s.l}</td>
         <td class="wt">${s.gw}</td><td class="lt">${s.gl2}</td>
-        <td style="font-weight:700;color:${diff>0?'var(--red)':diff<0?'var(--text3)':'var(--gray-l)'}">${diff>=0?'+':''}${diff}</td>
+        <td><span style="display:inline-flex;align-items:center;gap:2px;padding:2px 9px;border-radius:20px;font-weight:800;font-size:var(--fs-sm);background:${diff>0?'color-mix(in srgb, var(--red) 14%, var(--white))':diff<0?'var(--surface)':'transparent'};color:${diff>0?'var(--red)':diff<0?'var(--text3)':'var(--gray-l)'}">${diff>0?'▲':diff<0?'▼':''}${diff>=0?'+':''}${diff}</span></td>
         <td style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:${col}">${s.pts}</td>
       </tr>`;
     });
