@@ -37,7 +37,7 @@ function rStats(C,T){
       {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
-      {id:'award',lbl:'🏆 이달의 스트리머'},
+      {id:'award',lbl:'🏆 이번 주/달 MVP'},
       {id:'records',lbl:'🎖️ 최다 기록'},
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
@@ -250,7 +250,7 @@ function rStats(C,T){
   }
   else if(window.statsSub==='elo')    h+=_safeRender(statsEloHTML, 'ELO 그래프');
   else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
-  else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이달의 스트리머');
+  else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이번 주/달 MVP');
   else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
   else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '대학 레이더');
   else if(window.statsSub==='univcompare') h+=_safeRender(statsUnivCompareHTML, '대학비교');

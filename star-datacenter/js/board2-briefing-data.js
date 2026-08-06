@@ -123,19 +123,20 @@ function _b2BuildMvpCardHtml(s, rank, isWorst, extraClass, opts) {
 // 캐시된 결과를 재사용하도록 했습니다. (players-tier-rank.js의 _tierRecByNameCache와 동일한 접근)
 const _b2WeeklyAggregateCache = [];
 const _B2_WEEKLY_AGG_CACHE_MAX = 4;
-function _b2WeeklyAggregate(players, dateFrom, dateTo) {
+function _b2WeeklyAggregate(players, dateFrom, dateTo, opts) {
+  const _inclPro = !!(opts && opts.includeProLeague);
   let cacheKey = null;
   try {
     let saveSig = '';
     try { saveSig = String(localStorage.getItem('su_last_save_time') || ''); } catch(e) {}
     // 선수 수만 비교하면 "같은 인원, 다른 구성"을 같다고 오판할 수 있어 이름을 이어붙여 서명으로 사용합니다.
     const namesSig = players.map(p => p && p.name).join(',');
-    cacheKey = `${dateFrom}|${dateTo}|${saveSig}|${namesSig}`;
+    cacheKey = `${dateFrom}|${dateTo}|${_inclPro?'PRO':'NOPRO'}|${saveSig}|${namesSig}`;
     const hit = _b2WeeklyAggregateCache.find(e => e.key === cacheKey);
     if (hit) return hit.result;
   } catch(e) { cacheKey = null; }
 
-  const result = _b2WeeklyAggregateCompute(players, dateFrom, dateTo);
+  const result = _b2WeeklyAggregateCompute(players, dateFrom, dateTo, opts);
 
   if (cacheKey) {
     _b2WeeklyAggregateCache.push({ key: cacheKey, result });
@@ -144,7 +145,9 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   return result;
 }
 
-function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
+function _b2WeeklyAggregateCompute(players, dateFrom, dateTo, opts) {
+  // 2026-08-06: 통계탭 "이번 달/지난달 MVP(남자)"는 프로리그 기록도 포함해 집계한다.
+  const includeProLeague = !!(opts && opts.includeProLeague);
   const dateNum = s => parseInt(String(s || '').replace(/[-\.\/]/g, '')) || 0;
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
   const inRange = d => { const dn = dateNum(d); return dn >= fromN && dn <= toN; };
@@ -152,7 +155,8 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   // 브리핑 집계 제외 모드: 개인전 / 끝장전 / 프로리그 기록은 반영하지 않음
   const isBriefingExcluded = mode => {
     const m = String(mode||'').trim();
-    return m.indexOf('프로리그') !== -1 || m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1
+    if (m.indexOf('프로리그') !== -1) return !includeProLeague;
+    return m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1
       || m.indexOf('시빌워') !== -1 || m.indexOf('내전') !== -1;
   };
 
