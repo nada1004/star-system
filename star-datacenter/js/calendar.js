@@ -87,6 +87,7 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-day-summary{background:linear-gradient(135deg,#132033,#17263c);border-color:#1d4ed8}',
     'body.dark .cal-day-summary-title{color:#93c5fd}',
     'body.dark .cal-sched-card{background:linear-gradient(180deg,rgba(120,53,15,.28),rgba(120,53,15,.18));border-color:#92400e}',
+    'body.dark .cal-sched-title{color:#fde68a}',
     'body.dark .cal-match-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .cal-match-card .rec-sum-header{background:linear-gradient(180deg,rgba(var(--rec-mode-rgb),.16),rgba(15,23,42,.78))}',
     'body.dark .cal-match-result{background:rgba(148,163,184,.12);color:#e2e8f0}',
