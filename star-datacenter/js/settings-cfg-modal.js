@@ -161,6 +161,8 @@ function _cfgGo(secId){
         if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
         if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
         if(secId==='aibot' && typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
+        // [FIX] '🧾 데이터 검수'도 팝업으로 옮겨질 때 ontoggle이 안 나는 환경 대비 수동 렌더
+        if(secId==='datacheck' && typeof window.cfgRunDataAudit==='function') window.cfgRunDataAudit();
       }catch(e){}
     }
     // (모바일 버그픽스) pointerdown에서 섹션을 누를 경우,

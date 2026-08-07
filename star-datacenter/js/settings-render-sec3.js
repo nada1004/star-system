@@ -322,7 +322,8 @@ function _cfgSecGroup3(ctx){
     </div>
   </details>
   ${_scfgD('b2layout','📐 이미지탭 레이아웃')}
-    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 조절하면 바로 반영됩니다.</div>
+    <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;margin-bottom:6px">✓ 실시간 미리보기</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-b" onclick="cfgAutoFitBoard()">📱 이미지탭 자동 맞춤(원클릭)</button>
@@ -334,7 +335,7 @@ function _cfgSecGroup3(ctx){
           <span id="cfg-b2-left-size-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">55%</span>
         </div>
         <input type="range" id="cfg-b2-left-size" min="30" max="70" step="1" value="55" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%'">
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%';clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
       <div>
@@ -343,29 +344,29 @@ function _cfgSecGroup3(ctx){
           <span id="cfg-b2-right-size-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">45%</span>
         </div>
         <input type="range" id="cfg-b2-right-size" min="30" max="70" step="1" value="45" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%'">
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%';clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">PC 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">태블릿 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">모바일 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div style="display:flex;align-items:flex-end;padding-bottom:4px">
           <div style="display:flex;flex-direction:column;gap:8px">
             <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:700">
-              <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절(좌우 비율)
+              <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px" onchange="if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true)"> 자동 크기 조절(좌우 비율)
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:700">
-              <input type="checkbox" id="cfg-b2-auto-height" checked style="width:15px;height:15px"> 모바일/태블릿 높이 자동 맞춤(추천)
+              <input type="checkbox" id="cfg-b2-auto-height" checked style="width:15px;height:15px" onchange="if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true)"> 모바일/태블릿 높이 자동 맞춤(추천)
             </label>
           </div>
         </div>
@@ -558,6 +559,12 @@ function _cfgSecGroup3(ctx){
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">티어 아이콘 크기</div>
         <input type="range" id="cfg-femco-tierBadgeSize" min="9" max="16" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-tierBadgeSizeNum').value=this.value;cfgFemcoUpd('tierBadgeSize',this.value)">
         <input type="number" id="cfg-femco-tierBadgeSizeNum" min="9" max="16" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-tierBadgeSize').value=this.value;cfgFemcoUpd('tierBadgeSize',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">티어 아이콘 좌우 여백</div>
+        <input type="range" id="cfg-femco-tierBadgePadX" min="4" max="12" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-tierBadgePadXNum').value=this.value;cfgFemcoUpd('tierBadgePadX',this.value)">
+        <input type="number" id="cfg-femco-tierBadgePadXNum" min="4" max="12" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-tierBadgePadX').value=this.value;cfgFemcoUpd('tierBadgePadX',this.value)">
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">

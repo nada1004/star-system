@@ -269,6 +269,16 @@ function _cfgMenuApplyAndRerender(layout){
     }
   }catch(e){}
   try{ render(); }catch(e){}
+  // [FIX] "설정 메뉴 정리"는 팝업(모달)로 열려서 보고 있는 화면이라,
+  // 위 render()가 #rcont를 통째로 새로 그려도 이미 모달로 옮겨진(appendChild된)
+  // 옛 DOM은 그대로 남아 있어 카테고리/순서 이동·이름변경 버튼을 눌러도
+  // 화면(팝업 안 목록)에는 즉시 반영되지 않던 문제 수정.
+  // → 모달이 cfgmenu를 보여주는 중이면 모달 내용을 새로 렌더링된 섹션으로 다시 옮겨온다.
+  try{
+    if(window._cfgModalSecId==='cfgmenu' && typeof window.cfgGo==='function'){
+      window.cfgGo('cfgmenu');
+    }
+  }catch(e){}
 }
 
 // 섹션을 다른 카테고리로 이동
@@ -455,6 +465,7 @@ window.cfgFemcoInit = function(){
   setVal('cfg-femco-nameFontSize', s.nameFontSize || 16); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 16);
   setVal('cfg-femco-roleFontSize', s.roleFontSize || 10); setVal('cfg-femco-roleFontSizeNum', s.roleFontSize || 10);
   setVal('cfg-femco-tierBadgeSize', s.tierBadgeSize || 10); setVal('cfg-femco-tierBadgeSizeNum', s.tierBadgeSize || 10);
+  setVal('cfg-femco-tierBadgePadX', s.tierBadgePadX || 6); setVal('cfg-femco-tierBadgePadXNum', s.tierBadgePadX || 6);
   setVal('cfg-femco-starSize', s.starSize || 15); setVal('cfg-femco-starSizeNum', s.starSize || 15);
   setVal('cfg-femco-statusIconSize', s.statusIconSize || 18); setVal('cfg-femco-statusIconSizeNum', s.statusIconSize || 18);
   setVal('cfg-femco-subtitleSize', s.subtitleSize); setVal('cfg-femco-subtitleSizeNum', s.subtitleSize);

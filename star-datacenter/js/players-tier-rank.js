@@ -906,7 +906,14 @@ function rTier(C,T){
     return url?`<img src="${toHttpsUrl(url)}" style="width:22px;height:22px;object-fit:contain;border-radius:0;background:none;flex-shrink:0" onerror="this.style.display='none'">`:``; 
   }
 
-  const _vm = window._tierViewMode || 'table';
+  const _knownVm = ['table','magazine','podium','compact','tier-group'];
+  let _vm = window._tierViewMode || 'table';
+  if(!_knownVm.includes(_vm)){
+    // 알 수 없는(구버전/오타) 모드값이면 빈 화면 대신 테이블로 안전 대체
+    _vm = 'table';
+    window._tierViewMode = 'table';
+    try{ localStorage.setItem('su_tier_view_mode','table'); }catch(e){}
+  }
   let h='';
 
   // ════════════════════════════════════════════
@@ -1182,7 +1189,7 @@ function rTier(C,T){
         <span style="background:${_tc};color:${_tt};font-weight:900;font-size:var(--fs-base);padding:3px 12px;border-radius:5px">${getTierLabel(t)}</span>
         <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text3)">${grp.players.length}명</span>
       </div>
-      <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'104px':(_isMb?'130px':'160px')},1fr));gap:${_isNarrow?'5px':(_isMb?'6px':'8px')}">`;
+      <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'104px':(_isMb?'130px':'160px')},1fr));gap:var(--su-tier-card-gap, ${_isNarrow?'5px':(_isMb?'6px':'8px')})">`;
     grp.players.forEach(({p,i})=>{
       const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
       const _pAttr=(typeof escAttr==='function')
@@ -1216,7 +1223,7 @@ function rTier(C,T){
   // 뷰5: MAGAZINE (매거진/룩북 스타일)
   // ════════════════════════════════════════════
   else if(_vm==='magazine'){
-  h=`<div class="tier-content-card"><div class="tier-mag-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'220px')},1fr));gap:${_isNarrow?'8px':(_isMb?'12px':'20px')}">`;
+  h=`<div class="tier-content-card"><div class="tier-mag-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'220px')},1fr));gap:var(--su-tier-card-gap, ${_isNarrow?'8px':(_isMb?'12px':'20px')})">`;
   list.forEach((p,i)=>{
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pAttr=(typeof escAttr==='function')

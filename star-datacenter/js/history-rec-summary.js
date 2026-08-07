@@ -486,8 +486,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _iconUnivB=isCivil?_civilUniv:(_isNoUnivIcon?'':m.b);
     const iconA=(()=>{const n=_iconUnivA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=_iconUnivB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const _themeCls = '';
-    const _themeStyle = '';
+    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '#64748b';
+    const _themeCls = _rcThemeOn ? ' rc-theme' : '';
+    const _themeStyle = _rcThemeOn ? `--rc-win-rgb:${_hexToRgbStr(_winCol)};` : '';
 
     const MODE_COL = {
       ind:'#2563eb', gj:'#d97706', progj:'#b91c1c',

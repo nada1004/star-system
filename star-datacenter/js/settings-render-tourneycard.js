@@ -16,6 +16,28 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill');
   return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px">
+      <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;margin-bottom:8px">✓ 실시간 미리보기 — 아래 설정을 바꾸면 이 카드가 바로 바뀝니다</div>
+      <div class="grp-match-card match-card-v3 tc-card" style="--tc-win-rgb:37,99,235;background:var(--white);border:1px solid var(--border);border-left:4px solid #2563eb;border-right:4px solid #dc2626;border-radius:22px;box-shadow:0 14px 32px rgba(15,23,42,.06);pointer-events:none">
+        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap;padding:14px">
+          <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
+            <div class="grp-team-chip" style="--chip-col:#2563eb;display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26)">
+              <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">한국대</span>
+              <img class="tc-uicon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Crect width='34' height='34' rx='6' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E" style="object-fit:contain;flex-shrink:0">
+            </div>
+          </div>
+          <div class="grp-score-col" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:80px">
+            <div class="grp-match-score"><span>2</span><span style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span>1</span></div>
+          </div>
+          <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
+            <div class="grp-team-chip" style="--chip-col:#dc2626;display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26)">
+              <img class="tc-uicon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Crect width='34' height='34' rx='6' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E" style="object-fit:contain;flex-shrink:0">
+              <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">부산대</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div style="padding:0;display:flex;flex-direction:column;gap:8px">
       <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">⚙️ 기본 설정</summary>
@@ -375,13 +397,13 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
         <input type="range" id="cfg-h2h-bgpos-x" min="0" max="100" step="1" value="50"
-          oninput="document.getElementById('cfg-h2h-bgpos-xv').textContent=this.value+'%'" style="width:100%">
+          oninput="document.getElementById('cfg-h2h-bgpos-xv').textContent=this.value+'%';clearTimeout(window._h2hBgPosLiveT);window._h2hBgPosLiveT=setTimeout(()=>{if(typeof cfgH2HBgPosSave==='function')cfgH2HBgPosSave(true);},150)" style="width:100%">
         <div id="cfg-h2h-bgpos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
         <input type="range" id="cfg-h2h-bgpos-y" min="0" max="100" step="1" value="50"
-          oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%'" style="width:100%">
+          oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%';clearTimeout(window._h2hBgPosLiveT);window._h2hBgPosLiveT=setTimeout(()=>{if(typeof cfgH2HBgPosSave==='function')cfgH2HBgPosSave(true);},150)" style="width:100%">
         <div id="cfg-h2h-bgpos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
         </div>

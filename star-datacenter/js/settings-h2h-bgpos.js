@@ -20,10 +20,10 @@ window.cfgH2HBgPosLoad = function(){
     if(yi){ yi.value=String(Number.isFinite(y)?y:50); document.getElementById('cfg-h2h-bgpos-yv').textContent=yi.value+'%'; }
   }catch(e){}
 };
-window.cfgH2HBgPosSave = function(){
+window.cfgH2HBgPosSave = function(silent){
   try{
     const name=String(document.getElementById('cfg-h2h-bgpos-name')?.value||'').trim();
-    if(!name){ alert('스트리머 이름을 입력하세요.'); return; }
+    if(!name){ if(!silent) alert('스트리머 이름을 입력하세요.'); return; }
     const x=parseInt(document.getElementById('cfg-h2h-bgpos-x')?.value||'50',10) || 50;
     const y=parseInt(document.getElementById('cfg-h2h-bgpos-y')?.value||'50',10) || 50;
     const map=_cfgH2HBgPosLoadAll();

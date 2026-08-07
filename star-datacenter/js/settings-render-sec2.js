@@ -271,7 +271,7 @@ function _cfgSecGroup2(ctx){
             const _cur = localStorage.getItem('su_tier_view_mode') || 'table';
             return [
               {id:'table',      icon:'📋', title:'테이블',        desc:'기존 테이블 형식. 모든 정보 한눈에'},
-              {id:'card',       icon:'🃏', title:'카드 그리드',   desc:'프로필 카드 그리드. 한 눈에 보기 좋음'},
+              {id:'magazine',   icon:'📷', title:'매거진/룩북',   desc:'프로필 카드 그리드. 한 눈에 보기 좋음'},
               {id:'podium',     icon:'🏆', title:'포디움',        desc:'1-2-3위 시상대 + 나머지 리스트'},
               {id:'compact',    icon:'📝', title:'컴팩트 리스트', desc:'한 줄로 밀도 높게. 많은 인원 빠르게'},
               {id:'tier-group', icon:'🎖️', title:'티어별 그룹',   desc:'티어 단위로 묶어 카드 표시'},
@@ -287,7 +287,7 @@ function _cfgSecGroup2(ctx){
         </div>
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);border-top:1px solid var(--border2);padding-top:8px">
-        💡 순위표 상단 우측의 <b>📋 🃏 🏆 📝 🎖️</b> 아이콘 버튼으로도 즉시 전환됩니다.
+        💡 순위표 상단 우측의 <b>📋 📷 🏆 📝 🎖️</b> 아이콘 버튼으로도 즉시 전환됩니다.
       </div>
     </div>
   </details>
@@ -464,8 +464,11 @@ function _cfgSecGroup2(ctx){
       </div>
 
       <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
-        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:900;margin-bottom:8px">커스텀 폰트 별칭(표시 이름)</div>
-        <div id="cfg-appfont-alias-wrap"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:900">커스텀 폰트 별칭(표시 이름)</div>
+          <button class="btn btn-w btn-xs" onclick="cfgRenderAppFontAliasEditor()" style="padding:4px 8px">🔄 새로고침</button>
+        </div>
+        <div id="cfg-appfont-alias-wrap">${(()=>{ try{ return (typeof window!=='undefined' && typeof window.cfgGetCustomFontFamilies==='function' && !window.cfgGetCustomFontFamilies().length) ? `<div style="font-size:11px;color:var(--gray-l)">커스텀 폰트가 없습니다. (CSS 직접 입력에 @font-face를 추가하면 여기에 표시됩니다)</div>` : ''; }catch(e){ return ''; } })()}</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">※ 별칭을 저장하면 ‘프리셋/선택 드롭다운’에 표시됩니다.</div>
       </div>
     </div>

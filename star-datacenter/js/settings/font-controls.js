@@ -76,19 +76,42 @@ window.cfgResetAppFontScalePct = function(){
   try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 
-// 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록 갱신
-try{
-  const _prevRender = window.render;
-  if(typeof _prevRender === 'function' && !window.__patchedRenderForFontPreset){
-    window.__patchedRenderForFontPreset = true;
-    window.render = function(){
-      const r = _prevRender.apply(this, arguments);
-      try{ if(typeof window.cfgRenderCustomFontPresetOptions==='function') window.cfgRenderCustomFontPresetOptions(); }catch(e){}
-      try{ if(typeof window.cfgRenderAppFontAliasEditor==='function') window.cfgRenderAppFontAliasEditor(); }catch(e){}
-      return r;
-    };
+// 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록/별칭 편집기 갱신
+// [FIX] 이 스크립트는 render-core.js보다 먼저 로드되기 때문에, 로드 시점에
+// window.render (혹은 window.renderNow)를 바로 감싸려고 하면 아직 함수가 존재하지
+// 않아 patch가 조용히 무시되고("커스텀 폰트 별칭" UI가 영영 채워지지 않는 버그의 원인).
+// → DOMContentLoaded(모든 defer 스크립트 로드 완료 후) 시점까지 기다렸다가 patch한다.
+// → 또한 window.render()는 requestAnimationFrame으로 배치되는 비동기 스케줄러라
+//   patch 직후 DOM이 아직 갱신되지 않은 상태일 수 있다. 실제 DOM을 동기적으로
+//   그리는 window.renderNow(render-core.js의 _renderImpl)를 감싸야 타이밍이 맞다.
+(function(){
+  function _installFontPanelAutoRefresh(){
+    try{
+      if(window.__patchedRenderForFontPreset) return;
+      const _prevRenderNow = window.renderNow;
+      if(typeof _prevRenderNow !== 'function') return; // 아직 준비 안 됐으면 다음 시도에서
+      window.__patchedRenderForFontPreset = true;
+      window.renderNow = function(){
+        const r = _prevRenderNow.apply(this, arguments);
+        try{ if(typeof window.cfgRenderCustomFontPresetOptions==='function') window.cfgRenderCustomFontPresetOptions(); }catch(e){}
+        try{ if(typeof window.cfgRenderAppFontAliasEditor==='function') window.cfgRenderAppFontAliasEditor(); }catch(e){}
+      };
+    }catch(e){}
   }
-}catch(e){}
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _installFontPanelAutoRefresh);
+  }else{
+    _installFontPanelAutoRefresh();
+  }
+  // 안전망: 혹시라도 renderNow가 DOMContentLoaded 시점에도 아직 없다면(스크립트 로딩 지연 등)
+  // 짧게 재시도한다.
+  let _tries = 0;
+  const _retry = setInterval(()=>{
+    _tries++;
+    if(window.__patchedRenderForFontPreset || _tries>50){ clearInterval(_retry); return; }
+    _installFontPanelAutoRefresh();
+  }, 100);
+})();
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) CSS 직접입력(@font-face)에서 font-family 자동 추출 → 프리셋 드롭다운

@@ -51,6 +51,26 @@
 //   su_app_font_css:    (옵션) 폰트 CSS URL
 //   su_app_font_family: (옵션) font-family 문자열
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// 전역 폰트 설정 저장(설정탭 UI ↔ localStorage ↔ _applyAppFont 연결)
+// - 기존에 호출부(cfg-appfont-* 컨트롤)만 있고 정의가 없어 아무 동작도 하지 않던 함수를 복원
+// ─────────────────────────────────────────────────────────────
+window.cfgSetAppFontSettings = function(){
+  try{
+    const preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
+    const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
+    const fam    = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+    const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '').trim();
+    localStorage.setItem('su_app_font_preset', preset);
+    localStorage.setItem('su_app_font_css', cssUrl);
+    localStorage.setItem('su_app_font_family', fam);
+    localStorage.setItem('su_app_font_css_text', cssTxt);
+  }catch(e){}
+  try{ if(typeof save === 'function') save(); }catch(e){}
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+
 window._applyAppFont = function(){
   let preset='noto', cssUrl='', fam='';
   try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}

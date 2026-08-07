@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════════════════
    현황판 — 📺 라이브 뷰 (SOOP 채널 등록 스트리머 방송화면 모아보기)
    - p.channelUrl 이 SOOP(sooplive) 주소인 스트리머만 추출
-   - 대학별 / 티어별 필터 + 이름검색 + 정렬 + 카드크기 조절
+   - 대학별 / 티어별 필터 + 이름검색 + 정렬
    - IntersectionObserver로 화면에 보이는 카드만 iframe 로드(성능)
    - 카드 확대보기 모달 지원
    - (2026-08 제거) 방송중 여부 자동감지용 SOOP 비공식 API 폴링(/api/soop-live-status)은
@@ -14,7 +14,6 @@ var _b2LiveTierFilter = '전체';
 var _b2LiveGenderFilter = (()=>{ try{ const g = localStorage.getItem('su_b2_live_gender'); return ['전체','F','M'].includes(g) ? g : '전체'; }catch(e){ return '전체'; } })();
 var _b2LiveSearch = '';
 var _b2LiveSortMode = (()=>{ try{ return localStorage.getItem('su_b2_live_sort') || 'tier'; }catch(e){ return 'tier'; } })(); // 'tier' | 'name' | 'univ'
-var _b2LiveCardSize = 's';
 var _b2LiveObserver = null;
 var _b2LiveHoverOpenTimer = null;
 var _b2LiveHoverCloseTimer = null;
@@ -57,13 +56,6 @@ function _b2LiveSetSort(mode) {
 function _b2LiveSetGender(g) {
   _b2LiveGenderFilter = ['전체','F','M'].includes(g) ? g : '전체';
   try{ localStorage.setItem('su_b2_live_gender', _b2LiveGenderFilter); }catch(e){}
-  const el = document.getElementById('b2-content');
-  if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
-}
-
-function _b2LiveSetCardSize(size) {
-  _b2LiveCardSize = 's';
-  try{ localStorage.setItem('su_b2_live_card_size', _b2LiveCardSize); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
 }

@@ -26,6 +26,27 @@ window.renderCfgRecCardSection = function(_scfgD) {
   const _rcIcScope = Math.max(12,Math.min(34,parseInt(localStorage.getItem('su_rc_uicon_scope_size') ?? String(_rcIc),10) || _rcIc));
   return _scfgD('reccard','🧾 기록 카드(기록탭) 스타일') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px">
+      <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;margin-bottom:8px">✓ 실시간 미리보기 — 아래 설정을 바꾸면 이 카드가 바로 바뀝니다</div>
+      <div class="rec-summary rec-mode-comp rc-theme" data-rec-mode="comp" style="--rec-mode-col:#3b82f6;--rec-mode-rgb:59,130,246;--rc-win-rgb:37,99,235;pointer-events:none">
+        <div class="rec-sum-header rec-sum-header--stack">
+          <div class="rec-topline"><div class="rec-meta-row"></div><div class="rec-actions no-export rec-actions--inline"></div></div>
+          <div class="rec-sum-vs-outer">
+            <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+                <span class="ubadge" style="background:#2563eb;display:inline-flex;align-items:center;gap:4px">한국대<img class="rec-uicon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' rx='5' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E"></span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+                <div class="rec-sum-score"><span style="color:var(--win-col)">2</span><span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:400">:</span><span style="color:var(--lose-col)">1</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+                <span class="ubadge loser" style="background:#dc2626;display:inline-flex;align-items:center;gap:4px"><img class="rec-uicon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' rx='5' fill='%23ffffff' fill-opacity='.92'/%3E%3C/svg%3E">부산대</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div style="padding:0;display:flex;flex-direction:column;gap:8px">
       <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 기본 색상/테마</summary>

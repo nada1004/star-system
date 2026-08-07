@@ -24,11 +24,16 @@ window.cfgMenuRenameSec = function(secId){
   else cur[secId]=s;
   _cfgMenuSaveRenames(cur);
   try{ render(); }catch(e){}
+  // [FIX] "설정 메뉴 정리" 팝업이 열려 있는 상태에서 이름을 바꾸면,
+  // render()가 #rcont는 새로 그려도 이미 팝업(모달)로 옮겨진 옛 DOM은
+  // 그대로 남아 있어 팝업 화면에는 바뀐 이름이 반영되지 않던 문제 수정.
+  try{ if(window._cfgModalSecId==='cfgmenu' && typeof window.cfgGo==='function') window.cfgGo('cfgmenu'); }catch(e){}
 };
 window.cfgMenuResetSecNames = function(){
   if(!confirm('설정 하위 메뉴 이름 변경을 모두 초기화할까요?')) return;
   _cfgMenuSaveRenames({});
   try{ render(); }catch(e){}
+  try{ if(window._cfgModalSecId==='cfgmenu' && typeof window.cfgGo==='function') window.cfgGo('cfgmenu'); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
