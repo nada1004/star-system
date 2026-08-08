@@ -78,10 +78,12 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       const canStyle = !!isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
       if(isLoggedIn){
         // 수정 버튼
+        // [BUGFIX] 존재하지 않는 openCompMatchEditModal/grpEditMatchInline/openBktManualEditModal 함수를
+        // 호출하고 있어 수정 버튼을 눌러도 아무 반응이 없었음 → 실제 존재하는 편집 함수로 연결
         if(isLeagueMatch){
-          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openCompMatchEditModal==='function')openCompMatchEditModal('${tnId}',${gi},${mi});else if(typeof grpEditMatchInline==='function')grpEditMatchInline('${tnId}',${gi},${mi})">✏️ 수정</button>`;
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="closeCompMatchDetailModal();if(typeof grpEditMatch==='function')grpEditMatch('${tnId}',${gi},${mi})">✏️ 수정</button>`;
         } else if(isManual){
-          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openBktManualEditModal==='function')openBktManualEditModal('${tnId}',${mi})">✏️ 수정</button>`;
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="closeCompMatchDetailModal();if(typeof openBracketMatchModal==='function')openBracketMatchModal('${tnId}',-1,${mi})">✏️ 수정</button>`;
         }
       }
       if(canStyle){

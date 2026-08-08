@@ -72,6 +72,14 @@ function _applyRecCardTheme(){
 window._applyRecCardTheme=_applyRecCardTheme;
 _applyRecCardTheme();
 
+// [FIX-RECCARD-SHAPE] 새로고침해도 저장된 카드 모양이 유지되도록 초기 1회 적용
+try{
+  const _savedShape = localStorage.getItem('su_rc_card_shape');
+  if(_savedShape && _savedShape!=='default' && document.body){
+    document.body.classList.add('rc-shape--'+_savedShape);
+  }
+}catch(e){}
+
 // 대회탭 스코어 크기 초기 적용
 (function(){
   try{

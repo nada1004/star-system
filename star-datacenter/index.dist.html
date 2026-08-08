@@ -407,7 +407,7 @@ if ('serviceWorker' in navigator) {
   <div class="umbox" style="width:780px;padding-bottom:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="mtitle" id="grpMatchTitle" style="margin-bottom:0">경기 입력</div>
-      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
+      <button class="btn btn-w btn-sm" onclick="if(typeof grpCancelMatchModal==='function')grpCancelMatchModal();else cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
     </div>
     <div id="grpMatchBody"></div>
   </div>

@@ -149,6 +149,28 @@ window.cfgSetAutoFitAllTabs = function(on){
 };
 
 // ─────────────────────────────────────────────────────────────
+// [FIX-RECCARD-SHAPE] 기록 카드 "모양" 설정 — 예전엔 이 함수 자체가 없어서
+// 카드 모양 버튼(약 50가지)을 눌러도 아무 반응이 없었습니다.
+// CSS는 이미 `body.rc-shape--{name}` 클래스 기준으로 다 구현되어 있어서
+// 여기서는 localStorage 저장 + body 클래스 갱신만 해주면 됩니다.
+// ─────────────────────────────────────────────────────────────
+window.cfgSetRecCardShape = function(shape){
+  try{
+    const v = String(shape||'default').trim() || 'default';
+    localStorage.setItem('su_rc_card_shape', v);
+    if(document.body){
+      const toRemove=[];
+      document.body.classList.forEach(c=>{ if(c.indexOf('rc-shape--')===0) toRemove.push(c); });
+      toRemove.forEach(c=>document.body.classList.remove(c));
+      if(v!=='default') document.body.classList.add('rc-shape--'+v);
+    }
+  }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 기록 카드 테마/밝기/아이콘/메모 설정
 // ─────────────────────────────────────────────────────────────
 window.cfgSetRecCardSettings = function(){

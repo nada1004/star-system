@@ -255,11 +255,11 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     if(!entries.length) return '';
     const sortFn=(a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l)||b[1].w-a[1].w;
     const sideEntries=(side)=>entries.filter(([,s])=>s.side===side).sort(sortFn);
-    const _row=(name,s,col,alignRight)=>{
+    const _row=(name,s,col,alignRight,tierBadgeHtml)=>{
       const photoHtml = typeof getPlayerPhotoHTML==='function' ? getPlayerPhotoHTML(name,'26px','border:1.5px solid '+col+';box-shadow:0 1px 5px '+col+'40;') : '';
       const click=`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(name)}'); })()" data-player-link="1"`;
       const recordHtml=`<span class="cmd-pt-record"><b class="wt">${s.w}승</b>${s.l>0?`<span class="cmd-pt-sep">·</span><b class="lt">${s.l}패</b>`:''}</span>`;
-      const nameHtml=`<span class="cmd-pt-name">${_escHtml(name)}</span>`;
+      const nameHtml=`<span class="cmd-pt-name">${_escHtml(name)}</span>${tierBadgeHtml||''}`;
       const idCellHtml=`<span class="cmd-pt-idcell"><span class="cmd-pt-photo">${photoHtml}</span>${nameHtml}</span>`;
       return `<div class="cmd-pt-row${alignRight?' is-right':''}" ${click} style="--pt-col:${col}">
         ${idCellHtml}
@@ -267,8 +267,11 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
       </div>`;
     };
     const colFor=(name)=>{ const p=(players||[]).find(x=>x&&x.name===name); return (p&&gc(p.univ))||'#64748b'; };
-    const listA=sideEntries('A').map(([name,s])=>_row(name,s,colFor(name),false)).join('');
-    const listB=sideEntries('B').map(([name,s])=>_row(name,s,colFor(name),true)).join('');
+    const tierFor=(name)=>{ const p=(players||[]).find(x=>x&&x.name===name); return p?.tier||''; };
+    const _ct=t=>t?t.replace(/티어$/,''):'';
+    const _ptTierBadge=(tier)=>tier?`<span class="cmd-tier-badge" style="background:${getTierBtnColor(tier)||'#64748b'};color:${getTierBtnTextColor(tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;flex-shrink:0;margin-left:4px"><span class="tier-pc">${tier}</span><span class="tier-mob">${_ct(tier)}</span></span>`:'';
+    const listA=sideEntries('A').map(([name,s])=>_row(name,s,colFor(name),false,_ptTierBadge(tierFor(name)))).join('');
+    const listB=sideEntries('B').map(([name,s])=>_row(name,s,colFor(name),true,_ptTierBadge(tierFor(name)))).join('');
     if(!listA && !listB) return '';
     return `<div class="cmd-player-tally">
       <div class="cmd-player-tally__head"><span class="cmd-player-tally__icon">🧑‍🤝‍🧑</span><span class="cmd-player-tally__title">이번 경기 개인 기록</span></div>

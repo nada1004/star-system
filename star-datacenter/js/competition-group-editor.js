@@ -1,26 +1,39 @@
 /* 대회 조별 경기 입력/편집 모달 */
 
+// [BUGFIX] "경기 추가" 클릭 시 곧바로 배열에 push+save() 되어 저장(✅ 저장)을 누르지 않아도
+// 조별리그 일정에 빈 경기가 즉시 노출되던 문제 → 실제로 "✅ 저장"을 눌러야 비로소 경기가
+// 생성되도록, 새 경기는 임시 draft 객체로만 들고 있다가 grpSaveMatch()에서 배열에 반영한다.
+function _grpCurrentMatch(){
+  try{
+    if(grpMatchState.isNew) return grpMatchState.draft||null;
+    const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return null;
+    if(grpMatchState.gi==null||grpMatchState.mi==null)return null;
+    const grp=tn.groups&&tn.groups[grpMatchState.gi];
+    return (grp&&grp.matches)?grp.matches[grpMatchState.mi]:null;
+  }catch(e){return null;}
+}
+
 function grpAddMatchByDate(tnId, date){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const validGrp=tn.groups.find(g=>g.univs.length>=2)||tn.groups[0];
   if(!validGrp){alert('조를 먼저 만들어 주세요.');return;}
   const gi=tn.groups.indexOf(validGrp);
-  validGrp.matches.push({a:'',b:'',d:date,sa:null,sb:null,sets:[]});
-  const mi=validGrp.matches.length-1;
-  save();grpMatchState={tnId,gi,mi};grpOpenMatchModal(tn,gi,mi);
+  const draft={a:'',b:'',d:date,sa:null,sb:null,sets:[]};
+  grpMatchState={tnId,gi,mi:null,isNew:true,draft};
+  grpOpenMatchModal(tn,gi,null);
 }
 
 function grpAddMatch(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const grp=tn.groups[gi];
   if(grp.univs.length<2){alert(tn.type==='tier'?'먼저 선수를 2명 이상 추가하세요.':'먼저 대학을 2개 이상 추가하세요.');return;}
-  tn.groups[gi].matches.push({a:'',b:'',d:'',sa:null,sb:null,sets:[]});
-  const mi=tn.groups[gi].matches.length-1;
-  save();grpMatchState={tnId,gi,mi};grpOpenMatchModal(tn,gi,mi);
+  const draft={a:'',b:'',d:'',sa:null,sb:null,sets:[]};
+  grpMatchState={tnId,gi,mi:null,isNew:true,draft};
+  grpOpenMatchModal(tn,gi,null);
 }
 
 function grpEditMatch(tnId,gi,mi){
-  grpMatchState={tnId,gi,mi};const tn=tourneys.find(t=>t.id===tnId);if(tn)grpOpenMatchModal(tn,gi,mi);
+  grpMatchState={tnId,gi,mi,isNew:false,draft:null};const tn=tourneys.find(t=>t.id===tnId);if(tn)grpOpenMatchModal(tn,gi,mi);
 }
 
 function grpDelMatch(tnId,gi,mi){
@@ -41,7 +54,7 @@ function grpDelMatch(tnId,gi,mi){
 }
 
 function grpOpenMatchModal(tn,gi,mi){
-  const grp=tn.groups[gi];const m=grp.matches[mi];
+  const grp=tn.groups[gi];const m=_grpCurrentMatch();if(!m)return;
   const GL=['A','B','C','D','E','F','G','H','I','J'];const gl=GL[gi]||String.fromCharCode(65+gi);
   const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
   const isTierGrp=tn.type==='tier';
@@ -49,7 +62,8 @@ function grpOpenMatchModal(tn,gi,mi){
   const _badgeColGrp=(name)=>isTierGrp?gc((players||[]).find(p=>p.name===name)?.univ||''):gc(name);
   const uOpts=`<option value="">— ${_glbl} 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.a===u?' selected':''}>${u}</option>`).join('');
   const uOptsB=`<option value="">— ${_glbl} 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.b===u?' selected':''}>${u}</option>`).join('');
-  document.getElementById('grpMatchTitle').textContent=`GROUP ${gl}조 ${mi+1}경기 결과 입력`;
+  const _dispNum=(mi!=null)?(mi+1):((grp.matches?grp.matches.length:0)+1);
+  document.getElementById('grpMatchTitle').textContent=`GROUP ${gl}조 ${_dispNum}경기 결과 입력`;
   document.getElementById('grpMatchBody').innerHTML=`
     <div style="background:${col}10;border:1px solid ${col}44;border-radius:var(--r);padding:14px;margin-bottom:16px">
       <div style="font-size:var(--fs-caption);font-weight:700;color:${col};margin-bottom:10px">
@@ -86,10 +100,17 @@ function grpOpenMatchModal(tn,gi,mi){
         <option value="game"${m.mode==='game'?' selected':''}>게임수 합산</option>
       </select>
       <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="grpSaveMatch()">✅ 저장</button>
-      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
+      <button class="btn btn-w btn-sm" onclick="grpCancelMatchModal()">취소</button>
     </div>`;
   om('grpMatchModal');
   grpRefreshSets();
+}
+
+// [BUGFIX] 취소/닫기 시 아직 저장되지 않은 새 경기(draft)는 조 배열에 반영되지 않은 상태이므로
+// 그냥 모달만 닫고 상태를 초기화한다. (기존 경기 수정 중 취소 시에는 원본 데이터에 변화 없음)
+function grpCancelMatchModal(){
+  grpMatchState={tnId:null,gi:null,mi:null,isNew:false,draft:null};
+  cm('grpMatchModal');
 }
 
 function grpUpdateMemberList(){
@@ -106,9 +127,7 @@ function grpUpdateMemberList(){
 }
 
 function grpRefreshSets(){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  if(grpMatchState.gi==null||grpMatchState.mi==null)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
+  const m=_grpCurrentMatch();if(!m)return;
   const aEl=document.getElementById('gm-a');const bEl=document.getElementById('gm-b');
   if(!aEl)return;
   const teamA=aEl.value,teamB=bEl?bEl.value:'';
@@ -194,21 +213,18 @@ function grpRefreshSets(){
 }
 
 function grpSetGame(si,gi,field,val){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
+  const m=_grpCurrentMatch();if(!m||!m.sets)return;
   if(m.sets[si]&&m.sets[si].games[gi])m.sets[si].games[gi][field]=val;
 }
 
 function grpAddSet(){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];if(!m.sets)m.sets=[];
+  const m=_grpCurrentMatch();if(!m)return;if(!m.sets)m.sets=[];
   if(m.sets.length>=3){alert('최대 3세트(에이스전 포함)까지 가능합니다.');return;}
   m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});grpRefreshSets();
 }
 
 function grpAddSet2(){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];if(!m.sets)m.sets=[];
+  const m=_grpCurrentMatch();if(!m)return;if(!m.sets)m.sets=[];
   if(m.sets.length>=3){alert('이미 최대 세트입니다.');return;}
   if(m.sets.length<1)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
   if(m.sets.length<2)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
@@ -216,29 +232,26 @@ function grpAddSet2(){
 }
 
 function grpAddSet3(){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];if(!m.sets)m.sets=[];
+  const m=_grpCurrentMatch();if(!m)return;if(!m.sets)m.sets=[];
   if(m.sets.length>=3){alert('에이스전이 이미 있습니다.');return;}
   while(m.sets.length<3)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
   grpRefreshSets();
 }
 
 function grpDelSet(si){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];m.sets.splice(si,1);grpRefreshSets();
+  const m=_grpCurrentMatch();if(!m||!m.sets)return;m.sets.splice(si,1);grpRefreshSets();
 }
 
 function grpAddGame(si, isTeam){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
+  const m=_grpCurrentMatch();
   if(!m||!m.sets||!m.sets[si])return;
   if(!m.sets[si].games)m.sets[si].games=[];
   m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:!!isTeam,a1:'',a2:'',b1:'',b2:''});grpRefreshSets();
 }
 
 function grpDelGame(si,gi2){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];m.sets[si].games.splice(gi2,1);grpRefreshSets();
+  const m=_grpCurrentMatch();if(!m||!m.sets||!m.sets[si]||!m.sets[si].games)return;
+  m.sets[si].games.splice(gi2,1);grpRefreshSets();
 }
 
 function updateHistoryFromGame(game, date) {
@@ -267,7 +280,10 @@ function updateHistoryFromGame(game, date) {
 
 function grpSaveMatch(){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const {gi,mi}=grpMatchState;const m=tn.groups[gi].matches[mi];
+  const gi=grpMatchState.gi;
+  const isNew=!!grpMatchState.isNew;
+  const m=isNew?(grpMatchState.draft||{a:'',b:'',d:'',sa:null,sb:null,sets:[]}):tn.groups[gi].matches[grpMatchState.mi];
+  if(!m)return;
   m.d=document.getElementById('gm-date')?.value||'';
   m.a=document.getElementById('gm-a')?.value||'';
   m.b=document.getElementById('gm-b')?.value||'';
@@ -275,6 +291,12 @@ function grpSaveMatch(){
   if(_grpCaster) m.caster=_grpCaster; else delete m.caster;
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
   if(m.a===m.b){alert('같은 팀은 선택할 수 없습니다.');return;}
+  // [BUGFIX] 새 경기는 여기(실제 저장 시점)에 와서야 조 배열에 반영한다.
+  if(isNew){
+    tn.groups[gi].matches.push(m);
+    const newMi=tn.groups[gi].matches.length-1;
+    grpMatchState={tnId:grpMatchState.tnId,gi,mi:newMi,isNew:false,draft:null};
+  }
   const matchId=m._id||genId();
   if(m._id)revertMatchRecord({...m,_id:matchId});
   m._id=matchId;
@@ -334,6 +356,8 @@ try{
   window.grpAddMatchByDate = grpAddMatchByDate;
   window.grpAddMatch = grpAddMatch;
   window.grpEditMatch = grpEditMatch;
+  window.grpCancelMatchModal = grpCancelMatchModal;
+  window._grpCurrentMatch = _grpCurrentMatch;
   window.grpDelMatch = grpDelMatch;
   window.grpOpenMatchModal = grpOpenMatchModal;
   window.grpUpdateMemberList = grpUpdateMemberList;
