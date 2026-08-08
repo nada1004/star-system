@@ -9,12 +9,23 @@
       const swA=s.scoreA||0,swB=s.scoreB||0;
       const sAW=swA>swB,sBW=swB>swA;
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
+      // (요청사항) 티어칩을 이름 옆 인라인이 아니라 프로필 사진 모서리의 작은 뱃지로 이동 — 이름 표시폭 확보
+      const _tierCornerBadge=(name)=>{
+        try{
+          const p=(window.players||[]).find(x=>x&&x.name===name);
+          const tier=p&&p.tier;
+          if(!tier) return '';
+          const bg=(typeof getTierBtnColor==='function'&&getTierBtnColor(tier))||'#64748b';
+          const fg=(typeof getTierBtnTextColor==='function'&&getTierBtnTextColor(tier))||'#fff';
+          return `<span style="position:absolute;bottom:-3px;right:-3px;background:${bg};color:${fg};font-size:7px;font-weight:800;line-height:1;padding:1.5px 3px;border-radius:3px;border:1.5px solid ${theme.cardBg||'#fff'};pointer-events:none">${tier}</span>`;
+        }catch(e){return '';}
+      };
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
         const loserA=!aW&&bW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
         const loserB=!bW&&aW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
-        const photoA=g.playerA?`<span onclick="openPlayerModal('${String(g.playerA).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`)}</span>`:'';
-        const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}</span>`:'';
+        const photoA=g.playerA?`<span onclick="openPlayerModal('${String(g.playerA).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`)}${_tierCornerBadge(g.playerA)}</span>`:'';
+        const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}${_tierCornerBadge(g.playerB)}</span>`:'';
         const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         const winB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         return`<div class="share-match-game-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${theme.divider}">
@@ -72,10 +83,20 @@
     entries.sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l)||b[1].w-a[1].w);
     const isDarkCard = !!(theme && theme.isDarkCard);
     const chipBg = (theme && theme.surfaceBg) || 'rgba(255,255,255,.9)';
+    const _tierChipTally=(name)=>{
+      try{
+        const p=(window.players||[]).find(x=>x&&x.name===name);
+        const tier=p&&p.tier;
+        if(!tier) return '';
+        const bg=(typeof getTierBtnColor==='function'&&getTierBtnColor(tier))||'#64748b';
+        const fg=(typeof getTierBtnTextColor==='function'&&getTierBtnTextColor(tier))||'#fff';
+        return `<span style="background:${bg};color:${fg};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;flex-shrink:0">${tier}</span>`;
+      }catch(e){return '';}
+    };
     const chips=entries.map(([name,s])=>{
       const photo=getPlayerPhotoHTML?`<span style="display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(name,'18px','flex-shrink:0')}</span>`:'';
       return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:${chipBg};border:1px solid ${theme.divider};font-size:11px;font-weight:800;white-space:nowrap">
-        ${photo}<span style="color:${theme.text}">${name}</span>
+        ${photo}<span style="color:${theme.text}">${name}</span>${_tierChipTally(name)}
         <span style="color:${isDarkCard?'#4ade80':'#16a34a'}">${s.w}승</span><span style="color:${theme.textDim}">·</span><span style="color:${isDarkCard?'#f87171':'#dc2626'}">${s.l}패</span>
       </span>`;
     }).join('');
