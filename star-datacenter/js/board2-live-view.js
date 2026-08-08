@@ -54,11 +54,17 @@ function _b2LiveSetSort(mode) {
   try{ localStorage.setItem('su_b2_live_sort', _b2LiveSortMode); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  _b2LiveTheaterReinitIfNeeded();
 }
 
 function _b2LiveSetViewMode(mode) {
   _b2LiveViewMode = mode === 'theater' ? 'theater' : 'card';
   try{ localStorage.setItem('su_b2_live_viewmode', _b2LiveViewMode); }catch(e){}
+  // 재생 중인 스트리머가 있는데 목록이 드릴다운 안 된 상태로 시청형에 진입하면,
+  // 해당 스트리머의 소속 대학으로 자동 드릴다운해 목록에서 바로 보이게 한다.
+  if (_b2LiveViewMode === 'theater' && _b2LiveTheaterSelected && !_b2LiveTheaterUnivSel) {
+    _b2LiveTheaterUnivSel = String(_b2LiveTheaterSelected.univ || '').trim() || '무소속';
+  }
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
   if (_b2LiveViewMode === 'theater' && typeof _b2LiveTheaterInitList === 'function') setTimeout(_b2LiveTheaterInitList, 0);
@@ -78,6 +84,20 @@ function _b2LiveTheaterSyncListHeight() {
     }
     const h = main.getBoundingClientRect().height;
     if (h > 0) list.style.height = h + 'px';
+  } catch (e) {}
+}
+
+// 현재 재생 중인 스트리머가 목록에 보이면(드릴다운된 대학과 일치) 그 위치로 스크롤
+function _b2LiveTheaterScrollToActive() {
+  try {
+    const list = document.getElementById('b2-live-theater-list');
+    const active = list && list.querySelector('.b2-live-theater-item.active');
+    if (!list || !active) return;
+    const listRect = list.getBoundingClientRect();
+    const itemRect = active.getBoundingClientRect();
+    if (itemRect.top < listRect.top || itemRect.bottom > listRect.bottom) {
+      active.scrollIntoView({ block: 'nearest' });
+    }
   } catch (e) {}
 }
 
@@ -119,6 +139,7 @@ function _b2LiveTheaterInitList() {
       window.addEventListener('resize', () => { if (typeof _b2LiveTheaterSyncListHeight === 'function') _b2LiveTheaterSyncListHeight(); });
     }
     _b2LiveTheaterSyncListHeight();
+    _b2LiveTheaterScrollToActive();
   } catch (e) {}
 }
 
@@ -127,6 +148,30 @@ function _b2LiveSetGender(g) {
   try{ localStorage.setItem('su_b2_live_gender', _b2LiveGenderFilter); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  _b2LiveTheaterReinitIfNeeded();
+}
+
+function _b2LiveSetUnivFilter(v) {
+  _b2LiveUnivFilter = v;
+  const el = document.getElementById('b2-content');
+  if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  _b2LiveTheaterReinitIfNeeded();
+}
+
+function _b2LiveSetTierFilter(v) {
+  _b2LiveTierFilter = v;
+  const el = document.getElementById('b2-content');
+  if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  _b2LiveTheaterReinitIfNeeded();
+}
+
+// 필터(대학/티어/성별) 변경으로 #b2-content 전체가 새로 그려지면 시청형 우측 목록의
+// 높이 동기화·드래그 스크롤 바인딩(dataset.dragInit)도 새 DOM과 함께 초기화되어 버리므로
+// 재초기화한다. 카드형일 때는 아무 것도 하지 않음.
+function _b2LiveTheaterReinitIfNeeded() {
+  if (_b2LiveViewMode === 'theater' && typeof _b2LiveTheaterInitList === 'function') {
+    setTimeout(_b2LiveTheaterInitList, 0);
+  }
 }
 
 // 화면에 보이는 카드만 iframe src를 채워 넣는 지연로딩 옵저버
@@ -323,7 +368,7 @@ function _b2LiveView() {
       </div>
       <div style="position:relative">
         <select id="b2-live-univ-sel" class="b2-toolbar-select"
-          onchange="_b2LiveUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'))"
+          onchange="_b2LiveSetUnivFilter(this.value)"
           style="padding:8px 30px 8px 13px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체"${_b2LiveUnivFilter === '전체' ? ' selected' : ''}>🏫 전체 대학</option>
           ${univList.map(u => `<option value="${u}"${_b2LiveUnivFilter === u ? ' selected' : ''}>${u}</option>`).join('')}
@@ -331,7 +376,7 @@ function _b2LiveView() {
       </div>
       <div style="position:relative">
         <select id="b2-live-tier-sel" class="b2-toolbar-select"
-          onchange="_b2LiveTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'))"
+          onchange="_b2LiveSetTierFilter(this.value)"
           style="padding:8px 30px 8px 13px;border-radius:20px;border:1.5px solid var(--border2);font-size:var(--fs-base);font-weight:700;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체"${_b2LiveTierFilter === '전체' ? ' selected' : ''}>🎖️ 전체 티어</option>
           ${(typeof TIERS !== 'undefined' ? TIERS : []).map(t => `<option value="${t}"${_b2LiveTierFilter === t ? ' selected' : ''}>${typeof getTierLabel === 'function' ? getTierLabel(t) : t}</option>`).join('')}
@@ -647,7 +692,12 @@ function _b2LiveTheaterGroups() {
     const ia = univOrder.indexOf(a), ib = univOrder.indexOf(b);
     return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
   });
-  groupNames.forEach(u => groups[u].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ko')));
+  groupNames.forEach(u => groups[u].sort((a, b) =>
+    (typeof getRoleOrder === 'function' ? getRoleOrder(a.role, a) - getRoleOrder(b.role, b) : 0)
+    || (typeof TIERS !== 'undefined' ? TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) : 0)
+    || ((b.points || 0) - (a.points || 0))
+    || String(a.name || '').localeCompare(String(b.name || ''), 'ko')
+  ));
   return { groups, groupNames };
 }
 
@@ -661,12 +711,23 @@ function _b2LiveTheaterItemHtml(p, univLabel) {
   const avatarHtml = photoUrl
     ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`
     : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`;
+  // 정렬 기준(직급→티어)을 목록에서도 바로 알아볼 수 있게 직급 아이콘 + 티어 색상 점 표시
+  const roleIcon = (p.role && typeof _roleMatchedMain === 'function' && _roleMatchedMain(p.role) && typeof ROLE_ICONS !== 'undefined')
+    ? (ROLE_ICONS[_roleMatchedMain(p.role)] || '') : '';
+  const tierColor = typeof getTierBtnColor === 'function' ? getTierBtnColor(p.tier) : '#94a3b8';
+  const tierDot = `<span title="${p.tier ? (typeof getTierLabel === 'function' ? getTierLabel(p.tier) : p.tier) : ''}" style="width:7px;height:7px;border-radius:50%;background:${tierColor};flex-shrink:0;box-shadow:0 0 0 1.5px var(--white)"></span>`;
   return `
     <button type="button" class="b2-live-theater-item${active ? ' active' : ''}" data-soop-id="${p._soopId}"
       onclick="_b2LiveTheaterSelect('${p._soopId}','${safeName}','${safeUniv}')"
       style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:6px 8px;border-radius:12px;border:1.5px solid ${active ? 'var(--blue)' : 'transparent'};background:${active ? 'var(--surface)' : 'transparent'};cursor:pointer">
-      <span style="width:34px;height:34px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,.9);box-shadow:0 2px 6px rgba(15,23,42,.12)">${avatarHtml}</span>
-      <span style="min-width:0;flex:1;font-weight:800;font-size:var(--fs-base);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name || ''}</span>
+      <span style="position:relative;width:34px;height:34px;flex-shrink:0">
+        <span style="display:block;width:100%;height:100%;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;border:1.5px solid rgba(255,255,255,.9);box-shadow:0 2px 6px rgba(15,23,42,.12)">${avatarHtml}</span>
+        <span style="position:absolute;right:-2px;bottom:-2px">${tierDot}</span>
+      </span>
+      <span style="min-width:0;flex:1;display:flex;align-items:center;gap:3px">
+        ${roleIcon ? `<span style="font-size:10px;flex-shrink:0" title="${String(p.role || '').replace(/"/g, '&quot;')}">${roleIcon}</span>` : ''}
+        <span style="min-width:0;font-weight:800;font-size:var(--fs-base);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name || ''}</span>
+      </span>
     </button>`;
 }
 
@@ -717,7 +778,8 @@ function _b2LiveTheaterSelectUniv(u) {
     const body = document.getElementById('b2-live-theater-list-body');
     if (body) body.innerHTML = _b2LiveTheaterListBodyHTML();
     const listBox = document.getElementById('b2-live-theater-list');
-    if (listBox) listBox.scrollTop = 0;
+    const active = listBox && listBox.querySelector('.b2-live-theater-item.active');
+    if (listBox) { if (active) active.scrollIntoView({ block: 'nearest' }); else listBox.scrollTop = 0; }
   } catch (e) {}
 }
 
