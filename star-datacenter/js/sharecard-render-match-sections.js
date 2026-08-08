@@ -9,29 +9,30 @@
       const swA=s.scoreA||0,swB=s.scoreB||0;
       const sAW=swA>swB,sBW=swB>swA;
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
-      // (요청사항) 티어칩을 이름 옆 인라인이 아니라 프로필 사진 모서리의 작은 뱃지로 이동 — 이름 표시폭 확보
-      const _tierCornerBadge=(name)=>{
+      // (요청사항) 승리표시(WIN)는 프로필 사진 모서리 뱃지로, 티어는 이름 옆 인라인 칩으로 위치 맞교체
+      const _tierChip=(name)=>{
         try{
           const p=(window.players||[]).find(x=>x&&x.name===name);
           const tier=p&&p.tier;
           if(!tier) return '';
           const bg=(typeof getTierBtnColor==='function'&&getTierBtnColor(tier))||'#64748b';
           const fg=(typeof getTierBtnTextColor==='function'&&getTierBtnTextColor(tier))||'#fff';
-          return `<span style="position:absolute;bottom:-3px;right:-3px;background:${bg};color:${fg};font-size:7px;font-weight:800;line-height:1;padding:1.5px 3px;border-radius:3px;border:1.5px solid ${theme.cardBg||'#fff'};pointer-events:none">${tier}</span>`;
+          return `<span style="background:${bg};color:${fg};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;flex-shrink:0">${tier}</span>`;
         }catch(e){return '';}
       };
+      const _winCornerBadge=(isWinner,color)=>isWinner?`<span style="position:absolute;bottom:-3px;right:-3px;background:${color};color:#fff;font-size:7px;font-weight:800;line-height:1;padding:1.5px 3px;border-radius:3px;border:1.5px solid ${theme.cardBg||'#fff'};pointer-events:none">WIN</span>`:'';
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
         const loserA=!aW&&bW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
         const loserB=!bW&&aW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
-        const photoA=g.playerA?`<span onclick="openPlayerModal('${String(g.playerA).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`)}${_tierCornerBadge(g.playerA)}</span>`:'';
-        const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}${_tierCornerBadge(g.playerB)}</span>`:'';
-        const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
-        const winB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
+        const photoA=g.playerA?`<span onclick="openPlayerModal('${String(g.playerA).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`)}${_winCornerBadge(aW,ca)}</span>`:'';
+        const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}${_winCornerBadge(bW,cb)}</span>`:'';
+        const tierA=_tierChip(g.playerA);
+        const tierB=_tierChip(g.playerB);
         return`<div class="share-match-game-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${theme.divider}">
           <span class="share-match-game-idx" style="color:${theme.textDim};min-width:38px;font-size:10px;text-align:center;flex-shrink:0;font-weight:800">경기${gi+1}</span>
           <div class="share-match-game-player share-match-game-player--a" style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0;${aW?'':'opacity:.6'}">
-            ${winA}
+            ${tierA}
             <span class="share-match-game-name" style="font-weight:${aW?'900':'600'};color:${aW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.playerA||'?'}</span>
             ${photoA}
           </div>
@@ -39,7 +40,7 @@
           <div class="share-match-game-player share-match-game-player--b" style="flex:1;display:flex;align-items:center;gap:4px;min-width:0;${bW?'':'opacity:.6'}">
             ${photoB}
             <span class="share-match-game-name" style="font-weight:${bW?'900':'600'};color:${bW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.playerB||'?'}</span>
-            ${winB}
+            ${tierB}
           </div>
           ${g.map?`<span class="share-match-game-map" style="color:${theme.textDim};font-size:10px;flex-shrink:0;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍${g.map}</span>`:''}
         </div>`;
