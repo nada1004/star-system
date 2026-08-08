@@ -510,7 +510,14 @@ window.cfgFemcoRefreshUnivFields = function(){
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
   if (bgEl) bgEl.value = bgObj.url || '';
-  if (bgHint) bgHint.textContent = bgObj.url ? '설정됨' : '미설정';
+  if (bgHint){
+    if(bgObj.url){
+      bgHint.textContent = '설정됨';
+    } else {
+      const _fallbackU = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null) || {};
+      bgHint.textContent = _fallbackU.bgImg ? '미설정 (현황판 배경을 자동으로 사용 중)' : '미설정';
+    }
+  }
   // 배경 옵션
   const setVal=(id,v)=>{const el=document.getElementById(id);if(el!=null) el.value=v;};
   setVal('cfg-femco-bgAlpha', bgObj.alpha);

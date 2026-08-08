@@ -316,7 +316,7 @@ function _b2DateNum(s) {
 // 대학별 현황판 색상 진하기 (0~100, %)
 var b2LabelAlpha  = typeof b2LabelAlpha  !== 'undefined' ? b2LabelAlpha  : (J('su_b2la')  ?? 16);
 var b2BgAlpha     = typeof b2BgAlpha     !== 'undefined' ? b2BgAlpha     : (J('su_b2ba')  ?? 9);
-var b2BgImgAlpha      = typeof b2BgImgAlpha      !== 'undefined' ? b2BgImgAlpha      : (J('su_b2bia')  ?? 12);
+var b2BgImgAlpha      = typeof b2BgImgAlpha      !== 'undefined' ? b2BgImgAlpha      : (J('su_b2bia')  ?? 64);
 var b2FreeBgAlpha     = typeof b2FreeBgAlpha     !== 'undefined' ? b2FreeBgAlpha     : (J('su_b2fba')  ?? 25);
 var b2FreeTierBgAlpha = typeof b2FreeTierBgAlpha !== 'undefined' ? b2FreeTierBgAlpha : (J('su_b2ftba') ?? 15);
 var b2ProfileBgAlpha  = typeof b2ProfileBgAlpha  !== 'undefined' ? b2ProfileBgAlpha  : (J('su_b2pba') ?? 10);

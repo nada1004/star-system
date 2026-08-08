@@ -1290,12 +1290,28 @@ try{
 var boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 var b2LabelAlpha  = J('su_b2la')  ?? 16;
 var b2BgAlpha     = J('su_b2ba')  ?? 9;
-var b2BgImgAlpha      = J('su_b2bia')  ?? 12;
+var b2BgImgAlpha      = J('su_b2bia')  ?? 64;
 var b2FreeBgAlpha     = J('su_b2fba')  ?? 25;
 var b2FreeTierBgAlpha = J('su_b2ftba') ?? 15;
 var b2ProfileBgAlpha  = J('su_b2pba') ?? 10;
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
+// [FIX-BRIGHT-4] 이전에 이름으로 하드코딩되어 있던 "로고형 배경" 대학들을 1회성으로 uCfg.bgIsLogo=true로 마이그레이션
+// (밝기는 이제 통일되지만, 로고가 중앙에 작게 배치되는 레이아웃은 그대로 유지)
+try{
+  if(!localStorage.getItem('su_biglogo_migrated_v1') && Array.isArray(univCfg)){
+    const _legacyLogoNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미','HM','DM','SSG','JSA','BGM'];
+    univCfg.forEach(u=>{
+      if(!u || u.bgIsLogo!==undefined) return;
+      const nm = String(u.name||'').trim();
+      const nmU = nm.toUpperCase();
+      if(_legacyLogoNames.includes(nm) || _legacyLogoNames.includes(nmU) || nm.includes('몬스타') || nmU.includes('MONSTAR')){
+        u.bgIsLogo = true;
+      }
+    });
+    localStorage.setItem('su_biglogo_migrated_v1','1');
+  }
+}catch(e){}
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');

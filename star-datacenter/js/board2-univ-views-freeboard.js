@@ -80,8 +80,9 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'auto';
+  // [FIX-BRIGHT-1] 모든 대학이 동일한 밝기 공식을 사용 (설정탭 슬라이더로 조절 가능, su_b2bia)
   const _bgOpacityNum = (uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100;
-  const _bgOpacity = (_hasBgImg ? Math.max(0.64, _bgOpacityNum + 0.08) : _bgOpacityNum).toFixed(2);
+  const _bgOpacity = _bgOpacityNum.toFixed(2);
   const _uKeyRaw = String(univName||'').trim();
   const _uKey = _uKeyRaw.toUpperCase();
   const _logoOverlayCfg = (() => {
@@ -104,20 +105,14 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       return def;
     }
   })();
-  const _logoUnivNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미'];
-  const _isMonstarName = _uKeyRaw.includes('몬스타') || _uKey.includes('MONSTAR');
-  const _bgIsLogo =
-    (_uKey === 'HM' || _uKey === 'DM' || _uKey === 'SSG' || _uKey === 'JSA' || _uKey === 'BGM') ||
-    (_logoUnivNames.includes(_uKeyRaw) || _isMonstarName);
+  // [FIX-BRIGHT-2] 대학 이름 하드코딩 대신 대학별 설정값(uCfg.bgIsLogo)으로 "로고형 배경"(중앙 배치) 여부를 판단.
+  // 설정탭 > 🖼️ 현황판 라벨 배경 이미지별 설정에서 대학별로 켜고 끌 수 있음.
+  const _bgIsLogo = !!uCfg.bgIsLogo;
   const _bgLogoPos = '44% 50%';
   const _bgLogoSizeBase = (() => {
-    const isSmall =
-      (_uKey === 'JSA' || _uKey === 'BGM') ||
-      _logoUnivNames.includes(_uKeyRaw) ||
-      _isMonstarName;
-    if (_uKey === 'JSA' || _uKeyRaw === '흑카데미') return 'min(72%,620px) auto';
-    if (_uKeyRaw === '수술대' || _uKeyRaw === '엠비대' || _uKeyRaw === '케이대') return 'min(84%,740px) auto';
-    return isSmall ? 'min(78%,680px) auto' : 'min(86%,760px) auto';
+    const custom = String(uCfg.bgLogoSize||'').trim();
+    if (custom) return custom;
+    return 'min(82%,720px) auto';
   })();
   const _bgLogoSize = (() => {
     const sc = (_logoOverlayCfg.bgScale || 100) / 100;
@@ -128,12 +123,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     const px = Math.max(80, Math.min(1200, Math.round(parseInt(m[2],10) * sc)));
     return `min(${pct}%,${px}px) auto`;
   })();
-  // [UX-FIX] 화면에서는 가운데 로고가 스트리머 이름/티어 라벨과 겹쳐 가독성을 떨어뜨리므로
-  // 로고 배경일 때 투명도를 크게 낮춘다. 이미지 저장(forExport)에는 기존 값을 유지.
-  const _bgOpacityLogoScreen = 0.18;
-  const _bgOpacity2 = _bgIsLogo
-    ? String((forExport ? Math.min(0.48, parseFloat(_bgOpacity)||0.48) : _bgOpacityLogoScreen).toFixed(2))
-    : _bgOpacity;
+  // [FIX-BRIGHT-3] 로고형/일반 배경 모두 같은 밝기값(_bgOpacity)을 사용 — 더 이상 로고형만 강제로 어둡게 하지 않음.
+  const _bgOpacity2 = _bgOpacity;
   const _profileViewMode = _b2GetUnivProfileViewMode();
   const bgImgHtml = uCfg.bgImg
     ? forExport
@@ -171,8 +162,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     if (k === 'HM' || k === 'DM' || k === 'SSG') return { pct: 20, max: 148, op1: '.34', op0: '.24' };
     if (k === 'JSA' || kRaw === '흑카데미') return { pct: 22, max: 160, op1: '.36', op0: '.26', right: 66, bottom: 28 };
     if (
-      k === 'JSA' || k === 'BGM' ||
-      _logoUnivNames.includes(kRaw) ||
+      k === 'JSA' || k === 'BGM' || _bgIsLogo ||
       kRaw.includes('몬스타') || k.includes('MONSTAR')
     ) {
       return { pct: 26, max: 182, op1: '.36', op0: '.26', right: 46, bottom: 28 };

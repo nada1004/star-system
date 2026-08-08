@@ -943,6 +943,32 @@ function setBoardBgImgSize(univName, size){
   u.bgImgSize=size;
   save();render();
 }
+// [FIX-BRIGHT-5] 대학별 "로고형 배경"(중앙에 작게 배치) 여부 토글
+function setBoardBgIsLogo(univName, checked){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(checked) u.bgIsLogo=true; else delete u.bgIsLogo;
+  save();render();
+}
+// [FIX-BRIGHT-5b] 대학별 배경 밝기 개별 오버라이드 (null이면 전체값 사용)
+function setBoardBgImgAlpha(univName, pct){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(pct===null || pct===undefined || pct==='') delete u.bgImgAlpha;
+  else u.bgImgAlpha = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
+  save();render();
+}
+// [FIX-BRIGHT-6] 대학 전체 배경 밝기(전역 기본값) 저장 — 설정탭 슬라이더용
+function setBoardBgAlphaGlobal(pct, silent){
+  const v = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
+  b2BgImgAlpha = v;
+  try{ localStorage.setItem('su_b2bia', v); }catch(e){}
+  if(typeof save==='function')save();
+  if(typeof render==='function')render();
+  if(!silent){
+    try{ if(typeof showToast==='function') showToast('🎨 대학 배경 이미지 밝기가 저장되었습니다.'); }catch(e){}
+  }
+}
 function promptBoardBgImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;

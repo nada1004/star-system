@@ -330,6 +330,18 @@ setTimeout(()=>{
             <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
             <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
           </select>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:var(--fs-caption);font-weight:600;color:var(--text2);cursor:pointer">
+            <input type="checkbox" ${u.bgIsLogo?'checked':''} onchange="setBoardBgIsLogo('${u.name.replace(/'/g,"\\'")}',this.checked)">
+            🏷️ 로고형 배경 (중앙에 작게 배치 — 엠블럼/로고 이미지용)
+          </label>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+            <label style="font-size:var(--fs-caption);font-weight:600;color:var(--text2);min-width:90px">밝기(개별):</label>
+            <input type="range" min="0" max="100" value="${u.bgImgAlpha ?? b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
+              oninput="this.nextElementSibling.textContent=this.value+'%'"
+              onchange="setBoardBgImgAlpha('${u.name.replace(/'/g,"\\'")}',this.value)">
+            <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:700">${u.bgImgAlpha ?? b2BgImgAlpha}%</span>
+            ${u.bgImgAlpha!=null?`<button class="btn btn-xs btn-w" onclick="setBoardBgImgAlpha('${u.name.replace(/'/g,"\\'")}',null)">전체값 사용</button>`:''}
+          </div>
         </div>`:''}
       </div>`).join('');
     }

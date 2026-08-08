@@ -412,7 +412,19 @@ function _b2FemcoView() {
     const _subColor = (subtitleColor && subtitleColor.trim()) ? subtitleColor : textCol;
 
     // 대학별 배경 미디어
-    const _bgRaw = ((femcoSettings.univBgMedia||{})[univName]) || '';
+    // [FIX-FEMCO-BG-1] 펨코 전용 배경(univBgMedia)이 따로 설정되지 않았으면
+    // 현황판에 설정된 대학 배경(uCfg.bgImg / 로고)을 그대로 가져와 보여준다.
+    const _bgRawExplicit = ((femcoSettings.univBgMedia||{})[univName]) || '';
+    const _bgRaw = _bgRawExplicit || (uCfg.bgImg ? {
+      url: uCfg.bgImg,
+      alpha: (uCfg.bgImgAlpha ?? (typeof b2BgImgAlpha!=='undefined' ? b2BgImgAlpha : 64)),
+      // [FIX-FEMCO-LOGO-SIZE] 로고형 배경은 contain(카드 가득)이 아니라 작은 비율로 중앙 배치
+      sizeMode: uCfg.bgIsLogo ? 'pct' : (uCfg.bgImgSize && uCfg.bgImgSize!=='auto' && uCfg.bgImgSize!=='fill' ? uCfg.bgImgSize : 'cover'),
+      sizeVal: uCfg.bgIsLogo ? (parseInt(uCfg.femcoBgLogoPct||'',10) || 42) : 90,
+      pos: 'center',
+      repeat: 'no-repeat', ox:0, oy:0,
+      __fromBoard: true
+    } : '');
     const _bgCfg = (function(){
       const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
       if(!_bgRaw) return d;

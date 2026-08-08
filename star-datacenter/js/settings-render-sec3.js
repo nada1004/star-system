@@ -102,7 +102,7 @@ function _cfgSecGroup3(ctx){
       <div>
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on');try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">${t}전</button>`).join('')}
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on');try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">${t}전</button>`).join('')}
         </div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
       </div>
@@ -225,6 +225,15 @@ function _cfgSecGroup3(ctx){
   </details>
   ${_scfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
     <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:var(--fs-sm);font-weight:600;color:var(--text2);min-width:140px">🔆 대학 배경 밝기(전체):</label>
+        <input type="range" id="cfg-b2-bgimg-alpha" min="0" max="100" value="${b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
+          oninput="document.getElementById('cfg-b2-bgimg-alpha-val').textContent=this.value+'%';clearTimeout(window._b2ImgAlphaLiveT);window._b2ImgAlphaLiveT=setTimeout(()=>{if(typeof setBoardBgAlphaGlobal==='function')setBoardBgAlphaGlobal(this.value,true);},120)">
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:700" id="cfg-b2-bgimg-alpha-val">${b2BgImgAlpha}%</span>
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:8px">모든 대학(로고형 배경 포함)이 같은 밝기값을 사용합니다. 특정 대학만 다르게 하려면 아래 목록에서 개별 설정하세요.</div>
+    </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
   </details>
   ${_scfgD('sync','🔄 데이터 동기화')}
@@ -638,7 +647,7 @@ function _cfgSecGroup3(ctx){
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">대학별 설정</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 선택</div>
-        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
+        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields();try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 색상</div>
