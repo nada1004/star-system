@@ -420,7 +420,7 @@ function _b2FemcoView() {
       alpha: (uCfg.bgImgAlpha ?? (typeof b2BgImgAlpha!=='undefined' ? b2BgImgAlpha : 64)),
       // [FIX-FEMCO-LOGO-SIZE] 로고형 배경은 contain(카드 가득)이 아니라 작은 비율로 중앙 배치
       sizeMode: uCfg.bgIsLogo ? 'pct' : (uCfg.bgImgSize && uCfg.bgImgSize!=='auto' && uCfg.bgImgSize!=='fill' ? uCfg.bgImgSize : 'cover'),
-      sizeVal: uCfg.bgIsLogo ? (parseInt(uCfg.femcoBgLogoPct||'',10) || 42) : 90,
+      sizeVal: uCfg.bgIsLogo ? (parseInt(uCfg.femcoBgLogoPct||'',10) || parseInt(femcoSettings.bgLogoPct||'',10) || 42) : 90,
       pos: 'center',
       repeat: 'no-repeat', ox:0, oy:0,
       __fromBoard: true
@@ -431,6 +431,13 @@ function _b2FemcoView() {
       if(typeof _bgRaw==='string') return {...d,url:String(_bgRaw).trim()};
       if(typeof _bgRaw==='object') return {...d,..._bgRaw,url:String(_bgRaw.url||'').trim()};
       return d;
+    })();
+    // [FEMCO-BG-SIZE] 설정탭 > 펨코스타일 > 배경 크기(공통/대학별) 적용
+    (function(){
+      const uPct = parseInt(uCfg.femcoBgLogoPct||'',10);
+      if(!isNaN(uPct) && uPct>0){ _bgCfg.sizeMode='pct'; _bgCfg.sizeVal=uPct; return; }
+      const gPct = parseInt(femcoSettings.bgLogoPct||'',10);
+      if(!isNaN(gPct) && gPct>0 && _bgCfg.sizeMode==='pct'){ _bgCfg.sizeVal=gPct; }
     })();
     const _bgUrl = (_bgCfg.url||'').trim();
     const _bgLower = _bgUrl.toLowerCase();

@@ -386,6 +386,8 @@ function _cfgFemcoDefaults(){
     univBgMedia: {},
     // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
     bgOverlay: 22,
+    // (요청) 펨코 대학 카드 배경 크기(%) — 로고형 배경 기본 42%
+    bgLogoPct: 42,
     // (요청) 로고/대학명 위치 미세조정(px)
     logoOffsetX: 0,
     logoOffsetY: 0,
@@ -428,7 +430,7 @@ try{
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
   const next = {...cur};
-  const numKeys = ['autoLayout','logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX','bgOverlay','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY'];
+  const numKeys = ['autoLayout','logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX','bgOverlay','bgLogoPct','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY'];
   next[k] = numKeys.includes(k) ? parseInt(v, 10) : v;
 
   // 수동 조절을 건드리면 자동 레이아웃 OFF (원클릭 자동화 요구사항: 사용자가 바꾸면 유지)
@@ -472,6 +474,7 @@ window.cfgFemcoInit = function(){
   setVal('cfg-femco-subtitleWeight', s.subtitleWeight);
   setVal('cfg-femco-subtitleColor', (s.subtitleColor && s.subtitleColor.startsWith('#')) ? s.subtitleColor : '#ffffff');
   setVal('cfg-femco-bgOverlay', s.bgOverlay ?? 22); setVal('cfg-femco-bgOverlayNum', s.bgOverlay ?? 22);
+  setVal('cfg-femco-bgLogoPct', s.bgLogoPct ?? 42); setVal('cfg-femco-bgLogoPctNum', s.bgLogoPct ?? 42);
   setVal('cfg-femco-logoOffsetX', s.logoOffsetX ?? 0); setVal('cfg-femco-logoOffsetXNum', s.logoOffsetX ?? 0);
   setVal('cfg-femco-logoOffsetY', s.logoOffsetY ?? 0); setVal('cfg-femco-logoOffsetYNum', s.logoOffsetY ?? 0);
   setVal('cfg-femco-titleOffsetX', s.titleOffsetX ?? 0); setVal('cfg-femco-titleOffsetXNum', s.titleOffsetX ?? 0);

@@ -3,9 +3,7 @@
     "build": "node build.mjs",
     "build:watch": "node build.mjs --watch"
   },
-  "devDependencies": {
-    "esbuild": "^0.28.1"
-  },
+  "devDependencies": {},
   "dependencies": {
     "acorn": "^8.17.0",
     "jsdom": "^29.1.1"

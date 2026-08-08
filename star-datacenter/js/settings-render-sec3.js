@@ -447,6 +447,36 @@ function _cfgSecGroup3(ctx){
       </details>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">배경 크기(%)</div>
+        <input type="range" id="cfg-femco-bgLogoPct" min="10" max="220" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgLogoPctNum').value=this.value;cfgFemcoUpd('bgLogoPct',this.value)">
+        <input type="number" id="cfg-femco-bgLogoPctNum" min="10" max="220" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgLogoPct').value=this.value;cfgFemcoUpd('bgLogoPct',this.value)">
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:-6px">로고형 배경(대학 로고 배경) 크기 기본값입니다. 100 = 카드 가로 100%</div>
+      <details style="border:1px dashed var(--border2);border-radius:12px;padding:10px 12px;background:var(--white)" onclick="event.stopPropagation()">
+        <summary style="cursor:pointer;font-weight:900;color:var(--text2);list-style:none" onclick="event.stopPropagation()">🖼️ 대학별 배경 크기 (펨코스타일) <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:600">(선택)</span></summary>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:8px 0 10px;line-height:1.6">
+          위의 “배경 크기(%)”가 <b>기본(공통)</b>이고, 아래는 대학별 <b>예외값</b>입니다. 초기화하면 공통값을 따릅니다.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>{
+            const _v = parseInt(u.femcoBgLogoPct||'',10);
+            const cur = isNaN(_v) ? '' : Math.max(10, Math.min(220,_v));
+            const _def = (()=>{try{return Math.max(10,Math.min(220,parseInt((J('b2_femco_settings_v1')||{}).bgLogoPct||42,10)||42));}catch(e){return 42;}})();
+            return `
+              <div class="srow" style="gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+                <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+                <input type="range" min="10" max="220" step="1" value="${cur||_def}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+                  oninput="univCfg[${i}].femcoBgLogoPct=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'%';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
+                <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'%':'(기본)'}</span>
+                <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].femcoBgLogoPct;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='${_def}';const s=p.querySelector('span');if(s)s.textContent='(기본)';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </details>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">배경 투명(오버레이)</div>
         <input type="range" id="cfg-femco-bgOverlay" min="0" max="70" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOverlayNum').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
         <input type="number" id="cfg-femco-bgOverlayNum" min="0" max="70" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgOverlay').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
