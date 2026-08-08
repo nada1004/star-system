@@ -20,6 +20,9 @@ var _b2LiveHoverCloseTimer = null;
 var _b2LiveHoverOpenId = '';
 var _b2LiveHoverOpenName = '';
 var _b2LiveInlineHideTimers = {};
+var _b2LiveViewMode = (()=>{ try{ const m = localStorage.getItem('su_b2_live_viewmode'); return ['card','theater'].includes(m) ? m : 'card'; }catch(e){ return 'card'; } })(); // 'card'(카드형) | 'theater'(시청형: 좌측 큰화면+우측 대학별 목록)
+var _b2LiveTheaterSelected = null; // { id, name, univ } — 시청형 모드에서 현재 큰 화면에 재생 중인 스트리머
+var _b2LiveTheaterUnivSel = null; // 시청형 모드 우측 목록에서 드릴다운한 대학명(null이면 대학 버튼 목록 표시)
 
 // soop-multiview.js 의 정규화 로직과 동일 — 독립 로드 순서 문제 없도록 자체 보유
 function _b2LiveSoopId(input) {
@@ -51,6 +54,72 @@ function _b2LiveSetSort(mode) {
   try{ localStorage.setItem('su_b2_live_sort', _b2LiveSortMode); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+}
+
+function _b2LiveSetViewMode(mode) {
+  _b2LiveViewMode = mode === 'theater' ? 'theater' : 'card';
+  try{ localStorage.setItem('su_b2_live_viewmode', _b2LiveViewMode); }catch(e){}
+  const el = document.getElementById('b2-content');
+  if (el) { el.innerHTML = _b2LiveView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  if (_b2LiveViewMode === 'theater' && typeof _b2LiveTheaterInitList === 'function') setTimeout(_b2LiveTheaterInitList, 0);
+}
+
+// 시청형(theater) 모드 우측 스트리머 목록: 좌측 큰 화면(main)의 실제 렌더링 높이에
+// 맞춰 우측 목록의 높이를 동적으로 맞추고(비율 기반 높이라 뷰포트 계산만으론 안 맞음),
+// 그 안에서 마우스 드래그로 스크롤할 수 있게 한다(휠 스크롤도 계속 동작).
+function _b2LiveTheaterSyncListHeight() {
+  try {
+    const main = document.getElementById('b2-live-theater-main');
+    const list = document.getElementById('b2-live-theater-list');
+    if (!main || !list) return;
+    if (window.matchMedia && window.matchMedia('(max-width:1024px)').matches) {
+      list.style.height = '';
+      return;
+    }
+    const h = main.getBoundingClientRect().height;
+    if (h > 0) list.style.height = h + 'px';
+  } catch (e) {}
+}
+
+function _b2LiveTheaterInitList() {
+  try {
+    const list = document.getElementById('b2-live-theater-list');
+    if (!list) return;
+    if (list.dataset.dragInit !== '1') {
+      list.dataset.dragInit = '1';
+      let isDown = false, startY = 0, startScroll = 0, moved = false, capturedId = null;
+      list.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        isDown = true; moved = false; startY = e.clientY; startScroll = list.scrollTop; capturedId = e.pointerId;
+        // 주의: 여기서 setPointerCapture를 걸면 클릭(버튼 onclick)까지 list로 리디렉션되어
+        // 버튼이 아예 눌리지 않게 된다 — 실제로 드래그가 확인된 순간(pointermove)에만 캡처한다.
+      });
+      list.addEventListener('pointermove', (e) => {
+        if (!isDown) return;
+        const dy = e.clientY - startY;
+        if (Math.abs(dy) > 4) {
+          if (!moved) {
+            moved = true;
+            list.style.cursor = 'grabbing';
+            try { list.setPointerCapture(capturedId); } catch (e2) {}
+          }
+          list.scrollTop = startScroll - dy;
+        }
+      });
+      const endDrag = () => { isDown = false; list.style.cursor = 'grab'; };
+      list.addEventListener('pointerup', endDrag);
+      list.addEventListener('pointerleave', endDrag);
+      list.addEventListener('pointercancel', endDrag);
+      // 드래그로 판단되면(4px 이상 이동) 클릭으로 이어져 스트리머가 잘못 선택되는 것 방지
+      list.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+      list.style.cursor = 'grab';
+    }
+    if (!window._b2LiveTheaterResizeBound) {
+      window._b2LiveTheaterResizeBound = true;
+      window.addEventListener('resize', () => { if (typeof _b2LiveTheaterSyncListHeight === 'function') _b2LiveTheaterSyncListHeight(); });
+    }
+    _b2LiveTheaterSyncListHeight();
+  } catch (e) {}
 }
 
 function _b2LiveSetGender(g) {
@@ -246,6 +315,12 @@ function _b2LiveView() {
       .b2-toolbar-btn:hover{ filter:brightness(.97); }
     </style>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:3px;align-items:center;background:var(--surface);padding:3px;border-radius:20px;border:1.5px solid var(--border2)">
+        <button type="button" onclick="_b2LiveSetViewMode('card')" aria-pressed="${_b2LiveViewMode==='card'}"
+          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='card'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='card'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='card'?'var(--text)':'var(--text3)'}">🖼️ 카드형</button>
+        <button type="button" onclick="_b2LiveSetViewMode('theater')" aria-pressed="${_b2LiveViewMode==='theater'}"
+          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='theater'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='theater'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='theater'?'var(--text)':'var(--text3)'}">🎬 시청형</button>
+      </div>
       <div style="position:relative">
         <select id="b2-live-univ-sel" class="b2-toolbar-select"
           onchange="_b2LiveUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2LiveView();injectUnivIcons&&injectUnivIcons(document.getElementById('b2-content'))"
@@ -283,6 +358,9 @@ function _b2LiveView() {
     </div>
   `;
 
+  if (_b2LiveViewMode === 'theater') {
+    return filterBar + _b2LiveTheaterHTML();
+  }
   return filterBar + `<div id="b2-live-results">${_b2LiveResultsHTML()}</div>`;
 }
 
@@ -475,9 +553,212 @@ function _b2LiveResultsHTML() {
 // 검색 input 자신은 DOM에서 전혀 교체되지 않으므로 IME 조합/커서/포커스가 유지된다.
 function _b2LiveRefreshResultsOnly() {
   try {
+    if (_b2LiveViewMode === 'theater') {
+      const body = document.getElementById('b2-live-theater-list-body');
+      if (body) body.innerHTML = _b2LiveTheaterListBodyHTML();
+      return;
+    }
     const box = document.getElementById('b2-live-results');
     if (!box) return; // 다른 탭으로 이미 이동한 경우
     box.innerHTML = _b2LiveResultsHTML();
     injectUnivIcons && injectUnivIcons(box);
+  } catch (e) {}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   🎬 시청형 모드 — 프로필탭(b2-players-wrapper)과 동일하게
+   왼쪽 큰 화면 + 오른쪽 대학별 목록 구조. 목록 클릭 시 왼쪽 화면만
+   교체(전체 재렌더 없음)해서 목록 스크롤 위치가 유지된다.
+   ══════════════════════════════════════════════════════════════ */
+
+// 카드형과 동일한 필터(대학/티어/성별/검색)만 적용, 정렬은 대학별 그룹핑 고정이라 미사용
+function _b2LiveTheaterFilteredList() {
+  const soopPlayers = (typeof players !== 'undefined' ? players : []).filter(p => {
+    if (p.hidden || p.retired || p.hideFromBoard) return false;
+    const _u = String(p?.univ || '').trim();
+    if (_u === 'YB') return false;
+    return !!_b2LiveSoopId(p.channelUrl);
+  }).map(p => Object.assign({ _soopId: _b2LiveSoopId(p.channelUrl) }, p));
+
+  const univFiltered = _b2LiveUnivFilter === '전체'
+    ? soopPlayers
+    : soopPlayers.filter(p => String(p?.univ || '').trim() === _b2LiveUnivFilter);
+  const tierFiltered = _b2LiveTierFilter === '전체'
+    ? univFiltered
+    : univFiltered.filter(p => p.tier === _b2LiveTierFilter);
+  const genderFiltered = _b2LiveGenderFilter === '전체'
+    ? tierFiltered
+    : tierFiltered.filter(p => p.gender === _b2LiveGenderFilter);
+
+  const q = String(_b2LiveSearch || '').trim().toLowerCase();
+  return q ? genderFiltered.filter(p => String(p.name || '').toLowerCase().includes(q)) : genderFiltered;
+}
+
+function _b2LiveTheaterHTML() {
+  const list = _b2LiveTheaterFilteredList();
+
+  if (!list.length) {
+    return `
+      <div style="padding:60px 20px;text-align:center;color:var(--gray-l)">
+        <div style="font-size:40px;margin-bottom:10px">🔍</div>
+        <div style="font-weight:700">해당 조건에 맞는 스트리머가 없습니다</div>
+      </div>`;
+  }
+
+  // 이전 선택이 현재 필터 결과에 없으면 선택 해제(안내 문구로 복귀)
+  if (_b2LiveTheaterSelected && !list.some(p => p._soopId === _b2LiveTheaterSelected.id)) {
+    _b2LiveTheaterSelected = null;
+  }
+
+  return `
+    <style>
+      .b2-live-theater-wrapper{ display:flex; gap:18px; align-items:flex-start; min-height:480px; }
+      .b2-live-theater-main{ flex:1 1 auto; min-width:0; position:relative; border-radius:20px; overflow:hidden; background:#0f172a; display:flex; flex-direction:column; }
+      .b2-live-theater-video{ width:100%; aspect-ratio:16/9; background:#000; }
+      .b2-live-theater-list{ flex:0 0 118px; width:118px; min-width:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding-right:4px; height:calc(100vh - 230px); cursor:grab; touch-action:pan-y; user-select:none; }
+      .b2-live-theater-item:hover{ background:var(--surface); }
+      .b2-live-theater-univbtn:hover{ background:var(--surface); }
+      @media (max-width:1024px){
+        .b2-live-theater-wrapper{ flex-direction:column; }
+        .b2-live-theater-main{ flex:none; width:100%; }
+        .b2-live-theater-list{ flex:none; width:100%; height:auto; max-height:420px; }
+      }
+    </style>
+    <div class="b2-live-theater-wrapper">
+      <div class="b2-live-theater-main" id="b2-live-theater-main">${_b2LiveTheaterMainHTML()}</div>
+      <div class="b2-live-theater-list" id="b2-live-theater-list">
+        <div id="b2-live-theater-list-body">${_b2LiveTheaterListBodyHTML()}</div>
+      </div>
+    </div>`;
+}
+
+// 대학별 그룹핑 (univCfg 등록 순서, 무소속은 맨 뒤)
+function _b2LiveTheaterGroups() {
+  const list = _b2LiveTheaterFilteredList();
+  const univOrder = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+  const groups = {};
+  list.forEach(p => {
+    const u = String(p.univ || '').trim() || '무소속';
+    (groups[u] = groups[u] || []).push(p);
+  });
+  const groupNames = Object.keys(groups).sort((a, b) => {
+    if (a === '무소속') return 1;
+    if (b === '무소속') return -1;
+    const ia = univOrder.indexOf(a), ib = univOrder.indexOf(b);
+    return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
+  });
+  groupNames.forEach(u => groups[u].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ko')));
+  return { groups, groupNames };
+}
+
+function _b2LiveTheaterItemHtml(p, univLabel) {
+  const safeName = (typeof escJS === 'function') ? escJS(p.name) : String(p.name || '').replace(/'/g, "\\'");
+  const safeUniv = String(univLabel || '').replace(/'/g, "\\'");
+  const safeNameHtml = String(p.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const photoUrl = p.photo ? ((typeof toHttpsUrl === 'function' ? toHttpsUrl(p.photo) : p.photo).replace(/"/g, '&quot;')) : '';
+  const active = !!(_b2LiveTheaterSelected && _b2LiveTheaterSelected.id === p._soopId);
+  const univColor = typeof gc === 'function' ? gc(univLabel === '무소속' ? '' : univLabel) : '#6b7280';
+  const avatarHtml = photoUrl
+    ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`
+    : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`;
+  return `
+    <button type="button" class="b2-live-theater-item${active ? ' active' : ''}" data-soop-id="${p._soopId}"
+      onclick="_b2LiveTheaterSelect('${p._soopId}','${safeName}','${safeUniv}')"
+      style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:6px 8px;border-radius:12px;border:1.5px solid ${active ? 'var(--blue)' : 'transparent'};background:${active ? 'var(--surface)' : 'transparent'};cursor:pointer">
+      <span style="width:34px;height:34px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,.9);box-shadow:0 2px 6px rgba(15,23,42,.12)">${avatarHtml}</span>
+      <span style="min-width:0;flex:1;font-weight:800;font-size:var(--fs-base);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name || ''}</span>
+    </button>`;
+}
+
+// 목록 영역 내용: 처음엔 대학 버튼 목록만 보여주고, 대학을 누르면 그 대학 스트리머만 +
+// "◀ 처음으로" 버튼으로 전환(리스트 세로 길이가 화면 아래로 무한정 안 늘어나게)
+function _b2LiveTheaterListBodyHTML() {
+  const { groups, groupNames } = _b2LiveTheaterGroups();
+
+  if (!groupNames.length) {
+    return `<div style="padding:30px 8px;text-align:center;color:var(--gray-l);font-size:11px;font-weight:700">조건에 맞는<br>스트리머가 없습니다</div>`;
+  }
+
+  // 선택된 대학이 현재 필터 결과에 없으면 처음 화면으로
+  if (_b2LiveTheaterUnivSel && !groupNames.includes(_b2LiveTheaterUnivSel)) {
+    _b2LiveTheaterUnivSel = null;
+  }
+
+  if (!_b2LiveTheaterUnivSel) {
+    return groupNames.map(u => {
+      const safeU = String(u).replace(/'/g, "\\'");
+      return `
+        <button type="button" class="b2-live-theater-univbtn" onclick="_b2LiveTheaterSelectUniv('${safeU}')"
+          style="display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:8px 6px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;margin-bottom:4px">
+          ${typeof gUI === 'function' ? gUI(u === '무소속' ? '' : u, '16px') : ''}
+          <span style="min-width:0;flex:1;font-weight:900;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u}</span>
+          <span style="font-size:10px;color:var(--text3);font-weight:700;flex-shrink:0">${groups[u].length}</span>
+        </button>`;
+    }).join('');
+  }
+
+  const items = (groups[_b2LiveTheaterUnivSel] || []).map(p => _b2LiveTheaterItemHtml(p, _b2LiveTheaterUnivSel)).join('');
+  return `
+    <button type="button" onclick="_b2LiveTheaterSelectUniv(null)"
+      style="display:flex;align-items:center;gap:4px;width:100%;text-align:left;padding:6px 4px;border-radius:10px;border:none;background:transparent;color:var(--blue);font-weight:900;font-size:11.5px;cursor:pointer;margin-bottom:6px">
+      ◀ 처음으로
+    </button>
+    <div style="display:flex;align-items:center;gap:6px;padding:2px 4px 8px">
+      ${typeof gUI === 'function' ? gUI(_b2LiveTheaterUnivSel === '무소속' ? '' : _b2LiveTheaterUnivSel, '15px') : ''}
+      <span style="font-weight:900;font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_b2LiveTheaterUnivSel}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">${items}</div>`;
+}
+
+// 대학 버튼 클릭(드릴다운) / "처음으로"(u=null) — 목록 영역만 교체, 큰 화면은 그대로 유지
+function _b2LiveTheaterSelectUniv(u) {
+  try {
+    _b2LiveTheaterUnivSel = u || null;
+    const body = document.getElementById('b2-live-theater-list-body');
+    if (body) body.innerHTML = _b2LiveTheaterListBodyHTML();
+    const listBox = document.getElementById('b2-live-theater-list');
+    if (listBox) listBox.scrollTop = 0;
+  } catch (e) {}
+}
+
+function _b2LiveTheaterMainHTML() {
+  const sel = _b2LiveTheaterSelected;
+  if (!sel) {
+    return `
+      <div class="b2-live-theater-video" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.7)">
+        <div style="font-size:44px">📺</div>
+        <div style="font-weight:800;font-size:var(--fs-base)">왼쪽에서 스트리머를 선택하면 방송이 나옵니다</div>
+      </div>`;
+  }
+  const safeNameHtml = String(sel.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const univColor = (sel.univ && sel.univ !== '무소속' && typeof gc === 'function') ? gc(sel.univ) : '#1e293b';
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:linear-gradient(100deg,${univColor} -10%,#0f172a 90%);color:#fff;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        ${typeof gUI === 'function' ? gUI(sel.univ === '무소속' ? '' : sel.univ, '16px') : ''}
+        <span style="font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.35)">${safeNameHtml}</span>
+      </div>
+      <a href="https://ch.sooplive.co.kr/${sel.id}" target="_blank" rel="noopener" style="color:#93c5fd;font-weight:800;font-size:var(--fs-sm);text-decoration:none;white-space:nowrap;flex-shrink:0">🔗 채널로 이동</a>
+    </div>
+    <div class="b2-live-theater-video">
+      <iframe src="${_b2LiveEmbedUrl(sel.id, true)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer" style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
+    </div>`;
+}
+
+// 목록 클릭 시 왼쪽 큰 화면만 교체(전체 재렌더 없음 — 목록 스크롤 유지)
+function _b2LiveTheaterSelect(id, name, univ) {
+  try {
+    if (!id) return;
+    _b2LiveTheaterSelected = { id, name, univ };
+    const main = document.getElementById('b2-live-theater-main');
+    if (main) main.innerHTML = _b2LiveTheaterMainHTML();
+    document.querySelectorAll('.b2-live-theater-item').forEach(btn => {
+      const on = btn.getAttribute('data-soop-id') === id;
+      btn.classList.toggle('active', on);
+      btn.style.borderColor = on ? 'var(--blue)' : 'transparent';
+      btn.style.background = on ? 'var(--surface)' : 'transparent';
+    });
+    // 방송 선택 시 상단 안내문구(고정 높이)가 헤더바로 바뀌며 main 높이가 달라지므로 재동기화
+    if (typeof _b2LiveTheaterSyncListHeight === 'function') setTimeout(_b2LiveTheaterSyncListHeight, 0);
   } catch (e) {}
 }

@@ -826,6 +826,7 @@ function rBoard2(C, T) {
     } else if (_b2View === 'live') {
       sub.innerHTML = _b2LiveView();
       injectUnivIcons && injectUnivIcons(sub);
+      if (typeof _b2LiveTheaterInitList === 'function') setTimeout(_b2LiveTheaterInitList, 0);
     } else if (_b2View === 'old') {
       if (typeof rBoard === 'function') {
         rBoard(sub, T);
