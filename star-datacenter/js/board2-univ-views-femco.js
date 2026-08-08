@@ -441,9 +441,11 @@ function _b2FemcoView() {
     })();
     const _bgUrl = (_bgCfg.url||'').trim();
     const _bgLower = _bgUrl.toLowerCase();
-    const _bgIsImage = _bgUrl && /\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(_bgLower);
     const _bgIsVideo = _bgUrl && /\.(mp4|webm|ogg)(\?|#|$)/i.test(_bgLower);
     const _bgIsEmbed = _bgUrl && /(youtube\.com|youtu\.be|twitch\.tv)/i.test(_bgLower);
+    // 이미지 CDN/스토리지 URL은 확장자가 없거나 쿼리 뒤에 숨는 경우가 많다.
+    // 명백한 영상/임베드가 아니면 이미지로 취급해야 배경과 오버레이가 함께 적용된다.
+    const _bgIsImage = !!(_bgUrl && !_bgIsVideo && !_bgIsEmbed);
     const _bgBtn = (_bgIsVideo || _bgIsEmbed || (_bgUrl && !_bgIsImage))
       ? `<button class="b2-femco-pill no-export" style="cursor:pointer" onclick="_b2FemcoOpenBgMedia('${univName.replace(/'/g,"\\'")}', '${_bgUrl.replace(/'/g,"\\'")}');event.stopPropagation();">${_bgIsVideo?'🎞️ 배경영상':_bgIsEmbed?'🔗 배경링크':'🖼️ 배경링크'}</button>`
       : '';
@@ -534,7 +536,7 @@ function _b2FemcoView() {
       : (_bgIsVideo || _bgIsEmbed)
         ? `<div style="position:absolute;inset:0;background-image:url('${_bgUrl.replace(/'/g,"%27")}');background-repeat:${_bgRepeat};background-size:${_bgSize};background-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0"></div>`
         : '';
-    const _ovLayer = (_bgIsImage && _bgUrl && BG_OVERLAY>0)
+    const _ovLayer = (_bgUrl && !_bgIsVideo && !_bgIsEmbed && BG_OVERLAY>0)
       ? `<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,${OV_TOP.toFixed(3)}), rgba(2,6,23,${OV_BOT.toFixed(3)}));pointer-events:none;z-index:1"></div>`
       : '';
 

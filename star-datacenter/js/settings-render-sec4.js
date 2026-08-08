@@ -199,6 +199,43 @@ function _cfgSecGroup4(ctx){
       </div>
       </div>
     </details>
+    <details class="cfg-grp" open style="border:2px solid #93c5fd;border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(135deg,#eff6ff,#eef2ff);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🌤️ 대학별 현황판 배경 밝기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.5;margin-bottom:10px">대학 로고를 현황판 배경으로 깔 때 학교마다 진하기가 다르면 여기서 맞출 수 있습니다.</div>
+        <div style="display:grid;grid-template-columns:84px 1fr 90px;gap:10px;align-items:center;margin-bottom:6px;padding-bottom:12px;border-bottom:1px dashed var(--border2)">
+          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--blue)">🌍 전체 공통</div>
+          <input type="range" id="cfg-boardchip-bgAlphaGlobal" min="0" max="100" step="1" value="${(typeof b2BgImgAlpha!=='undefined'?b2BgImgAlpha:64)}" style="width:100%;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-boardchip-bgAlphaGlobalNum').value=this.value"
+            onchange="setBoardBgAlphaGlobal(this.value,true);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields();}catch(e){}">
+          <input type="number" id="cfg-boardchip-bgAlphaGlobalNum" min="0" max="100" step="1" value="${(typeof b2BgImgAlpha!=='undefined'?b2BgImgAlpha:64)}" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700"
+            onchange="document.getElementById('cfg-boardchip-bgAlphaGlobal').value=this.value;setBoardBgAlphaGlobal(this.value,true);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields();}catch(e){}">
+        </div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">모든 대학이 기본으로 같이 쓰는 공통 밝기입니다. 특정 대학만 다르게 하고 싶으면 아래에서 대학을 골라 개별 조절하세요.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:84px">대학 선택</div>
+          <select id="cfg-boardchip-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields(this.value);}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:180px;flex:1">
+            ${(()=>{
+              const names=(Array.isArray(window.univCfg)?window.univCfg:[]).map(u=>String(u&&u.name||'').trim()).filter(Boolean);
+              if(!names.includes('무소속')) names.push('무소속');
+              const cur=(()=>{try{return localStorage.getItem('cfg_femco_univ') || names[0] || '';}catch(e){return names[0]||'';}})();
+              return names.map(n=>`<option value="${String(n).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"${n===cur?' selected':''}>${String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
+            })()}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:84px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">밝기(개별)</div>
+          <input type="range" id="cfg-boardchip-bgAlpha" min="0" max="100" step="1" value="64" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-boardchip-bgAlphaNum').value=this.value" onchange="window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+          <input type="number" id="cfg-boardchip-bgAlphaNum" min="0" max="100" step="1" value="64" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-boardchip-bgAlpha').value=this.value;window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <button class="btn btn-xs btn-w" onclick="window.cfgFemcoResetBoardBgAlpha&&window.cfgFemcoResetBoardBgAlpha()">이 대학만 전체값 사용(개별 해제)</button>
+          <span id="cfg-boardchip-bgAlphaHint" style="font-size:var(--fs-caption);color:var(--gray-l)">전체값 사용 중</span>
+        </div>
+      </div>
+      </div>
+    </details>
     <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
       <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🏫 대학 로고 모양 · 크기</summary>
       <div style="padding:12px;display:flex;flex-direction:column;gap:14px">

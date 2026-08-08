@@ -436,7 +436,7 @@ function _cfgSecGroup3(ctx){
               <div class="srow" style="gap:10px;align-items:center;flex-wrap:wrap">
                 <div class="cdot" style="background:${u.color||'#64748b'}"></div>
                 <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
-                <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('su_femco_settings')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+                <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('b2_femco_settings_v1')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
                   oninput="univCfg[${i}].logoSizeFemco=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
                 <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'px':'(기본)'}</span>
                 <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeFemco;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='150';const s=p.querySelector('span');if(s)s.textContent='(기본)';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
@@ -677,7 +677,7 @@ function _cfgSecGroup3(ctx){
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">대학별 설정</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 선택</div>
-        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields();try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
+        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields(this.value);try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 색상</div>
@@ -699,6 +699,15 @@ function _cfgSecGroup3(ctx){
         • 이미지/GIF: 대학 카드 배경으로 적용<br>
         • MP4/WEBM: 대학 카드에 “배경영상” 버튼 표시(클릭 재생)<br>
         • 유튜브/트위치: “배경링크” 버튼 표시(새창)
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">현황판 배경 밝기</div>
+        <input type="range" id="cfg-femco-boardBgAlpha" min="0" max="100" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-boardBgAlphaNum').value=this.value" onchange="window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+        <input type="number" id="cfg-femco-boardBgAlphaNum" min="0" max="100" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-boardBgAlpha').value=this.value;window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:-4px">
+        <button class="btn btn-xs" onclick="window.cfgFemcoResetBoardBgAlpha&&window.cfgFemcoResetBoardBgAlpha()">전체값 사용</button>
+        <span id="cfg-femco-boardBgAlphaHint" style="font-size:var(--fs-caption);color:var(--gray-l)">전체값 사용 중</span>
       </div>
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">배경 이미지 투명도</div>

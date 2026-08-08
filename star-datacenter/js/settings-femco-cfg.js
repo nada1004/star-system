@@ -439,8 +439,9 @@ window.cfgFemcoUpd = function(k, v){
     next.autoLayout = 0;
   }
   _cfgFemcoSave(next);
-  // 즉시 반영(로고 위치/오버레이 등이 "안 먹는" 것처럼 보이는 문제 방지)
-  try{ if(typeof render === 'function') render(); }catch(e){}
+  // 설정 탭 전체를 다시 그리면 드래그 중인 슬라이더가 교체된다.
+  // 설정 화면 밖에서만 현재 화면을 갱신하고, 설정 탭에서는 저장값을 유지한다.
+  try{ if(window._cfgSoftRefreshLive) window._cfgSoftRefreshLive(); }catch(e){}
 };
 
 window.cfgFemcoInit = function(){
@@ -492,12 +493,32 @@ window.cfgFemcoInit = function(){
   if (typeof window.cfgFemcoRefreshUnivFields === 'function') window.cfgFemcoRefreshUnivFields();
 };
 
-window.cfgFemcoRefreshUnivFields = function(){
+window.cfgFemcoRefreshUnivFields = function(forcedUniv){
   const s = _cfgFemcoLoad();
   const sel = document.getElementById('cfg-femco-univ');
-  const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const _savedUniv = localStorage.getItem('cfg_femco_univ') || '';
+  // [FIX-BRIGHT-8] 사용자가 방금 조작한 select(forcedUniv)를 최우선으로 사용.
+  // 예전엔 다른(숨겨진) 대학 셀렉트의 값을 먼저 읽어와서, 방금 고른 대학이
+  // 화면에 반영되지도 못하고 이전 값으로 되돌아가 버리는 문제가 있었음.
+  const u = forcedUniv || (sel && sel.value) || (selBoard && selBoard.value) || _savedUniv;
   const c = (s.univColorOverrides||{})[u] || '#000000';
   const sub = (s.univSubtitles||{})[u] || '';
+  const boardU = ((typeof univCfg!=='undefined' ? univCfg : []).find(x=>x.name===u)) || {};
+  const _globalBoardBgAlpha = (() => {
+    if (typeof b2BgImgAlpha !== 'undefined' && !isNaN(parseInt(b2BgImgAlpha, 10))) {
+      return Math.max(0, Math.min(100, parseInt(b2BgImgAlpha, 10)));
+    }
+    try{
+      return Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_b2bia') || '64', 10) || 64));
+    }catch(e){
+      return 64;
+    }
+  })();
+  const _boardBgAlphaCustom = boardU.bgImgAlpha;
+  const _boardBgAlphaEff = (_boardBgAlphaCustom==null)
+    ? _globalBoardBgAlpha
+    : Math.max(0, Math.min(100, parseInt(_boardBgAlphaCustom, 10) || 0));
   const rawBg = (s.univBgMedia||{})[u] || '';
   const bgObj = (function(){
     const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
@@ -510,6 +531,11 @@ window.cfgFemcoRefreshUnivFields = function(){
   const subEl = document.getElementById('cfg-femco-subtitle');
   const bgEl = document.getElementById('cfg-femco-bgMediaUrl');
   const bgHint = document.getElementById('cfg-femco-bgMediaHint');
+  const boardBgHint = document.getElementById('cfg-femco-boardBgAlphaHint');
+  const boardChipHint = document.getElementById('cfg-boardchip-bgAlphaHint');
+  if (sel && sel.value !== u) sel.value = u;
+  if (selBoard && selBoard.value !== u) selBoard.value = u;
+  try{ if(u) localStorage.setItem('cfg_femco_univ', u); }catch(e){}
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
   if (bgEl) bgEl.value = bgObj.url || '';
@@ -517,12 +543,27 @@ window.cfgFemcoRefreshUnivFields = function(){
     if(bgObj.url){
       bgHint.textContent = '설정됨';
     } else {
-      const _fallbackU = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null) || {};
-      bgHint.textContent = _fallbackU.bgImg ? '미설정 (현황판 배경을 자동으로 사용 중)' : '미설정';
+      bgHint.textContent = boardU.bgImg ? '미설정 (현황판 배경을 자동으로 사용 중)' : '미설정';
     }
+  }
+  if (boardBgHint){
+    const _baseMsg = boardU.bgImg ? '현황판 배경 로고/이미지에 적용됩니다.' : '현황판 배경을 넣으면 이 값이 적용됩니다.';
+    boardBgHint.textContent = _boardBgAlphaCustom==null
+      ? `${_baseMsg} 전체값 ${_boardBgAlphaEff}% 사용 중`
+      : `${_baseMsg} 대학별 ${_boardBgAlphaEff}% 사용 중`;
+  }
+  if (boardChipHint){
+    const _baseMsg = boardU.bgImg ? '이 대학 현황판 배경에 바로 반영됩니다.' : '현황판 배경을 넣으면 이 값이 적용됩니다.';
+    boardChipHint.textContent = _boardBgAlphaCustom==null
+      ? `${_baseMsg} 전체값 ${_boardBgAlphaEff}% 사용 중`
+      : `${_baseMsg} 대학별 ${_boardBgAlphaEff}% 사용 중`;
   }
   // 배경 옵션
   const setVal=(id,v)=>{const el=document.getElementById(id);if(el!=null) el.value=v;};
+  setVal('cfg-femco-boardBgAlpha', _boardBgAlphaEff);
+  setVal('cfg-femco-boardBgAlphaNum', _boardBgAlphaEff);
+  setVal('cfg-boardchip-bgAlpha', _boardBgAlphaEff);
+  setVal('cfg-boardchip-bgAlphaNum', _boardBgAlphaEff);
   setVal('cfg-femco-bgAlpha', bgObj.alpha);
   setVal('cfg-femco-bgAlphaNum', bgObj.alpha);
   setVal('cfg-femco-bgSizeMode', bgObj.sizeMode);
@@ -569,6 +610,41 @@ window.cfgFemcoSetBgOpt = function(k, v){
   _cfgFemcoSave(s);
   try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgFemcoSetBoardBgAlpha = function(v){
+  const sel = document.getElementById('cfg-femco-univ');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const u = (sel && sel.value) || (selBoard && selBoard.value) || (localStorage.getItem('cfg_femco_univ') || '');
+  if(!u) return;
+  const pct = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
+  if (typeof window.setBoardBgImgAlpha === 'function') {
+    window.setBoardBgImgAlpha(u, pct);
+  } else {
+    const target = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null);
+    if(!target) return;
+    target.bgImgAlpha = pct;
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+  }
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
+};
+
+window.cfgFemcoResetBoardBgAlpha = function(){
+  const sel = document.getElementById('cfg-femco-univ');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const u = (sel && sel.value) || (selBoard && selBoard.value) || (localStorage.getItem('cfg_femco_univ') || '');
+  if(!u) return;
+  if (typeof window.setBoardBgImgAlpha === 'function') {
+    window.setBoardBgImgAlpha(u, null);
+  } else {
+    const target = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null);
+    if(!target) return;
+    delete target.bgImgAlpha;
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+  }
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
 };
 
 window.cfgFemcoSetUnivColor = function(color){

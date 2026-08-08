@@ -950,13 +950,27 @@ function setBoardBgIsLogo(univName, checked){
   if(checked) u.bgIsLogo=true; else delete u.bgIsLogo;
   save();render();
 }
+// [FIX-BRIGHT-7] 설정탭(cfg)에 머무는 동안은 전체 화면을 다시 그리지 않고
+// board2 라이브 화면만(보이는 경우) 가볍게 갱신합니다.
+// → 밝기 슬라이더를 조작할 때마다 설정탭 전체가 다시 그려지면서
+//   방금 펼친 <details>가 접히고 대학 선택이 풀리는 문제를 방지합니다.
+function _cfgSoftPersist(){
+  try{
+    if(typeof window.curTab!=='undefined' && window.curTab==='cfg'){
+      try{ window._cfgSoftRefreshBoard2 && window._cfgSoftRefreshBoard2(); }catch(e){}
+      return;
+    }
+  }catch(e){}
+  if(typeof render==='function')render();
+}
 // [FIX-BRIGHT-5b] 대학별 배경 밝기 개별 오버라이드 (null이면 전체값 사용)
 function setBoardBgImgAlpha(univName, pct){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
   if(pct===null || pct===undefined || pct==='') delete u.bgImgAlpha;
   else u.bgImgAlpha = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
-  save();render();
+  save();
+  _cfgSoftPersist();
 }
 // [FIX-BRIGHT-6] 대학 전체 배경 밝기(전역 기본값) 저장 — 설정탭 슬라이더용
 function setBoardBgAlphaGlobal(pct, silent){
@@ -964,7 +978,7 @@ function setBoardBgAlphaGlobal(pct, silent){
   b2BgImgAlpha = v;
   try{ localStorage.setItem('su_b2bia', v); }catch(e){}
   if(typeof save==='function')save();
-  if(typeof render==='function')render();
+  _cfgSoftPersist();
   if(!silent){
     try{ if(typeof showToast==='function') showToast('🎨 대학 배경 이미지 밝기가 저장되었습니다.'); }catch(e){}
   }
