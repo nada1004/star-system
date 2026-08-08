@@ -281,6 +281,10 @@ function rCfg(C,T){
   const ctx = {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml};
   let h = _cfgSecGroup1(ctx) + _cfgSecGroup2(ctx) + _cfgSecGroup3(ctx) + _cfgSecGroup4(ctx);
 setTimeout(()=>{
+    // [FIX-UX-1] 설정탭이 다시 그려질 때 사용자가 펼쳐뒀던 <details class="cfg-grp"> 패널을
+    // 다시 펼쳐줍니다. (전에는 슬라이더 하나만 조작해도 패널이 접혀서
+    // "선택/설정이 안 된다"고 느껴지는 원인 중 하나였습니다.)
+    try{ if(typeof window._cfgSyncGrpOpenState==='function') window._cfgSyncGrpOpenState(); }catch(e){}
     // 상태 아이콘 지정 목록(전용 메뉴)
     try{ if(typeof _renderCfgSiAssignList==='function') _renderCfgSiAssignList(); }catch(e){}
     renderStorageInfo();
