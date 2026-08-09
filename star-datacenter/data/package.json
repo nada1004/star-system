@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "node build.mjs",
+    "build:watch": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "acorn": "^8.17.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^29.1.1"
+  }
+}

@@ -1,0 +1,227 @@
+/* ============================================================
+   경기 기록카드 — 미니멀 화이트 톤 리디자인 (요청사항: 2026-07)
+   대상: .rec-summary (대전기록 탭 등 모든 경기 기록카드 공통 컴포넌트)
+   - 타입별 원색 그라데이션 배경 제거 → 화이트/뉴트럴 톤 통일
+   - 좌측 컬러바는 얇고 은은하게(정보 식별용)만 유지
+   - hover/열림 상태는 그림자 톤으로만 표현해 과함 없이 정돈
+   이 파일은 다른 스타일시트보다 나중에 로드되어 우선 적용됩니다.
+   ============================================================ */
+
+.rec-summary{
+  background:var(--white) !important;
+  border:1px solid var(--border) !important;
+  border-left-width:3px !important;
+  border-left-style:solid !important;
+  border-left-color:color-mix(in srgb, var(--rec-mode-col,#94a3b8) 42%, var(--border)) !important;
+  border-radius:14px !important;
+  box-shadow:0 1px 2px rgba(15,23,42,.03) !important;
+  transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease !important;
+}
+.rec-summary:hover{
+  border-left-color:color-mix(in srgb, var(--rec-mode-col,#94a3b8) 65%, var(--border)) !important;
+  box-shadow:0 6px 18px rgba(15,23,42,.07) !important;
+  transform:translateY(-1px);
+}
+.rec-summary.detail-open{
+  border-left-color:color-mix(in srgb, var(--rec-mode-col,#94a3b8) 75%, var(--border)) !important;
+  box-shadow:0 6px 20px rgba(15,23,42,.09) !important;
+}
+body.dark .rec-summary{
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62)) !important;
+  border-color:#334155 !important;
+  box-shadow:0 1px 2px rgba(0,0,0,.18) !important;
+}
+body.dark .rec-summary:hover,
+body.dark .rec-summary.detail-open{
+  box-shadow:0 6px 20px rgba(0,0,0,.30) !important;
+}
+
+/* 헤더의 타입 배지: 은은한 톤 유지, 그림자 제거로 평평하게 */
+.rec-sum-header{
+  gap:calc(9px * var(--rc-layout-scale,1)) !important;
+}
+
+/* 점수/스코어 캡슐: 그라데이션 대신 플랫한 화이트+보더 */
+.rec-sum-score{
+  background:var(--white) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:none !important;
+}
+.rec-sum-score:hover{
+  border-color:var(--border2) !important;
+}
+body.dark .rec-sum-score{
+  background:rgba(15,23,42,.6) !important;
+  border-color:#334155 !important;
+}
+
+/* 상세 영역: 서피스 그라데이션 대신 얇은 구분선 + 플랫 화이트 */
+.rec-detail-area{
+  background:var(--white) !important;
+  box-shadow:none !important;
+  border-top:1px solid var(--border) !important;
+}
+.rec-detail-area.open{
+  box-shadow:none !important;
+}
+body.dark .rec-detail-area{
+  background:rgba(15,23,42,.55) !important;
+  border-top-color:#334155 !important;
+}
+
+/* 빈 상태(empty-state) 아이콘 자리 정리: 이모지 제거 후 여백만 살짝 축소 */
+.empty-state-icon:empty{
+  display:none;
+}
+
+/* ============================================================
+   대전기록 종합(전체 통합) 탭 — 신용카드형 미니 카드 그리드 (요청사항: 2026-07)
+   기존 긴 가로 막대형 행 목록을 고정 비율의 작은 카드들로 교체.
+   ============================================================ */
+.hist-all-cardgrid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:10px;
+  margin-bottom:16px;
+}
+@media (max-width:900px){
+  .hist-all-cardgrid{grid-template-columns:repeat(3, minmax(0,1fr));}
+}
+@media (max-width:560px){
+  .hist-all-cardgrid{grid-template-columns:repeat(2, minmax(0,1fr));}
+}
+.hist-all-minicard{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-left:5px solid var(--rec-mode-col,#94a3b8);
+  border-right:5px solid var(--border);
+  border-radius:14px;
+  padding:8px 10px;
+  min-height:118px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  cursor:pointer;
+  transition:box-shadow .18s ease, transform .18s ease, border-left-color .18s ease;
+  position:relative;
+  overflow:hidden;
+}
+.hist-all-minicard:hover{
+  box-shadow:0 6px 18px rgba(15,23,42,.09);
+  transform:translateY(-1px);
+}
+body.dark .hist-all-minicard{
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62));
+  border-color:#334155;
+  box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+body.dark .hist-all-minicard:hover{
+  box-shadow:0 6px 20px rgba(0,0,0,.30);
+}
+.hist-all-mc-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding-right:26px;
+}
+.hist-all-mc-type{
+  font-size:10px;
+  font-weight:800;
+  padding:2px 7px;
+  border-radius:20px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.hist-all-mc-date{
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hist-all-mc-top .btn{
+  position:absolute;
+  top:8px;
+  right:9px;
+}
+.hist-all-mc-mid{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:4px;
+  min-width:0;
+}
+.hist-all-mc-side{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  min-width:0;
+  flex:1;
+  overflow:hidden;
+  text-align:center;
+}
+.hist-all-mc-side.right{
+  align-items:center;
+}
+.hist-all-mc-name{
+  font-weight:800;
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+.hist-all-mc-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.hist-all-mc-participants{
+  position:relative;
+  width:46px;
+  height:46px;
+  margin-top:4px;
+}
+.hist-all-mc-avatar-frame{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:var(--su_profile_radius,50%);
+  clip-path:var(--su_profile_clip,none);
+  box-shadow:0 0 0 1px var(--white);
+  opacity:0;
+}
+body.dark .hist-all-mc-avatar-frame{
+  box-shadow:0 0 0 1px var(--surface);
+}
+.hist-all-mc-score{
+  font-size:13px;
+  font-weight:800;
+  padding:2px 8px;
+  border-radius:20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.hist-all-mc-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-height:15px;
+}
+.hist-all-mc-map{
+  font-size:9px;
+  color:var(--text3);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
