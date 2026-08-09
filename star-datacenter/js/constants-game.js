@@ -89,6 +89,13 @@ function getRankChangeBadge(playerName, currentRank) {
 }
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
+function _univIconTag(name,size){
+  if(!name) return '';
+  const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
+  if(!url) return '';
+  const s=size||16;
+  return `<img src="${toHttpsUrl(url)}" style="width:${s}px;height:${s}px;object-fit:contain;border-radius:var(--su_univ_logo_radius,6px);flex-shrink:0" onerror="this.style.display='none'">`;
+}
 function _normHexColor(v,fallback){
   const s=String(v||'').trim();
   if(/^#[0-9a-fA-F]{6}$/.test(s)) return s;

@@ -166,7 +166,25 @@ function rBracketSchedule(tn){
       </div>
     </div>
     ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:6px 10px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:10px;cursor:pointer;line-height:1;min-height:32px;min-width:32px" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
+    <div class="no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
+      <button class="pill ${bktViewMode==='card'?'on':''}" onclick="bktViewMode='card';render()">🗂️ 카드형</button>
+      <button class="pill ${bktViewMode==='round'?'on':''}" onclick="bktViewMode='round';render()">🗃️ 라운드뷰</button>
+    </div>
     `;
+
+  if(bktViewMode==='round'){
+    const _bktAll=_filtered.filter(m=>m.teamA||m.teamB);
+    if(!_bktAll.length){
+      h+=`<div style="padding:30px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">
+        ${isLoggedIn?'+ 경기 추가 버튼으로 경기를 등록하거나 브라켓에서 팀을 배정하세요.':'팀이 배정되면 경기 일정이 표시됩니다.'}
+      </div>`;
+    } else {
+      h+=_bktRenderRoundView(_bktAll,tn.id);
+    }
+    h+=`</div>`;
+    return h;
+  }
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){
     h+=`<div style="padding:30px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">
@@ -274,8 +292,62 @@ function openBktBulkPaste(tnId, roundLabel){
   openBktPasteModal();
 }
 
+/* ── 라운드별 그룹뷰 ── */
+function _bktRoundRow(mc,tnId){
+  const {r,mi,teamA,teamB,detail,isDone,winner,isManual}=mc;
+  const aWin=isDone&&winner===teamA;const bWin=isDone&&winner===teamB;
+  const ca=gc(teamA||''),cb=gc(teamB||'');
+  const sa=detail?.sa??'';const sb=detail?.sb??'';
+  const dateStr=detail?.d?detail.d.slice(5).replace('-','/'):'';
+  const clickable=isDone&&tnId;
+  const accentCol=isDone?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
+  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',null,${mi},${r},${isManual})"`:''} style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${accentCol};border-radius:var(--r);cursor:${clickable?'pointer':'default'}">
+    ${dateStr?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px">${dateStr}</span>`:''}
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:6px;text-align:right">
+      <span style="word-break:keep-all;line-height:1.3;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.55':'1'};color:${ca}">${teamA||'미정'}</span>
+      ${_univIconTag(teamA,18)}
+    </div>
+    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:48px;text-align:center;padding:3px 8px;border-radius:8px;background:${isDone?'var(--surface)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left">
+      ${_univIconTag(teamB,18)}
+      <span style="word-break:keep-all;line-height:1.3;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.55':'1'};color:${cb}">${teamB||'미정'}</span>
+    </div>
+  </div>`;
+}
+
+function _bktRenderRoundView(matches,tnId){
+  const groups={};
+  const order=[];
+  matches.forEach(mc=>{
+    if(!groups[mc.rLabel]){groups[mc.rLabel]=[];order.push(mc.rLabel);}
+    groups[mc.rLabel].push(mc);
+  });
+  order.sort((ra,rb)=>{const a=groups[ra][0].r,b=groups[rb][0].r;const av=a===-1?9999:a,bv=b===-1?9999:b;return av-bv;});
+  const roundIcon={'결승':'🏆','4강':'🥈','8강':'⚔️'};
+  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;align-items:start">`;
+  order.forEach(rl=>{
+    const list=groups[rl];
+    const doneCnt=list.filter(mc=>mc.isDone).length;
+    const pct=list.length?Math.round(doneCnt/list.length*100):0;
+    h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:4px 12px;border-radius:99px">${roundIcon[rl]||'⚔️'} ${rl}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${doneCnt}/${list.length}경기</span>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:#2563eb;border-radius:3px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">`;
+    list.forEach(mc=>{ h+=_bktRoundRow(mc,tnId); });
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
 try{
   window.rBracketSchedule = rBracketSchedule;
+  window._bktRenderRoundView = _bktRenderRoundView;
   window.bktDelRound = bktDelRound;
   window.openBktSchedulePaste = openBktSchedulePaste;
   window.bktAddManualMatch = bktAddManualMatch;

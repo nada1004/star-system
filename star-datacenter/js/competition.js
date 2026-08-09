@@ -26,7 +26,9 @@ var grpMatchState={tnId:null,gi:null,mi:null};
 var bracketMatchState={tnId:null,rnd:null,mi:null,teamA:'',teamB:''};
 var bktSchedRound='전체';
 var leagueSortDir='desc';
+var leagueViewMode='card';
 var bktSchedSortDir='desc';
+var bktViewMode='card';
 
 function _compMenuTint(hex, alpha){
   try{
