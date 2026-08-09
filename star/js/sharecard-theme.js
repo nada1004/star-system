@@ -70,9 +70,26 @@
     return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape, entityLayout, matchLayout, showTally };
   };
 
+  // (darkfix25) 사이트가 다크모드일 때, 카드 자체 스타일(su_sc_mode)이 campus/vivid/soft/minimal/mono처럼
+  // "밝은 계열"이면 카드의 실제 바깥 배경(.share-shell)이 CSS 강제 다크 보정(style.css .share-card-host [style*="#ffffff"/"#f8fafc"] 등)에
+  // 걸려 배경만 어두워지고, 이름 텍스트(theme.text)는 여전히 라이트 카드용 짙은 남색(#1e293b)로 남아
+  // 경기 상세 팝업 → 공유카드에서 스트리머 이름이 안 보이는 문제가 있었음.
+  // → 사이트 다크모드 + 밝은 계열 카드 스타일 조합이면 카드 스타일 자체를 'dark'로 취급해 배경/텍스트를 함께 어둡게 맞춘다.
+  window._isSiteDarkMode = window._isSiteDarkMode || function(){
+    try{
+      return !!((document.body && document.body.classList.contains('dark')) ||
+                (document.documentElement && document.documentElement.classList.contains('dark')));
+    }catch(e){ return false; }
+  };
+
   window._makeShareCardTheme = window._makeShareCardTheme || function(hex, opts){
     const color = hexNorm(hex||'#475569');
     const draw = !!(opts&&opts.draw);
+    // (darkfix23) 공유카드 자체 디자인 모드(다크/포스터/미드나잇)가 카드 배경을 어둡게 만드는데,
+    // theme.text/textDim 등은 항상 라이트 카드용 값이라 이름/맵 텍스트가 안 보이던 문제 → 모드별 다크 텍스트 세트 적용
+    // (darkfix25) 사이트 다크모드에서는 밝은 계열 카드 스타일도 배경이 강제로 어두워지므로 텍스트도 함께 전환
+    const isDarkCard = !!(opts && ['dark','poster','midnight'].includes(opts.cardMode))
+      || (window._isSiteDarkMode() && !!(opts && ['campus','vivid','soft','minimal','mono',undefined,null,''].includes(opts.cardMode)));
     function hexToHsl(raw){
       let h=String(raw||'').replace('#','');
       if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -91,19 +108,22 @@
       }
       return {h:Math.round(hue*360),s:Math.round(sat*100),l:Math.round(lit*100)};
     }
+    const _darkOverride = isDarkCard ? {bodyBg:'#0f172a', text:'#e8edf5', textDim:'rgba(226,232,240,.62)', divider:'rgba(148,163,184,.24)', isDarkCard:true, surfaceBg:'rgba(15,23,42,.62)', surfaceBorder:'rgba(255,255,255,.14)'} : {isDarkCard:false, surfaceBg:'rgba(255,255,255,.88)', surfaceBorder:null};
     if(draw){
       return {
         headerBg:'#334155', bodyBg:'#f8fafc',
-        accentHex:'#475569', accentDark:'#1e293b',
-        text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)'
+        accentHex:'#475569', accentDark: isDarkCard?'#e8edf5':'#1e293b',
+        text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)',
+        ..._darkOverride
       };
     }
     const hsl=hexToHsl(color);
     if(!hsl){
       return {
         headerBg:'#1e293b', bodyBg:'#f8fafc',
-        accentHex:color, accentDark:'#1e293b',
-        text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)'
+        accentHex:color, accentDark: isDarkCard?'#e8edf5':'#1e293b',
+        text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)',
+        ..._darkOverride
       };
     }
     const {h,s,l}=hsl;
@@ -112,7 +132,12 @@
     const accentDark=`hsl(${h},${Math.min(s+10,95)}%,${Math.max(l-15,15)}%)`;
     const divider=`hsla(${h},${Math.min(s*0.5,35)}%,${Math.max(l-20,30)}%,.18)`;
     const textDim=`hsla(${h},${Math.min(s*0.4,30)}%,${Math.max(l-45,12)}%,.6)`;
-    return {headerBg, bodyBg, accentHex:color, accentDark, text:`hsl(${h},${Math.min(s*0.6,45)}%,${Math.max(l-52,8)}%)`, textDim, divider};
+    return {
+      headerBg, bodyBg, accentHex:color,
+      accentDark: isDarkCard?'#e8edf5':accentDark,
+      text:`hsl(${h},${Math.min(s*0.6,45)}%,${Math.max(l-52,8)}%)`, textDim, divider,
+      ..._darkOverride
+    };
   };
 
   window._getShareCardVariantKey = window._getShareCardVariantKey || function(m){
@@ -129,7 +154,14 @@
   };
 
   window._buildShareCardVariant = window._buildShareCardVariant || function(params){
-    const {matchObj:m, theme, winnerColor, scp, variantKey} = params||{};
+    const {matchObj:m, theme, winnerColor, scp:scpRaw, variantKey} = params||{};
+    // (darkfix25) 사이트 다크모드 + 밝은 계열 카드 스타일(campus/vivid/soft/minimal/mono/미지정)이면
+    // 그라디언트 생성 단계에서부터 'dark' 스타일 분기를 타도록 해 배경을 실제로 어둡게 만들고,
+    // CSS의 사후 강제 보정(style.css .share-card-host [style*="#ffffff"] 등)에 기대지 않게 한다.
+    const _lightFamily = ['campus','vivid','soft','minimal','mono',undefined,null,''];
+    const scp = (window._isSiteDarkMode() && scpRaw && _lightFamily.includes(scpRaw.mode))
+      ? {...scpRaw, mode:'dark'}
+      : (scpRaw||{});
     const _variantMap = {
       pro:{ outerBg:'linear-gradient(180deg,#f8fbff,#eef4ff)', headerBg:'linear-gradient(135deg,#0f172a 0%,#1d4ed8 52%,#7c3aed 100%)', setBg:'rgba(37,99,235,.06)', setBorder:'rgba(37,99,235,.14)', chipBg:'rgba(255,255,255,.16)', chipBd:'rgba(255,255,255,.24)', hero:'🏅 프로리그', tone:'공식전 · 리그 스타일' },
       ck:{ outerBg:'linear-gradient(180deg,#fffaf0,#fff7ed)', headerBg:'linear-gradient(135deg,#0f766e 0%,#0891b2 38%,#b45309 100%)', setBg:'rgba(245,158,11,.09)', setBorder:'rgba(217,119,6,.16)', chipBg:'rgba(255,255,255,.17)', chipBd:'rgba(255,255,255,.26)', hero:'🤝 대학CK', tone:'라이벌전 · 대학 대항전' },

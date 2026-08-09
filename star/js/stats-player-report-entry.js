@@ -74,15 +74,16 @@ function statsPlayerReportHTML(){
 
   h += `<div class="ssec" id="pr-sec-vs"><div class="pr-sec-head"><h4>⚔️ 1:1 상대 비교 &amp; 승부 예측</h4></div>${_prVsCompareHTML(p)}</div>`;
 
-  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기</h4></div>${_prRecentTableHTML(p)}</div>`;
+  const recentMapStats = _prMapStats(_prExcludeFilter(histAll));
+  h += `<div class="ssec" id="pr-sec-mapwl"><div class="pr-sec-head"><h4>🗺️ 맵별 전적 <span class="pr-sec-sub">(클릭하면 아래 최근 경기가 해당 맵으로 필터링됩니다)</span></h4></div>${_prRecentMapWinLossHTML(recentMapStats)}</div>`;
+
+  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기${window._prRecentMapFilter?` · <span style="color:var(--blue)">${escHTML(window._prRecentMapFilter)}</span>`:''}</h4></div>${_prRecentTableHTML(p)}</div>`;
   h += `</div>`;
 
   return h;
 }
 
 /* ─── 섹션 바로가기 내비게이션 ─── */
-/* 자주 쓰는 섹션만 칩으로 노출하고, 상대적으로 덜 쓰는 섹션(티어상대전적/1:1비교)은
-   "더보기" 드롭다운(details/summary)으로 묶어 좁은 화면에서 칩이 두 줄 넘게 늘어지는 것을 방지 */
 function _prSectionNavHTML(){
   const items=[
     ['pr-sec-info','📋 기본정보'],
@@ -90,22 +91,13 @@ function _prSectionNavHTML(){
     ['pr-sec-map','🗺️ 맵'],
     ['pr-sec-insights','📈 핵심분석'],
     ['pr-sec-allmatches','📋 전체경기'],
+    ['pr-sec-mapwl','🗺️ 맵별전적'],
     ['pr-sec-recent','📋 최근경기'],
-  ];
-  const moreItems=[
-    ['pr-sec-elo','📉 ELO 추이'],
-    ['pr-sec-monthly','📅 월별 승률'],
-    ['pr-sec-modes','🏆 대회·모드별 성적'],
-    ['pr-sec-tier','🎯 티어 성과 · 동일 티어 상대전적'],
-    ['pr-sec-vs','⚔️ 1:1 상대 비교'],
   ];
   const chips = items.map(([id,lbl])=>
     `<button type="button" class="pr-nav-chip" onclick="_prScrollToSection('${id}')">${lbl}</button>`
   ).join('');
-  const moreChips = moreItems.map(([id,lbl])=>
-    `<button type="button" class="pr-nav-more-item" onclick="_prScrollToSection('${id}');_prCloseNavMore()">${lbl}</button>`
-  ).join('');
-  return `<div class="pr-nav-bar no-export">${chips}<details class="pr-nav-more" id="pr-nav-more"><summary class="pr-nav-chip pr-nav-more-btn">⋯ 더보기</summary><div class="pr-nav-more-panel">${moreChips}</div></details></div>`;
+  return `<div class="pr-nav-bar no-export">${chips}</div>`;
 }
 function _prCloseNavMore(){
   const d = document.getElementById('pr-nav-more');
@@ -479,8 +471,13 @@ async function _prBuildCardData(p){
   const univLogoUrl = univLogoUrl0 ? ((typeof toHttpsUrl==='function') ? toHttpsUrl(univLogoUrl0) : univLogoUrl0) : '';
   const univLogoImg = univLogoUrl ? await _prLoadImageEl(univLogoUrl) : null;
   const univColor = (p.univ && typeof gc==='function') ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb';
+  // 스트리머 상세 팝업과 동일한 ELO 등급(LEGEND/MASTER/DIAMOND/GOLD/SILVER/BRONZE)
+  const eloValForGrade = Number(p.elo||1200);
+  const eloGrade = eloValForGrade>=1500?'LEGEND':eloValForGrade>=1400?'MASTER':eloValForGrade>=1300?'DIAMOND':eloValForGrade>=1200?'GOLD':eloValForGrade>=1100?'SILVER':'BRONZE';
+  const eloGradeColor = eloValForGrade>=1500?'#b45309':eloValForGrade>=1400?'#7e22ce':eloValForGrade>=1300?'#0369a1':eloValForGrade>=1200?'#a16207':eloValForGrade>=1100?'#64748b':'#92400e';
   return {
     name: p.name||'스트리머', univ: p.univ||'', tier: p.tier||'', race: p.race||'', elo: p.elo||1200,
+    eloGrade, eloGradeColor,
     univColor, photoImg, univLogoImg, w, l, tot, wr,
     raceStats: raceStats.rv,
     bestWinStreak: (streak.win&&streak.win.n)||0,

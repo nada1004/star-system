@@ -76,7 +76,7 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-univ-banner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:18px;color:#fff;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12)}',
     '.streamer-univ-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 42%);pointer-events:none}',
     '.streamer-univ-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;position:relative;z-index:1}',
-    '.streamer-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);color:#fff;font-size:14px;font-weight:900;border:1px solid rgba(255,255,255,.24)}',
+    '.streamer-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:0;border-radius:0;background:none;backdrop-filter:none;color:#fff;font-size:14px;font-weight:900;border:none;box-shadow:none;min-width:0;text-align:left}',
     '.streamer-univ-count{position:relative;z-index:1;font-size:var(--fs-caption);color:rgba(255,255,255,.86);font-weight:700;white-space:nowrap}',
     '.streamer-subgrp td{padding:0!important;border:none!important;background:transparent!important;box-shadow:none!important}',
     '.streamer-subgrp-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:var(--fs-sm);font-weight:800;background:rgba(59,130,246,.08);color:var(--text2);border:1px solid rgba(59,130,246,.14)}',
@@ -97,7 +97,7 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:var(--su-streamer-card-gap,13px);padding:22px}',
     '.streamer-gallery-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:20px;position:relative;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12);margin-top:10px}',
     '.streamer-gallery-head::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 44%);pointer-events:none}',
-    '.streamer-gallery-univ{position:relative;z-index:1;background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)}',
+    '.streamer-gallery-univ{position:relative;z-index:1;background:none!important;border:none!important;backdrop-filter:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;min-width:0!important;display:inline-flex!important}',
     '.streamer-gallery-univ.clickable-univ{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}',
     '.streamer-gallery-univ.clickable-univ:hover{transform:translateY(-1px);background:rgba(255,255,255,.24)!important;box-shadow:0 10px 18px rgba(15,23,42,.14)}',
     '@keyframes podiumCardHoverFloat{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-7px) scale(1.016)}100%{transform:translateY(-5px) scale(1.012)}}',
@@ -710,7 +710,7 @@ function totalApplySearchFilter(){
   const cont=document.getElementById('rcont');
   if(!cont) return;
   const cards=[...cont.querySelectorAll('[data-player-card="1"]')];
-  if(!cards.length) return;
+  if(cards.length){
   const _visibleUnivsG=new Set();
   cards.forEach(card=>{
     if(!qHas){ card.style.display=''; _visibleUnivsG.add(card.getAttribute('data-univ')||''); return; }
@@ -730,6 +730,7 @@ function totalApplySearchFilter(){
     const u=h.getAttribute('data-gallery-univ-header')||'';
     h.style.display=_visibleUnivsG.has(u)?'':'none';
   });
+  }
   // 상세형 목록 필터
   const focusRows=[...cont.querySelectorAll('[data-focus-row="1"]')];
   focusRows.forEach(row=>{

@@ -136,12 +136,28 @@ try{
 var boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 var b2LabelAlpha  = J('su_b2la')  ?? 16;
 var b2BgAlpha     = J('su_b2ba')  ?? 9;
-var b2BgImgAlpha      = J('su_b2bia')  ?? 12;
+var b2BgImgAlpha      = J('su_b2bia')  ?? 64;
 var b2FreeBgAlpha     = J('su_b2fba')  ?? 25;
 var b2FreeTierBgAlpha = J('su_b2ftba') ?? 15;
 var b2ProfileBgAlpha  = J('su_b2pba') ?? 10;
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
+// [FIX-BRIGHT-4] 이전에 이름으로 하드코딩되어 있던 "로고형 배경" 대학들을 1회성으로 uCfg.bgIsLogo=true로 마이그레이션
+// (밝기는 이제 통일되지만, 로고가 중앙에 작게 배치되는 레이아웃은 그대로 유지)
+try{
+  if(!localStorage.getItem('su_biglogo_migrated_v1') && Array.isArray(univCfg)){
+    const _legacyLogoNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미','HM','DM','SSG','JSA','BGM'];
+    univCfg.forEach(u=>{
+      if(!u || u.bgIsLogo!==undefined) return;
+      const nm = String(u.name||'').trim();
+      const nmU = nm.toUpperCase();
+      if(_legacyLogoNames.includes(nm) || _legacyLogoNames.includes(nmU) || nm.includes('몬스타') || nmU.includes('MONSTAR')){
+        u.bgIsLogo = true;
+      }
+    });
+    localStorage.setItem('su_biglogo_migrated_v1','1');
+  }
+}catch(e){}
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
@@ -160,6 +176,25 @@ let proTourneys = _matchLegacyLoadEnabled ? (J('su_ptn') || []) : [];
 let curProComp  = J('su_ptc') || '';
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
 let tourneys   = _matchLegacyLoadEnabled ? (J('su_tn') || []) : [];
+// (버그픽스,2026-08-06) 결과를 하나도 안 넣었는데 sa=0,sb=0으로 저장돼 "0:0 완료 경기"로
+// 조별순위/브라켓에 승점이 잘못 반영되던 기존 데이터 정리. 실제 게임 결과가 있는 매치는 건드리지 않음.
+(function _fixPhantomZeroMatches(){
+  const hasResult = m => (m.sets||[]).some(st => (st.games||[]).some(g => g.winner==='A'||g.winner==='B'));
+  let touched=false;
+  (tourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(m && m.sa===0 && m.sb===0 && !hasResult(m)){ m.sa=null; m.sb=null; touched=true; }
+      });
+    });
+    if(tn.bracket && tn.bracket.matchDetails){
+      Object.values(tn.bracket.matchDetails).forEach(m=>{
+        if(m && m.sa===0 && m.sb===0 && !hasResult(m)){ m.sa=null; m.sb=null; touched=true; }
+      });
+    }
+  });
+  if(touched) window.addEventListener('DOMContentLoaded',()=>{ if(typeof save==='function') save(); });
+})();
 let ttM        = _matchLegacyLoadEnabled ? (J('su_ttm') || []) : [];
 let _ttCurComp = J('su_ttcur') || '';
 let _ttSub     = 'records';

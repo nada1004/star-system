@@ -11,11 +11,14 @@
  *  - API 요청 (/api/)              : Network Only — 캐시하지 않음
  *
  * 업데이트:
- *  빌드 버전이 바뀌면 CACHE_VERSION을 올리면 됩니다.
- *  → 이전 캐시가 모두 삭제되고 새 버전으로 교체됩니다.
+ *  CACHE_VERSION은 build.mjs가 빌드 산출물(청크/CSS) 내용 해시를 기반으로
+ *  자동 생성/갱신한다 (`node build.mjs` 실행 시마다 갱신 여부 확인).
+ *  내용이 실제로 바뀌지 않으면 버전도 그대로 유지되어 불필요한 재다운로드가 없다.
+ *  → 버전이 바뀌면 이전 캐시가 모두 삭제되고 새 버전으로 교체된다.
+ *  (수동으로 이 값을 편집해도 다음 빌드 시 해시 기반 값으로 덮어써진다)
  */
 
-const CACHE_VERSION = 'v20260730-univfilter1';
+const CACHE_VERSION = 'v20260809-fddc649fb9';
 
 const CACHE_NAMES = {
   immutable: `immutable-${CACHE_VERSION}`,  // 번들/버전 쿼리 파일 (장기 캐시)

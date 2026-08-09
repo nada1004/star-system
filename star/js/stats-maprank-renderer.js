@@ -1,16 +1,17 @@
 (function(){
   function statsMapRankHTML(){
     const currentMap = String(window._mapRankSelMap||'');
-    const histMaps=[...new Set((window.players||[]).flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))];
-    const configMaps=((window.maps)||[]).filter(m=>m&&m!=='-');
-    const allMaps=[...new Set([...histMaps,...configMaps])].sort();
+    const configMaps=((typeof maps !== 'undefined' ? maps : (window.maps||[]))).filter(m=>m&&m!=='-');
+    const allMaps=[...new Set(configMaps)].sort();
     if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
-    if(!window._mapRankSelMap||!allMaps.includes(window._mapRankSelMap)) window._mapRankSelMap=allMaps[0];
+    if(window._mapRankGenderFilter===undefined) window._mapRankGenderFilter='전체';
+    const genderFilter=window._mapRankGenderFilter;
+    const genderOk=p=>genderFilter==='전체'||(p&&p.gender===genderFilter);
 
     const mapData={};
     allMaps.forEach(m=>mapData[m]={});
     const countedMatchIds=new Set();
-    (window.players||[]).forEach(p=>{
+    (window.players||[]).filter(genderOk).forEach(p=>{
       window.statsNonProHist(p).forEach(h=>{
         if(!h.map||h.map==='-') return;
         if(!mapData[h.map]) mapData[h.map]={};
@@ -37,13 +38,17 @@
           if(!mapData[mapName]) mapData[mapName]={};
           if(wn&&!countedMatchIds.has(wmKey)){
             const p=window.statsP(wn);
-            if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
-            mapData[mapName][wn].w++;
+            if(genderOk(p)){
+              if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
+              mapData[mapName][wn].w++;
+            }
           }
           if(ln&&!countedMatchIds.has(lmKey)){
             const p=window.statsP(ln);
-            if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
-            mapData[mapName][ln].l++;
+            if(genderOk(p)){
+              if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
+              mapData[mapName][ln].l++;
+            }
           }
         });
       });
@@ -55,6 +60,11 @@
       const total=Math.round(rawTotal/2);
       return{name:m,games:total,players:Object.keys(mapData[m]||{}).length};
     }).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name,'ko'));
+    const mapSummaryWithGames=mapSummary.filter(m=>m.games>0);
+
+    if(!window._mapRankSelMap||!allMaps.includes(window._mapRankSelMap)||!mapSummaryWithGames.some(m=>m.name===window._mapRankSelMap)){
+      window._mapRankSelMap=(mapSummaryWithGames[0]||mapSummary[0]||{}).name||allMaps[0];
+    }
 
     const selData=Object.entries(mapData[window._mapRankSelMap]||{})
       .map(([name,s])=>({name,w:s.w,l:s.l,univ:s.univ,tier:s.tier,tot:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}))
@@ -63,9 +73,15 @@
 
     return`<div style="display:flex;flex-direction:column;gap:14px">
     <div class="ssec">
-      <h4 style="margin-bottom:12px">🗺️ 맵별 경기 수 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">클릭하여 선택</span></h4>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <h4 style="margin:0">🗺️ 맵별 경기 수 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">클릭하여 선택</span></h4>
+        <div style="display:flex;gap:6px">
+          ${[['전체','전체'],['M','남자'],['F','여자']].map(([gv,glbl])=>`
+            <button class="pill ${genderFilter===gv?'on':''}" onclick="window._mapRankGenderFilter='${gv}';render()">${glbl}</button>`).join('')}
+        </div>
+      </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${mapSummary.map(m=>`
+        ${mapSummaryWithGames.map(m=>`
           <button onclick="window._mapRankSelMap='${m.name.replace(/'/g,"\\'")}';render()"
             style="padding:6px 14px;border-radius:8px;border:2px solid ${window._mapRankSelMap===m.name?'var(--blue)':'var(--border2)'};background:${window._mapRankSelMap===m.name?'var(--blue-l)':'var(--white)'};font-size:var(--fs-sm);font-weight:${window._mapRankSelMap===m.name?'700':'500'};color:${window._mapRankSelMap===m.name?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
             ${m.name} <span style="font-size:10px;opacity:.6">${m.games}게임</span>

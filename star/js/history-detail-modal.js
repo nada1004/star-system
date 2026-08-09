@@ -249,7 +249,7 @@ function openHistDetailModal(key){
         const _icon = (name)=>{
           try{
             const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
-            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`;
+            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;background:transparent;border:none;border-radius:0;padding:0" onerror="this.style.display='none'">`;
           }catch(e){}
           return '';
         };
@@ -287,7 +287,7 @@ function openHistDetailModal(key){
           m.dataset.teamColorB = cbBase;
         }catch(e){}
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team ${aWin?'is-win':''} ${loseTeamA?'is-lose':''}" style="background:${loseTeamA?'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))':`linear-gradient(135deg,${ca},${ca}cc)`};border-color:${loseTeamA?'rgba(203,213,225,.88)':'rgba(255,255,255,.28)'};padding:0 18px;color:${loseTeamA?'#64748b':'#fff'}"><span class="cmd-team-text" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);align-items:center;text-align:center;justify-content:center;gap:3px;max-width:calc(100% - 82px)"><span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%">${_icon(labelA)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelA)}</span></span>${metaA}</span></div>
+          <div class="cmd-team ${aWin?'is-win':''} ${loseTeamA?'is-lose':''}" style="background:${loseTeamA?'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))':`linear-gradient(135deg,${ca},${ca}cc)`};border-color:${loseTeamA?'rgba(203,213,225,.88)':'rgba(255,255,255,.28)'};padding:0 18px;color:${loseTeamA?'#64748b':'#fff'}"><span class="cmd-team-text" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);align-items:center;text-align:center;justify-content:center;gap:3px;max-width:calc(100% - 82px)"><span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%"><span class="cmd-team-name" style="font-weight:1000">${safe(labelA)}</span>${_icon(labelA)}</span>${metaA}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'#111827'}">${match.sa??''}</span><span class="cmd-colon">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'#111827'}">${match.sb??''}</span></div>
           <div class="cmd-team ${bWin?'is-win':''} ${loseTeamB?'is-lose':''}" style="background:${loseTeamB?'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))':`linear-gradient(135deg,${cb},${cb}cc)`};border-color:${loseTeamB?'rgba(203,213,225,.88)':'rgba(255,255,255,.28)'};padding:0 18px;color:${loseTeamB?'#64748b':'#fff'}"><span class="cmd-team-text" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);align-items:center;text-align:center;justify-content:center;gap:3px;max-width:calc(100% - 82px)"><span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%">${_icon(labelB)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelB)}</span></span>${metaB}</span></div>
         </div>`;
@@ -388,8 +388,8 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
       const winBorderA=pca+'66',winBorderB=pcb+'66';
       const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;`;
       const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;`;
-      const cA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
-      const cB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cA=g.playerA?`onclick="openPlayerModal('${escJS(g.playerA)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cB=g.playerB?`onclick="openPlayerModal('${escJS(g.playerB)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
       const mapStr=g.map?`<span style="background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px">${g.map}</span>`:'';
       const teamANameHTML = `${_histSearchTeamBadge(sideA)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideA)}</strong>`;
       const teamBNameHTML = `${_histSearchTeamBadge(sideB)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideB)}</strong>`;

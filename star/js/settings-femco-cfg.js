@@ -101,6 +101,93 @@ window.cfgRunSettingsSelfCheck = function(){
     if(out) out.innerHTML = `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
   }
 };
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 메뉴별(아코디언 단위) 기능 작동 점검
+// - 각 [data-cfg-sec] 메뉴(설정탭 안의 개별 항목들) 안에서 쓰이는
+//   onclick/onchange/oninput 핸들러 함수가 실제로 존재하는지 확인
+// - 결과를 메뉴 제목(summary) 옆에 점(●)으로 표시: 파란색=정상, 빨간색=오류
+// - 실데이터를 건드리지 않는 존재여부 점검(=클릭/변경 없이 판정)
+// ─────────────────────────────────────────────────────────────
+window.cfgRunMenuFuncCheck = function(){
+  const out = document.getElementById('cfg-selfcheck-out');
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:var(--fs-sm)">메뉴별 점검 중...</div>';
+  try{
+    const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
+    const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+    const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
+    const results = [];
+
+    secs.forEach(sec=>{
+      const id = sec.getAttribute('data-cfg-sec') || '';
+      const summary = sec.querySelector(':scope > summary.cfg-sec-summary');
+      const titleEl = summary ? summary.querySelector('h4') : null;
+      const title = (titleEl ? titleEl.textContent : id).trim() || id;
+
+      const html = sec.outerHTML;
+      const found = new Set();
+      let m; re.lastIndex = 0;
+      while((m = re.exec(html))){
+        const fn = m[1];
+        if(!JS_KEYWORDS.has(fn)) found.add(fn);
+      }
+      const okList = Array.from(found).filter(fn => typeof window[fn] === 'function').sort();
+      const missing = Array.from(found).filter(fn => typeof window[fn] !== 'function').sort();
+      const hasHandlers = found.size > 0;
+      const pass = hasHandlers ? (missing.length === 0) : null; // null = 점검 대상 없음(핸들러 미사용 메뉴)
+      results.push({id, title, okList, missing, pass});
+
+      // 메뉴 제목 옆 점(뱃지) 표시/갱신
+      if(summary){
+        let badge = summary.querySelector('.cfg-func-badge');
+        if(!badge){
+          badge = document.createElement('span');
+          badge.className = 'cfg-func-badge';
+          badge.style.cssText = 'display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;flex-shrink:0;vertical-align:middle;';
+          if(titleEl) titleEl.insertBefore(badge, titleEl.firstChild);
+          else summary.appendChild(badge);
+        }
+        if(pass === null){
+          badge.style.background = 'var(--border2, #cbd5e1)';
+          badge.title = '점검 대상 함수 없음';
+        }else if(pass){
+          badge.style.background = '#2563eb';
+          badge.title = `정상 (함수 ${okList.length}개 확인됨)`;
+        }else{
+          badge.style.background = '#dc2626';
+          badge.title = `오류 ${missing.length}개: ${missing.join(', ')}`;
+        }
+      }
+    });
+
+    const checked = results.filter(r => r.pass !== null);
+    const passN = checked.filter(r => r.pass).length;
+    const failN = checked.filter(r => !r.pass).length;
+
+    if(out){
+      out.innerHTML = `
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <div style="font-size:var(--fs-sm);font-weight:1000;color:${failN ? '#dc2626' : '#2563eb'}">메뉴별 점검: 🔵 정상 ${passN}개 / 🔴 오류 ${failN}개 (총 ${checked.length}개 메뉴)</div>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 각 메뉴 제목 왼쪽 점(●) 색상도 함께 갱신됩니다 — 파란색=정상, 빨간색=오류, 회색=점검대상 없음</span>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
+          ${checked.map(r => `
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border)">
+              <span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${r.pass ? '#2563eb' : '#dc2626'}"></span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${esc(r.title)}</div>
+                ${r.missing.length ? `<div style="font-size:var(--fs-caption);color:#dc2626;font-family:ui-monospace,monospace;white-space:pre-wrap">누락된 함수: ${r.missing.map(esc).join(', ')}</div>` : ''}
+                <div style="font-size:var(--fs-caption);color:var(--gray-l)">확인된 함수 ${r.okList.length}개${r.missing.length ? ` · 누락 ${r.missing.length}개` : ''}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+  }catch(e){
+    if(out) out.innerHTML = `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000">점검 실패: ${String(e)}</div>`;
+  }
+};
+
 function _cfgMenuSave(v){
   try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
 }
@@ -182,6 +269,16 @@ function _cfgMenuApplyAndRerender(layout){
     }
   }catch(e){}
   try{ render(); }catch(e){}
+  // [FIX] "설정 메뉴 정리"는 팝업(모달)로 열려서 보고 있는 화면이라,
+  // 위 render()가 #rcont를 통째로 새로 그려도 이미 모달로 옮겨진(appendChild된)
+  // 옛 DOM은 그대로 남아 있어 카테고리/순서 이동·이름변경 버튼을 눌러도
+  // 화면(팝업 안 목록)에는 즉시 반영되지 않던 문제 수정.
+  // → 모달이 cfgmenu를 보여주는 중이면 모달 내용을 새로 렌더링된 섹션으로 다시 옮겨온다.
+  try{
+    if(window._cfgModalSecId==='cfgmenu' && typeof window.cfgGo==='function'){
+      window.cfgGo('cfgmenu');
+    }
+  }catch(e){}
 }
 
 // 섹션을 다른 카테고리로 이동
@@ -289,6 +386,8 @@ function _cfgFemcoDefaults(){
     univBgMedia: {},
     // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
     bgOverlay: 22,
+    // (요청) 펨코 대학 카드 배경 크기(%) — 로고형 배경 기본 42%
+    bgLogoPct: 42,
     // (요청) 로고/대학명 위치 미세조정(px)
     logoOffsetX: 0,
     logoOffsetY: 0,
@@ -331,7 +430,7 @@ try{
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
   const next = {...cur};
-  const numKeys = ['autoLayout','logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX','bgOverlay','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY'];
+  const numKeys = ['autoLayout','logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX','bgOverlay','bgLogoPct','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY'];
   next[k] = numKeys.includes(k) ? parseInt(v, 10) : v;
 
   // 수동 조절을 건드리면 자동 레이아웃 OFF (원클릭 자동화 요구사항: 사용자가 바꾸면 유지)
@@ -340,8 +439,9 @@ window.cfgFemcoUpd = function(k, v){
     next.autoLayout = 0;
   }
   _cfgFemcoSave(next);
-  // 즉시 반영(로고 위치/오버레이 등이 "안 먹는" 것처럼 보이는 문제 방지)
-  try{ if(typeof render === 'function') render(); }catch(e){}
+  // 설정 탭 전체를 다시 그리면 드래그 중인 슬라이더가 교체된다.
+  // 설정 화면 밖에서만 현재 화면을 갱신하고, 설정 탭에서는 저장값을 유지한다.
+  try{ if(window._cfgSoftRefreshLive) window._cfgSoftRefreshLive(); }catch(e){}
 };
 
 window.cfgFemcoInit = function(){
@@ -368,12 +468,14 @@ window.cfgFemcoInit = function(){
   setVal('cfg-femco-nameFontSize', s.nameFontSize || 16); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 16);
   setVal('cfg-femco-roleFontSize', s.roleFontSize || 10); setVal('cfg-femco-roleFontSizeNum', s.roleFontSize || 10);
   setVal('cfg-femco-tierBadgeSize', s.tierBadgeSize || 10); setVal('cfg-femco-tierBadgeSizeNum', s.tierBadgeSize || 10);
+  setVal('cfg-femco-tierBadgePadX', s.tierBadgePadX || 6); setVal('cfg-femco-tierBadgePadXNum', s.tierBadgePadX || 6);
   setVal('cfg-femco-starSize', s.starSize || 15); setVal('cfg-femco-starSizeNum', s.starSize || 15);
   setVal('cfg-femco-statusIconSize', s.statusIconSize || 18); setVal('cfg-femco-statusIconSizeNum', s.statusIconSize || 18);
   setVal('cfg-femco-subtitleSize', s.subtitleSize); setVal('cfg-femco-subtitleSizeNum', s.subtitleSize);
   setVal('cfg-femco-subtitleWeight', s.subtitleWeight);
   setVal('cfg-femco-subtitleColor', (s.subtitleColor && s.subtitleColor.startsWith('#')) ? s.subtitleColor : '#ffffff');
   setVal('cfg-femco-bgOverlay', s.bgOverlay ?? 22); setVal('cfg-femco-bgOverlayNum', s.bgOverlay ?? 22);
+  setVal('cfg-femco-bgLogoPct', s.bgLogoPct ?? 42); setVal('cfg-femco-bgLogoPctNum', s.bgLogoPct ?? 42);
   setVal('cfg-femco-logoOffsetX', s.logoOffsetX ?? 0); setVal('cfg-femco-logoOffsetXNum', s.logoOffsetX ?? 0);
   setVal('cfg-femco-logoOffsetY', s.logoOffsetY ?? 0); setVal('cfg-femco-logoOffsetYNum', s.logoOffsetY ?? 0);
   setVal('cfg-femco-titleOffsetX', s.titleOffsetX ?? 0); setVal('cfg-femco-titleOffsetXNum', s.titleOffsetX ?? 0);
@@ -391,12 +493,32 @@ window.cfgFemcoInit = function(){
   if (typeof window.cfgFemcoRefreshUnivFields === 'function') window.cfgFemcoRefreshUnivFields();
 };
 
-window.cfgFemcoRefreshUnivFields = function(){
+window.cfgFemcoRefreshUnivFields = function(forcedUniv){
   const s = _cfgFemcoLoad();
   const sel = document.getElementById('cfg-femco-univ');
-  const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const _savedUniv = localStorage.getItem('cfg_femco_univ') || '';
+  // [FIX-BRIGHT-8] 사용자가 방금 조작한 select(forcedUniv)를 최우선으로 사용.
+  // 예전엔 다른(숨겨진) 대학 셀렉트의 값을 먼저 읽어와서, 방금 고른 대학이
+  // 화면에 반영되지도 못하고 이전 값으로 되돌아가 버리는 문제가 있었음.
+  const u = forcedUniv || (sel && sel.value) || (selBoard && selBoard.value) || _savedUniv;
   const c = (s.univColorOverrides||{})[u] || '#000000';
   const sub = (s.univSubtitles||{})[u] || '';
+  const boardU = ((typeof univCfg!=='undefined' ? univCfg : []).find(x=>x.name===u)) || {};
+  const _globalBoardBgAlpha = (() => {
+    if (typeof b2BgImgAlpha !== 'undefined' && !isNaN(parseInt(b2BgImgAlpha, 10))) {
+      return Math.max(0, Math.min(100, parseInt(b2BgImgAlpha, 10)));
+    }
+    try{
+      return Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_b2bia') || '64', 10) || 64));
+    }catch(e){
+      return 64;
+    }
+  })();
+  const _boardBgAlphaCustom = boardU.bgImgAlpha;
+  const _boardBgAlphaEff = (_boardBgAlphaCustom==null)
+    ? _globalBoardBgAlpha
+    : Math.max(0, Math.min(100, parseInt(_boardBgAlphaCustom, 10) || 0));
   const rawBg = (s.univBgMedia||{})[u] || '';
   const bgObj = (function(){
     const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
@@ -409,12 +531,39 @@ window.cfgFemcoRefreshUnivFields = function(){
   const subEl = document.getElementById('cfg-femco-subtitle');
   const bgEl = document.getElementById('cfg-femco-bgMediaUrl');
   const bgHint = document.getElementById('cfg-femco-bgMediaHint');
+  const boardBgHint = document.getElementById('cfg-femco-boardBgAlphaHint');
+  const boardChipHint = document.getElementById('cfg-boardchip-bgAlphaHint');
+  if (sel && sel.value !== u) sel.value = u;
+  if (selBoard && selBoard.value !== u) selBoard.value = u;
+  try{ if(u) localStorage.setItem('cfg_femco_univ', u); }catch(e){}
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
   if (bgEl) bgEl.value = bgObj.url || '';
-  if (bgHint) bgHint.textContent = bgObj.url ? '설정됨' : '미설정';
+  if (bgHint){
+    if(bgObj.url){
+      bgHint.textContent = '설정됨';
+    } else {
+      bgHint.textContent = boardU.bgImg ? '미설정 (현황판 배경을 자동으로 사용 중)' : '미설정';
+    }
+  }
+  if (boardBgHint){
+    const _baseMsg = boardU.bgImg ? '현황판 배경 로고/이미지에 적용됩니다.' : '현황판 배경을 넣으면 이 값이 적용됩니다.';
+    boardBgHint.textContent = _boardBgAlphaCustom==null
+      ? `${_baseMsg} 전체값 ${_boardBgAlphaEff}% 사용 중`
+      : `${_baseMsg} 대학별 ${_boardBgAlphaEff}% 사용 중`;
+  }
+  if (boardChipHint){
+    const _baseMsg = boardU.bgImg ? '이 대학 현황판 배경에 바로 반영됩니다.' : '현황판 배경을 넣으면 이 값이 적용됩니다.';
+    boardChipHint.textContent = _boardBgAlphaCustom==null
+      ? `${_baseMsg} 전체값 ${_boardBgAlphaEff}% 사용 중`
+      : `${_baseMsg} 대학별 ${_boardBgAlphaEff}% 사용 중`;
+  }
   // 배경 옵션
   const setVal=(id,v)=>{const el=document.getElementById(id);if(el!=null) el.value=v;};
+  setVal('cfg-femco-boardBgAlpha', _boardBgAlphaEff);
+  setVal('cfg-femco-boardBgAlphaNum', _boardBgAlphaEff);
+  setVal('cfg-boardchip-bgAlpha', _boardBgAlphaEff);
+  setVal('cfg-boardchip-bgAlphaNum', _boardBgAlphaEff);
   setVal('cfg-femco-bgAlpha', bgObj.alpha);
   setVal('cfg-femco-bgAlphaNum', bgObj.alpha);
   setVal('cfg-femco-bgSizeMode', bgObj.sizeMode);
@@ -461,6 +610,41 @@ window.cfgFemcoSetBgOpt = function(k, v){
   _cfgFemcoSave(s);
   try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgFemcoSetBoardBgAlpha = function(v){
+  const sel = document.getElementById('cfg-femco-univ');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const u = (sel && sel.value) || (selBoard && selBoard.value) || (localStorage.getItem('cfg_femco_univ') || '');
+  if(!u) return;
+  const pct = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
+  if (typeof window.setBoardBgImgAlpha === 'function') {
+    window.setBoardBgImgAlpha(u, pct);
+  } else {
+    const target = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null);
+    if(!target) return;
+    target.bgImgAlpha = pct;
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+  }
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
+};
+
+window.cfgFemcoResetBoardBgAlpha = function(){
+  const sel = document.getElementById('cfg-femco-univ');
+  const selBoard = document.getElementById('cfg-boardchip-univ');
+  const u = (sel && sel.value) || (selBoard && selBoard.value) || (localStorage.getItem('cfg_femco_univ') || '');
+  if(!u) return;
+  if (typeof window.setBoardBgImgAlpha === 'function') {
+    window.setBoardBgImgAlpha(u, null);
+  } else {
+    const target = (typeof univCfg!=='undefined' ? univCfg.find(x=>x.name===u) : null);
+    if(!target) return;
+    delete target.bgImgAlpha;
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+  }
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
 };
 
 window.cfgFemcoSetUnivColor = function(color){

@@ -206,10 +206,10 @@ function buildPlayerVsUnivSectionHTML(opts){
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
           ${row.univ&&row.univ!=='무소속'?`onclick="openUnivModal('${(typeof escJS==='function'?escJS(row.univ):String(row.univ).replace(/'/g,"\\'"))}')"`:''}
-          style="background:#f8fafc;color:#0f172a;border:1px solid rgba(148,163,184,.28);font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
+          style="background:#f8fafc;color:var(--text);border:1px solid rgba(148,163,184,.28);font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
       </div>
-      <div style="margin-top:7px;font-size:var(--fs-base);font-weight:900;color:#0f172a">
+      <div style="margin-top:7px;font-size:var(--fs-base);font-weight:900;color:var(--text)">
         <span style="color:#dc2626">${row.w}승</span>
         <span style="color:var(--gray-l);margin:0 5px">/</span>
         <span style="color:#2563eb">${row.l}패</span>

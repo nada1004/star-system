@@ -55,13 +55,13 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
               ? window.univCfg
               : (typeof getAllUnivs==='function' ? getAllUnivs() : []);
             const url=(window.UNIV_ICONS&&window.UNIV_ICONS[team])||((cfgList.find(x=>x&&x.name===team)||{}).icon)||((cfgList.find(x=>x&&x.name===team)||{}).img)||'';
-            return url?`<span style="display:inline-flex;align-items:center;justify-content:center"><img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:7px" onerror="this.parentNode.style.display='none'"></span>`:'';
+            return url?`<span style="display:inline-flex;align-items:center;justify-content:center"><img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;background:transparent;border:none;border-radius:0;padding:0" onerror="this.parentNode.style.display='none'"></span>`:'';
           }catch(e){ return ''; }
         };
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team" style="background:${aBg};border:1px solid ${aBd};justify-content:center;text-align:center;position:relative;color:${aFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2">${uicon(m.a||'')}<span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.a||'A팀')}</span></span></div>
+          <div class="cmd-team" style="background:${aBg};border:1px solid ${aBd};justify-content:center;text-align:center;position:relative;color:${aFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:var(--su_md_team_font,20px);text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2"><span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.a||'A팀')}</span>${uicon(m.a||'')}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'#111827'}">${sa}</span><span class="cmd-colon">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'#111827'}">${sb}</span></div>
-          <div class="cmd-team" style="background:${bBg};border:1px solid ${bBd};justify-content:center;text-align:center;position:relative;color:${bFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2">${uicon(m.b||'')}<span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.b||'B팀')}</span></span></div>
+          <div class="cmd-team" style="background:${bBg};border:1px solid ${bBd};justify-content:center;text-align:center;position:relative;color:${bFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:var(--su_md_team_font,20px);text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 60px);white-space:normal;word-break:keep-all;overflow:hidden;line-height:1.2">${uicon(m.b||'')}<span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${safe(m.b||'B팀')}</span></span></div>
         </div>`;
         bar.style.display='block';
       }else{
@@ -78,10 +78,12 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       const canStyle = !!isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
       if(isLoggedIn){
         // 수정 버튼
+        // [BUGFIX] 존재하지 않는 openCompMatchEditModal/grpEditMatchInline/openBktManualEditModal 함수를
+        // 호출하고 있어 수정 버튼을 눌러도 아무 반응이 없었음 → 실제 존재하는 편집 함수로 연결
         if(isLeagueMatch){
-          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openCompMatchEditModal==='function')openCompMatchEditModal('${tnId}',${gi},${mi});else if(typeof grpEditMatchInline==='function')grpEditMatchInline('${tnId}',${gi},${mi})">✏️ 수정</button>`;
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="closeCompMatchDetailModal();if(typeof grpEditMatch==='function')grpEditMatch('${tnId}',${gi},${mi})">✏️ 수정</button>`;
         } else if(isManual){
-          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openBktManualEditModal==='function')openBktManualEditModal('${tnId}',${mi})">✏️ 수정</button>`;
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="closeCompMatchDetailModal();if(typeof openBracketMatchModal==='function')openBracketMatchModal('${tnId}',-1,${mi})">✏️ 수정</button>`;
         }
       }
       if(canStyle){

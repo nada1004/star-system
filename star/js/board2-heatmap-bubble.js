@@ -86,7 +86,8 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
     bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
     members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
-      const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
+      const rTxt=p && p.race==='P'?'P':p && p.race==='T'?'T':p && p.race==='Z'?'Z':'';
+      const rClr={T:'#60a5fa',Z:'#c084fc',P:'#fbbf24'}[rTxt]||'#fff';
       const _isGif = p && p.photo ? /\.gif(\?|$)/i.test(String(p.photo)) : false;
       const rawPhoto = p && p.photo ? (_isGif ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo)) : '';
       const rawPhotoOrig = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
@@ -94,13 +95,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       const safePhotoOrig = rawPhotoOrig ? escA(rawPhotoOrig) : '';
       const _2ndHm1 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
       const initials = String(p && p.name || '?').slice(0,1);
-      let pw=0,pl=0;
-      (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
-      const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
-      const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
       const safeNameAttr = escA(p && p.name || '');
-      const tierCol1 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
-      const tierTxt1 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
       bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm1?'ph-swap':'')+'" style="position:relative;display:block">'
@@ -111,9 +106,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
         bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:linear-gradient(160deg,'+color+'44,'+color+'22);color:'+color+'">'+ escH(initials)+'</div>';
       }
       bodyHtml += '<div class="b2hm2-pcard-info">';
-      if (p&&p.tier) bodyHtml += '<span style="font-size:9px;font-weight:900;background:'+tierCol1+';color:'+tierTxt1+';border-radius:4px;padding:1px 5px;margin-bottom:2px;line-height:1.6">'+escH(p.tier)+'</span>';
-      bodyHtml += '<div class="b2hm2-pcard-name">'+escH(p && p.name || '')+'</div>';
-      bodyHtml += '<div class="b2hm2-pcard-sub">'+(rIco?'<span>'+rIco+'</span>':'')+(pwr!==null?'<span style="color:'+pc+';font-weight:900">'+pwr+'%</span>':'')+'</div>';
+      bodyHtml += '<div class="b2hm2-pcard-name">'+(rTxt?'<span style="color:'+rClr+';font-weight:900;margin-right:3px;text-shadow:0 1px 3px rgba(0,0,0,.6)">'+rTxt+'</span>':'')+escH(p && p.name || '')+'</div>';
       bodyHtml += '</div>';
       bodyHtml += '</div>';
     });
@@ -360,7 +353,7 @@ function _b2HeatmapView() {
     .b2hm2-week-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;font-size:var(--fs-caption);font-weight:800;color:#c2410c;margin-bottom:12px }
     .b2hm2-tbl td:hover { filter:none;box-shadow:none; }
     .b2hm2-tbl tr:hover td { filter:none; box-shadow:none; }
-    .b2hm2-tbl td.univ-name { text-align:left;font-size:var(--fs-caption);font-weight:800;padding:4px 8px;white-space:nowrap;background:var(--bg);color:var(--text1);position:sticky;left:0;z-index:2;min-width:72px }
+    .b2hm2-tbl td.univ-name { text-align:left;font-size:var(--fs-caption);font-weight:800;padding:4px 6px;white-space:nowrap;background:var(--bg);color:var(--text1);position:sticky;left:0;z-index:2;min-width:56px }
     .b2hm2-tbl td.total-cell { background:var(--surface);border:1px solid var(--border2);font-weight:900 }
     .b2hm2-legend { display:flex;align-items:center;gap:6px;margin-top:8px;font-size:var(--fs-caption);color:var(--text3) }
     .b2hm2-legend-bar { height:12px;width:120px;border-radius:6px }
@@ -419,7 +412,7 @@ function _b2HeatmapView() {
     if (!tot.count) return;
     h += `<tr>
       <td class="univ-name" style="border-left:3px solid ${color};background:var(--bg) !important">
-        <span style="color:${color}">${u.name}</span>
+        <span style="color:${color};display:inline-flex;align-items:center;gap:3px">${typeof gUI==='function'?gUI(u.name,'18px'):''}${u.name}</span>
         <div style="font-size:9px;color:var(--text3);font-weight:600">${mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-'}</div>
       </td>
       ${sortedTiers.map(t => {
@@ -708,7 +701,7 @@ function _b2BubbleView() {
       const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
       ttip.innerHTML=\`
         <div style="font-weight:900;font-size:var(--fs-base);color:\${b.color};margin-bottom:6px">\${b.name}</div>
-        <div style="font-size:var(--fs-sm);font-weight:700;color:#334155;margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
         \${b.wr!==null?'<div style="font-size:var(--fs-sm);font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
         \${b.topTier?'<div style="font-size:var(--fs-caption);margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
         <div style="font-size:10px;color:#94a3b8;margin-top:6px">클릭 → 상세 정보</div>

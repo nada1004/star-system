@@ -265,8 +265,8 @@ async function rebuildIndexedDbStores(){
   }
 }
 
-// ── 이미지탭 레이아웃 저장 함수 ──
-function saveB2LayoutSettings(){
+// ── 이미지탭 레이아웃 저장 함수 (silent=true면 슬라이더/입력 실시간 미리보기용 — 얼럿 생략) ──
+function saveB2LayoutSettings(silent){
   const settings = {
     autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
     autoHeight: document.getElementById('cfg-b2-auto-height')?.checked !== false,
@@ -278,28 +278,32 @@ function saveB2LayoutSettings(){
   };
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
   if(typeof save==='function')save();
-  alert('이미지탭 레이아웃이 저장되었습니다.');
   if(typeof render === 'function') render();
   // board2 탭이 열려있으면 다시 렌더링
   if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')) {
     document.getElementById('b2-content').innerHTML = _b2PlayersView();
     if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
   }
+  if(!silent){
+    try{ if(typeof showToast==='function') showToast('📐 이미지탭 레이아웃이 저장되었습니다.'); else alert('이미지탭 레이아웃이 저장되었습니다.'); }catch(e){ alert('이미지탭 레이아웃이 저장되었습니다.'); }
+  }
 }
 
-// ── 구현황판 밝기 저장 함수 ──
-function saveOldDashboardBrightness(){
+// ── 구현황판 밝기 저장 함수 (silent=true면 슬라이더 실시간 미리보기용 — 얼럿 생략) ──
+function saveOldDashboardBrightness(silent){
   const labelAlpha = parseInt(document.getElementById('cfg-b2-label-alpha')?.value) || 16;
   const bgAlpha = parseInt(document.getElementById('cfg-b2-bg-alpha')?.value) || 9;
   localStorage.setItem('su_b2la', labelAlpha);
   localStorage.setItem('su_b2ba', bgAlpha);
   if(typeof save==='function')save();
-  alert('구현황판 밝기 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
+  if(!silent){
+    try{ if(typeof showToast==='function') showToast('🎨 구현황판 밝기 설정이 저장되었습니다.'); else alert('구현황판 밝기 설정이 저장되었습니다.'); }catch(e){ alert('구현황판 밝기 설정이 저장되었습니다.'); }
+  }
 }
 
-// ── 이미지 설정 저장 함수 ──
-function saveImageSettings(){
+// ── 이미지 설정 저장 함수 (silent=true면 슬라이더 실시간 미리보기용 — 얼럿/모달 재오픈 생략) ──
+function saveImageSettings(silent){
   const rawPrev = (()=>{ try{ return JSON.parse(localStorage.getItem('su_img_settings')||'{}')||{}; }catch(e){ return {}; } })();
   const settings = {
     fill: document.getElementById('cfg-img-fill')?.checked || false,
@@ -347,7 +351,9 @@ function saveImageSettings(){
       openUnivModal(ust.currentName);
     }
   }catch(e){}
-  alert('이미지 설정이 저장되었습니다.');
+  if(!silent){
+    try{ if(typeof showToast==='function') showToast('🖼️ 이미지 설정이 저장되었습니다.'); else alert('이미지 설정이 저장되었습니다.'); }catch(e){ alert('이미지 설정이 저장되었습니다.'); }
+  }
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
@@ -390,11 +396,11 @@ function showImageContextMenu(e, imgElement){
     </div>
     <div style="padding: 8px 16px;">
       <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">크기: <span id="ctx-scale-val">${currentScale}x</span></label>
-      <input type="range" id="ctx-scale" min="0.5" max="3" step="0.1" value="${currentScale}" style="width: 100%;" oninput="document.getElementById('ctx-scale-val').textContent=this.value+'x'">
+      <input type="range" id="ctx-scale" min="0.5" max="3" step="0.1" value="${currentScale}" style="width: 100%;" oninput="document.getElementById('ctx-scale-val').textContent=this.value+'x';if(typeof _ctxImgLivePreview==='function')_ctxImgLivePreview();">
     </div>
     <div style="padding: 8px 16px;">
       <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">밝기: <span id="ctx-bright-val">${currentBrightness}x</span></label>
-      <input type="range" id="ctx-bright" min="0.3" max="2" step="0.1" value="${currentBrightness}" style="width: 100%;" oninput="document.getElementById('ctx-bright-val').textContent=this.value+'x'">
+      <input type="range" id="ctx-bright" min="0.3" max="2" step="0.1" value="${currentBrightness}" style="width: 100%;" oninput="document.getElementById('ctx-bright-val').textContent=this.value+'x';if(typeof _ctxImgLivePreview==='function')_ctxImgLivePreview();">
     </div>
     <div style="padding: 8px 16px; border-top: 1px solid var(--border);">
       <button onclick="applyImageContextStyle()" style="width: 100%; padding: 6px 12px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor:pointer;">✅ 적용</button>
@@ -415,6 +421,15 @@ function showImageContextMenu(e, imgElement){
     };
     document.addEventListener('click', closeMenu);
   }, 0);
+}
+
+// ── 우클릭 이미지 조절: 슬라이더 실시간 미리보기(메뉴는 유지) ──
+function _ctxImgLivePreview(){
+  if(!window._currentImageTarget) return;
+  const scale = document.getElementById('ctx-scale')?.value || 1;
+  const brightness = document.getElementById('ctx-bright')?.value || 1;
+  window._currentImageTarget.style.transform = `scale(${scale})`;
+  window._currentImageTarget.style.filter = `brightness(${brightness})`;
 }
 
 function applyImageContextStyle(){
@@ -928,6 +943,46 @@ function setBoardBgImgSize(univName, size){
   u.bgImgSize=size;
   save();render();
 }
+// [FIX-BRIGHT-5] 대학별 "로고형 배경"(중앙에 작게 배치) 여부 토글
+function setBoardBgIsLogo(univName, checked){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(checked) u.bgIsLogo=true; else delete u.bgIsLogo;
+  save();render();
+}
+// [FIX-BRIGHT-7] 설정탭(cfg)에 머무는 동안은 전체 화면을 다시 그리지 않고
+// board2 라이브 화면만(보이는 경우) 가볍게 갱신합니다.
+// → 밝기 슬라이더를 조작할 때마다 설정탭 전체가 다시 그려지면서
+//   방금 펼친 <details>가 접히고 대학 선택이 풀리는 문제를 방지합니다.
+function _cfgSoftPersist(){
+  try{
+    if(typeof window.curTab!=='undefined' && window.curTab==='cfg'){
+      try{ window._cfgSoftRefreshBoard2 && window._cfgSoftRefreshBoard2(); }catch(e){}
+      return;
+    }
+  }catch(e){}
+  if(typeof render==='function')render();
+}
+// [FIX-BRIGHT-5b] 대학별 배경 밝기 개별 오버라이드 (null이면 전체값 사용)
+function setBoardBgImgAlpha(univName, pct){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(pct===null || pct===undefined || pct==='') delete u.bgImgAlpha;
+  else u.bgImgAlpha = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
+  save();
+  _cfgSoftPersist();
+}
+// [FIX-BRIGHT-6] 대학 전체 배경 밝기(전역 기본값) 저장 — 설정탭 슬라이더용
+function setBoardBgAlphaGlobal(pct, silent){
+  const v = Math.max(0, Math.min(100, parseInt(pct,10) || 0));
+  b2BgImgAlpha = v;
+  try{ localStorage.setItem('su_b2bia', v); }catch(e){}
+  if(typeof save==='function')save();
+  _cfgSoftPersist();
+  if(!silent){
+    try{ if(typeof showToast==='function') showToast('🎨 대학 배경 이미지 밝기가 저장되었습니다.'); }catch(e){}
+  }
+}
 function promptBoardBgImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
@@ -956,3 +1011,126 @@ function promptBoardNoteImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   addBoardNoteImg(univName,trimmed);
 }
+
+// ─────────────────────────────────────────────────────────────
+// 🎛️ 버튼 스타일 / 전역 UI 배율 / 상단 탭 UI / 앱 폰트 크기 배율
+// - 컨트롤(oninput/onchange)은 있었지만 실제 저장 함수가 없어 동작하지 않던 것들을 복원
+// ─────────────────────────────────────────────────────────────
+window.cfgSetUiScalePct = function(device, val){
+  try{
+    const pct = Math.max(80, Math.min(140, parseInt(val,10) || 100));
+    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : 'su_ui_scale_mb_pct';
+    localStorage.setItem(key, String(pct));
+    const lbl = document.getElementById('cfg-uiscale-'+device+'-v');
+    if(lbl) lbl.textContent = pct+'%';
+  }catch(e){}
+  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+window.cfgResetUiScalePct = function(){
+  try{
+    ['su_ui_scale_pc_pct','su_ui_scale_tb_pct','su_ui_scale_mb_pct','su_ui_scale_pct'].forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+window.cfgSetTopTabUiSettings = function(){
+  try{
+    const font = parseInt(document.getElementById('cfg-top-tab-font-mb')?.value || '10', 10) || 10;
+    const gap  = parseInt(document.getElementById('cfg-top-tab-gap-mb')?.value || '2', 10) || 2;
+    const align = (document.getElementById('cfg-top-tab-align-mb')?.value || 'start').trim();
+    localStorage.setItem('su_top_tab_font_mb_px', String(Math.max(8,Math.min(16,font))));
+    localStorage.setItem('su_top_tab_gap_mb_px', String(Math.max(0,Math.min(16,gap))));
+    localStorage.setItem('su_top_tab_align_mb', align);
+  }catch(e){}
+  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+window.cfgResetTopTabUiSettings = function(){
+  try{
+    ['su_top_tab_font_mb_px','su_top_tab_gap_mb_px','su_top_tab_align_mb'].forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+window.cfgSetUiBtnStyleSettings = function(){
+  try{
+    const pct = parseInt(document.getElementById('cfg-btnscale')?.value || '100', 10) || 100;
+    const br  = parseInt(document.getElementById('cfg-btnr')?.value || '8', 10) || 8;
+    const pr  = parseInt(document.getElementById('cfg-pillr')?.value || '20', 10) || 20;
+    localStorage.setItem('su_btn_scale_pct', String(Math.max(85,Math.min(125,pct))));
+    localStorage.setItem('su_btn_r', String(Math.max(4,Math.min(18,br))));
+    localStorage.setItem('su_pill_r', String(Math.max(12,Math.min(28,pr))));
+  }catch(e){}
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+window.cfgResetUiBtnStyleSettings = function(){
+  try{
+    ['su_btn_scale_pct','su_btn_r','su_pill_r'].forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+window.cfgSetAppFontScalePct = function(device, val){
+  try{
+    const pct = Math.max(85, Math.min(130, parseInt(val,10) || 100));
+    const key = device==='pc' ? 'su_app_font_scale_pc_pct' : device==='tb' ? 'su_app_font_scale_tb_pct' : 'su_app_font_scale_mb_pct';
+    localStorage.setItem(key, String(pct));
+    const lbl = document.getElementById('cfg-appfont-scale-'+device+'-v');
+    if(lbl) lbl.textContent = pct+'%';
+  }catch(e){}
+  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+window.cfgResetAppFontScalePct = function(){
+  try{
+    ['su_app_font_scale_pc_pct','su_app_font_scale_tb_pct','su_app_font_scale_mb_pct','su_app_font_scale_pct'].forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// font-family 선택 드롭다운 → font-family 입력칸에 반영 후 저장
+window.cfgApplyFontFamilyChoice = function(val){
+  try{
+    if(!val) return;
+    const el = document.getElementById('cfg-appfont-family');
+    if(el) el.value = val;
+  }catch(e){}
+  try{ if(typeof window.cfgSetAppFontSettings === 'function') window.cfgSetAppFontSettings(); }catch(e){}
+};
+// 커스텀 CSS 직접입력에서 자동 추출된 font-family 프리셋 선택
+window.cfgApplyCustomFontPreset = function(val){
+  try{
+    if(!val) return;
+    const name = val.indexOf('custom:')===0 ? val.slice(7) : val;
+    const el = document.getElementById('cfg-appfont-family');
+    if(el) el.value = `${name}, "Noto Sans KR", sans-serif`;
+  }catch(e){}
+  try{ if(typeof window.cfgSetAppFontSettings === 'function') window.cfgSetAppFontSettings(); }catch(e){}
+};
+// 커스텀 CSS 직접입력 textarea에서 font-family들을 다시 추출해 프리셋 드롭다운 갱신
+window.cfgRenderCustomFontPresetOptions = function(){
+  try{
+    const sel = document.getElementById('cfg-appfont-custompreset');
+    const txt = document.getElementById('cfg-appfont-csstext')?.value || '';
+    if(!sel) return;
+    const out=[]; const seen=new Set();
+    const re=/font-family\s*:\s*['"]?([^;'"\n\r]+)['"]?\s*;/gi;
+    let m;
+    while((m=re.exec(txt))){
+      const name=String(m[1]||'').trim();
+      if(!name) continue;
+      const key=name.toLowerCase();
+      if(seen.has(key)) continue;
+      seen.add(key); out.push(name);
+    }
+    sel.innerHTML = '<option value="">(직접입력에서 자동 추출)</option>' +
+      out.map(n=>`<option value="custom:${n.replace(/"/g,'&quot;')}">${n.replace(/</g,'&lt;')}</option>`).join('');
+  }catch(e){}
+};

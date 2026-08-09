@@ -141,7 +141,8 @@ function _cfgSecGroup2(ctx){
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b btn-sm" onclick="cfgRunSettingsSelfCheck()">🔎 설정 핸들러 점검</button>
       <button class="btn btn-g btn-sm" onclick="cfgRunFullQaDryRun()">🧪 전체 QA(드라이런) 점검</button>
-      <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 실제 데이터는 건드리지 않고, 임시 더미 데이터로 동작만 확인합니다.</span>
+      <button class="btn btn-b btn-sm" onclick="cfgRunMenuFuncCheck()">🔵🔴 메뉴별 작동 점검</button>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 실제 데이터는 건드리지 않고, 임시 더미 데이터로 동작만 확인합니다. 메뉴별 점검은 각 메뉴 제목 옆에 파란색(정상)/빨간색(오류) 점으로도 표시됩니다.</span>
     </div>
     <div id="cfg-selfcheck-out" style="margin-top:10px"></div>
   </details>
@@ -212,6 +213,30 @@ function _cfgSecGroup2(ctx){
     </div>
   </details>`;
   })()}
+  ${(()=>{ 
+    const q = (localStorage.getItem('su_cfg_streamer_channel_q') || '').trim();
+    const players = (Array.isArray(window.players) ? window.players : []).filter(p=>p && !p.hidden && !p.retired && String(p.univ||'').trim() !== 'YB');
+    const withUrl = players.filter(p=>String(p.channelUrl||'').trim()).length;
+    return _scfgD('streamerchannel','📺 스트리머 방송국 URL') + `
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+      스트리머별 <b>방송국 홈 URL</b>을 한 곳에서 빠르게 입력/수정합니다.<br>
+      라이브탭 SOOP 미리보기/채널 이동은 여기 입력된 주소를 기준으로 동작합니다.
+    </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input id="cfg-streamer-channel-search" type="text" value="${(typeof escAttr==='function'?escAttr(q):String(q).replace(/"/g,'&quot;'))}" placeholder="이름/대학/티어/URL 검색"
+          oninput="cfgFilterStreamerChannels(this.value)"
+          style="width:min(320px,100%);padding:8px 12px;border-radius:20px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2)">
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:800">총 ${players.length}명 · URL 설정 ${withUrl}명</span>
+        <button class="btn btn-w btn-xs" onclick="document.getElementById('cfg-streamer-channel-search').value='';cfgFilterStreamerChannels('')">검색 지우기</button>
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.5">
+        입력 후 <b>포커스 아웃</b> 또는 <b>Enter</b> 시 바로 저장됩니다. 예: <code>https://ch.sooplive.co.kr/...</code>, <code>https://chzzk.naver.com/...</code>
+      </div>
+      <div id="cfg-streamer-channel-rows" style="display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto">${typeof window.cfgGetStreamerChannelRowsHTML==='function' ? window.cfgGetStreamerChannelRowsHTML(q) : ''}</div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('streamer-view','🎬 스트리머탭 기본 뷰')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">스트리머탭 진입 시 기본으로 표시할 뷰 방식을 설정합니다. 탭 상단 버튼으로도 즉시 전환 가능합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
@@ -246,7 +271,7 @@ function _cfgSecGroup2(ctx){
             const _cur = localStorage.getItem('su_tier_view_mode') || 'table';
             return [
               {id:'table',      icon:'📋', title:'테이블',        desc:'기존 테이블 형식. 모든 정보 한눈에'},
-              {id:'card',       icon:'🃏', title:'카드 그리드',   desc:'프로필 카드 그리드. 한 눈에 보기 좋음'},
+              {id:'magazine',   icon:'📷', title:'매거진/룩북',   desc:'프로필 카드 그리드. 한 눈에 보기 좋음'},
               {id:'podium',     icon:'🏆', title:'포디움',        desc:'1-2-3위 시상대 + 나머지 리스트'},
               {id:'compact',    icon:'📝', title:'컴팩트 리스트', desc:'한 줄로 밀도 높게. 많은 인원 빠르게'},
               {id:'tier-group', icon:'🎖️', title:'티어별 그룹',   desc:'티어 단위로 묶어 카드 표시'},
@@ -262,7 +287,7 @@ function _cfgSecGroup2(ctx){
         </div>
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);border-top:1px solid var(--border2);padding-top:8px">
-        💡 순위표 상단 우측의 <b>📋 🃏 🏆 📝 🎖️</b> 아이콘 버튼으로도 즉시 전환됩니다.
+        💡 순위표 상단 우측의 <b>📋 📷 🏆 📝 🎖️</b> 아이콘 버튼으로도 즉시 전환됩니다.
       </div>
     </div>
   </details>
@@ -439,8 +464,11 @@ function _cfgSecGroup2(ctx){
       </div>
 
       <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
-        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:900;margin-bottom:8px">커스텀 폰트 별칭(표시 이름)</div>
-        <div id="cfg-appfont-alias-wrap"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:900">커스텀 폰트 별칭(표시 이름)</div>
+          <button class="btn btn-w btn-xs" onclick="cfgRenderAppFontAliasEditor()" style="padding:4px 8px">🔄 새로고침</button>
+        </div>
+        <div id="cfg-appfont-alias-wrap">${(()=>{ try{ return (typeof window!=='undefined' && typeof window.cfgGetCustomFontFamilies==='function' && !window.cfgGetCustomFontFamilies().length) ? `<div style="font-size:11px;color:var(--gray-l)">커스텀 폰트가 없습니다. (CSS 직접 입력에 @font-face를 추가하면 여기에 표시됩니다)</div>` : ''; }catch(e){ return ''; } })()}</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">※ 별칭을 저장하면 ‘프리셋/선택 드롭다운’에 표시됩니다.</div>
       </div>
     </div>

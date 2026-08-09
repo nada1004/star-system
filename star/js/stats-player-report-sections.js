@@ -431,7 +431,8 @@ function _prVsCompareHTML(p){
 /* ─── 최근 경기 표 (기존 렌더 함수 재사용 · 읽기 전용) ─── */
 function _prRecentTableHTML(p){
   const hist = _statsAllHist(p).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  const filtered = _prExcludeFilter(hist);
+  let filtered = _prExcludeFilter(hist);
+  if(window._prRecentMapFilter) filtered = filtered.filter(h=>h.map===window._prRecentMapFilter);
   const shown = filtered.slice(0, window._prTableLimit||20);
   if(!shown.length) return _prEmptyStateHTML('경기 기록이 없습니다');
   let h=`<div class="pr-recent-table" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
@@ -465,16 +466,19 @@ function _prHeroHTML(p){
   const RACE_KO={T:'테란',Z:'저그',P:'프로토스',N:'무종족'};
   const rankInfo=_prTierRank(p);
   const eloBoardUrl = `https://eloboard.com/?s=${encodeURIComponent(p.name)}`;
-  const heroW=p.win||0, heroL=p.loss||0, heroTot=heroW+heroL;
-  const heroWr = heroTot? Math.round(heroW/heroTot*100):0;
-  const heroWrColor = _prWrColor(heroWr);
   return `<div class="pr-hero">
     <div class="pr-hero-photo" style="box-shadow:0 0 0 3px var(--white),var(--sh2)" onclick="openPlayerModal('${escJS(p.name)}')" title="상세 프로필 보기">${getPlayerPhotoHTML(p.name,'124px','object-fit:cover;object-position:center;')}</div>
     <div style="flex:1;min-width:200px">
       <div class="pr-hero-name">${escHTML(p.name)} <span class="rbadge r${p.race||''}">${RACE_KO[p.race]||p.race||''}</span></div>
       <div class="pr-hero-wr-row">
-        <span class="pr-hero-wr-num" style="color:${heroWrColor}">${heroTot?`${heroWr}%`:'-%'}</span>
-        <span class="pr-hero-wr-sub">${_prWrIcon(heroWr)} 승률 (${heroW}승 ${heroL}패)</span>
+        ${(typeof _prLevelBadgeHTML==='function') ? _prLevelBadgeHTML(p) : ''}
+        ${(()=>{
+          const pointsVal = Number(p.points||0);
+          const pointsColor = pointsVal>0 ? 'var(--score-win)' : pointsVal<0 ? 'var(--score-lose)' : 'var(--text2)';
+          const roleTxt = String(p.role||'').trim();
+          return `<span class="pr-hero-wr-num" style="color:${pointsColor}">${pointsVal>0?'+':''}${pointsVal}P</span>
+          <span class="pr-hero-wr-sub">포인트${roleTxt?` · ${escHTML(roleTxt)}`:''}</span>`;
+        })()}
       </div>
       <div class="pr-hero-meta">
         ${(()=>{
@@ -487,11 +491,25 @@ function _prHeroHTML(p){
           const tier = p.tier;
           const ic = (typeof _TIER_ICON!=='undefined' && _TIER_ICON[tier]) || '';
           const bg = (typeof getTierBtnColor==='function') ? (getTierBtnColor(tier)||'#64748b') : '#64748b';
-          const col = (typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(tier)||'#fff') : '#fff';
           const rankTxt = rankInfo.rank ? ` · ${rankInfo.rank}위/${rankInfo.total}명` : '';
-          return `<span class="pr-chip" style="background:${bg};color:${col};gap:4px">${ic?ic+' ':''}${escHTML(tier||'-')}${rankTxt}</span>`;
+          // 소속 칩(=신원 정보)만 진하게 채우고, 티어/등급 칩은 같은 "연한 톤+테두리" 스타일로 통일해
+          // 3개 칩이 신호등처럼 튀지 않고 차분하게 정리되도록 함
+          return `<span class="pr-chip" style="background:${bg}16;color:${bg};border:1.5px solid ${bg}45;gap:5px">${ic?ic+' ':''}${escHTML(tier||'-')}${rankTxt}</span>`;
         })()}
-        <span class="pr-chip pr-chip-neutral">ELO ${p.elo||1200}</span>
+        ${(()=>{
+          // 스트리머 상세 팝업과 동일한 ELO 등급 배지 — 숫자 칩과 등급 칩을 하나로 합쳐 깔끔하게
+          const eloVal = Number(p.elo||1200);
+          const GRADES = [
+            [1500,'LEGEND','👑','#9a3412'],
+            [1400,'MASTER','🏅','#6b21a8'],
+            [1300,'DIAMOND','💎','#075985'],
+            [1200,'GOLD','🥇','#854d0e'],
+            [1100,'SILVER','🥈','#475569'],
+            [0,'BRONZE','🥉','#7c2d12'],
+          ];
+          const [,label,icon,color] = GRADES.find(([min])=>eloVal>=min) || GRADES[GRADES.length-1];
+          return `<span class="pr-chip" style="background:${color}16;color:${color};border:1.5px solid ${color}45;gap:5px;font-weight:900">${icon} ${label} <span style="opacity:.6;font-weight:700">· ELO ${eloVal}</span></span>`;
+        })()}
       </div>
     </div>
     <div class="pr-hero-actions no-export">
@@ -532,6 +550,7 @@ function _prSelectPlayer(name){
   window._prName = name;
   window._prVsOpp = '';
   window._prTableLimit = 20;
+  window._prRecentMapFilter = '';
   _prSaveRecent(name);
   render();
 }

@@ -73,6 +73,13 @@ function rCompLeague(tn){
         <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';render()">오래된순</button>
       </div>
     </div>`;
+    h+=`<div class="no-export grp-viewmode-row" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
+      <button class="pill ${leagueViewMode==='card'?'on':''}" onclick="leagueViewMode='card';render()">🗂️ 카드형</button>
+      <button class="pill ${leagueViewMode==='compact'?'on':''}" onclick="leagueViewMode='compact';render()">📃 컴팩트</button>
+      <button class="pill ${leagueViewMode==='group'?'on':''}" onclick="leagueViewMode='group';render()">🗃️ 조별뷰</button>
+      <button class="pill ${leagueViewMode==='matrix'?'on':''}" onclick="leagueViewMode='matrix';render()">🔲 매트릭스</button>
+    </div>`;
   }
   let filtered=allMatches;
   if(leagueFilterDate) filtered=filtered.filter(m=>m.d===leagueFilterDate);
@@ -84,6 +91,9 @@ function rCompLeague(tn){
     </div>`;
     return h;
   }
+  if(leagueViewMode==='compact'){ h+=_grpRenderCompact(filtered,leagueSortDir,tn.id); return h; }
+  if(leagueViewMode==='group'){ h+=_grpRenderGroupView(tn,filtered,leagueSortDir); return h; }
+  if(leagueViewMode==='matrix'){ h+=_grpRenderMatrix(tn,leagueFilterGrp); return h; }
   const byDate={};
   filtered.forEach(m=>{const k=m.d||'날짜 미정';if(!byDate[k])byDate[k]=[];byDate[k].push(m);});
   Object.keys(byDate).sort((a,b)=>leagueSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date=>{
@@ -138,10 +148,12 @@ function rCompLeague(tn){
       const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
       const _sideRgbVars=`--rec-side-left-rgb:${_hexRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb(cb||'#ef4444')};`;
       const _sideAB = {a:aMembers||[], b:bMembers||[]};
-      const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])};
-      const _compSide=(typeof window._buildRecSideProfilePanel==='function')
-        ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
-        : {left:'',right:''};
+      const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[]), matchNum:m.matchNum};
+      const _compSide=(typeof window._buildCompSidePanel==='function')
+        ? window._buildCompSidePanel(m.a||'', m.b||'', aWin, bWin, ca, cb, _sideM)
+        : (typeof window._buildRecSideProfilePanel==='function')
+          ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
+          : {left:'',right:''};
       const _grpWinnerName = isDone ? (aWin ? (m.a||'') : bWin ? (m.b||'') : '') : '';
       const _grpWinnerCol  = isDone ? (aWin ? ca : bWin ? cb : '') : '';
       const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
@@ -159,9 +171,9 @@ function rCompLeague(tn){
         ${_compSide.left||''}
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-            <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${m.a||''}')">
-            ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
-              <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.a||'—'}</span>
+            <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${escJS(m.a||'')}')">
+            <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.a||'—'}</span>
+              ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
             </div>
             ${aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${m.a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
               <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
@@ -172,7 +184,7 @@ function rCompLeague(tn){
             `:`<div class="grp-vs-text" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-            <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${m.b||''}')">
+            <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26)" onclick="openUnivModal('${escJS(m.b||'')}')">
             ${(()=>{const url=UNIV_ICONS[m.b]||(univCfg.find(x=>x.name===m.b)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.b||'—'}</span>
             </div>
@@ -249,6 +261,178 @@ function grpMatchDetail(m){
   return h;
 }
 
+/* ── 순위 미니 테이블 (조별뷰 · 매트릭스 공용) ── */
+function _grpStandingsMiniHTML(ranked){
+  if(!ranked||!ranked.length) return '';
+  const medals=['🥇','🥈','🥉'];
+  let h=`<div style="display:flex;flex-direction:column;gap:4px">`;
+  ranked.forEach((r,i)=>{
+    const col=gc(r.u);
+    const diff=r.sw-r.sl;
+    const isTop=i===0;
+    h+=`<div style="display:flex;align-items:center;gap:7px;padding:6px 9px;background:${isTop?`linear-gradient(90deg,${col}14,transparent)`:'transparent'};border-left:2px solid ${isTop?col:'transparent'};border-radius:6px;font-size:11px">
+      <span style="width:18px;text-align:center;flex-shrink:0;font-size:${i<3?'13px':'10px'};font-weight:${i<3?'400':'800'};color:${i<3?'inherit':'var(--gray-l)'}">${medals[i]||(i+1)}</span>
+      ${_univIconTag(r.u,17)}
+      <span style="flex:1;min-width:0;word-break:keep-all;font-weight:${isTop?'900':'700'};color:${col}">${r.u}</span>
+      <span style="flex-shrink:0;font-weight:800;color:var(--text2);letter-spacing:-.2px">${r.w}<span style="color:var(--gray-l);font-weight:500">승</span> ${r.l}<span style="color:var(--gray-l);font-weight:500">패</span></span>
+      <span style="flex-shrink:0;font-weight:700;color:${diff>0?'var(--win-col)':diff<0?'var(--lose-col)':'var(--gray-l)'};min-width:30px;text-align:right">${diff>0?'+':''}${diff}</span>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+/* ── 컴팩트 리스트 뷰 ── */
+function _grpCompactRow(m,tnId,opts){
+  const o=opts||{};
+  const plain=!!o.plain; // 조별뷰: 좌측 색상바 제거
+  const isDone=m.sa!=null&&m.sb!=null;
+  const aWin=isDone&&m.sa>m.sb;const bWin=isDone&&m.sb>m.sa;
+  const clickable=isDone&&tnId;
+  const _uc=(n)=>{const c=(typeof gc==='function'&&n)?gc(n):'';return c||'var(--text)';};
+  const ca=_uc(m.a);
+  const cb=_uc(m.b);
+  const leftBar=plain?'':`border-left:4px solid ${isDone?(aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--border)'):'var(--border)'};`;
+  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',${m.grpIdx},${m.matchNum-1})"`:''} style="display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--white);border:1px solid var(--border);${leftBar}border-radius:var(--r2);cursor:${clickable?'pointer':'default'};box-shadow:0 1px 3px rgba(0,0,0,.03)">
+    ${o.hideGroupBadge?'':`<span class="grp-badge" style="font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);padding:3px 8px;border-radius:99px;flex-shrink:0;box-shadow:0 1px 4px ${m.grpColor}55"><span class="grp-badge-full">${m.grpLetter}조</span><span class="grp-badge-short">${m.grpLetter}</span></span>`}
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:7px;text-align:right">
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.7':'1'};color:${ca}">${m.a||'—'}</span>
+      <span class="grp-uic">${_univIconTag(m.a,19)}</span>
+    </div>
+    <span class="grp-score" style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${m.sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${m.sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left">
+      <span class="grp-uic">${_univIconTag(m.b,19)}</span>
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.7':'1'};color:${cb}">${m.b||'—'}</span>
+    </div>
+  </div>`;
+}
+
+
+
+function _grpRenderCompact(matches,sortDir,tnId){
+  const byDate={};
+  matches.forEach(m=>{const k=m.d||'날짜 미정';if(!byDate[k])byDate[k]=[];byDate[k].push(m);});
+  let h='';
+  Object.keys(byDate).sort((a,b)=>sortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date=>{
+    let dateLabel=date;
+    if(date!=='날짜 미정'){
+      const dt=new Date(date+'T00:00:00');
+      const days=['일','월','화','수','목','금','토'];
+      dateLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${days[dt.getDay()]}요일`;
+    }
+    const doneCnt=byDate[date].filter(m=>m.sa!=null&&m.sb!=null).length;
+    const pct=byDate[date].length?Math.round(doneCnt/byDate[date].length*100):0;
+    h+=`<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:7px 14px;background:linear-gradient(90deg,#1e3a8a0d,transparent);border-left:3px solid #2563eb;border-radius:0 8px 8px 0">
+        <span style="font-size:12px;font-weight:900;color:#1e3a8a">📅 ${dateLabel}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${doneCnt}/${byDate[date].length}경기</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:800">${pct}%</span>
+
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+    byDate[date].forEach(m=>{ h+=_grpCompactRow(m,tnId); });
+    h+=`</div></div>`;
+  });
+  return h;
+}
+
+/* ── 조별 그룹뷰 ── */
+function _grpRenderGroupView(tn,matches,sortDir){
+  const groups={};
+  matches.forEach(m=>{
+    if(!groups[m.grpIdx]) groups[m.grpIdx]={letter:m.grpLetter,color:m.grpColor,list:[]};
+    groups[m.grpIdx].list.push(m);
+  });
+  const order=Object.keys(groups).sort((a,b)=>a-b);
+  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">`;
+  order.forEach(gi=>{
+    const g=groups[gi];
+    g.list.sort((a,b)=>sortDir==='asc'?(a.d||'9999').localeCompare(b.d||'9999'):(b.d||'').localeCompare(a.d||''));
+    const doneCnt=g.list.filter(m=>m.sa!=null&&m.sb!=null).length;
+    const pct=g.list.length?Math.round(doneCnt/g.list.length*100):0;
+    const grpObj=(tn.groups||[])[gi];
+    const ranked=grpObj?_calcGrpRank(grpObj):[];
+
+    h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${g.color},${g.color}cc);padding:4px 12px;border-radius:99px;letter-spacing:.3px;box-shadow:0 2px 6px ${g.color}44">GROUP ${g.letter}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto;font-weight:700">${doneCnt}/${g.list.length}경기 · ${pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${g.color}99,${g.color});border-radius:99px;transition:.3s"></div>
+      </div>
+      ${ranked.length?`<div style="display:flex;align-items:center;gap:5px;margin-top:6px"><span style="font-size:10px;font-weight:900;color:var(--gray-l);letter-spacing:.3px">🏅 순위</span><div style="flex:1;height:1px;background:var(--border)"></div></div>${_grpStandingsMiniHTML(ranked)}<div style="height:1px;background:var(--border);margin:4px 0 2px"></div>`:''}
+
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+    g.list.forEach(m=>{ h+=_grpCompactRow(m,tn.id,{plain:true}); });
+
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+/* ── 매트릭스(대진표) 뷰 ── */
+function _grpRenderMatrix(tn,filterGrp){
+  let h='';
+  (tn.groups||[]).forEach((grp,gi)=>{
+    if(filterGrp && grp.name!==filterGrp) return;
+    const gl='ABCDEFGHIJ'[gi]||gi;
+    const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+    const teams=(grp.univs||[]).filter(Boolean);
+    if(!teams.length) return;
+    const cellMap={};
+    (grp.matches||[]).forEach(m=>{
+      if(!m.a||!m.b) return;
+      cellMap[m.a+'|'+m.b]={sa:m.sa,sb:m.sb,done:m.sa!=null&&m.sb!=null};
+    });
+    const ranked=_calcGrpRank(grp);
+    h+=`<div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${col},${col}cc);padding:4px 12px;border-radius:99px;box-shadow:0 2px 6px ${col}44">GROUP ${gl}</span>
+        <span style="font-size:11px;color:var(--gray-l);font-weight:700">${teams.length}개 팀</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start">
+      <div style="min-width:0;overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <table style="border-collapse:separate;border-spacing:0;width:100%;min-width:${(teams.length+1)*88}px">
+        <thead><tr>
+          <th style="padding:9px;background:var(--surface);position:sticky;left:0;z-index:2;border-bottom:2px solid ${col}"></th>
+          ${teams.map(t=>`<th style="padding:9px;border-bottom:2px solid ${col};border-left:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:800;color:${gc(t)};white-space:nowrap"><div style="display:flex;align-items:center;justify-content:center;gap:5px">${_univIconTag(t,18)}<span>${t}</span></div></th>`).join('')}
+        </tr></thead><tbody>`;
+    teams.forEach((rowT,ri)=>{
+      h+=`<tr style="background:${ri%2?'rgba(148,163,184,.05)':'transparent'}"><th style="padding:9px;position:sticky;left:0;z-index:1;border-right:2px solid ${col};background:var(--surface);font-size:11px;font-weight:800;color:${gc(rowT)};text-align:left;white-space:nowrap"><div style="display:flex;align-items:center;gap:6px">${_univIconTag(rowT,18)}<span>${rowT}</span></div></th>`;
+      teams.forEach(colT=>{
+        if(rowT===colT){ h+=`<td style="padding:9px;border-left:1px solid var(--border);border-top:1px solid var(--border);text-align:center;color:var(--border2);background:repeating-linear-gradient(135deg,var(--surface),var(--surface) 4px,transparent 4px,transparent 8px)">–</td>`; return; }
+        const fwd=cellMap[rowT+'|'+colT];
+        const rev=cellMap[colT+'|'+rowT];
+        let content=`<span style="color:var(--gray-l);font-size:10px">미대결</span>`;
+        let bg='transparent';
+        if(fwd&&fwd.done){
+          const win=fwd.sa>fwd.sb;
+          content=`<span style="font-weight:900;color:${win?'var(--win-col)':'var(--lose-col)'}">${fwd.sa}:${fwd.sb}</span>`;
+          bg=win?'rgba(220,38,38,.09)':'rgba(37,99,235,.09)';
+        }else if(rev&&rev.done){
+          const win=rev.sb>rev.sa;
+          content=`<span style="font-weight:900;color:${win?'var(--win-col)':'var(--lose-col)'}">${rev.sb}:${rev.sa}</span>`;
+          bg=win?'rgba(220,38,38,.09)':'rgba(37,99,235,.09)';
+        }else if((fwd&&!fwd.done)||(rev&&!rev.done)){
+          content=`<span style="color:var(--text2);font-size:11px">예정</span>`;
+        }
+        h+=`<td style="padding:9px;border-left:1px solid var(--border);border-top:1px solid var(--border);text-align:center;background:${bg}">${content}</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>
+      <div style="min-width:0;background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+        <div style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:8px;letter-spacing:.3px">🏅 순위</div>
+        ${_grpStandingsMiniHTML(ranked)}
+      </div>
+      </div></div>`;
+  });
+  if(!h) h=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">표시할 조가 없습니다. (조편성에서 대학을 먼저 추가하세요)</div>`;
+  return h;
+}
+
 try{
   window.rCompLeague = rCompLeague;
   window.leagueToggleDet = leagueToggleDet;
@@ -256,4 +440,7 @@ try{
   window.openLeaguePaste = openLeaguePaste;
   window.openCompAutoDetectPaste = openCompAutoDetectPaste;
   window.grpMatchDetail = grpMatchDetail;
+  window._grpRenderCompact = _grpRenderCompact;
+  window._grpRenderGroupView = _grpRenderGroupView;
+  window._grpRenderMatrix = _grpRenderMatrix;
 }catch(e){}

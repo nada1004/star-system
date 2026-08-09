@@ -101,6 +101,24 @@ try{
       else if(typeof window.renderNow === 'function') window.renderNow();
     }catch(e){}
   };
+  // [FIX-UX-1] 설정탭 <details class="cfg-grp"> 펼침/접힘 상태를 세션 동안 기억.
+  // 설정탭 전체가 다시 그려질 때(다른 슬라이더 조작 등으로 render()가 호출될 때)마다
+  // 사용자가 펼쳐 둔 패널이 매번 접혀버리던 문제를 근본적으로 줄여줍니다.
+  window._cfgGrpOpenKeys = window._cfgGrpOpenKeys || new Set();
+  window._cfgSyncGrpOpenState = function(){
+    try{
+      document.querySelectorAll('#rcont details.cfg-grp').forEach(function(d){
+        const summaryEl = d.querySelector('summary');
+        const key = summaryEl ? summaryEl.textContent.trim() : '';
+        if(!key) return;
+        if(window._cfgGrpOpenKeys.has(key) && !d.open) d.open = true;
+        d.addEventListener('toggle', function(){
+          if(d.open) window._cfgGrpOpenKeys.add(key);
+          else window._cfgGrpOpenKeys.delete(key);
+        });
+      });
+    }catch(e){}
+  };
   window.cfgGetB2UnivProfileView = function(){
     try{
       const raw = String(localStorage.getItem('su_b2_univ_profile_view') || '').trim();

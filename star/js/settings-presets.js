@@ -607,6 +607,95 @@ window.cfgSaveSoopSettings = function(){
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 
+// ─────────────────────────────────────────────────────────────
+// 📺 스트리머 방송국 URL 전용 설정
+// - 스트리머별 channelUrl 빠른 편집
+// - SOOP/치지직/유튜브 등 방송국 홈 URL 관리
+// ─────────────────────────────────────────────────────────────
+window.cfgGetStreamerChannelRowsHTML = function(q){
+  const _escH = (typeof window.escHTML==='function')
+    ? window.escHTML
+    : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const _escA = (typeof window.escAttr==='function')
+    ? window.escAttr
+    : (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const players = (Array.isArray(window.players) ? window.players : [])
+    .filter(p=>p && !p.hidden && !p.retired && String(p.univ||'').trim() !== 'YB')
+    .slice()
+    .sort((a,b)=>{
+      const ua = String(a.univ||'').trim();
+      const ub = String(b.univ||'').trim();
+      if(ua !== ub) return ua.localeCompare(ub, 'ko');
+      return String(a.name||'').localeCompare(String(b.name||''), 'ko');
+    });
+  const query = String(q||'').trim().toLowerCase();
+  const list = query
+    ? players.filter(p=>{
+        const name = String(p.name||'').toLowerCase();
+        const univ = String(p.univ||'').toLowerCase();
+        const tier = String(p.tier||'').toLowerCase();
+        const url = String(p.channelUrl||'').toLowerCase();
+        return name.includes(query) || univ.includes(query) || tier.includes(query) || url.includes(query);
+      })
+    : players;
+  if(!list.length){
+    return `<div style="padding:18px;border:1px dashed var(--border2);border-radius:12px;background:var(--white);font-size:var(--fs-sm);color:var(--gray-l);text-align:center">조건에 맞는 스트리머가 없습니다.</div>`;
+  }
+  return list.map((p, idx)=>{
+    const name = String(p.name||'').trim();
+    const univ = String(p.univ||'').trim();
+    const tier = String(p.tier||'').trim();
+    const url = String(p.channelUrl||'').trim();
+    return `<div style="display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:${idx%2?'var(--surface)':'var(--white)'};border:1px solid var(--border2)">
+      <div style="min-width:0">
+        <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escH(name)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          ${univ?`<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,.10);color:#4f46e5">${_escH(univ)}</span>`:''}
+          ${tier?`<span style="font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:rgba(15,23,42,.08);color:var(--text2)">${_escH(tier)}</span>`:''}
+        </div>
+      </div>
+      <input type="text" data-name="${_escA(name)}" value="${_escA(url)}" placeholder="https://ch.sooplive.co.kr/... 또는 https://chzzk.naver.com/..."
+        onblur="cfgSaveStreamerChannel(this)" onchange="cfgSaveStreamerChannel(this)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+        style="width:100%;min-width:0;padding:8px 10px;border:1.5px solid var(--border2);border-radius:10px;font-size:var(--fs-sm);background:var(--white);color:var(--text1);box-sizing:border-box">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        ${url?`<a href="${_escA(url)}" target="_blank" rel="noopener" class="btn btn-w btn-xs" style="text-decoration:none">🏠 열기</a>`:`<span style="font-size:10px;color:var(--gray-l);font-weight:700">미설정</span>`}
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.cfgRenderStreamerChannelRows = function(q){
+  try{
+    const host = document.getElementById('cfg-streamer-channel-rows');
+    if(!host) return;
+    host.innerHTML = window.cfgGetStreamerChannelRowsHTML(q);
+  }catch(e){}
+};
+
+window.cfgFilterStreamerChannels = function(v){
+  const q = String(v||'');
+  try{ localStorage.setItem('su_cfg_streamer_channel_q', q); }catch(e){}
+  try{ window.cfgRenderStreamerChannelRows(q); }catch(e){}
+};
+
+window.cfgSaveStreamerChannel = function(inputEl){
+  try{
+    if(!inputEl) return;
+    const name = String(inputEl.getAttribute('data-name')||'').trim();
+    if(!name) return;
+    const val = String(inputEl.value||'').trim();
+    const players = Array.isArray(window.players) ? window.players : [];
+    const p = players.find(x=>x && String(x.name||'').trim()===name);
+    if(!p) return;
+    if(val) p.channelUrl = val;
+    else delete p.channelUrl;
+    if(typeof window.save==='function') window.save();
+    try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
+    try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  }catch(e){}
+};
+
 // ─────────────────────────────────────────────
 // (요청사항) 결과 붙여넣기 자동 분리 저장 규칙
 // - localStorage: su_paste_route_rules

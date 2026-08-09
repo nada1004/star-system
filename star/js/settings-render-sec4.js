@@ -58,14 +58,15 @@ function _cfgSecGroup4(ctx){
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">모바일/태블릿/PC 크기를 따로 저장합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
+        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px" onchange="if(typeof saveImageSettings==='function')saveImageSettings(true)"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
       </label>
+      <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700">✓ 실시간 미리보기 — 조절하면 스트리머 상세 팝업에 바로 반영됩니다</div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">기본 크기</label>
           <span id="cfg-img-scale-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x';clearTimeout(window._imgSetLiveT);window._imgSetLiveT=setTimeout(()=>{if(typeof saveImageSettings==='function')saveImageSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.5x</span><span>2.0x</span></div>
       </div>
       <div>
@@ -73,7 +74,7 @@ function _cfgSecGroup4(ctx){
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">기본 밝기</label>
           <span id="cfg-img-brightness-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x';clearTimeout(window._imgSetLiveT);window._imgSetLiveT=setTimeout(()=>{if(typeof saveImageSettings==='function')saveImageSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.3x</span><span>2.0x</span></div>
       </div>
       <div>
@@ -81,21 +82,21 @@ function _cfgSecGroup4(ctx){
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">모바일 크기</label>
           <span id="cfg-img-scale-left-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x';clearTimeout(window._imgSetLiveT);window._imgSetLiveT=setTimeout(()=>{if(typeof saveImageSettings==='function')saveImageSettings(true);},150)">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">태블릿 크기</label>
           <span id="cfg-img-scale-tablet-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x';clearTimeout(window._imgSetLiveT);window._imgSetLiveT=setTimeout(()=>{if(typeof saveImageSettings==='function')saveImageSettings(true);},150)">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">PC 크기</label>
           <span id="cfg-img-scale-right-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x';clearTimeout(window._imgSetLiveT);window._imgSetLiveT=setTimeout(()=>{if(typeof saveImageSettings==='function')saveImageSettings(true);},150)">
       </div>
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
@@ -195,6 +196,43 @@ function _cfgSecGroup4(ctx){
         <input type="range" min="70" max="160" step="5" value="${(()=>{try{return parseInt(localStorage.getItem('su_bcp_layout')||'100');}catch(e){return 100;}})()}" style="width:100%;accent-color:var(--blue)"
           oninput="boardChipLayoutScale=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-layout-val').textContent=this.value+'%';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
         <div style="display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--gray-l);margin-top:2px"><span>70%</span><span>160%</span></div>
+      </div>
+      </div>
+    </details>
+    <details class="cfg-grp" open style="border:2px solid #93c5fd;border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(135deg,#eff6ff,#eef2ff);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🌤️ 대학별 현황판 배경 밝기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.5;margin-bottom:10px">대학 로고를 현황판 배경으로 깔 때 학교마다 진하기가 다르면 여기서 맞출 수 있습니다.</div>
+        <div style="display:grid;grid-template-columns:84px 1fr 90px;gap:10px;align-items:center;margin-bottom:6px;padding-bottom:12px;border-bottom:1px dashed var(--border2)">
+          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--blue)">🌍 전체 공통</div>
+          <input type="range" id="cfg-boardchip-bgAlphaGlobal" min="0" max="100" step="1" value="${(typeof b2BgImgAlpha!=='undefined'?b2BgImgAlpha:64)}" style="width:100%;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-boardchip-bgAlphaGlobalNum').value=this.value"
+            onchange="setBoardBgAlphaGlobal(this.value,true);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields();}catch(e){}">
+          <input type="number" id="cfg-boardchip-bgAlphaGlobalNum" min="0" max="100" step="1" value="${(typeof b2BgImgAlpha!=='undefined'?b2BgImgAlpha:64)}" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700"
+            onchange="document.getElementById('cfg-boardchip-bgAlphaGlobal').value=this.value;setBoardBgAlphaGlobal(this.value,true);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields();}catch(e){}">
+        </div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">모든 대학이 기본으로 같이 쓰는 공통 밝기입니다. 특정 대학만 다르게 하고 싶으면 아래에서 대학을 골라 개별 조절하세요.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:84px">대학 선택</div>
+          <select id="cfg-boardchip-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);try{window.cfgFemcoRefreshUnivFields&&window.cfgFemcoRefreshUnivFields(this.value);}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:180px;flex:1">
+            ${(()=>{
+              const names=(Array.isArray(window.univCfg)?window.univCfg:[]).map(u=>String(u&&u.name||'').trim()).filter(Boolean);
+              if(!names.includes('무소속')) names.push('무소속');
+              const cur=(()=>{try{return localStorage.getItem('cfg_femco_univ') || names[0] || '';}catch(e){return names[0]||'';}})();
+              return names.map(n=>`<option value="${String(n).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"${n===cur?' selected':''}>${String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
+            })()}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:84px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">밝기(개별)</div>
+          <input type="range" id="cfg-boardchip-bgAlpha" min="0" max="100" step="1" value="64" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-boardchip-bgAlphaNum').value=this.value" onchange="window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+          <input type="number" id="cfg-boardchip-bgAlphaNum" min="0" max="100" step="1" value="64" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-boardchip-bgAlpha').value=this.value;window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <button class="btn btn-xs btn-w" onclick="window.cfgFemcoResetBoardBgAlpha&&window.cfgFemcoResetBoardBgAlpha()">이 대학만 전체값 사용(개별 해제)</button>
+          <span id="cfg-boardchip-bgAlphaHint" style="font-size:var(--fs-caption);color:var(--gray-l)">전체값 사용 중</span>
+        </div>
       </div>
       </div>
     </details>
@@ -373,15 +411,16 @@ function _cfgSecGroup4(ctx){
   </details>
   ${_scfgD('oldbright','🎨 구현황판 카드 배경/라벨 밝기 조절')}
     <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
+    <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;margin-bottom:8px">✓ 실시간 미리보기 — 슬라이더를 움직이면 바로 반영됩니다</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-size:var(--fs-sm);font-weight:600;color:var(--text2);min-width:80px">배경 밝기:</label>
-        <input type="range" id="cfg-b2-bg-alpha" min="0" max="30" value="9" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-bg-alpha-val').textContent=this.value+'%'">
+        <input type="range" id="cfg-b2-bg-alpha" min="0" max="30" value="9" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-bg-alpha-val').textContent=this.value+'%';clearTimeout(window._b2BrightLiveT);window._b2BrightLiveT=setTimeout(()=>{if(typeof saveOldDashboardBrightness==='function')saveOldDashboardBrightness(true);},150)">
         <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="cfg-b2-bg-alpha-val">9%</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-size:var(--fs-sm);font-weight:600;color:var(--text2);min-width:80px">라벨 밝기:</label>
-        <input type="range" id="cfg-b2-label-alpha" min="0" max="40" value="16" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-label-alpha-val').textContent=this.value+'%'">
+        <input type="range" id="cfg-b2-label-alpha" min="0" max="40" value="16" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-label-alpha-val').textContent=this.value+'%';clearTimeout(window._b2BrightLiveT);window._b2BrightLiveT=setTimeout(()=>{if(typeof saveOldDashboardBrightness==='function')saveOldDashboardBrightness(true);},150)">
         <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="cfg-b2-label-alpha-val">16%</span>
       </div>
       <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>

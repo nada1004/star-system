@@ -412,7 +412,19 @@ function _b2FemcoView() {
     const _subColor = (subtitleColor && subtitleColor.trim()) ? subtitleColor : textCol;
 
     // 대학별 배경 미디어
-    const _bgRaw = ((femcoSettings.univBgMedia||{})[univName]) || '';
+    // [FIX-FEMCO-BG-1] 펨코 전용 배경(univBgMedia)이 따로 설정되지 않았으면
+    // 현황판에 설정된 대학 배경(uCfg.bgImg / 로고)을 그대로 가져와 보여준다.
+    const _bgRawExplicit = ((femcoSettings.univBgMedia||{})[univName]) || '';
+    const _bgRaw = _bgRawExplicit || (uCfg.bgImg ? {
+      url: uCfg.bgImg,
+      alpha: (uCfg.bgImgAlpha ?? (typeof b2BgImgAlpha!=='undefined' ? b2BgImgAlpha : 64)),
+      // [FIX-FEMCO-LOGO-SIZE] 로고형 배경은 contain(카드 가득)이 아니라 작은 비율로 중앙 배치
+      sizeMode: uCfg.bgIsLogo ? 'pct' : (uCfg.bgImgSize && uCfg.bgImgSize!=='auto' && uCfg.bgImgSize!=='fill' ? uCfg.bgImgSize : 'cover'),
+      sizeVal: uCfg.bgIsLogo ? (parseInt(uCfg.femcoBgLogoPct||'',10) || parseInt(femcoSettings.bgLogoPct||'',10) || 42) : 90,
+      pos: 'center',
+      repeat: 'no-repeat', ox:0, oy:0,
+      __fromBoard: true
+    } : '');
     const _bgCfg = (function(){
       const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
       if(!_bgRaw) return d;
@@ -420,11 +432,20 @@ function _b2FemcoView() {
       if(typeof _bgRaw==='object') return {...d,..._bgRaw,url:String(_bgRaw.url||'').trim()};
       return d;
     })();
+    // [FEMCO-BG-SIZE] 설정탭 > 펨코스타일 > 배경 크기(공통/대학별) 적용
+    (function(){
+      const uPct = parseInt(uCfg.femcoBgLogoPct||'',10);
+      if(!isNaN(uPct) && uPct>0){ _bgCfg.sizeMode='pct'; _bgCfg.sizeVal=uPct; return; }
+      const gPct = parseInt(femcoSettings.bgLogoPct||'',10);
+      if(!isNaN(gPct) && gPct>0 && _bgCfg.sizeMode==='pct'){ _bgCfg.sizeVal=gPct; }
+    })();
     const _bgUrl = (_bgCfg.url||'').trim();
     const _bgLower = _bgUrl.toLowerCase();
-    const _bgIsImage = _bgUrl && /\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(_bgLower);
     const _bgIsVideo = _bgUrl && /\.(mp4|webm|ogg)(\?|#|$)/i.test(_bgLower);
     const _bgIsEmbed = _bgUrl && /(youtube\.com|youtu\.be|twitch\.tv)/i.test(_bgLower);
+    // 이미지 CDN/스토리지 URL은 확장자가 없거나 쿼리 뒤에 숨는 경우가 많다.
+    // 명백한 영상/임베드가 아니면 이미지로 취급해야 배경과 오버레이가 함께 적용된다.
+    const _bgIsImage = !!(_bgUrl && !_bgIsVideo && !_bgIsEmbed);
     const _bgBtn = (_bgIsVideo || _bgIsEmbed || (_bgUrl && !_bgIsImage))
       ? `<button class="b2-femco-pill no-export" style="cursor:pointer" onclick="_b2FemcoOpenBgMedia('${univName.replace(/'/g,"\\'")}', '${_bgUrl.replace(/'/g,"\\'")}');event.stopPropagation();">${_bgIsVideo?'🎞️ 배경영상':_bgIsEmbed?'🔗 배경링크':'🖼️ 배경링크'}</button>`
       : '';
@@ -515,7 +536,7 @@ function _b2FemcoView() {
       : (_bgIsVideo || _bgIsEmbed)
         ? `<div style="position:absolute;inset:0;background-image:url('${_bgUrl.replace(/'/g,"%27")}');background-repeat:${_bgRepeat};background-size:${_bgSize};background-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0"></div>`
         : '';
-    const _ovLayer = (_bgIsImage && _bgUrl && BG_OVERLAY>0)
+    const _ovLayer = (_bgUrl && !_bgIsVideo && !_bgIsEmbed && BG_OVERLAY>0)
       ? `<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,${OV_TOP.toFixed(3)}), rgba(2,6,23,${OV_BOT.toFixed(3)}));pointer-events:none;z-index:1"></div>`
       : '';
 
@@ -776,7 +797,7 @@ async function _saveB2FemcoInternal(){
   const fname = '펨코현황판_전체_' + new Date().toISOString().slice(0,10) + '.png';
 
   try{
-    console.log('[펨코] 이미지 저장 시작');
+    window.LOG('펨코', '이미지 저장 시작');
     if (typeof window._captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await window._captureAndSave(tmpDiv, w, h, fname);
     

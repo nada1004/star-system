@@ -165,30 +165,8 @@ function rTotal(C,T){
   const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
   const _noRecordCount = Math.max(0, _visiblePlayers.length - _hasRecordCount);
-  const _kpiBar = totalViewMode==='gallery'
-    ? `<div class="streamer-kpi-grid">
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">표시 스트리머</div>
-          <div class="streamer-kpi-value">${_visiblePlayers.length}</div>
-          <div class="streamer-kpi-sub">현재 필터 기준 표시 인원</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">기록 보유</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_hasRecordCount}</div>
-          <div class="streamer-kpi-sub">전적 있음 ${_hasRecordCount}명 · 전적 없음 ${_noRecordCount}명</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">대학 분포</div>
-          <div class="streamer-kpi-value" style="color:#2563eb">${_activeUnivCount}</div>
-          <div class="streamer-kpi-sub">현재 조건에서 보이는 대학 수</div>
-        </article>
-        <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">프로필 준비</div>
-          <div class="streamer-kpi-value" style="color:#7c3aed">${_photoCount}</div>
-          <div class="streamer-kpi-sub">사진 등록 ${_photoCount}명 · 직책자 ${_roleCount}명</div>
-        </article>
-      </div>`
-    : '';
+  // [삭제됨] 카드형(gallery) 상단 4칸 통계 카드(표시 스트리머/기록 보유/대학 분포/프로필 준비) — rlrj 요청으로 제거
+  const _kpiBar = '';
   // 뷰 전환(카드형/상세형/리스트/심플형) 버튼은 별도의 고정 세그먼트 컨트롤로 분리 —
   // 아래 필터바(가로 스크롤)에 섞여 있으면 모바일에서 원하는 뷰 버튼을 찾으려 계속 스크롤해야 하는 문제가 있었음
   const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">
@@ -484,7 +462,7 @@ function rTotal(C,T){
       <div class="streamer-univ-banner" style="background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;">
         <div class="streamer-univ-meta">
           ${_hdrTextPos === 'left' ? _textHtml : ''}
-          <span class="clickable-univ streamer-univ-badge" onclick="openUnivModal('${escJS(u.name)}')" style="background:${u.color}">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
+          <span class="clickable-univ streamer-univ-badge" onclick="openUnivModal('${escJS(u.name)}')" style="background:${u.color}">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}<span style="color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.55)">${u.name}</span></span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
           ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
         </div>
@@ -977,7 +955,8 @@ function _buildSimpleView(rankMap){
     '.streamer-simple-medal.is-none .streamer-simple-medal-value{color:var(--gray-l)}',
     '@media (max-width:768px){.streamer-simple-row{gap:8px;padding:6px 8px}.streamer-simple-avatar{width:34px;height:34px}.streamer-simple-name-text{font-size:var(--fs-sm)}.streamer-simple-tier,.streamer-simple-record,.streamer-simple-race{font-size:9.5px;padding:2.5px 6px}.streamer-simple-medal{min-width:40px}.streamer-simple-medal-value{font-size:12.5px}.streamer-simple-medal-label{font-size:7px}}',
     'body.dark .streamer-simple-row{background:#0f172a;border-color:rgba(255,255,255,.08)}',
-    'body.dark .streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 10%, #0f172a)}'
+    'body.dark .streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 10%, #0f172a)}',
+    'body.dark .streamer-simple-avatar{background:color-mix(in srgb, var(--c,#6366f1) 26%, #0f172a)}'
   ].join('');
   document.head.appendChild(s);
 })();

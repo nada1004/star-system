@@ -89,6 +89,13 @@ function getRankChangeBadge(playerName, currentRank) {
 }
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
+function _univIconTag(name,size){
+  if(!name) return '';
+  const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
+  if(!url) return '';
+  const s=size||16;
+  return `<img src="${toHttpsUrl(url)}" style="width:${s}px;height:${s}px;object-fit:contain;border-radius:var(--su_univ_logo_radius,6px);flex-shrink:0" onerror="this.style.display='none'">`;
+}
 function _normHexColor(v,fallback){
   const s=String(v||'').trim();
   if(/^#[0-9a-fA-F]{6}$/.test(s)) return s;
@@ -426,8 +433,8 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
   const modeNorm = _normalizeStoredMode(mode);
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm});
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm,tierAtMatch:w.tier||'',oppTierAtMatch:l.tier||''});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm,tierAtMatch:l.tier||'',oppTierAtMatch:w.tier||''});
 }
 
 // (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
@@ -802,6 +809,25 @@ function _rebuildAllPlayerHistoryCore() {
           count++;
         });
       });
+      // (안전장치) 프로리그대회 재생성 필드 누락 방지용 자체 점검.
+      // 위에서 실제로 처리하는 tn의 필드 목록을 여기 한 곳에 명시해두고,
+      // tn에 매치/기록성 데이터로 보이는 배열/객체 필드가 있는데 목록에 없으면
+      // "또 다른 필드를 추가해놓고 재생성 로직 반영을 깜빡한 경우"로 간주해 경고한다.
+      // (constants-game.js 여러 줄에 로직이 흩어져 있어 생기기 쉬운 실수를 잡기 위함 —
+      //  새 필드를 추가했다면 이 목록에도 함께 추가할 것)
+      try {
+        const _PROTOUR_HANDLED_FIELDS = ['groups', 'thirdPlace', 'teamMatches', 'stageRecords', 'gjMatches'];
+        const _PROTOUR_IGNORE_FIELDS = ['id', '_id', 'name', 'type', 'date', 'd', 'createdAt', 'updatedAt', 'settings', 'meta', 'options', 'note', 'notes'];
+        Object.keys(tn || {}).forEach(k => {
+          if (_PROTOUR_HANDLED_FIELDS.includes(k) || _PROTOUR_IGNORE_FIELDS.includes(k) || k.startsWith('_')) return;
+          const v = tn[k];
+          const looksLikeRecordData = (Array.isArray(v) && v.length && typeof v[0] === 'object')
+            || (v && typeof v === 'object' && (Array.isArray(v.games) || Array.isArray(v.sets)));
+          if (looksLikeRecordData && typeof window.WARN === 'function') {
+            window.WARN('rebuildAllPlayerHistory', `proTourneys 필드 '${k}'가 재생성 로직에 반영되지 않은 것 같습니다 — 스트리머 전적 누락 가능성. constants-game.js의 _PROTOUR_HANDLED_FIELDS 목록 확인 필요`, { tnId: tn.id, tnName: tn.name });
+          }
+        });
+      } catch (e) {}
     });
   }
 

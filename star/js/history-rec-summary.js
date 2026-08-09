@@ -70,7 +70,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
           <div class="rec-meta-row">
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
-            ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">🎙️ ${m.caster}</span>`:''}
+            ${m.caster?`<span class="rec-meta-chip rec-meta-chip--amber2">🎙️ ${m.caster}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             ${(_pms.length && mode!=='tt')?`<button class="btn btn-w btn-xs rc-mem-btn" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 ${_pms.length}</button>`:''}
@@ -97,12 +97,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
           ${_sidePanelHTML.left}
           <div class="rec-sum-vs">
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}<span class="rec-team-name">${labelA}</span></span>
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${escJS((mode==='ck'||mode==='pro')?'':m.a)}')"><span class="rec-team-name">${labelA}</span>${(()=>{const n=(mode==='ck'||mode==='pro')?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}</span>
               ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
             </div>
             <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 4px;opacity:0.8">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}<span class="rec-team-name">${labelB}</span></span>
+              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${escJS((mode==='ck'||mode==='pro')?'':m.b)}')">${(()=>{const n=(mode==='ck'||mode==='pro')?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}<span class="rec-team-name">${labelB}</span></span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
 
@@ -480,12 +480,15 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const key = mid ? `${context}-${mode}-mid:${mid}` : `${context}-${mode}-${i}`;
     // 검색용 hay 데이터
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘, 시빌워는 같은 대학)
-    const _iconUnivA=isCivil?_civilUniv:(isCK?'':m.a);
-    const _iconUnivB=isCivil?_civilUniv:(isCK?'':m.b);
+    // 티어(tt)는 실제 대학팀끼리의 경기이므로 대학 아이콘을 표시해야 함 (CK/프로만 아이콘 생략)
+    const _isNoUnivIcon=(mode==='ck'||mode==='pro');
+    const _iconUnivA=isCivil?_civilUniv:(_isNoUnivIcon?'':m.a);
+    const _iconUnivB=isCivil?_civilUniv:(_isNoUnivIcon?'':m.b);
     const iconA=(()=>{const n=_iconUnivA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=_iconUnivB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const _themeCls = '';
-    const _themeStyle = '';
+    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '#64748b';
+    const _themeCls = _rcThemeOn ? ' rc-theme' : '';
+    const _themeStyle = _rcThemeOn ? `--rc-win-rgb:${_hexToRgbStr(_winCol)};` : '';
 
     const MODE_COL = {
       ind:'#2563eb', gj:'#d97706', progj:'#b91c1c',
@@ -555,7 +558,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           ${_sp2.left}
           <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${labelA}${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}</span>
               ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
                 <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
               </button>` : ''}

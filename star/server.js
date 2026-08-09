@@ -3,8 +3,8 @@
  *
  * 기능:
  *  1. 정적 파일 서빙 (HTTP/1.1 + 캐싱 헤더 최적화)
- *  2. POST /api/aibot  → Groq Chat Completions 프록시
- *  3. GET  /api/health → 헬스체크
+ *  2. POST /api/aibot            → Groq Chat Completions 프록시
+ *  3. GET  /api/health           → 헬스체크
  *
  * 캐싱 전략:
  *  - dist/js/chunk-*.js, dist/js/lazy-*.js

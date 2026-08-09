@@ -15,6 +15,142 @@ function proCompBracket(tn) {
       </div>`:''}
     </div>`;
   }
+  const _switcher=(typeof _rBktModeSwitcherHTML==='function')?_rBktModeSwitcherHTML():'';
+  const vm=window._bktViewMode||'tree';
+  if(vm==='compact') return _switcher+_pcBracketCompact(tn);
+  if(vm==='poster') return _switcher+_pcBracketPoster(tn);
+  if(vm==='broadcast') return _switcher+_pcBracketBroadcast(tn);
+  return _switcher+_pcBracketTree(tn);
+}
+/* ── 프로리그/티어대회 대진표 컴팩트·포스터·브로드캐스트형 공용 헬퍼 ──
+   proCompBracket과 동일한 tn.bracket(rounds 배열) 데이터를 그대로 읽어 view-only로 렌더 */
+function _pcBracketMeta(tn){
+  const rounds=tn.bracket;
+  const _pc=name=>players.find(x=>x.name===name)||null;
+  const isTierTourney=tn.type==='tier';
+  const rndLabel=ri=>ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'🥈 4강':ri===rounds.length-3?'🥉 8강':`${Math.pow(2,rounds.length-ri)}강`;
+  const finalMatch=(rounds[rounds.length-1]||[])[0];
+  const champion=finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
+  return {rounds,_pc,isTierTourney,rndLabel,champion};
+}
+function _pcChampBanner(champion,_pc,isTierTourney){
+  if(!champion) return '';
+  const cp=_pc(champion);
+  const cpPhoto=cp?.photo?`<img src="${toHttpsUrl(cp.photo)}" style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
+    `<div style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
+  return `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
+    ${cpPhoto}
+    <div>
+      <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">FINAL CHAMPION</div>
+      <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
+      ${isTierTourney?(cp?.tier?`<div style="font-size:var(--fs-caption);color:rgba(255,255,255,.7)">${cp.tier}${cp.race?' · '+cp.race:''}</div>`:''):(cp?.univ?`<div style="font-size:var(--fs-caption);color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:'')}
+    </div>
+  </div>`;
+}
+function _pcBracketCompact(tn){
+  const {rounds,_pc,isTierTourney,rndLabel,champion}=_pcBracketMeta(tn);
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <span style="font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏆 ${tn.name} 토너먼트</span>
+    <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 컴팩트형 · 라운드별 리스트</span>
+  </div>`+_pcChampBanner(champion,_pc,isTierTourney);
+  rounds.forEach((rnd,ri)=>{
+    h+=`<div style="margin-bottom:14px">
+      <div style="font-size:var(--fs-sm);font-weight:900;color:#fff;padding:6px 12px;background:linear-gradient(135deg,#3b82f6,var(--blue-d));border-radius:8px 8px 0 0;letter-spacing:.5px">${rndLabel(ri)}</div>
+      <div style="border:1.5px solid var(--border);border-top:0;border-radius:0 0 10px 10px;overflow:hidden">`;
+    rnd.forEach((m,mi)=>{
+      const aWin=m.winner==='A', bWin=m.winner==='B';
+      const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
+      const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
+      const hasScore=Array.isArray(m._games)&&m._games.length>1;
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;${mi>0?'border-top:1px solid var(--bg)':''}">
+        <div style="flex:1;min-width:0;text-align:right;font-weight:${aWin?'900':'700'};color:${aWin?'var(--red)':m.a&&m.a!=='TBD'?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.a||'TBD'}${hasScore?` <span style="color:${aWin?'var(--red)':'var(--text3)'}">${scoreA}</span>`:''}</div>
+        <div style="flex-shrink:0;font-size:var(--fs-caption);font-weight:800;color:var(--gray-l)">vs</div>
+        <div style="flex:1;min-width:0;font-weight:${bWin?'900':'700'};color:${bWin?'var(--red)':m.b&&m.b!=='TBD'?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hasScore?`<span style="color:${bWin?'var(--red)':'var(--text3)'}">${scoreB}</span> `:''}${m.b||'TBD'}</div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  return h;
+}
+function _pcBracketPoster(tn){
+  const {rounds,_pc,isTierTourney,rndLabel,champion}=_pcBracketMeta(tn);
+  const _av=(name)=>{
+    if(!name||name==='TBD') return `<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:var(--surface)"></div>`;
+    const p=_pc(name);
+    return p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);object-fit:cover" onerror="this.style.display='none'">`
+      :`<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff">${name[0]}</div>`;
+  };
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <span style="font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏆 ${tn.name} 토너먼트</span>
+    <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 포스터형 · 라운드별 카드</span>
+  </div>`+_pcChampBanner(champion,_pc,isTierTourney);
+  rounds.forEach((rnd,ri)=>{
+    h+=`<div style="margin-bottom:18px">
+      <div style="font-size:var(--fs-sm);font-weight:900;color:var(--blue);margin-bottom:9px;letter-spacing:.5px">${rndLabel(ri)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">`;
+    rnd.forEach(m=>{
+      const aWin=m.winner==='A', bWin=m.winner==='B';
+      const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
+      const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
+      const hasScore=Array.isArray(m._games)&&m._games.length>1;
+      const winC=m.winner?'var(--red)':'var(--border)';
+      h+=`<div style="width:230px;background:var(--white);border:2px solid ${winC}55;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.08)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;gap:8px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0">
+            ${_av(m.a)}
+            <span style="font-size:var(--fs-sm);font-weight:${aWin?'900':'700'};color:${aWin?'var(--red)':m.a&&m.a!=='TBD'?'var(--text2)':'var(--text3)'};text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${m.a||'TBD'}</span>
+          </div>
+          <span style="font-size:11px;font-weight:900;color:var(--gray-l);flex-shrink:0">VS</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0">
+            ${_av(m.b)}
+            <span style="font-size:var(--fs-sm);font-weight:${bWin?'900':'700'};color:${bWin?'var(--red)':m.b&&m.b!=='TBD'?'var(--text2)':'var(--text3)'};text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${m.b||'TBD'}</span>
+          </div>
+        </div>
+        ${hasScore?`<div style="text-align:center;padding:6px;font-weight:900;font-size:var(--fs-md);color:var(--text2);border-top:1px solid var(--bg);background:var(--surface)">${scoreA} : ${scoreB}</div>`:`<div style="text-align:center;padding:6px;font-size:var(--fs-caption);color:var(--gray-l);border-top:1px solid var(--bg);background:var(--surface)">${m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD'?'경기 예정':'대진 확정 전'}</div>`}
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  return h;
+}
+function _pcBracketBroadcast(tn){
+  const {rounds,_pc,isTierTourney,rndLabel,champion}=_pcBracketMeta(tn);
+  const _av=(name)=>{
+    if(!name||name==='TBD') return '';
+    const p=_pc(name);
+    return p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:24px;height:24px;border-radius:var(--su_profile_radius,50%);object-fit:cover" onerror="this.style.display='none'">`
+      :`<div style="width:24px;height:24px;border-radius:var(--su_profile_radius,50%);background:#334155;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff">${name[0]}</div>`;
+  };
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <span style="font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏆 ${tn.name} 토너먼트</span>
+    <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 브로드캐스트형</span>
+  </div>`+_pcChampBanner(champion,_pc,isTierTourney);
+  rounds.forEach((rnd,ri)=>{
+    h+=`<div style="margin-bottom:14px">
+      <div style="display:inline-block;font-size:var(--fs-caption);font-weight:900;color:#fff;background:#0f172a;padding:4px 14px;border-radius:999px;margin-bottom:8px;letter-spacing:1px">${rndLabel(ri)}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+    rnd.forEach(m=>{
+      const aWin=m.winner==='A', bWin=m.winner==='B';
+      const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
+      const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
+      const hasScore=Array.isArray(m._games)&&m._games.length>1;
+      h+=`<div style="display:flex;align-items:stretch;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;background:${aWin?'#b91c1c':'#1e293b'};${!m.winner?'':aWin?'':'opacity:.55'}">
+          ${_av(m.a)}
+          <span style="color:#fff;font-weight:${aWin?'900':'700'};font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.a||'TBD'}</span>
+        </div>
+        <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0 14px;background:#0f172a;color:#fff;font-weight:900;font-size:var(--fs-sm);min-width:64px">${hasScore?`${scoreA} : ${scoreB}`:'VS'}</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:10px 14px;background:${bWin?'#b91c1c':'#1e293b'};${!m.winner?'':bWin?'':'opacity:.55'}">
+          <span style="color:#fff;font-weight:${bWin?'900':'700'};font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">${m.b||'TBD'}</span>
+          ${_av(m.b)}
+        </div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  return h;
+}
+function _pcBracketTree(tn) {
   const rounds = tn.bracket;
   const _pc = name => players.find(x=>x.name===name)||null;
   const isTierTourney = tn.type === 'tier';
@@ -491,8 +627,8 @@ function proCompTourMatchInput(tn){
       </span>`;
     };
     const _srcChip = item.src==='bkt'
-      ? `<span class="rec-meta-chip" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca">🗂️ 대진표</span>`
-      : `<span class="rec-meta-chip" style="background:#f1f5f9;border-color:#cbd5e1;color:#475569">📝 입력</span>`;
+      ? `<span class="rec-meta-chip rec-meta-chip--indigo">🗂️ 대진표</span>`
+      : `<span class="rec-meta-chip rec-meta-chip--gray">📝 입력</span>`;
     const _detailPayload = encodeURIComponent(JSON.stringify({
       title:'프로리그 대회 조별리그 대진표 기록',
       subtitle:`${tn.name||''} · ${_cardRound} · ${displayNo}경기`,

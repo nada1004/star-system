@@ -42,10 +42,11 @@ function _bindPlayerExtraDelegatedEvents(){
   });
 }
 
-function buildPlayerMapStatsHTML(modeHist){
+function buildPlayerMapStatsHTML(modeHist, pName, activeMap){
+  const _regMaps = (typeof maps !== 'undefined' ? maps : (window.maps||[]));
   const mapStats = {};
   (modeHist||[]).forEach(h=>{
-    if(!h.map || h.map==='-' || h.map==='') return;
+    if(!h.map || h.map==='-' || h.map==='' || !_regMaps.includes(h.map)) return;
     if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
     if(h.result==='승') mapStats[h.map].w++;
     else mapStats[h.map].l++;
@@ -55,12 +56,16 @@ function buildPlayerMapStatsHTML(modeHist){
     .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
     .slice(0,8);
   if(mapList.length<2) return '';
+  const safeName = (typeof escJS==='function') ? escJS(pName) : String(pName||'').replace(/'/g,"\\'");
   const mapCards = mapList.map(([mapName,s])=>{
     const t=s.w+s.l;
     const wr=Math.round(s.w/t*100);
     const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
-    return `<div class="pd-map-card" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
-      <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
+    const isOn = !!activeMap && activeMap===mapName;
+    const safeMap = (typeof escJS==='function') ? escJS(mapName) : String(mapName).replace(/'/g,"\\'");
+    const dispMap = (typeof escHTML==='function') ? escHTML(mapName) : mapName;
+    return `<button type="button" onclick="if(typeof _pdSetMapFilter==='function')_pdSetMapFilter('${safeName}','${safeMap}')" class="pd-map-card" title="클릭하면 이 맵의 경기 내역만 아래에서 볼 수 있습니다" style="cursor:pointer;text-align:left;font-family:inherit;margin:0;background:${isOn?'var(--blue-l)':'var(--surface)'};border:1.5px solid ${isOn?'var(--blue)':'var(--border)'};border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
+      <div style="font-size:10px;font-weight:700;color:${isOn?'var(--blue)':'var(--text2)'};margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dispMap}${isOn?' ✓':''}</div>
       <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
         <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
       </div>
@@ -68,10 +73,10 @@ function buildPlayerMapStatsHTML(modeHist){
         <span style="color:${barCol};font-weight:800">${wr}%</span>
         <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
       </div>
-    </div>`;
+    </button>`;
   }).join('');
   return `<div class="su-sec" style="--su-sec-accent:#f59e0b">
-    <div class="su-sec__title">맵별 승률 <small>(2게임 이상)</small></div>
+    <div class="su-sec__title">맵별 승률 <small>(2게임 이상) · 맵을 클릭하면 아래 경기 내역이 필터링됩니다</small></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
   </div>`;
 }

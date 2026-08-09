@@ -243,8 +243,8 @@
       const on = cur===key;
       return `<button type="button" class="sc-mode-chip" data-mode="${key}" onclick="_scSwitchMode('${key}')"
         style="font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;
-        border:1.5px solid ${on?'#0f172a':'rgba(148,163,184,.32)'};
-        background:${on?'#0f172a':'#fff'};color:${on?'#fff':'#334155'}">${label}${on?' ✓':''}</button>`;
+        border:1.5px solid ${on?'var(--text, #0f172a)':'var(--border2, rgba(148,163,184,.32))'};
+        background:${on?'var(--text, #0f172a)':'var(--card, var(--white, #fff))'};color:${on?'#fff':'var(--text2, #334155)'}">${label}${on?' ✓':''}</button>`;
     }).join('');
   }
 
@@ -274,7 +274,7 @@
     const layoutSection = (window._shareMode==='match') ? `
       <div style="height:1px;background:rgba(148,163,184,.22);margin:10px 0"></div>
       ${_scLayoutPickerBodyHTML()}` : '';
-    return `<div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">스타일 전환</div>
+    return `<div style="font-size:11px;font-weight:900;color:var(--text3, #94a3b8);letter-spacing:.06em;margin-bottom:6px">스타일 전환</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">${_scModeChipsHTML()}</div>${layoutSection}`;
   }
 
@@ -314,7 +314,7 @@
     if(!_scCanEditStyle()) return;
     const panel=document.createElement('div');
     panel.id='scStylePicker';
-    panel.style.cssText='position:fixed;z-index:100050;overflow:auto;background:var(--white,#fff);border:1px solid rgba(148,163,184,.28);border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.24);padding:12px';
+    panel.style.cssText='position:fixed;z-index:100050;overflow:auto;background:var(--white,#fff);border:1px solid var(--border, rgba(148,163,184,.28));border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.24);padding:12px;color:var(--text, #0f172a)';
     panel.innerHTML=_scStylePickerBodyHTML();
     const anchor=(evt && evt.currentTarget) || document.getElementById('sc-style-btn');
     panel._scAnchor=anchor || document.body;
@@ -349,8 +349,8 @@
       const on = cur===key;
       return `<button type="button" class="sc-layout-chip" data-layout="${key}" onclick="_scSwitchMatchLayout('${key}')"
         style="font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;
-        border:1.5px solid ${on?'#0f172a':'rgba(148,163,184,.32)'};
-        background:${on?'#0f172a':'#fff'};color:${on?'#fff':'#334155'}">${label}${on?' ✓':''}</button>`;
+        border:1.5px solid ${on?'var(--text, #0f172a)':'var(--border2, rgba(148,163,184,.32))'};
+        background:${on?'var(--text, #0f172a)':'var(--card, var(--white, #fff))'};color:${on?'#fff':'var(--text2, #334155)'}">${label}${on?' ✓':''}</button>`;
     }).join('');
   }
 
@@ -365,7 +365,7 @@
   }
 
   function _scLayoutPickerBodyHTML(){
-    return `<div style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.06em;margin-bottom:6px">레이아웃 전환</div>
+    return `<div style="font-size:11px;font-weight:900;color:var(--text3, #94a3b8);letter-spacing:.06em;margin-bottom:6px">레이아웃 전환</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">${_scMatchLayoutChipsHTML()}</div>`;
   }
 

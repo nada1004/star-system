@@ -63,7 +63,7 @@ function _b2UnivView() {
   </button>`;
   const statsBar = `<div style="margin-bottom:12px">
     <button type="button" class="pill ${window._b2UnivStatsBarOpen?'on':''}" style="width:100%;justify-content:center;padding:10px" onclick="window._b2UnivStatsBarOpen=!window._b2UnivStatsBarOpen;render()">🔍 필터/보기 ${window._b2UnivStatsBarOpen?'▲':'▼'}</button>
-    ${window._b2UnivStatsBarOpen?`<div style="margin-top:8px;padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
+    ${window._b2UnivStatsBarOpen?`<div class="b2-univ-statsbar-panel" style="margin-top:8px;padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
       <div class="b2-race-tier-row b2-stats-subrow">
         <span class="b2-section-label">⚔️ 종족 비중</span>
         ${_uvRaceBar||`<span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">집계 없음</span>`}
@@ -81,7 +81,7 @@ function _b2UnivView() {
     </div>`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:var(--r);padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}.b2-univ-statsbar-grid{display:none!important;}}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:var(--r);padding:8px;box-sizing:border-box;}body.dark .b2-univ-statsbar-panel{background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62))!important;border-color:#334155!important}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}.b2-univ-statsbar-grid{display:none!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -163,6 +163,13 @@ try{
             #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
             #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:10.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px);background:rgba(15,23,42,.55)!important}
             @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-summary{grid-template-columns:1fr}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}#b2RaceTierOverlay .b2rt-groupgrid{grid-template-columns:1fr}}
+            body.dark #b2RaceTierOverlay .su-modal{background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.96));border-color:#334155}
+            body.dark #b2RaceTierOverlay .su-modal-hd{background:linear-gradient(135deg,rgba(30,58,95,.5),rgba(15,23,42,.9));border-bottom-color:#334155}
+            body.dark #b2RaceTierOverlay .b2rt-summarycard,
+            body.dark #b2RaceTierOverlay .b2rt-groupcard{background:rgba(15,23,42,.6);border-color:#334155}
+            body.dark #b2RaceTierOverlay .b2rt-univbtn{background:rgba(15,23,42,.6);border-color:#334155}
+            body.dark #b2RaceTierOverlay .b2rt-univbtn.on{background:linear-gradient(180deg,#1e3a5f,#1e293b);color:#93c5fd;border-color:rgba(96,165,250,.35)}
+            body.dark #b2RaceTierOverlay .b2rt-av{background:linear-gradient(160deg,rgba(148,163,184,.16),rgba(15,23,42,.3))}
           `;
           document.head.appendChild(st);
         }
@@ -383,6 +390,13 @@ try{
             #b2TierUnivOverlay .b2tu-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
             #b2TierUnivOverlay .b2tu-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
             @media (max-width:780px){#b2TierUnivOverlay .su-modal{height:min(920px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2TierUnivOverlay .b2tu-summary{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-groupgrid{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+            body.dark #b2TierUnivOverlay .su-modal{background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.96));border-color:#334155}
+            body.dark #b2TierUnivOverlay .su-modal-hd{background:linear-gradient(135deg,rgba(30,58,95,.5),rgba(15,23,42,.9));border-bottom-color:#334155}
+            body.dark #b2TierUnivOverlay .b2tu-summarycard,
+            body.dark #b2TierUnivOverlay .b2tu-groupcard{background:rgba(15,23,42,.6);border-color:#334155}
+            body.dark #b2TierUnivOverlay .b2tu-filterbtn{background:rgba(15,23,42,.6);border-color:#334155}
+            body.dark #b2TierUnivOverlay .b2tu-filterbtn.on{background:linear-gradient(180deg,#1e3a5f,#1e293b);color:#93c5fd;border-color:rgba(96,165,250,.35)}
+            body.dark #b2TierUnivOverlay .b2tu-av{background:linear-gradient(160deg,rgba(148,163,184,.16),rgba(15,23,42,.3))}
           `;
           document.head.appendChild(st);
         }

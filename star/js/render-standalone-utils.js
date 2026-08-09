@@ -24,13 +24,42 @@ function initPEloChart(name, year){
   if(pts.length<2){canvas.style.display='none';return;}
   const W=canvas.offsetWidth||canvas.parentElement?.offsetWidth||300;
   const H=140;
-  canvas.width=W;canvas.height=H;
+  // 고해상도(레티나) 화면에서 선이 흐릿해지는 것 방지: 실제 캔버스 픽셀은 DPR배로 그리고
+  // CSS 크기는 그대로 유지, 컨텍스트를 DPR만큼 확대해서 좌표계는 기존 로직 그대로 사용
+  const _DPR=window.devicePixelRatio||1;
+  canvas.width=Math.round(W*_DPR);canvas.height=Math.round(H*_DPR);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
   const pad={t:14,r:14,b:32,l:46};
+  // 잘못된(NaN) elo 값이 섞여 있으면 조용히 빈 그래프로 그려지는 대신
+  // 콘솔에 경고를 남기고 해당 포인트를 제외해서 최소한 나머지는 정상 표시되게 함
+  const _badPts = pts.filter(x=>!Number.isFinite(x.elo));
+  if(_badPts.length){
+    try{ console.warn('[ELO차트] 잘못된 elo 값 감지, 제외됨:', name, _badPts); }catch(e){}
+  }
+  const pts2 = pts.filter(x=>Number.isFinite(x.elo));
+  if(pts2.length<2){ canvas.style.display='none'; return; }
+  pts.length=0; pts.push(...pts2); pts.forEach((pt,i)=>pt.i=i);
+  // 역산 불일치(직전 값 + 기록된 델타 ≠ 이 포인트 값) 지점을 "비정상 점프"로 표시
+  // → 실제 경기 결과가 아니라 그래프 데이터 재구성 과정의 오차일 가능성이 높다는 신호
+  pts.forEach((pt,i)=>{
+    if(i===0){ pt._anom=false; return; }
+    const expected = pts[i-1].elo + (pt.delta||0);
+    pt._anom = Math.abs(pt.elo - expected) > 5;
+  });
   const minE=Math.min(...pts.map(x=>x.elo))-15;
   const maxE=Math.max(...pts.map(x=>x.elo))+15;
-  const mapX=i=>(i/(pts.length-1||1))*(W-pad.l-pad.r)+pad.l;
+  // 날짜 기반 x축: 실제 경기 간격(공백기 포함)을 반영. 날짜가 없거나 전부 같은 날이면
+  // 기존 방식(균등 인덱스 간격)으로 안전하게 폴백.
+  const _ts=pts.map(pt=>{const t=Date.parse(pt.date||'');return Number.isFinite(t)?t:NaN;});
+  const _tsValid = _ts.every(Number.isFinite) && (Math.max(..._ts)-Math.min(..._ts))>0;
+  const _t0=_tsValid?Math.min(..._ts):0, _t1=_tsValid?Math.max(..._ts):1;
+  const xs=pts.map((pt,i)=> _tsValid
+    ? pad.l + ((_ts[i]-_t0)/(_t1-_t0))*(W-pad.l-pad.r)
+    : (i/(pts.length-1||1))*(W-pad.l-pad.r)+pad.l);
+  const mapX=i=>xs[i];
   const mapY=e=>H-pad.b-((e-minE)/(maxE-minE||1))*(H-pad.t-pad.b);
   const ctx=canvas.getContext('2d');
+  ctx.setTransform(_DPR,0,0,_DPR,0,0);
   ctx.clearRect(0,0,W,H);
   ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
   for(let g=0;g<=3;g++){
@@ -41,13 +70,26 @@ function initPEloChart(name, year){
   }
   ctx.strokeStyle='#cbd5e1';ctx.beginPath();
   ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
-  ctx.beginPath();
-  pts.forEach((pt,i)=>{const x=mapX(i),y=mapY(pt.elo); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-  ctx.strokeStyle='#3b82f6';ctx.lineWidth=2.5;ctx.stroke();
+  // 비정상 점프 구간은 점선 주황으로, 나머지는 기존처럼 파란 실선으로
+  pts.forEach((pt,i)=>{
+    if(i===0) return;
+    const x0=mapX(i-1),y0=mapY(pts[i-1].elo),x1=mapX(i),y1=mapY(pt.elo);
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);
+    if(pt._anom){ctx.strokeStyle='#f59e0b';ctx.setLineDash([4,3]);ctx.lineWidth=2;}
+    else{ctx.strokeStyle='#3b82f6';ctx.setLineDash([]);ctx.lineWidth=2.5;}
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // 점(마커)이 너무 많으면(경기수 많음) 서로 겹쳐 뭉개지므로, 일정 개수 이상이면
+  // 매 경기 점은 생략하고 시작/끝/이상치 지점만 표시해 가독성을 유지
+  const _denseMode = pts.length>80;
   pts.forEach(pt=>{
+    const isEndpoint = pt.i===0 || pt.i===pts.length-1;
+    if(_denseMode && !pt._anom && !isEndpoint) return;
     const x=mapX(pt.i),y=mapY(pt.elo);
-    ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);
-    ctx.fillStyle=pt.result==='승'?'#22c55e':'#ef4444';ctx.fill();
+    const r = pt._anom ? 4.5 : 3.5;
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=pt._anom?'#f59e0b':(pt.result==='승'?'#22c55e':(pt.result==='무'?'#94a3b8':'#ef4444'));ctx.fill();
     ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
   });
   ctx.fillStyle='#64748b';ctx.font='10px sans-serif';ctx.textAlign='center';
@@ -65,7 +107,8 @@ function initPEloChart(name, year){
       pts.forEach((pt,i)=>{const d=Math.abs(mapX(pt.i)-mx);if(d<md){md=d;ci=i;}});
       if(md<28){
         const pt=pts[ci];const sign=pt.delta>=0?'+':'';
-        tip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#86efac':'#fca5a5'}">${pt.result}</span><br>${sign}${pt.delta} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>`;
+        const _anomNote = pt._anom ? `<br><span style="color:#fbbf24">⚠ 데이터 불일치 의심 지점</span>` : '';
+        tip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#86efac':(pt.result==='무'?'#cbd5e1':'#fca5a5')}">${pt.result}</span><br>${sign}${pt.delta} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>${_anomNote}`;
         const tx=mapX(ci)*(rect.width/W);
         const ty=mapY(pt.elo)*(rect.height/H);
         tip.style.display='block';
@@ -105,7 +148,7 @@ window.openStarSystemInfo = function(){
           </div>
 
           <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 3점 체제)</div>
+            <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 ${(window.SS_CONST||{PTS_SAME:3}).PTS_SAME}점 체제)</div>
             <div style="overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:#fff">
               <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
                 <thead>
@@ -116,22 +159,24 @@ window.openStarSystemInfo = function(){
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">동일 티어 (0)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+3</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-3</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">상위 티어 (+1)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+5</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-5</td></tr>
-                  <tr><td style="padding:8px">하위 티어 (-1)</td><td style="padding:8px;color:#16a34a;font-weight:900">+2</td><td style="padding:8px;color:#dc2626;font-weight:900">-2</td></tr>
+                  ${(()=>{ const C=window.SS_CONST||{PTS_SAME:3,PTS_UP:5,PTS_DOWN:2}; return `
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">동일 티어 (0)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+${C.PTS_SAME}</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-${C.PTS_SAME}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">상위 티어 (+1)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+${C.PTS_UP}</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-${C.PTS_UP}</td></tr>
+                  <tr><td style="padding:8px">하위 티어 (-1)</td><td style="padding:8px;color:#16a34a;font-weight:900">+${C.PTS_DOWN}</td><td style="padding:8px;color:#dc2626;font-weight:900">-${C.PTS_DOWN}</td></tr>
+                  `; })()}
                 </tbody>
               </table>
             </div>
             <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.55">
               ※ 제로섬(Zero-sum): 승자 +X / 패자 -X (경기 단위로 총점 보존)<br>
-              ※ 현재 버전은 “현재 티어 기준”으로 상대 티어 차이를 계산합니다. (경기 당시 티어까지 정확히 하려면 기록에 tierAtMatch 저장이 필요)
+              ※ 2026-08-02 이후 등록된 경기는 “경기 당시 티어” 스냅샷으로 정확히 계산합니다. 그 이전 기록(스냅샷 없음)은 현재 티어로 대체 계산됩니다.
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">4) 승강급 기준</div>
             <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">
-              시작점수 100점. <b>130점</b> 도달 시 <b>승급 검증</b>, <b>70점 미만</b>이면 <b>강등 위기</b>.
+              ${(()=>{ const C=window.SS_CONST||{START:100,PROMO_THRESHOLD:130,DEMOTE_THRESHOLD:70}; return `시작점수 ${C.START}점. <b>${C.PROMO_THRESHOLD}점</b> 도달 시 <b>승급 검증</b>, <b>${C.DEMOTE_THRESHOLD}점 미만</b>이면 <b>강등 위기</b>.`; })()}
             </div>
           </div>
         </div>

@@ -11,13 +11,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="dist/css/bundle.css?v=6caae2fd60">
+<link rel="stylesheet" href="dist/css/bundle.css?v=0f94c033d3">
 <!-- /* [Z-IDX] */ -->
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const SWV = '20260708-01';
+    const SWV = '20260803-darkfix9';
     try{
       const prev = localStorage.getItem('su_sw_v') || '';
       if(prev !== SWV && navigator.serviceWorker.controller){
@@ -27,7 +27,7 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
-    navigator.serviceWorker.register('/sw.js?v=20260708-01', { scope: '/' })
+    navigator.serviceWorker.register('/sw.js?v=20260803-darkfix9', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
         try{ reg.update(); }catch(e){}
@@ -407,7 +407,7 @@ if ('serviceWorker' in navigator) {
   <div class="umbox" style="width:780px;padding-bottom:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="mtitle" id="grpMatchTitle" style="margin-bottom:0">경기 입력</div>
-      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
+      <button class="btn btn-w btn-sm" onclick="if(typeof grpCancelMatchModal==='function')grpCancelMatchModal();else cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
     </div>
     <div id="grpMatchBody"></div>
   </div>

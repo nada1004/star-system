@@ -305,7 +305,7 @@ function compSummaryListHTML(context){
           return `
         <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
+            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${escJS(a)}')">${a}</span>`:''}
             ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
               <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
             </button>` : ''}
@@ -320,7 +320,7 @@ function compSummaryListHTML(context){
             ${aWin ? `<span style="font-size:var(--fs-caption);color:#dc2626;font-weight:700">${a} 승</span>` : bWin ? `<span style="font-size:var(--fs-caption);color:#dc2626;font-weight:700">${b} 승</span>` : ''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
+            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${escJS(b)}')">${b}</span>`:''}
             ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
               <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
             </button>` : ''}
@@ -924,7 +924,7 @@ function openHistDetailModal(key){
         const _icon = (name)=>{
           try{
             const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
-            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`;
+            if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;background:transparent;border:none;border-radius:0;padding:0" onerror="this.style.display='none'">`;
           }catch(e){}
           return '';
         };
@@ -1063,8 +1063,8 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
       const winBorderA=pca+'66',winBorderB=pcb+'66';
       const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pca}12;border:1px solid ${pca}33;`;
       const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;opacity:0.72;`):`display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:${pcb}12;border:1px solid ${pcb}33;`;
-      const cA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
-      const cB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cA=g.playerA?`onclick="openPlayerModal('${escJS(g.playerA)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
+      const cB=g.playerB?`onclick="openPlayerModal('${escJS(g.playerB)}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
       const mapStr=g.map?`<span style="background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px">${g.map}</span>`:'';
       const teamANameHTML = `${_histSearchTeamBadge(sideA)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideA)}</strong>`;
       const teamBNameHTML = `${_histSearchTeamBadge(sideB)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideB)}</strong>`;
@@ -1651,7 +1651,7 @@ function histProCompTeamHTML(_omitBar) {
           <div class="rec-topline">
             <div class="rec-meta-row">
               <span class="rec-meta-chip">📅 ${tm.d||'날짜 미정'}</span>
-              <span class="rec-meta-chip" style="background:#e0f2fe;border-color:#bae6fd;color:#0284c7">팀전</span>
+              <span class="rec-meta-chip rec-meta-chip--blue">팀전</span>
               <span class="rec-meta-chip" style="background:${aWin?colA:bWin?colB:'#64748b'};border-color:${aWin?colA:bWin?colB:'#64748b'};color:#fff;cursor:pointer" onclick="window.openProCompRecordDetailPopup('${_teamDetailPayload}')" title="경기 상세 열기">${tm.sa||0}:${tm.sb||0}</span>
               <span class="rec-meta-chip">${games.length}경기</span>
             </div>
@@ -1811,7 +1811,7 @@ function openProMembersPopup(teamLabel, teamColor, members){
     }).join('');
 
     modal.innerHTML = `
-      <div class="mbox" style="background:#ffffff;border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div class="mbox" style="background:var(--white);border-radius:var(--r2);max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
         <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:move;user-select:none">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};flex-shrink:0"></span>

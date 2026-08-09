@@ -102,7 +102,7 @@ function _cfgSecGroup3(ctx){
       <div>
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on');try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">${t}전</button>`).join('')}
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on');try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">${t}전</button>`).join('')}
         </div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
       </div>
@@ -225,6 +225,15 @@ function _cfgSecGroup3(ctx){
   </details>
   ${_scfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
     <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:var(--fs-sm);font-weight:600;color:var(--text2);min-width:140px">🔆 대학 배경 밝기(전체):</label>
+        <input type="range" id="cfg-b2-bgimg-alpha" min="0" max="100" value="${b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
+          oninput="document.getElementById('cfg-b2-bgimg-alpha-val').textContent=this.value+'%';clearTimeout(window._b2ImgAlphaLiveT);window._b2ImgAlphaLiveT=setTimeout(()=>{if(typeof setBoardBgAlphaGlobal==='function')setBoardBgAlphaGlobal(this.value,true);},120)">
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:700" id="cfg-b2-bgimg-alpha-val">${b2BgImgAlpha}%</span>
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:8px">모든 대학(로고형 배경 포함)이 같은 밝기값을 사용합니다. 특정 대학만 다르게 하려면 아래 목록에서 개별 설정하세요.</div>
+    </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
   </details>
   ${_scfgD('sync','🔄 데이터 동기화')}
@@ -322,7 +331,8 @@ function _cfgSecGroup3(ctx){
     </div>
   </details>
   ${_scfgD('b2layout','📐 이미지탭 레이아웃')}
-    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 조절하면 바로 반영됩니다.</div>
+    <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;margin-bottom:6px">✓ 실시간 미리보기</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-b" onclick="cfgAutoFitBoard()">📱 이미지탭 자동 맞춤(원클릭)</button>
@@ -334,7 +344,7 @@ function _cfgSecGroup3(ctx){
           <span id="cfg-b2-left-size-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">55%</span>
         </div>
         <input type="range" id="cfg-b2-left-size" min="30" max="70" step="1" value="55" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%'">
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%';clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
       <div>
@@ -343,29 +353,29 @@ function _cfgSecGroup3(ctx){
           <span id="cfg-b2-right-size-val" style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">45%</span>
         </div>
         <input type="range" id="cfg-b2-right-size" min="30" max="70" step="1" value="45" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%'">
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%';clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">PC 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">태블릿 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div>
           <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">모바일 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700">
+          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" oninput="clearTimeout(window._b2LayoutLiveT);window._b2LayoutLiveT=setTimeout(()=>{if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true);},150)">
         </div>
         <div style="display:flex;align-items:flex-end;padding-bottom:4px">
           <div style="display:flex;flex-direction:column;gap:8px">
             <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:700">
-              <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절(좌우 비율)
+              <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px" onchange="if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true)"> 자동 크기 조절(좌우 비율)
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:700">
-              <input type="checkbox" id="cfg-b2-auto-height" checked style="width:15px;height:15px"> 모바일/태블릿 높이 자동 맞춤(추천)
+              <input type="checkbox" id="cfg-b2-auto-height" checked style="width:15px;height:15px" onchange="if(typeof saveB2LayoutSettings==='function')saveB2LayoutSettings(true)"> 모바일/태블릿 높이 자동 맞춤(추천)
             </label>
           </div>
         </div>
@@ -426,10 +436,40 @@ function _cfgSecGroup3(ctx){
               <div class="srow" style="gap:10px;align-items:center;flex-wrap:wrap">
                 <div class="cdot" style="background:${u.color||'#64748b'}"></div>
                 <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
-                <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('su_femco_settings')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+                <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('b2_femco_settings_v1')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
                   oninput="univCfg[${i}].logoSizeFemco=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
                 <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'px':'(기본)'}</span>
                 <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeFemco;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='150';const s=p.querySelector('span');if(s)s.textContent='(기본)';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </details>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">배경 크기(%)</div>
+        <input type="range" id="cfg-femco-bgLogoPct" min="10" max="220" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgLogoPctNum').value=this.value;cfgFemcoUpd('bgLogoPct',this.value)">
+        <input type="number" id="cfg-femco-bgLogoPctNum" min="10" max="220" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgLogoPct').value=this.value;cfgFemcoUpd('bgLogoPct',this.value)">
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:-6px">로고형 배경(대학 로고 배경) 크기 기본값입니다. 100 = 카드 가로 100%</div>
+      <details style="border:1px dashed var(--border2);border-radius:12px;padding:10px 12px;background:var(--white)" onclick="event.stopPropagation()">
+        <summary style="cursor:pointer;font-weight:900;color:var(--text2);list-style:none" onclick="event.stopPropagation()">🖼️ 대학별 배경 크기 (펨코스타일) <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:600">(선택)</span></summary>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:8px 0 10px;line-height:1.6">
+          위의 “배경 크기(%)”가 <b>기본(공통)</b>이고, 아래는 대학별 <b>예외값</b>입니다. 초기화하면 공통값을 따릅니다.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>{
+            const _v = parseInt(u.femcoBgLogoPct||'',10);
+            const cur = isNaN(_v) ? '' : Math.max(10, Math.min(220,_v));
+            const _def = (()=>{try{return Math.max(10,Math.min(220,parseInt((J('b2_femco_settings_v1')||{}).bgLogoPct||42,10)||42));}catch(e){return 42;}})();
+            return `
+              <div class="srow" style="gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+                <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+                <input type="range" min="10" max="220" step="1" value="${cur||_def}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+                  oninput="univCfg[${i}].femcoBgLogoPct=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'%';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
+                <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'%':'(기본)'}</span>
+                <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].femcoBgLogoPct;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='${_def}';const s=p.querySelector('span');if(s)s.textContent='(기본)';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
               </div>
             `;
           }).join('')}
@@ -561,6 +601,12 @@ function _cfgSecGroup3(ctx){
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">티어 아이콘 좌우 여백</div>
+        <input type="range" id="cfg-femco-tierBadgePadX" min="4" max="12" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-tierBadgePadXNum').value=this.value;cfgFemcoUpd('tierBadgePadX',this.value)">
+        <input type="number" id="cfg-femco-tierBadgePadXNum" min="4" max="12" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-tierBadgePadX').value=this.value;cfgFemcoUpd('tierBadgePadX',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">⭐ 아이콘 크기</div>
         <input type="range" id="cfg-femco-starSize" min="10" max="28" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-starSizeNum').value=this.value;cfgFemcoUpd('starSize',this.value)">
         <input type="number" id="cfg-femco-starSizeNum" min="10" max="28" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-starSize').value=this.value;cfgFemcoUpd('starSize',this.value)">
@@ -631,7 +677,7 @@ function _cfgSecGroup3(ctx){
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">대학별 설정</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 선택</div>
-        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
+        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields(this.value);try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 색상</div>
@@ -653,6 +699,15 @@ function _cfgSecGroup3(ctx){
         • 이미지/GIF: 대학 카드 배경으로 적용<br>
         • MP4/WEBM: 대학 카드에 “배경영상” 버튼 표시(클릭 재생)<br>
         • 유튜브/트위치: “배경링크” 버튼 표시(새창)
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">현황판 배경 밝기</div>
+        <input type="range" id="cfg-femco-boardBgAlpha" min="0" max="100" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-boardBgAlphaNum').value=this.value" onchange="window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+        <input type="number" id="cfg-femco-boardBgAlphaNum" min="0" max="100" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-boardBgAlpha').value=this.value;window.cfgFemcoSetBoardBgAlpha&&window.cfgFemcoSetBoardBgAlpha(this.value)">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:-4px">
+        <button class="btn btn-xs" onclick="window.cfgFemcoResetBoardBgAlpha&&window.cfgFemcoResetBoardBgAlpha()">전체값 사용</button>
+        <span id="cfg-femco-boardBgAlphaHint" style="font-size:var(--fs-caption);color:var(--gray-l)">전체값 사용 중</span>
       </div>
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">배경 이미지 투명도</div>

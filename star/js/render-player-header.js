@@ -14,6 +14,17 @@ function _bindPlayerHeaderDelegatedEvents(){
   });
 }
 
+// pr-level-num은 밝은 배경 기준 어두운 회색이라, 어두운 히어로 헤더 위에서는 흰색으로 덮어씀 (1회만 주입)
+// + 게이지 트랙이 밝은 배경(var(--border2)) 기준이라 어두운 히어로 위에서 거의 안 보이던 문제 수정
+try{
+  if(typeof document !== 'undefined' && !document.getElementById('pd-hero-levelbadge-style')){
+    var _pdLvlStyleEl = document.createElement('style');
+    _pdLvlStyleEl.id = 'pd-hero-levelbadge-style';
+    _pdLvlStyleEl.textContent = '.pd-hero-levelbadge .pr-level-num{color:rgba(255,255,255,.92)}\n.pd-hero-levelbadge .pr-level-badge{border:1px solid rgba(255,255,255,.14)!important;background:rgba(255,255,255,.05)!important;backdrop-filter:blur(6px);padding:2px 10px 2px 4px!important;box-shadow:0 2px 8px rgba(0,0,0,.08)}\n.pd-hero-levelbadge .pr-level-bar{width:56px;height:6px;background:rgba(0,0,0,.22);box-shadow:inset 0 1px 2px rgba(0,0,0,.28)}\n.pd-hero-levelbadge .pr-level-bar-fill{box-shadow:0 0 4px rgba(255,255,255,.4);min-width:2px}';
+    document.head.appendChild(_pdLvlStyleEl);
+  }
+}catch(e){}
+
 function buildPlayerHeaderCardHTML(opts){
   const {
     player, hdrBg='', hdrBgLayer=null, photoHTML='', channelHTML='', col='',
@@ -39,6 +50,20 @@ function buildPlayerHeaderCardHTML(opts){
   const recent10Wins = recent10.filter(h=>h?.result==='승').length;
   const recent10Losses = recent10.length - recent10Wins;
   const recent10Rate = recent10.length ? Math.round((recent10Wins/recent10.length)*100) : 0;
+
+  // 상태(활동중/비활동) — 최근 6개월 내 경기 기록이 있어야 '활동중'으로 표시
+  const _SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
+  let _lastMatchMs = null;
+  for (let i = 0; i < histAll.length; i++) {
+    const _dStr = histAll[i] && histAll[i].date;
+    if (typeof _dStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(_dStr)) {
+      const _ms = new Date(_dStr + 'T00:00:00').getTime();
+      if (!isNaN(_ms) && (_lastMatchMs === null || _ms > _lastMatchMs)) _lastMatchMs = _ms;
+    }
+  }
+  const _isRecentlyActive = _lastMatchMs !== null && (Date.now() - _lastMatchMs) <= _SIX_MONTHS_MS;
+  const _statusLabel = p.retired ? '은퇴' : (_isRecentlyActive ? '활동중' : '비활동');
+  const _statusColor = p.retired ? '#94a3b8' : (_isRecentlyActive ? '#0f172a' : '#94a3b8');
   const quickCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
   const quickCardBd = 'rgba(226,232,240,.92)';
   const quickLabelCol = '#475569';
@@ -56,26 +81,43 @@ function buildPlayerHeaderCardHTML(opts){
   }[p.race] || { chip:'#475569' };
   const univAccent = /^#|^rgb|^hsl/i.test(String(col||'')) ? String(col) : quickValueCol;
   const gradeTheme = eloVal>=1500
-    ? { color:'#b45309' }
+    ? { color:'#9a3412' }
     : eloVal>=1400
-      ? { color:'#7e22ce' }
+      ? { color:'#6b21a8' }
       : eloVal>=1300
-        ? { color:'#0369a1' }
+        ? { color:'#075985' }
         : eloVal>=1200
-          ? { color:'#a16207' }
+          ? { color:'#854d0e' }
           : eloVal>=1100
-            ? { color:'#64748b' }
-            : { color:'#92400e' };
+            ? { color:'#475569' }
+            : { color:'#7c2d12' };
   const pointsVal = Number(p.points||0);
   const pointsColor = pointsVal>0 ? cWin : pointsVal<0 ? cLoss : '#64748b';
 
+  // 기록(경기) 자체가 없는 선수는 ELO가 기본값(1200)이라 '골드'처럼 보이는 게 부적절 → 등급 자체를 비워서 표시
+  const _hasRecord = tot > 0;
+
   // ELO 등급 레이블
-  const eloGrade = eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE';
-  const eloGradeColor = gradeTheme.color;
+  const eloGrade = !_hasRecord ? '-' : (eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE');
+  const eloGradeColor = !_hasRecord ? '#94a3b8' : gradeTheme.color;
+
+  // ELO 패널(어두운 글래스 패널, 히어로 사진 위)용 별도 밝은 톤 — 위 eloGradeColor는 밝은 배경(등급 퀵카드)
+  // 기준이라 어두운 패널 위에선 대비가 낮음(특히 SILVER 슬레이트 그레이가 거의 안 보임)
+  const eloGradeColorOnDark = !_hasRecord ? 'rgba(255,255,255,.55)' : (
+    eloVal>=1500 ? '#ff8095' :
+    eloVal>=1400 ? '#e879f9' :
+    eloVal>=1300 ? '#38bdf8' :
+    eloVal>=1200 ? '#fcd34d' :
+    eloVal>=1100 ? '#f8fafc' :
+    '#fb923c'
+  );
 
   // 승률 바
   const wrBarW = Math.max(0, Math.min(100, wr));
   const wrColor = wr>=60 ? '#16a34a' : wr>=50 ? '#0f766e' : wr>=40 ? '#b45309' : '#dc2626';
+
+  // 승수 기반 레벨/등급 배지 (통계탭 레벨/등급 순위표와 동일 로직) — 이름 옆에 간단히 표시
+  const _levelBadgeHTML = (typeof _prLevelBadgeHTML === 'function') ? `<span class="pd-hero-levelbadge">${_prLevelBadgeHTML(p)}</span>` : '';
 
   const statsBlock = `
     <div class="pd-hero-stats" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
@@ -98,7 +140,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
-        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${_statusColor}">${_statusLabel}</div>
       </div>
     </div>`;
 
@@ -108,7 +150,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:var(--r2);padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:10px;font-weight:1000;color:${eloGradeColorOnDark};letter-spacing:.8px;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${eloGrade}</div>
         ${eloSparkHTML?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
       </div>
     </div>`;
@@ -119,23 +161,24 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-elo-panel-inner" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:1px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:24px;font-weight:1000;color:#fff;line-height:1.1">${eloVal}</div>
-        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor}">${eloGrade}</div>
+        <div class="pd-elo-grade" style="font-size:10px;font-weight:1000;color:${eloGradeColorOnDark};letter-spacing:.8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${eloGrade}</div>
       </div>
       ${eloSparkHTML?`<div style="flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:7px 8px;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
     </div>`;
 
   const photoBorder = `width:${pmPhotoSz+14}px;height:${pmPhotoSz+14}px;border-radius:var(--su_profile_radius,${pmPhotoR+6}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.14);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 10px 28px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.1));backdrop-filter:blur(8px)`;
 
+  const _glassChipShadow = 'box-shadow:0 2px 8px rgba(0,0,0,.08);';
   const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
-    style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}">
+    style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.14);font-size:${pmMetaFs}px;padding:2px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:600;backdrop-filter:blur(6px);${_glassChipShadow}${p.univ&&p.univ!=='무소속'?'cursor:pointer':''}">
     ${gUI(p.univ,'12px')}${pUnivSafe}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
-  const raceBadge = `<span class="pd-chip" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:5px">
-    <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||''} ${RNAME[p.race]||''}</span>`;
-
-  const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
+  // 티어 + 종족을 하나의 유리질감 칩으로 묶어 ELO 패널과 톤을 통일 (따로 떠 있던 플레인 텍스트 → 그룹핑된 칩)
+  const tierRaceBadge = (p.tier || p.race) ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:2px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);font-size:${pmMetaFs}px;font-weight:600;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.2);${_glassChipShadow}">
+    ${p.tier?`<span>${(typeof _TIER_LABEL_MAP!=='undefined' && _TIER_LABEL_MAP[p.tier]) || p.tier}</span>`:''}${(p.tier&&p.race)?'<span style="opacity:.4">·</span>':''}${p.race?`<span>${p.race} ${RNAME[p.race]||''}</span>`:''}
+  </span>` : '';
   const quickRail = `
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
@@ -167,13 +210,18 @@ function buildPlayerHeaderCardHTML(opts){
     <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
       <div class="pd-hero-photo ph-swap" style="${photoBorder}">${photoHTML}</div>
       <div class="pd-hero-meta" style="min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
-          ${tierBadge}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${tierRaceBadge}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          ${_levelBadgeHTML}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${univBadge}${raceBadge}${channelHTML}
+          ${univBadge}${channelHTML}
         </div>
       </div>
       ${eloPanel}
@@ -186,10 +234,13 @@ function buildPlayerHeaderCardHTML(opts){
         <div class="pd-hero-meta" style="min-width:0;flex:1">
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
-            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
+            ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierRaceBadge}
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
+            ${_levelBadgeHTML}
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            ${univBadge}${raceBadge}${channelHTML}
+            ${univBadge}${channelHTML}
           </div>
         </div>
       </div>

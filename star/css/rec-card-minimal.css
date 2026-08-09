@@ -27,6 +27,8 @@
   box-shadow:0 6px 20px rgba(15,23,42,.09) !important;
 }
 body.dark .rec-summary{
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62)) !important;
+  border-color:#334155 !important;
   box-shadow:0 1px 2px rgba(0,0,0,.18) !important;
 }
 body.dark .rec-summary:hover,
@@ -48,6 +50,10 @@ body.dark .rec-summary.detail-open{
 .rec-sum-score:hover{
   border-color:var(--border2) !important;
 }
+body.dark .rec-sum-score{
+  background:rgba(15,23,42,.6) !important;
+  border-color:#334155 !important;
+}
 
 /* 상세 영역: 서피스 그라데이션 대신 얇은 구분선 + 플랫 화이트 */
 .rec-detail-area{
@@ -57,6 +63,10 @@ body.dark .rec-summary.detail-open{
 }
 .rec-detail-area.open{
   box-shadow:none !important;
+}
+body.dark .rec-detail-area{
+  background:rgba(15,23,42,.55) !important;
+  border-top-color:#334155 !important;
 }
 
 /* 빈 상태(empty-state) 아이콘 자리 정리: 이모지 제거 후 여백만 살짝 축소 */
@@ -101,7 +111,8 @@ body.dark .rec-summary.detail-open{
   transform:translateY(-1px);
 }
 body.dark .hist-all-minicard{
-  background:var(--surface);
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62));
+  border-color:#334155;
   box-shadow:0 1px 2px rgba(0,0,0,.18);
 }
 body.dark .hist-all-minicard:hover{

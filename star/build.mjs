@@ -53,7 +53,12 @@ const CORE_FILES = [
   'js/modal-drag.js',
   'js/data.js',
   'js/year-utils.js',
-  'js/auth.js',
+  'js/auth-crypto.js',
+  'js/auth-remote-sync.js',
+  'js/auth-session.js',
+  'js/auth-login-flow.js',
+  'js/auth-game-edit.js',
+  'js/auth-ui-utils.js',
   'js/settings-sync/merge.js',
   'js/settings-sync/gist-io.js',
   'js/settings-sync/signal.js',
@@ -78,7 +83,13 @@ const CORE_FILES = [
   'js/settings-presets.js',
   'js/settings-femco-cfg.js',
   'js/settings-cfg-modal.js',
-  'js/settings-cfg-apply.js',
+  'js/settings-cfg-nav.js',
+  'js/settings-cfg-view-toggle.js',
+  'js/settings-cfg-univ-order.js',
+  'js/settings-cfg-qa-dryrun.js',
+  'js/settings-cfg-search.js',
+  'js/settings-cfg-gistsync.js',
+  'js/settings-cfg-legacy-openep.js',
   'js/settings-cfg-misc.js',
   'js/settings-render-reccard.js',
   'js/settings-render-tourneycard.js',
@@ -99,19 +110,27 @@ const CORE_FILES = [
   'js/settings-profile-ui.js',
   'js/settings-match-detail.js',
   'js/settings-player-detail.js',
+  'js/settings-univ-detail.js',
   'js/render-lazy-utils.js',
   'js/render-core.js',
   'js/render-nav-lazy.js',
   'js/render-iconify-ui.js',
-  'js/render-capture-utils.js',
+  'js/render-capture-core.js',
+  'js/render-capture-colorfix.js',
+  'js/render-capture-news.js',
+  'js/render-capture-poster-minimal.js',
+  'js/render-capture-basic.js',
+  'js/render-capture-briefing-flow.js',
   'js/render-share-utils.js',
   'js/render-merged-tabs.js',
   'js/render-standalone-utils.js',
   'js/render-player-filters.js',
+  'js/stats-player-level.js',
   'js/render-player-header.js',
   'js/render-player-compute.js',
   'js/render-player-style-prep.js',
   'js/render-player-detail.js',
+  'js/render-player-detail-modes.js',
   'js/render-player-detail-prep.js',
   'js/render-player-stats.js',
   'js/render-player-recent-history.js',
@@ -123,21 +142,21 @@ const CORE_FILES = [
   'js/render-univ-compute.js',
   'js/render-univ-style-prep.js',
   'js/render-univ-detail.js',
+  'js/render-univ-detail-modes.js',
   'js/render-univ-recent.js',
   'js/render-univ-actions.js',
   'js/render-player-modal-entry.js',
   'js/render-match-id-prepare.js',
-  'js/vs.js',
-  // ⚡ (성능) 첫 화면(전체 스트리머 리스트, curTab='total')이 의존하는 렌더 함수(rTotal)와
-  // 그 상태 변수들을 코어 청크로 이동. 원래 chunk-search.js(3번째로 실행)에 있어서
-  // chunk-match.js(경기기록, 초기 화면과 무관)까지 다 실행된 뒤에야 rTotal이 정의되어
-  // 첫 렌더가 그만큼 늦게 시작됐음 → 코어로 옮겨 init() 직후 바로 렌더 가능하게 함.
   'js/players-search-state.js',
-  'js/players-streamer-views.js',
+  'js/vs.js',
   'js/rec-side-profiles.js',
-  'js/mobile-bar.js',
+  'js/init-error-banner.js',
+  'js/init-bootstrap.js',
+  'js/init-theme-apply.js',
+  'js/init-card-theme.js',
   'js/fab.js',
-  'js/init.js',
+  'js/mobile-bar.js',
+  'js/firebase-init.js',
 ];
 
 /** 경기/대전 기록 번들 */
@@ -146,6 +165,7 @@ const MATCH_FILES = [
   'js/competition-detail-modal.js',
   'js/competition-group-records.js',
   'js/competition-bracket-records.js',
+  'js/competition-briefing.js',
   'js/competition-bracket-editor.js',
   'js/competition-group-editor.js',
   'js/competition-normal-matches.js',
@@ -153,9 +173,17 @@ const MATCH_FILES = [
   'js/history-action-utils.js',
   'js/history-external-utils.js',
   'js/history-external-ui.js',
-  'js/history-render-tabs.js',
+  'js/history-hist-nav.js',
+  'js/history-bulk-map.js',
+  'js/history-all-html.js',
+  'js/history-tourney-html.js',
+  'js/history-univ-stat.js',
+  'js/history-render-utils.js',
   'js/history-rec-summary.js',
-  'js/history-match-index.js',
+  'js/history-match-index-core.js',
+  'js/history-match-detail-byid.js',
+  'js/history-match-detail-fromhist.js',
+  'js/history-match-detail-html.js',
   'js/history-psearch.js',
   'js/history-record-list.js',
   'js/history-detail-modal.js',
@@ -173,21 +201,42 @@ const MATCH_FILES = [
   'js/match-builder-ranks.js',
   'js/match-builder-record-actions.js',
   'js/match-builder-record-ops.js',
-  'js/match-builder-record-views.js',
+  'js/match-h2h-session-utils.js',
+  'js/match-h2h-panel-utils.js',
+  'js/match-h2h-cards-a.js',
+  'js/match-h2h-cards-b.js',
+  'js/match-ind-records.js',
+  'js/match-gj-records.js',
   'js/match-builder-share-legacy.js',
   'js/match-builder-share-entry.js',
 ];
 
 /** 검색/선수 번들 */
 const SEARCH_FILES = [
+  'js/players-total-nav.js',
+  'js/players-total-render.js',
+  'js/players-total-views.js',
+  'js/players-total-focus.js',
+  'js/players-bulk-merge.js',
+  'js/players-tierrank-nav.js',
   'js/players-tier-rank.js',
-  'js/search-parsing.js',
-  'js/search-preview.js',
+  'js/search-record-filter.js',
+  'js/search-player-match.js',
+  'js/search-paste-blocks.js',
+  'js/search-paste-line-parser.js',
+  'js/search-paste-misc.js',
+  'js/search-preview-utils.js',
+  'js/search-preview-build.js',
+  'js/search-preview-render.js',
   'js/search-paste-edit.js',
   'js/search-paste-apply.js',
   'js/search-elo-cleanup.js',
   'js/search-modals.js',
-  'js/search-pro-paste.js',
+  'js/search-pro-parse.js',
+  'js/search-pro-modal.js',
+  'js/search-pro-preview-build.js',
+  'js/search-pro-preview-render.js',
+  'js/search-pro-apply.js',
 ];
 
 /** 프로대회 번들 */
@@ -198,8 +247,18 @@ const PROCOMP_FILES = [
   'js/pro-comp-bracket.js',
   'js/pro-comp-stage-merge.js',
   'js/pro-comp-edit-stage.js',
-  'js/pro-comp-edit-bracket.js',
-  'js/pro-comp-edit-paste.js',
+  'js/pro-comp-bkt-init.js',
+  'js/pro-comp-bkt-simple-paste.js',
+  'js/pro-comp-bkt-edit-modal.js',
+  'js/pro-comp-bkt-thirdplace.js',
+  'js/pro-comp-grp-edit.js',
+  'js/pro-comp-bkt-match-paste.js',
+  'js/pro-comp-bkt-paste.js',
+  'js/pro-comp-league-paste.js',
+  'js/pro-comp-auto-preview.js',
+  'js/pro-comp-auto-apply.js',
+  'js/pro-comp-match-edit.js',
+  'js/pro-comp-bkt-batch.js',
   'js/pro-comp-sub.js',
 ];
 
@@ -219,11 +278,19 @@ const BOARD_FILES = [
   'js/board2-univ-views-freeboard.js',
   'js/board2-univ-views-cards.js',
   'js/board2-univ-views-lineup.js',
-  'js/board2-players.js',
+  'js/board2-players-hover.js',
+  'js/board2-players-view.js',
+  'js/board2-players-main-display.js',
+  'js/board2-players-edit-modal.js',
+  'js/board2-players-save.js',
   'js/board2-analytics.js',
+  'js/board2-live-view.js',
   'js/board2-heatmap-bubble.js',
   'js/board2-briefing-data.js',
-  'js/board2-briefing.js',
+  'js/board2-briefing-state.js',
+  'js/board2-briefing-view.js',
+  'js/sync/firebase-github.js',
+  'js/sync/firebase-signal.js',
 ];
 
 /**
@@ -238,11 +305,13 @@ const LAZY_CHUNKS = {
     'js/stats-core-utils.js',
     'js/stats-tier-rank-utils.js',
     'js/stats-heatmap-utils.js',
+    'js/heatmap-day-popup.js',
     'js/stats-period-utils.js',
     'js/stats-period-renderer.js',
     'js/stats-tierwin-renderer.js',
     'js/stats-heatmap-renderer.js',
     'js/stats-maprank-renderer.js',
+    'js/stats-promo-sim-renderer.js',
     'js/stats-univmatrix-renderer.js',
     'js/stats-advanced-renderers.js',
     'js/stats-export-utils.js',
@@ -254,14 +323,25 @@ const LAZY_CHUNKS = {
     'js/sharecard-render-match-shell.js',
     'js/sharecard-render-match-sections.js',
     'js/sharecard-render-match-context.js',
-    'js/sharecard-render-match-pipeline.js',
     'js/sharecard-render-match-utils.js',
+    'js/sharecard-render-match-pipeline.js',
     'js/sharecard-match-openers.js',
-    'js/stats-core.js',
-    'js/stats-search.js',
-    'js/stats-overview-elo.js',
+    'js/stats-core-cache-utils.js',
+    'js/stats-core-render.js',
+    'js/stats-tier-rank-mini.js',
+    'js/stats-star-system-calc.js',
+    'js/stats-star-system-html.js',
+    'js/stats-overview.js',
+    'js/stats-elo.js',
+    'js/stats-growth.js',
+    'js/stats-award-records.js',
+    'js/stats-radar.js',
+    'js/stats-univ-compare.js',
     'js/stats-sharecard.js',
+    'js/stats-search.js',
     'js/stats-player-report-data.js',
+    'js/stats-player-level.js',
+    'js/stats-level-rank.js',
     'js/stats-player-report-sections.js',
     'js/stats-player-report-entry.js',
     'js/stats-player-report-canvas.js',
@@ -269,7 +349,13 @@ const LAZY_CHUNKS = {
   'lazy-roulette.js': [
     'js/wheel.js',
     'js/duck-race.js',
-    'js/roulette.js',
+    'js/roulette-nav.js',
+    'js/roulette-utils.js',
+    'js/roulette-ppg-game.js',
+    'js/roulette-gc-panel.js',
+    'js/roulette-gc-spin.js',
+    'js/roulette-ladder.js',
+    'js/roulette-marble.js',
     'js/team-match-game.js',
     'js/tier-match-game.js',
     'js/photo-quiz-game.js',
@@ -281,22 +367,25 @@ const LAZY_CHUNKS = {
     'js/calendar.js',
   ],
   'lazy-chatbot.js': [
+    'js/chatbot.js',
     'js/chatbot-utils.js',
     'js/chatbot-fuzzy.js',
-    'js/chatbot-formatters.js',
-    'js/chatbot-formatters-matches.js',
-    'js/chatbot-formatters-player-card.js',
-    'js/chatbot-formatters-recent.js',
-    'js/chatbot-formatters-records.js',
-    'js/chatbot-formatters-search.js',
-    'js/chatbot-formatters-stats.js',
-    'js/chatbot-formatters-tournaments.js',
-    'js/chatbot-formatters-univ.js',
-    'js/chatbot-handlers.js',
     'js/chatbot-sync.js',
     'js/chatbot-aibot.js',
+    'js/chatbot-formatters.js',
+    'js/chatbot-formatters-player-card.js',
+    'js/chatbot-formatters-recent.js',
+    'js/chatbot-formatters-stats.js',
+    'js/chatbot-formatters-matches.js',
+    'js/chatbot-formatters-daily.js',
+    'js/chatbot-changelog.js',
+    'js/chatbot-formatters-records.js',
+    'js/chatbot-formatters-search.js',
+    'js/chatbot-formatters-tournaments.js',
+    'js/chatbot-formatters-univ.js',
+    'js/chatbot-formatters-extra.js',
+    'js/chatbot-handlers.js',
     'js/chatbot-ui.js',
-    'js/chatbot.js',
   ],
   'lazy-elboard.js': [
     'js/elboard.js',
@@ -322,6 +411,9 @@ const CSS_FILES = [
   'css/match-detail-design-modes.css',
   'css/rec-card-minimal.css',
   'css/board2-briefing.css',
+  'css/tier-rank.css',
+  'css/stats-core.css',
+  'css/dark-mode-fixes.css',
 ];
 
 
@@ -385,12 +477,13 @@ async function buildChunk(outName, files) {
     .reduce((a, b) => a + b, 0);
   const newSize = Buffer.byteLength(combined, 'utf8');
   const saved = origSize > 0 ? (((origSize - newSize) / origSize) * 100).toFixed(1) : '?';
+  const hash = crypto.createHash('md5').update(combined).digest('hex').slice(0, 10);
 
   console.log(
     `  ✅ ${outName.padEnd(22)} ${String(files.length - missing).padStart(3)}개 파일  ` +
     `${fmtSize(origSize).padStart(9)} → ${fmtSize(newSize).padStart(9)}  (-${saved}%)`
   );
-  return { outName, files: files.length - missing, origSize, newSize };
+  return { outName, files: files.length - missing, origSize, newSize, hash };
 }
 
 async function buildCssBundle(files) {
@@ -431,7 +524,38 @@ async function buildCssBundle(files) {
   return { origSize, newSize, hash };
 }
 
+// ─────────────────────────────────────────
+// sw.js의 CACHE_VERSION을 빌드 산출물 해시 기반으로 자동 갱신.
+// (예전엔 배포마다 수동으로 CACHE_VERSION 문자열을 올려야 했고, 깜빡하면
+//  사용자 브라우저에 이전 캐시가 그대로 남아 새 빌드가 반영되지 않는 문제가 있었다.
+//  → 모든 청크/CSS 해시를 합쳐 하나의 버전 문자열을 만들고, 내용이 실제로
+//  달라졌을 때만 sw.js 파일을 갱신한다.)
+function patchServiceWorker(results, cssHash) {
+  const swPath = path.join(SRC, 'sw.js');
+  if (!fs.existsSync(swPath)) {
+    console.warn('  ⚠️  sw.js 없음 — CACHE_VERSION 자동 갱신 건너뜀');
+    return;
+  }
+  const allHashes = results.map(r => r.hash).concat([cssHash]).join('');
+  const combinedHash = crypto.createHash('md5').update(allHashes).digest('hex').slice(0, 10);
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const newVersion = `v${dateStr}-${combinedHash}`;
 
+  let sw = fs.readFileSync(swPath, 'utf8');
+  const versionRe = /const CACHE_VERSION = '([^']*)';/;
+  const m = sw.match(versionRe);
+  if (!m) {
+    console.warn('  ⚠️  sw.js에서 CACHE_VERSION 선언을 찾지 못함 — 자동 갱신 건너뜀');
+    return;
+  }
+  if (m[1] === newVersion) {
+    console.log(`  ℹ️  sw.js CACHE_VERSION 변경 없음 (${newVersion})`);
+    return;
+  }
+  sw = sw.replace(versionRe, `const CACHE_VERSION = '${newVersion}';`);
+  fs.writeFileSync(swPath, sw, 'utf8');
+  console.log(`  🔄 sw.js CACHE_VERSION 갱신: ${m[1]} → ${newVersion}`);
+}
 
 function patchIndexHtml(stats, cssHash) {
   const htmlPath = path.join(SRC, 'index.html');
@@ -561,6 +685,73 @@ async function patchLazyUtils() {
 // 메인
 // ──────────────────────────────────────────
 
+// ──────────────────────────────────────────
+// index.html 기준 자동 동기화
+//  - dist 번들에서 스크립트가 누락되면(예: 설정 파일 분할 후 목록 갱신 누락)
+//    해당 기능(설정 저장/반영 등)이 배포판에서 조용히 죽는다.
+//  - 그래서 "무엇을/어떤 순서로" 담을지는 index.html의 defer script 순서를
+//    단일 진실 소스(single source of truth)로 사용한다.
+// ──────────────────────────────────────────
+
+function readHtmlScriptOrder() {
+  const html = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
+  const re = /<script\s+defer\s+src="(js\/[^"?]+)(?:\?[^"]*)?"[^>]*><\/script>/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(html))) {
+    if (!out.includes(m[1])) out.push(m[1]);
+  }
+  return out;
+}
+
+/** 명시 목록에 없는 신규(분할) 파일을 파일명 규칙으로 청크에 배정 */
+function guessChunk(file) {
+  const n = file.replace(/^js\//, '');
+  if (/^(board2|cloud-board)/.test(n) || /^sync\//.test(n)) return 'board';
+  if (/^pro-comp/.test(n)) return 'procomp';
+  if (/^(competition|history|match)/.test(n)) return 'match';
+  if (/^(search|players)/.test(n)) return 'search';
+  return 'core';
+}
+
+/** index.html 순서를 기준으로 청크 목록을 재구성 */
+function syncChunksWithHtml(groups, lazyChunks) {
+  const order = readHtmlScriptOrder();
+  const idx = new Map(order.map((f, i) => [f, i]));
+  const lazySet = new Set(Object.values(lazyChunks).flat());
+
+  const assign = new Map();
+  for (const [name, files] of Object.entries(groups)) {
+    for (const f of files) {
+      if (!idx.has(f)) {
+        if (!lazySet.has(f)) console.warn(`  ⚠️  ${name} 목록의 ${f} 는 index.html에 없음 → 번들 제외`);
+        continue;
+      }
+      assign.set(f, name);
+    }
+  }
+
+  const added = [];
+  for (const f of order) {
+    // index.html에 defer script로 있으면 lazy 목록에 있어도 반드시 번들에 포함
+    if (assign.has(f)) continue;
+    if (lazySet.has(f)) console.warn(`  ⚠️  ${f} 는 lazy 목록에도 있으나 index.html 로딩이 우선 → 번들 포함`);
+    const g = guessChunk(f);
+    assign.set(f, g);
+    added.push(`${f} → chunk-${g}`);
+  }
+  if (added.length) {
+    console.log(`  🔄 index.html에만 있던 ${added.length}개 파일을 자동 배정:`);
+    added.forEach(t => console.log(`      + ${t}`));
+  }
+
+  const synced = {};
+  for (const name of Object.keys(groups)) {
+    synced[name] = order.filter(f => assign.get(f) === name);
+  }
+  return synced;
+}
+
 async function main() {
   console.log('🚀 빌드 시작...\n');
   const t0 = Date.now();
@@ -568,13 +759,26 @@ async function main() {
   // dist 폴더 준비
   fs.mkdirSync(path.join(DIST, 'js'), { recursive: true });
 
+  console.log('🔎 index.html script 순서와 청크 목록 동기화:');
+  const synced = syncChunksWithHtml(
+    {
+      core: CORE_FILES,
+      match: MATCH_FILES,
+      search: SEARCH_FILES,
+      procomp: PROCOMP_FILES,
+      board: BOARD_FILES,
+    },
+    LAZY_CHUNKS
+  );
+
   const chunks = [
-    ['chunk-core.js',    CORE_FILES],
-    ['chunk-match.js',   MATCH_FILES],
-    ['chunk-search.js',  SEARCH_FILES],
-    ['chunk-procomp.js', PROCOMP_FILES],
-    ['chunk-board.js',   BOARD_FILES],
+    ['chunk-core.js',    synced.core],
+    ['chunk-match.js',   synced.match],
+    ['chunk-search.js',  synced.search],
+    ['chunk-procomp.js', synced.procomp],
+    ['chunk-board.js',   synced.board],
   ];
+  console.log('');
 
   console.log('📦 코어/기능 청크 빌드:');
   const results = [];
@@ -605,6 +809,9 @@ async function main() {
 
   // index.html 패치
   patchIndexHtml(results, cssResult.hash);
+
+  // sw.js CACHE_VERSION 자동 갱신 (내용 해시 기반)
+  patchServiceWorker(results, cssResult.hash);
 
   console.log(`\n✨ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
   console.log('\n사용 방법:');

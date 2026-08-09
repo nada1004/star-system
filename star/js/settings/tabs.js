@@ -160,7 +160,7 @@
         {id:'starsystem', d:'⭐ 스타시스템'},
         {id:'elo', d:'📈 ELO 그래프'},
         {id:'growth', d:'📊 성장 곡선'},
-        {id:'award', d:'🏆 이달의 스트리머'},
+        {id:'award', d:'🏆 이번 주/달 MVP'},
         {id:'records', d:'🎖️ 최다 기록'},
         {id:'killer', d:'🗡️ 킬러/피해자'},
         {id:'streakhist', d:'🔥 역대 연속 기록'},

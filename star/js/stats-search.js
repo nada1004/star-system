@@ -1,3 +1,59 @@
+// ── 검색결과 카드 안에서 프로필 이미지 호버 시 방송 미리보기 (board2-live-view.js 와 동일 로직을
+//    자체 보유 — 청크 분리로 로드 순서가 달라도 문제 없도록 독립적으로 둠) ──
+function _gsSoopId(input) {
+  const s = String(input || '').trim();
+  if (!s) return '';
+  try {
+    const u = new URL(s, window.location.href);
+    const host = (u.hostname || '').toLowerCase();
+    if (host.includes('sooplive.co.kr') || host.includes('sooplive.com') || host.includes('afreecatv.com')) {
+      const path = u.pathname || '';
+      const m = path.match(/^\/([^\/]+)/);
+      return m ? m[1] : '';
+    }
+  } catch (e) {}
+  return '';
+}
+
+function _gsEmbedUrl(id) {
+  // 자동재생 없이(정지 상태로) 대기, 무음 파라미터는 유지
+  return id ? `https://play.sooplive.co.kr/${id}/embed?mute=y&muted=true&volume=0&showChat=false&autoPlay=false` : '';
+}
+
+var _gsPreviewHideTimers = {};
+
+function _gsShowPreview(wrapEl, id) {
+  try {
+    if (!wrapEl || !id) return;
+    if (_gsPreviewHideTimers[id]) { clearTimeout(_gsPreviewHideTimers[id]); _gsPreviewHideTimers[id] = null; }
+    const box = wrapEl.querySelector('.gs-inline-box');
+    const frame = wrapEl.querySelector('.gs-inline-frame');
+    if (box) box.style.display = 'block';
+    if (frame) {
+      const next = _gsEmbedUrl(id);
+      if (frame.getAttribute('src') !== next) frame.setAttribute('src', next);
+    }
+  } catch (e) {}
+}
+
+function _gsHidePreview(wrapEl, id, e) {
+  try {
+    if (!wrapEl || !id) return;
+    const related = e && e.relatedTarget;
+    if (related && wrapEl.contains && wrapEl.contains(related)) return;
+    if (_gsPreviewHideTimers[id]) clearTimeout(_gsPreviewHideTimers[id]);
+    _gsPreviewHideTimers[id] = setTimeout(() => {
+      try {
+        if (wrapEl.matches && wrapEl.matches(':hover')) return;
+        const box = wrapEl.querySelector('.gs-inline-box');
+        const frame = wrapEl.querySelector('.gs-inline-frame');
+        if (frame) frame.removeAttribute('src');
+        if (box) box.style.display = 'none';
+      } catch (_) {}
+    }, 120);
+  } catch (e) {}
+}
+
 function onGlobalSearch(val){
   const drop = document.getElementById('globalSearchDrop');
   if(!val || val.trim()===''){drop.style.display='none';return;}
@@ -67,16 +123,22 @@ function onGlobalSearch(val){
     const col=gc(p.univ);
     const wr=p.win+p.loss===0?0:Math.round(p.win/(p.win+p.loss)*100);
     const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',label:p.race};
-    return `<div data-gsidx="${ri}" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:.1s"
-      onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"
+    const soopId=_gsSoopId(p.channelUrl);
+    const previewHtml = soopId ? `<div class="gs-inline-box" style="display:none;position:absolute;inset:0;background:#000">
+        <iframe class="gs-inline-frame" src="" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer"
+          style="width:100%;height:100%;border:0;background:#000;display:block"></iframe>
+      </div>` : '';
+    const hoverAttrs = soopId ? `onmouseenter="_gsShowPreview(this,'${soopId}')" onmouseleave="_gsHidePreview(this,'${soopId}',event)"` : '';
+    return `<div data-gsidx="${ri}" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:.1s;background:${col}12"
+      onmouseover="this.style.background='${col}22'" onmouseout="this.style.background='${col}12'"
       onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
       ${p.photo
         ?(()=>{
           const _2nd=(typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):'';
-          return `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:inline-flex;width:60px;height:60px;flex-shrink:0;border-radius:8px;overflow:hidden"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">${_2nd}</span>`;
+          return `<span class="${_2nd?'ph-swap':''}" style="position:relative;display:inline-flex;width:60px;height:60px;flex-shrink:0;border-radius:8px;overflow:hidden" ${hoverAttrs}><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">${_2nd}${previewHtml}</span>`;
         })()
-        :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
+        :`<div style="position:relative;width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px;overflow:hidden" ${hoverAttrs}>${rc.label}${previewHtml}</div>`
       }
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:var(--fs-base)">${hl(p.name,mainQ)}${p.gender==='M'?'<span style="font-size:9px;background:#2563eb;color:#fff;padding:1px 4px;border-radius:4px;margin-left:4px">♂</span>':''}</div>

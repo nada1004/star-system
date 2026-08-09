@@ -124,6 +124,10 @@ function _b2RankingView() {
     .b2rk2-badges { display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center }
     .b2rk2-glow { position:absolute;inset:0;opacity:.05;pointer-events:none }
     .b2rk2-delta { font-size:var(--fs-caption);font-weight:800;margin-left:2px }
+    body.dark .b2rk2-row { background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62)); border-color:#334155 }
+    body.dark .b2rk2-row.selected { box-shadow:0 0 0 3px rgba(255,255,255,.08) }
+    body.dark .b2rk2-sbtn { background:rgba(15,23,42,.6); border-color:#334155; color:#94a3b8 }
+    body.dark .b2rk2-sbtn.on { background:#e2e8f0; color:#0f172a; border-color:#e2e8f0 }
   </style>`;
 
   // 헤더 배너
@@ -340,6 +344,19 @@ function _b2SummaryView() {
       /* 모바일: 배지 줄에 이미 같은 정보가 요약돼 있으므로 중복되는 히어로 통계 카드는 숨김 */
       .b2s-hero-stats{display:none!important}
     }
+    body.dark .b2s-hero,
+    body.dark .b2s-hero-stat,
+    body.dark .b2s-hero-badge,
+    body.dark .b2s-kpi,
+    body.dark .b2s-panel {
+      background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.62)) !important;
+      border-color:#334155 !important;
+      box-shadow:0 12px 22px rgba(0,0,0,.20) !important;
+    }
+    body.dark .b2s-univ-row + .b2s-univ-row { border-top-color:#334155; }
+    body.dark .b2s-bar-track { background:#334155; }
+    body.dark .b2s-univ-card { background:rgba(15,23,42,.55); }
+    body.dark .b2s-new-player { background:rgba(15,23,42,.6); border-color:#334155; color:#cbd5e1; }
   </style>`;
 
   // KPI 7개 (통산승률 + 이번주 활동 추가)

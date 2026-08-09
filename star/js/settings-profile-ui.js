@@ -41,10 +41,127 @@ function _renderCfgPdModeBadgeSection(){
   `;
 }
 
+// [FIX-PROFILESHAPE-1] 실제 모양 데이터(적용 로직인 constants*.js의 applyProfileShapeVars와 동일한 값을 사용)
+var _PROFILE_SHAPES = [
+  {k:'circle',l:'원형'},{k:'square',l:'정사각'},{k:'rounded',l:'둥근사각'},{k:'squircle',l:'스퀴클'},
+  {k:'diamond',l:'다이아'},{k:'hexagon',l:'육각'},{k:'pentagon',l:'오각'},{k:'octagon',l:'팔각'},
+  {k:'shield',l:'방패'},{k:'star',l:'별'},{k:'heart',l:'하트'},{k:'blob',l:'블롭'},
+  {k:'leaf',l:'나뭇잎'},{k:'triangle',l:'삼각'},{k:'pill',l:'알약'},{k:'stadium',l:'스타디움'},
+  {k:'teardrop',l:'물방울'},{k:'moon',l:'초승달'},{k:'cloud',l:'구름'},{k:'flower',l:'꽃'},
+  {k:'clover',l:'클로버'},{k:'trophy',l:'트로피'},{k:'crown',l:'왕관'},{k:'medal',l:'메달'},
+  {k:'arena',l:'아레나'},{k:'target',l:'과녁'},{k:'thunder',l:'번개'},{k:'versus',l:'VS'}
+];
+var _PROFILE_SHAPE_RADIUS = {
+  circle:'50%', square:'6px', rounded:'22%', squircle:'28%', diamond:'50%', hexagon:'50%',
+  shield:'50% 50% 45% 45% / 60% 60% 40% 40%', pentagon:'50%', star:'50%',
+  blob:'40% 60% 55% 45% / 45% 55% 60% 40%', leaf:'50%', triangle:'0', octagon:'50%',
+  heart:'50% 50% 50% 50%/60% 60% 40% 40%', pill:'50px', stadium:'40% 40% 40% 40% / 60% 60% 60% 60%',
+  teardrop:'50% 50% 50% 50% / 60% 60% 40% 40%', moon:'50%', cloud:'50%', flower:'50%',
+  clover:'50%', trophy:'0', crown:'0', medal:'50%', arena:'50%', target:'50%', thunder:'0', versus:'0'
+};
+var _PROFILE_SHAPE_CLIP = {
+  diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+  hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+  shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+  pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+  star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+  leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+  triangle:'polygon(50% 0%, 0% 100%, 100% 100%)',
+  octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
+  cloud:'polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)',
+  flower:'polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)',
+  moon:'ellipse(50% 50% at 65% 50%)',
+  trophy:'polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)',
+  crown:'polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)',
+  arena:'polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)',
+  medal:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)',
+  thunder:'polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)',
+  versus:'polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)'
+};
+// [FIX-PROFILESHAPE-2] 설정탭 "프로필 이미지 모양" 섹션 스켈레톤을 만들어 줍니다.
+// 예전엔 이 카드 자체가 아예 생성되지 않아서 버튼을 눌러도 아무 반응이 없었습니다.
+window.renderCfgProfileShapeCard = function(_scfgD){
+  try{
+    const open = (typeof _scfgD==='function') ? _scfgD('profileshape','📐 프로필 이미지 모양') : '';
+    if(!open) return '';
+    return `${open}
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">현황판·스트리머 상세 등 전체 화면에서 쓰이는 프로필·로고 이미지의 모양과 크기를 설정합니다.</div>
+    <div id="cfg-profileshape-body"><div style="font-size:var(--fs-sm);color:var(--gray-l)">로딩 중...</div></div>
+  </details>`;
+  }catch(e){ return ''; }
+};
+function _setProfileScale(dev, val){
+  const key = 'su_profile_scale_'+dev;
+  const v = Math.max(70, Math.min(130, parseInt(val,10)||100));
+  try{ localStorage.setItem(key, String(v)); }catch(e){}
+  try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
+}
+function _resetProfileShapeAll(){
+  try{
+    localStorage.removeItem('su_profile_shape');
+    localStorage.removeItem('su_profile_scale_pc');
+    localStorage.removeItem('su_profile_scale_tb');
+    localStorage.removeItem('su_profile_scale_mb');
+    if(typeof applyProfileShapeVars==='function') applyProfileShapeVars();
+  }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof _renderCfgProfileShapeSection==='function') _renderCfgProfileShapeSection(); }catch(e){}
+}
 function _renderCfgProfileShapeSection(){
-  if(typeof window.SettingsModules!=='undefined' && window.SettingsModules.profile && typeof window.SettingsModules.profile.renderProfileShapeSection==='function'){
-    return window.SettingsModules.profile.renderProfileShapeSection();
-  }
+  const body = document.getElementById('cfg-profileshape-body');
+  if(!body) return;
+  const cur = (()=>{ try{ return localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle'; }catch(e){ return 'circle'; } })();
+  const getInt=(k,def)=>{ try{ const v=parseInt(localStorage.getItem(k),10); return isNaN(v)?def:Math.max(70,Math.min(130,v)); }catch(e){ return def; } };
+  const pc = getInt('su_profile_scale_pc',100);
+  const tb = getInt('su_profile_scale_tb',96);
+  const mb = getInt('su_profile_scale_mb',92);
+
+  const swatchCss=(key)=>{
+    const radius = _PROFILE_SHAPE_RADIUS[key] || '50%';
+    const clip = _PROFILE_SHAPE_CLIP[key];
+    return `border-radius:${radius};${clip?`clip-path:${clip};`:''}`;
+  };
+  const grid = _PROFILE_SHAPES.map(({k,l})=>{
+    const sel = k===cur;
+    return `<button class="btn btn-xs" onclick="_setGlobalProfileShape('${k}')" title="${l}"
+      style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;min-width:56px;border:2px solid ${sel?'var(--blue)':'var(--border2)'};background:${sel?'#eff6ff':'var(--white)'}">
+      <span style="width:28px;height:28px;display:block;background:linear-gradient(135deg,#93c5fd,#6366f1);${swatchCss(k)}"></span>
+      <span style="font-size:10px;font-weight:${sel?900:600};color:${sel?'var(--blue)':'var(--text2)'}">${l}</span>
+    </button>`;
+  }).join('');
+
+  const scaleRow=(label,dev,val)=>{
+    const id = 'cfg-pshape-'+dev;
+    return `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="min-width:52px;font-size:var(--fs-sm);font-weight:800;color:var(--text2)">${label}</div>
+      <input type="range" id="${id}" min="70" max="130" step="2" value="${val}" style="flex:1;accent-color:var(--blue)"
+        oninput="document.getElementById('${id}-v').textContent=this.value+'%';clearTimeout(window._pshapeScaleT);window._pshapeScaleT=setTimeout(()=>{_setProfileScale('${dev}',document.getElementById('${id}').value);},120)">
+      <div id="${id}-v" style="width:44px;text-align:right;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${val}%</div>
+    </div>`;
+  };
+
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">📐 모양 선택</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">클릭하면 바로 적용됩니다.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;max-height:280px;overflow-y:auto;padding:2px">${grid}</div>
+      </div>
+      <div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">📏 크기(기기별)</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${scaleRow('PC','pc',pc)}
+          ${scaleRow('태블릿','tb',tb)}
+          ${scaleRow('모바일','mb',mb)}
+        </div>
+      </div>
+      <button class="btn btn-w btn-xs" style="align-self:flex-start" onclick="_resetProfileShapeAll()">↩️ 모양·크기 기본값으로</button>
+    </div>
+  `;
 }
 
 function _renderCfgUiSizeSection(){
@@ -127,4 +244,6 @@ try{
   window._renderCfgPdModeBadgeSection = _renderCfgPdModeBadgeSection;
   window._renderCfgProfileShapeSection = _renderCfgProfileShapeSection;
   window._renderCfgUiSizeSection = _renderCfgUiSizeSection;
+  window._setProfileScale = _setProfileScale;
+  window._resetProfileShapeAll = _resetProfileShapeAll;
 }catch(e){}

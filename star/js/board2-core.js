@@ -316,7 +316,7 @@ function _b2DateNum(s) {
 // 대학별 현황판 색상 진하기 (0~100, %)
 var b2LabelAlpha  = typeof b2LabelAlpha  !== 'undefined' ? b2LabelAlpha  : (J('su_b2la')  ?? 16);
 var b2BgAlpha     = typeof b2BgAlpha     !== 'undefined' ? b2BgAlpha     : (J('su_b2ba')  ?? 9);
-var b2BgImgAlpha      = typeof b2BgImgAlpha      !== 'undefined' ? b2BgImgAlpha      : (J('su_b2bia')  ?? 12);
+var b2BgImgAlpha      = typeof b2BgImgAlpha      !== 'undefined' ? b2BgImgAlpha      : (J('su_b2bia')  ?? 64);
 var b2FreeBgAlpha     = typeof b2FreeBgAlpha     !== 'undefined' ? b2FreeBgAlpha     : (J('su_b2fba')  ?? 25);
 var b2FreeTierBgAlpha = typeof b2FreeTierBgAlpha !== 'undefined' ? b2FreeTierBgAlpha : (J('su_b2ftba') ?? 15);
 var b2ProfileBgAlpha  = typeof b2ProfileBgAlpha  !== 'undefined' ? b2ProfileBgAlpha  : (J('su_b2pba') ?? 10);
@@ -410,6 +410,10 @@ function rBoard2(C, T) {
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
   if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
+  // 모바일에서는 라이브 탭을 노출하지 않음 (SOOP 임베드/미리보기가 모바일 화면·터치 환경에
+  // 적합하지 않아 요청에 따라 숨김) — 데스크톱에서 라이브 탭에 있다가 창을 좁히거나,
+  // 모바일로 접속했는데 이전 상태가 남아있는 경우 안전하게 다른 탭으로 이동
+  if (_b2View === 'live' && window.innerWidth <= 768) _b2View = 'univ';
 
   // 저장/초기화 바
   let saveBar = '';
@@ -524,6 +528,7 @@ function rBoard2(C, T) {
   // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
   const _b2TabDefs = [
     {id:'weekly',  label:(typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')},
+    {id:'live',    label:(typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')},
     {id:'lineup',  label:(typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')},
     {id:'univ',    label:(typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')},
     {id:'femco',   label:(typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')},
@@ -611,6 +616,7 @@ function rBoard2(C, T) {
     heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
     bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
     summary: { label:'요약', desc:'핵심 숫자와 흐름만 모아 간결하게 확인할 수 있도록 구성합니다.' },
+    live:    { label:'라이브', desc:'SOOP 방송국이 등록된 스트리머를 모아 보고 현재 라이브 상태를 빠르게 확인합니다.' },
     old:     { label:'구현황판', desc:'기존 현황판 레이아웃을 그대로 유지하면서 현재 데이터와 연결합니다.' }
   };
   const _curViewMeta = _heroViewMeta[_b2View] || { label:'현황판', desc:'여러 시각화와 카드형 화면으로 현황을 빠르게 탐색할 수 있습니다.' };
@@ -695,6 +701,7 @@ function rBoard2(C, T) {
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
         ${weeklyBtn}
+        ${window.innerWidth > 768 ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
         ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
@@ -758,7 +765,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','live','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -816,6 +823,10 @@ function rBoard2(C, T) {
     } else if (_b2View === 'bubble') {
       sub.innerHTML = _b2BubbleView();
       _b2InjectAndRunScripts(sub);
+    } else if (_b2View === 'live') {
+      sub.innerHTML = _b2LiveView();
+      injectUnivIcons && injectUnivIcons(sub);
+      if (typeof _b2LiveTheaterInitList === 'function') setTimeout(_b2LiveTheaterInitList, 0);
     } else if (_b2View === 'old') {
       if (typeof rBoard === 'function') {
         rBoard(sub, T);

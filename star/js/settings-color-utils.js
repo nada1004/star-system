@@ -78,6 +78,49 @@ window.cfgSetRecBgFxAll = function(on){
   try{ if(typeof render==='function') render(); }catch(e){}
 };
 
+// ─────────────────────────────────────────────────────────────
+// [FIX-SIDEFX] 기록 카드 "양쪽 끝 색상 효과" 설정
+// - 예전엔 이 6개 함수 자체가 없어서(history-core.js 유실 추정)
+//   사용/끄기 체크박스와 효과 종류·강도·길이·진하기·부드러움 슬라이더가
+//   전부 아무 반응이 없었습니다.
+// - 실제 색상 효과는 카드가 그려질 때 _getRecSideFxCfg()가 이 localStorage
+//   값들을 그대로 읽어가므로, 여기서는 저장 + 재렌더만 하면 됩니다.
+// ─────────────────────────────────────────────────────────────
+function _cfgSideFxTouch(){
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+}
+window.cfgSetRecSideFxEnabled = function(on){
+  try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
+  _cfgSideFxTouch();
+};
+window.cfgSetRecSideFxMode = function(mode){
+  try{
+    const valid = (typeof _REC_SIDE_FX_MODES!=='undefined' && Array.isArray(_REC_SIDE_FX_MODES)) ? _REC_SIDE_FX_MODES : null;
+    const v = String(mode||'soft').trim();
+    localStorage.setItem('su_rec_side_fx_mode', (valid && !valid.includes(v)) ? 'soft' : v);
+  }catch(e){}
+  _cfgSideFxTouch();
+};
+window.cfgSetRecSideFxIntensity = function(val){
+  try{ localStorage.setItem('su_rec_side_fx_intensity', String(Math.max(0,Math.min(140,parseInt(val,10)||68)))); }catch(e){}
+  _cfgSideFxTouch();
+};
+window.cfgSetRecSideFxLength = function(val){
+  try{ localStorage.setItem('su_rec_side_fx_length', String(Math.max(4,Math.min(80,parseInt(val,10)||25)))); }catch(e){}
+  _cfgSideFxTouch();
+};
+window.cfgSetRecSideFxTail = function(val){
+  try{ localStorage.setItem('su_rec_side_fx_tail', String(Math.max(0,Math.min(140,parseInt(val,10)||28)))); }catch(e){}
+  _cfgSideFxTouch();
+};
+window.cfgSetRecSideFxSoftness = function(val){
+  try{ localStorage.setItem('su_rec_side_fx_softness', String(Math.max(0,Math.min(100,parseInt(val,10)||52)))); }catch(e){}
+  _cfgSideFxTouch();
+};
+
 window.cfgSetProCompAvatarSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-procomp-ava-pc')?.value||'52',10) || 52;

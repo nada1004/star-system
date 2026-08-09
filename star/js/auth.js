@@ -1203,6 +1203,16 @@ function toggleDark(){
   }catch(e){
     console.warn('[toggleDark] 테마 변수 재적용 실패:', e.message);
   }
+  // [DARKFIX] 스트리머탭/현황판탭 등 일부 카드(프로필 사진 배경, 이름 영역)는
+  // 렌더링 시점에 document.body.classList.contains('dark')를 직접 검사해 색을 계산함(_b2PastelBg 등).
+  // 이런 값은 CSS 변수가 아니라 순수 JS 계산값이라 body.dark 클래스만 토글해서는 갱신되지 않고,
+  // 다른 이유로 다시 렌더링되기 전까지 이전 모드의 색이 그대로 남아있었음(= "다크모드 안 됨"으로 보였음).
+  // 토글 즉시 현재 탭을 강제로 재렌더링해서 바로 반영되게 함.
+  try{
+    if(typeof window.render==='function') window.render(true);
+  }catch(e){
+    console.warn('[toggleDark] 재렌더링 실패:', e.message);
+  }
 }
 
 /* ── 클립보드 복사 유틸 ── */

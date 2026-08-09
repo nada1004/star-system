@@ -97,6 +97,7 @@ function rCfg(C,T){
     procompleaguecard:'🏆 프로리그 대회 조별리그', procompteamcard:'🏆 프로리그 대회 팀전 카드', procompgjcard:'🏆 프로리그 대회 중장전 카드', procompcard:'⭐ 프로리그 대회 카드',
     sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     'tierrank-view':'📊 티어 순위표 보기 방식',
+    streamerchannel:'📺 스트리머 방송국 URL',
     'streamer-view':'🎬 스트리머탭 기본 뷰', 'streamer-tab-style':'🎬 스트리머탭 디자인/레이아웃',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
@@ -158,6 +159,7 @@ function rCfg(C,T){
     pd:'스트리머 상세 카드 색감과 배치 조정',
     matchdetail:'경기 상세 팝업 레이아웃과 색감 조정',
     streamerheader:'스트리머탭 상단 대학 헤더 꾸미기',
+    streamerchannel:'스트리머별 방송국 URL 빠른 입력/수정',
     'streamer-tab-style':'스트리머탭 카드/헤더/레이아웃 분위기 설정',
     univlogoimg:'대학 로고 이미지 등록과 관리',
     b2femco:'펨코스타일 색감과 카드 디자인 조정',
@@ -188,6 +190,7 @@ function rCfg(C,T){
     sharecard:'공유카드 템플릿과 색감 조정',
     calui:'캘린더 날짜칸과 버튼 구성 설정',
     appfont:'앱 전체 폰트와 크기 조정',
+    streamerchannel:'스트리머별 SOOP/치지직 등 방송국 홈 URL 빠른 편집',
     'tierrank-view':'티어 순위표 보기 방식 변경',
     bgm:'유튜브 배경음악 표시와 링크 설정',
     soopmv:'SOOP 멀티뷰 연결 설정',
@@ -278,6 +281,10 @@ function rCfg(C,T){
   const ctx = {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml};
   let h = _cfgSecGroup1(ctx) + _cfgSecGroup2(ctx) + _cfgSecGroup3(ctx) + _cfgSecGroup4(ctx);
 setTimeout(()=>{
+    // [FIX-UX-1] 설정탭이 다시 그려질 때 사용자가 펼쳐뒀던 <details class="cfg-grp"> 패널을
+    // 다시 펼쳐줍니다. (전에는 슬라이더 하나만 조작해도 패널이 접혀서
+    // "선택/설정이 안 된다"고 느껴지는 원인 중 하나였습니다.)
+    try{ if(typeof window._cfgSyncGrpOpenState==='function') window._cfgSyncGrpOpenState(); }catch(e){}
     // 상태 아이콘 지정 목록(전용 메뉴)
     try{ if(typeof _renderCfgSiAssignList==='function') _renderCfgSiAssignList(); }catch(e){}
     renderStorageInfo();
@@ -327,6 +334,18 @@ setTimeout(()=>{
             <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
             <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
           </select>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:var(--fs-caption);font-weight:600;color:var(--text2);cursor:pointer">
+            <input type="checkbox" ${u.bgIsLogo?'checked':''} onchange="setBoardBgIsLogo('${u.name.replace(/'/g,"\\'")}',this.checked)">
+            🏷️ 로고형 배경 (중앙에 작게 배치 — 엠블럼/로고 이미지용)
+          </label>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+            <label style="font-size:var(--fs-caption);font-weight:600;color:var(--text2);min-width:90px">밝기(개별):</label>
+            <input type="range" min="0" max="100" value="${u.bgImgAlpha ?? b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
+              oninput="this.nextElementSibling.textContent=this.value+'%'"
+              onchange="setBoardBgImgAlpha('${u.name.replace(/'/g,"\\'")}',this.value)">
+            <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:700">${u.bgImgAlpha ?? b2BgImgAlpha}%</span>
+            ${u.bgImgAlpha!=null?`<button class="btn btn-xs btn-w" onclick="setBoardBgImgAlpha('${u.name.replace(/'/g,"\\'")}',null)">전체값 사용</button>`:''}
+          </div>
         </div>`:''}
       </div>`).join('');
     }

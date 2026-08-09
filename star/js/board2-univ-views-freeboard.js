@@ -15,8 +15,11 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const lightCol = col + _b2AlphaHex(b2BgAlpha);
   const labelCol = col + _b2AlphaHex(b2LabelAlpha);
   const _hasBgImg = !!uCfg.bgImg;
-  const _softPanel = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
-  const _softBorder = _hasBgImg ? 'rgba(255,255,255,.18)' : 'rgba(255,255,255,.55)';
+  const _isDark = (typeof document!=='undefined' && document.body && document.body.classList.contains('dark'));
+  const _softPanel = _isDark
+    ? 'linear-gradient(180deg,rgba(15,23,42,.72),rgba(15,23,42,.6))'
+    : 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+  const _softBorder = _hasBgImg ? 'rgba(255,255,255,.18)' : (_isDark ? 'rgba(148,163,184,.32)' : 'rgba(255,255,255,.55)');
   const _rowPanelBg = _hasBgImg
     ? 'linear-gradient(180deg,rgba(255,255,255,.00),rgba(248,250,252,.00))'
     : _softPanel;
@@ -24,7 +27,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     ? 'linear-gradient(180deg,rgba(255,255,255,.12),rgba(248,250,252,.04))'
     : _softPanel;
   const _rowPanelBorder = _hasBgImg ? 'rgba(255,255,255,.04)' : _softBorder;
-  const _rowPanelShadow = _hasBgImg ? 'none' : '0 10px 18px rgba(15,23,42,.04)';
+  const _rowPanelShadow = _hasBgImg ? 'none' : (_isDark ? '0 10px 18px rgba(0,0,0,.22)' : '0 10px 18px rgba(15,23,42,.04)');
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
@@ -77,8 +80,9 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'auto';
+  // [FIX-BRIGHT-1] 모든 대학이 동일한 밝기 공식을 사용 (설정탭 슬라이더로 조절 가능, su_b2bia)
   const _bgOpacityNum = (uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100;
-  const _bgOpacity = (_hasBgImg ? Math.max(0.64, _bgOpacityNum + 0.08) : _bgOpacityNum).toFixed(2);
+  const _bgOpacity = _bgOpacityNum.toFixed(2);
   const _uKeyRaw = String(univName||'').trim();
   const _uKey = _uKeyRaw.toUpperCase();
   const _logoOverlayCfg = (() => {
@@ -101,20 +105,14 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       return def;
     }
   })();
-  const _logoUnivNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미'];
-  const _isMonstarName = _uKeyRaw.includes('몬스타') || _uKey.includes('MONSTAR');
-  const _bgIsLogo =
-    (_uKey === 'HM' || _uKey === 'DM' || _uKey === 'SSG' || _uKey === 'JSA' || _uKey === 'BGM') ||
-    (_logoUnivNames.includes(_uKeyRaw) || _isMonstarName);
+  // [FIX-BRIGHT-2] 대학 이름 하드코딩 대신 대학별 설정값(uCfg.bgIsLogo)으로 "로고형 배경"(중앙 배치) 여부를 판단.
+  // 설정탭 > 🖼️ 현황판 라벨 배경 이미지별 설정에서 대학별로 켜고 끌 수 있음.
+  const _bgIsLogo = !!uCfg.bgIsLogo;
   const _bgLogoPos = '44% 50%';
   const _bgLogoSizeBase = (() => {
-    const isSmall =
-      (_uKey === 'JSA' || _uKey === 'BGM') ||
-      _logoUnivNames.includes(_uKeyRaw) ||
-      _isMonstarName;
-    if (_uKey === 'JSA' || _uKeyRaw === '흑카데미') return 'min(72%,620px) auto';
-    if (_uKeyRaw === '수술대' || _uKeyRaw === '엠비대' || _uKeyRaw === '케이대') return 'min(84%,740px) auto';
-    return isSmall ? 'min(78%,680px) auto' : 'min(86%,760px) auto';
+    const custom = String(uCfg.bgLogoSize||'').trim();
+    if (custom) return custom;
+    return 'min(82%,720px) auto';
   })();
   const _bgLogoSize = (() => {
     const sc = (_logoOverlayCfg.bgScale || 100) / 100;
@@ -125,7 +123,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     const px = Math.max(80, Math.min(1200, Math.round(parseInt(m[2],10) * sc)));
     return `min(${pct}%,${px}px) auto`;
   })();
-  const _bgOpacity2 = _bgIsLogo ? String(Math.min(0.48, parseFloat(_bgOpacity)||0.48).toFixed(2)) : _bgOpacity;
+  // [FIX-BRIGHT-3] 로고형/일반 배경 모두 같은 밝기값(_bgOpacity)을 사용 — 더 이상 로고형만 강제로 어둡게 하지 않음.
+  const _bgOpacity2 = _bgOpacity;
   const _profileViewMode = _b2GetUnivProfileViewMode();
   const bgImgHtml = uCfg.bgImg
     ? forExport
@@ -154,8 +153,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
     <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
-    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('')}
-    ${_smemo?`<div style="font-size:var(--fs-caption);color:#334155;white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:${_isDark?'#1e293b':'#fff'}" onerror="this.style.display='none'">`).join('')}
+    ${_smemo?`<div style="font-size:var(--fs-caption);color:${_isDark?'#cbd5e1':'#334155'};white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
   const _wmSpec = (() => {
     const kRaw = String(univName||'').trim();
@@ -163,8 +162,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     if (k === 'HM' || k === 'DM' || k === 'SSG') return { pct: 20, max: 148, op1: '.34', op0: '.24' };
     if (k === 'JSA' || kRaw === '흑카데미') return { pct: 22, max: 160, op1: '.36', op0: '.26', right: 66, bottom: 28 };
     if (
-      k === 'JSA' || k === 'BGM' ||
-      _logoUnivNames.includes(kRaw) ||
+      k === 'JSA' || k === 'BGM' || _bgIsLogo ||
       kRaw.includes('몬스타') || k.includes('MONSTAR')
     ) {
       return { pct: 26, max: 182, op1: '.36', op0: '.26', right: 46, bottom: 28 };
@@ -180,7 +178,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _wmBottom = (typeof _logoOverlayCfg.wmBottom === 'number') ? _logoOverlayCfg.wmBottom : _wmBottomBase;
   const _wmMaxH = Math.round(_wmMax * 0.70);
   const _wmOn = ((_logoOverlayCfg.wmGlobalOn==null)?true:!!Number(_logoOverlayCfg.wmGlobalOn)) && ((_logoOverlayCfg.wmOn==null)?true:!!Number(_logoOverlayCfg.wmOn));
-  const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden;background:${_hasBgImg?'transparent':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82))'}">
+  const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden;background:${_hasBgImg?'transparent':(_isDark?'linear-gradient(180deg,rgba(15,23,42,.6),rgba(15,23,42,.48))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82))')}">
     ${bgImgHtml}
     ${(_wmOn && iconUrl)?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:${_wmRight}px;bottom:${_wmBottom}px;width:min(${_wmPct}%,${_wmMax}px);max-width:${_wmMax}px;max-height:${_wmMaxH}px;opacity:${_hasBgImg?_wmSpec.op1:_wmSpec.op0};object-fit:contain;pointer-events:none;z-index:0;filter:drop-shadow(0 12px 28px rgba(15,23,42,.18))" onerror="this.style.display='none'">`:''}
     <div data-b2-univ-content="1" style="position:relative;z-index:1;padding:16px 20px 22px 16px;background:${_hasBgImg?'transparent':'transparent'}">
@@ -202,19 +200,19 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
-  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:14px 16px 16px;background:${_hasBgImg?'linear-gradient(180deg,rgba(255,255,255,.28),rgba(248,250,252,.14))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.86))'};border-top:1px solid rgba(148,163,184,.16)">
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:${_isDark?'#1e293b':'#fff'}" onerror="this.style.display='none'">`).join('');
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:14px 16px 16px;background:${_hasBgImg?(_isDark?'linear-gradient(180deg,rgba(15,23,42,.4),rgba(15,23,42,.28))':'linear-gradient(180deg,rgba(255,255,255,.28),rgba(248,250,252,.14))'):(_isDark?'linear-gradient(180deg,rgba(15,23,42,.7),rgba(15,23,42,.6))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.86))')};border-top:1px solid ${_isDark?'rgba(148,163,184,.2)':'rgba(148,163,184,.16)'}">
     <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_bimgHtmls||_bnote)?'10px':'0'}">하단 메모</div>
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${_bnote?'8px':'0'}">${_bimgHtmls}</div>`:''}
-    ${_bnote?`<div style="font-size:var(--fs-sm);color:#334155;white-space:pre-wrap;line-height:1.7">${_bnote}</div>`:''}
+    ${_bnote?`<div style="font-size:var(--fs-sm);color:${_isDark?'#cbd5e1':'#334155'};white-space:pre-wrap;line-height:1.7">${_bnote}</div>`:''}
   </div>` : '';
 
   return `
-    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
+    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:22px;overflow:hidden;border:1px solid ${_isDark?'#334155':'rgba(148,163,184,.16)'};background:${_isDark?'linear-gradient(180deg,rgba(15,23,42,.78),rgba(15,23,42,.68))':'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96))'};box-shadow:${_isDark?'0 18px 32px rgba(0,0,0,.28)':'0 18px 32px rgba(15,23,42,.06)'}">
       <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:16px 16px 14px;position:relative;overflow:hidden">
         <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
         <div style="display:flex;align-items:stretch;gap:12px;position:relative;z-index:1">
-          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:clamp(56px,var(--su_univ_logo_size,64px),76px);height:clamp(56px,var(--su_univ_logo_size,64px),76px);object-fit:contain;border-radius:var(--su_univ_logo_radius,16px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.28);padding:6px;box-shadow:0 14px 26px rgba(15,23,42,.12)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:clamp(56px,var(--su_univ_logo_size,64px),76px);height:clamp(56px,var(--su_univ_logo_size,64px),76px);object-fit:contain;border-radius:0;flex-shrink:0;cursor:pointer;background:transparent;border:none;padding:0" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:7px">
             <div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">
               <div style="min-width:0;flex:1">
@@ -305,11 +303,19 @@ function _b2FreeView() {
 
   const defCol = '#64748b';
   const _fvMode = _b2GetFreeViewMode();
+  const _fvIsDark = (typeof document!=='undefined' && document.body && document.body.classList.contains('dark'));
+  const _fvWrapBg = _fvIsDark
+    ? 'linear-gradient(180deg,rgba(15,23,42,.98),rgba(10,17,32,.96))'
+    : 'linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96))';
+  const _fvWrapBorder = _fvIsDark ? 'rgba(148,163,184,.20)' : 'rgba(148,163,184,.16)';
+  const _fvBodyBg = _fvIsDark
+    ? 'linear-gradient(180deg,rgba(15,23,42,.92),rgba(10,17,32,.86))'
+    : 'linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90))';
   const _fvModeBtn = (mode, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeViewMode('${mode}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvMode===mode?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvMode===mode?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
   const _fvGenderBtn = (g, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeGenderFilter('${g}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvGenderFilter===g?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvGenderFilter===g?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
-  let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
+  let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid ${_fvWrapBorder};background:${_fvWrapBg};box-shadow:0 18px 32px rgba(15,23,42,.06)">
     <div style="background:linear-gradient(135deg,${defCol} 0%,#475569 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,0) 58%);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
@@ -345,7 +351,7 @@ function _b2FreeView() {
       </div>
       </div>
     </div>
-    <div style="background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90));padding:16px">`;
+    <div style="background:${_fvBodyBg};padding:16px">`;
 
   if (_fvMode === 'stat') {
     let _statHtml = '';
@@ -370,7 +376,11 @@ function _b2FreeView() {
     const _allFree = roledFree.concat(orderedTierKeys.flatMap(t => tierGroups[t].slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}))));
     h += _b2LineupTable(_allFree, defCol);
   } else {
-    const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
+    const _frowPanelBg = _fvIsDark
+      ? 'linear-gradient(180deg,rgba(30,41,59,.92),rgba(22,32,50,.88))'
+      : 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+    const _frowPanelBorder = _fvIsDark ? 'rgba(148,163,184,.20)' : 'rgba(148,163,184,.14)';
+    const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:${_frowPanelBg};border:1px solid ${_frowPanelBorder};border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
     const _fl = (text, isRole) => `<span style="font-size:var(--fs-sm);font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:var(--r2) 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
 
     roledFree.forEach(p => {

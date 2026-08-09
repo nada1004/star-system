@@ -1,3 +1,23 @@
+/* 저장된 색상값(rgb/rgba/hex/축약hex)을 <input type="color"> 용 #rrggbb 로 변환 */
+function _cfgColorToHex(val, fallback){
+  const fb = fallback || '#ffffff';
+  if(!val) return fb;
+  const v = String(val).trim();
+  let m = v.match(/^#([0-9a-fA-F]{3})$/);
+  if(m) return '#' + m[1].split('').map(c=>c+c).join('').toLowerCase();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)) return v.toLowerCase();
+  m = v.match(/^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i);
+  if(m){
+    const hex = m.slice(1,4).map(n=>{
+      let x = Math.max(0, Math.min(255, Math.round(parseFloat(n))));
+      return x.toString(16).padStart(2,'0');
+    }).join('');
+    return '#' + hex;
+  }
+  return fb;
+}
+window._cfgColorToHex = _cfgColorToHex;
+
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
@@ -833,7 +853,7 @@
       + '  </div>'
       + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">글자 색상</div>'
-      + '    <input type="color" id="cfg-univ-text-color" value="' + ((localStorage.getItem('su_univ_header_text_color')||'rgba(255,255,255,0.8)').replace('rgba(', '').replace(')', '').split(',').slice(0,3).join(',')||'#ffffff') + '" onchange="cfgSetUnivHeaderTextColor(this.value)" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+      + '    <input type="color" id="cfg-univ-text-color" value="' + _cfgColorToHex(localStorage.getItem('su_univ_header_text_color'), '#ffffff') + '" onchange="cfgSetUnivHeaderTextColor(this.value)" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
       + '  </div>'
       + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">가로 위치</div>'

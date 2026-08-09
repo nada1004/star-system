@@ -125,7 +125,8 @@ function _mbResolveAliasQuery(q){
 
 function _buildMatchSubtabShell(currentSub, subOpts, filterStateKey, extraHTML, modeId){
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
+    || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter(modeId));
   if(window[filterStateKey]===undefined) window[filterStateKey]=_lockOpen;
   if(_lockOpen) window[filterStateKey]=true;
   // 모드별 색상 주입 (id가 없는 opts의 경우 modeId 색상으로 통일)

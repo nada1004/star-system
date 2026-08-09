@@ -39,7 +39,7 @@ function _checkDataVersion(){
     
     const savedVer = Number(localStorage.getItem('su_data_version')) || 0;
     if(savedVer !== DATA_VERSION){
-      console.log('[Cache] 데이터 버전 변경됨:', savedVer, '->', DATA_VERSION, '- 캐시 초기화');
+      window.LOG('Cache', '데이터 버전 변경됨:', savedVer, '->', DATA_VERSION, '- 캐시 초기화');
       _clearCacheByVersionChange();
     }else{
       // 버전이 같으면 체크 완료 플래그 설정
@@ -67,7 +67,7 @@ function _clearCacheByVersionChange(){
     try{ sessionStorage.setItem('su_force_autoload', '1'); }catch(e){}
     try{ if(window.MatchStore && typeof window.MatchStore.clear === 'function') window.MatchStore.clear(); }catch(e){}
     try{ if(window.PlayerStore && typeof window.PlayerStore.clear === 'function') window.PlayerStore.clear(); }catch(e){}
-    console.log('[Cache] 캐시 초기화 완료');
+    window.LOG('Cache', '캐시 초기화 완료');
     // (요청) 버전 변경 시 강제 새로고침은 하지 않음
     // - 일부 환경에서 localStorage/sessionStorage 반영 타이밍 문제로 "계속 새로고침"처럼 느껴질 수 있음
     // - 대신 이번 세션에서는 체크 완료로 표시하고, 사용자에게 필요 시 수동 새로고침을 안내
@@ -82,7 +82,7 @@ window.clearAppCache = function(){
   if(!confirm('앱 캐시를 초기화하시겠습니까?\n\n⚠️ 저장된 모든 데이터가 삭제됩니다.')) return;
   try{
     localStorage.clear();
-    console.log('[Cache] 전체 캐시 삭제 완료');
+    window.LOG('Cache', '전체 캐시 삭제 완료');
     location.reload();
   }catch(e){
     alert('캐시 삭제 실패: ' + e.message);
@@ -95,7 +95,7 @@ window.clearSpecificCache = function(keys){
     keys.forEach(key => {
       try{ localStorage.removeItem(key); }catch(e){}
     });
-    console.log('[Cache] 특정 캐시 삭제 완료:', keys);
+    window.LOG('Cache', '특정 캐시 삭제 완료:', keys);
     return true;
   }catch(e){
     console.error('[Cache] 특정 캐시 삭제 실패:', e);
@@ -330,6 +330,7 @@ function resetPlayerDetailState(){
   st.seasonFilters = [];
   st.oppPage = 0;
   st.oppSort = 'tot';
+  st.mapFilter = '';
   return st;
 }
 
@@ -467,8 +468,8 @@ function applyUnivLogoVars(){
     // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
     const dSizeRaw = parseInt(localStorage.getItem('su_ul_size_detail') || '0', 10);
     const dBoxRaw  = parseInt(localStorage.getItem('su_ul_box_detail')  || '0', 10);
-    const dSize = Math.max(132, Number.isFinite(dSizeRaw) && dSizeRaw > 0 ? dSizeRaw : size);
-    const dBox  = Math.max(166, Number.isFinite(dBoxRaw) && dBoxRaw > 0 ? dBoxRaw : box);
+    const dSize = Math.max(28, Math.min(72, Number.isFinite(dSizeRaw) && dSizeRaw > 0 ? dSizeRaw : size));
+    const dBox  = Math.max(48, Math.min(110, Number.isFinite(dBoxRaw) && dBoxRaw > 0 ? dBoxRaw : box));
     // (요청사항) 대학 로고/팀버튼 이미지 모양 다양화
     const _ulRadiusMap = {
       circle:'50%', square:'10px', rounded:'22%', squircle:'28%',
@@ -1289,12 +1290,28 @@ try{
 var boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 var b2LabelAlpha  = J('su_b2la')  ?? 16;
 var b2BgAlpha     = J('su_b2ba')  ?? 9;
-var b2BgImgAlpha      = J('su_b2bia')  ?? 12;
+var b2BgImgAlpha      = J('su_b2bia')  ?? 64;
 var b2FreeBgAlpha     = J('su_b2fba')  ?? 25;
 var b2FreeTierBgAlpha = J('su_b2ftba') ?? 15;
 var b2ProfileBgAlpha  = J('su_b2pba') ?? 10;
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
+// [FIX-BRIGHT-4] 이전에 이름으로 하드코딩되어 있던 "로고형 배경" 대학들을 1회성으로 uCfg.bgIsLogo=true로 마이그레이션
+// (밝기는 이제 통일되지만, 로고가 중앙에 작게 배치되는 레이아웃은 그대로 유지)
+try{
+  if(!localStorage.getItem('su_biglogo_migrated_v1') && Array.isArray(univCfg)){
+    const _legacyLogoNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미','HM','DM','SSG','JSA','BGM'];
+    univCfg.forEach(u=>{
+      if(!u || u.bgIsLogo!==undefined) return;
+      const nm = String(u.name||'').trim();
+      const nmU = nm.toUpperCase();
+      if(_legacyLogoNames.includes(nm) || _legacyLogoNames.includes(nmU) || nm.includes('몬스타') || nmU.includes('MONSTAR')){
+        u.bgIsLogo = true;
+      }
+    });
+    localStorage.setItem('su_biglogo_migrated_v1','1');
+  }
+}catch(e){}
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');

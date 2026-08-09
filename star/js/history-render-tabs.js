@@ -912,8 +912,8 @@ function histTourneyHTML(context){
             <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
                 <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${a}')">
-                  ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[a])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===a)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                   <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'—'}</span>
+                  ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[a])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===a)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                 </div>
                 ${aMembers.length?`<button class="grp-mem-btn" style="--mem-col:${(isDone&&bWin)?'#94a3b8':(ca||'#3b82f6')};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>`:''}
               </div>
@@ -1048,7 +1048,7 @@ function rHistUnivStat(){
   h+=`<div style="background:linear-gradient(135deg,${col}18 0%,${col}08 100%);border:2px solid ${col}55;border-radius:var(--r2);padding:20px 22px;margin-bottom:22px;position:relative;overflow:hidden;">
     <div style="position:absolute;right:-18px;top:-18px;width:90px;height:90px;border-radius:50%;background:${col}12;pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
-      <span class="ubadge clickable-univ" style="background:${col};font-size:var(--fs-md);padding:6px 18px;border-radius:999px;box-shadow:0 2px 8px ${col}55;font-weight:900;letter-spacing:.3px" onclick="openUnivModal('${histUniv}')">${histUniv}</span>
+      <span class="ubadge clickable-univ" style="background:${col};font-size:var(--fs-md);padding:6px 18px;border-radius:999px;box-shadow:0 2px 8px ${col}55;font-weight:900;letter-spacing:.3px" onclick="openUnivModal('${escJS(histUniv)}')">${histUniv}</span>
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:${col};letter-spacing:-.3px">대전 통합 성적</span>
       <span style="margin-left:auto;background:${col};color:#fff;border-radius:999px;padding:4px 14px;font-size:var(--fs-base);font-weight:800;box-shadow:0 1px 6px ${col}55">${totalAll}경기 · ${totalWR}%</span>
     </div>
@@ -1073,7 +1073,7 @@ function rHistUnivStat(){
     oppList.forEach(([opp,s])=>{
       const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;const oc=gc(opp);
       const barW=Math.round(s.w/ot*100);
-      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:box-shadow .15s" onclick="openUnivModal('${opp}')">
+      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:box-shadow .15s" onclick="openUnivModal('${escJS(opp)}')">
         <span class="ubadge" style="background:${oc};font-size:var(--fs-sm);padding:3px 10px;border-radius:999px;flex-shrink:0;min-width:60px;text-align:center">${opp}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">

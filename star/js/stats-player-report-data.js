@@ -22,6 +22,7 @@ if(window._prExcludeTier===undefined) window._prExcludeTier = false;
 if(window._prExcludeNormalTour===undefined) window._prExcludeNormalTour = false;
 if(window._prVsOpp===undefined) window._prVsOpp = '';
 if(window._prTableLimit===undefined) window._prTableLimit = 20;
+if(window._prRecentMapFilter===undefined) window._prRecentMapFilter = '';
 if(window._prStripExpanded===undefined) window._prStripExpanded = false;
 
 var PR_RECENT_KEY = 'su_prReportRecent';
@@ -62,11 +63,16 @@ try{
     '.pr-hero-photo:hover{transform:translateY(-2px) scale(1.02)}',
     '.pr-hero-name{font-size:24px;font-weight:950;letter-spacing:-.02em;color:var(--text1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
     '.pr-hero-name .rbadge{font-size:11px;font-weight:700;opacity:.85}',
-    '.pr-hero-wr-row{display:flex;align-items:baseline;gap:8px;margin-top:8px}',
+    '.pr-hero-wr-row{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}',
     '.pr-hero-wr-num{font-size:30px;font-weight:950;letter-spacing:-.02em;line-height:1}',
     '.pr-hero-wr-sub{font-size:12px;font-weight:600;color:var(--text2)}',
-    '.pr-hero-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px}',
-    '.pr-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}',
+    '.pr-level-badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 4px;border-radius:999px;border:1px solid;line-height:1}',
+    '.pr-level-grade{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:-.01em;color:#fff;flex-shrink:0;box-shadow:0 1px 2px rgba(15,23,42,.16)}',
+    '.pr-level-num{font-size:11px;font-weight:800;color:var(--text2)}',
+    '.pr-level-bar{width:34px;height:5px;border-radius:999px;background:var(--border2);overflow:hidden;display:inline-block}',
+    '.pr-level-bar-fill{display:block;height:100%;border-radius:999px}',
+    '.pr-hero-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px}',
+    '.pr-chip{display:inline-flex;align-items:center;gap:5px;padding:5.5px 13px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;line-height:1.15}',
     '.pr-chip-neutral{background:var(--surface);color:var(--text2);font-weight:600}',
     '.pr-chip-wr{font-size:12.5px;font-weight:900}',
     '.pr-hero-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}',
@@ -381,10 +387,11 @@ function _prInfoGridHTML(p){
 }
 /* ─── 맵별 성적 ─── */
 function _prMapStats(hist){
+  const _regMaps = (typeof maps !== 'undefined' ? maps : (window.maps||[]));
   const m={};
   (hist||[]).forEach(h=>{
     if(h.result!=='승' && h.result!=='패') return;
-    const map = (h.map && h.map!=='-') ? h.map : null;
+    const map = (h.map && h.map!=='-' && _regMaps.includes(h.map)) ? h.map : null;
     if(!map) return;
     if(!m[map]) m[map]={w:0,l:0};
     if(h.result==='승') m[map].w++; else m[map].l++;
@@ -410,6 +417,22 @@ function _prMapBarsHTML(mapStats){
       <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color}">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
       <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
     </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+/* ─── 맵별 전적(클릭 시 최근 경기 표를 해당 맵으로 필터링) ─── */
+function _prRecentMapWinLossHTML(mapStats){
+  if(!mapStats.length) return _prEmptyStateHTML('맵 기록이 없습니다');
+  const sel = window._prRecentMapFilter||'';
+  const chip = (label, on, onclick, rec)=>`<button type="button" onclick="${onclick}"
+    style="padding:6px 14px;border-radius:8px;border:2px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue-l)':'var(--white)'};font-size:var(--fs-sm);font-weight:${on?'700':'500'};color:${on?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
+    ${escHTML(label)}${rec?` <span style="opacity:.7">${rec}</span>`:''}
+  </button>`;
+  let h=`<div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  h+=chip('전체', !sel, "window._prRecentMapFilter='';window._prTableLimit=20;render()");
+  mapStats.forEach(m=>{
+    h+=chip(m.map, sel===m.map, `window._prRecentMapFilter='${escJS(m.map)}';window._prTableLimit=20;render()`, `${m.w}승 ${m.l}패`);
   });
   h+=`</div>`;
   return h;

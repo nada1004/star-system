@@ -123,19 +123,20 @@ function _b2BuildMvpCardHtml(s, rank, isWorst, extraClass, opts) {
 // 캐시된 결과를 재사용하도록 했습니다. (players-tier-rank.js의 _tierRecByNameCache와 동일한 접근)
 const _b2WeeklyAggregateCache = [];
 const _B2_WEEKLY_AGG_CACHE_MAX = 4;
-function _b2WeeklyAggregate(players, dateFrom, dateTo) {
+function _b2WeeklyAggregate(players, dateFrom, dateTo, opts) {
+  const _inclPro = !!(opts && opts.includeProLeague);
   let cacheKey = null;
   try {
     let saveSig = '';
     try { saveSig = String(localStorage.getItem('su_last_save_time') || ''); } catch(e) {}
     // 선수 수만 비교하면 "같은 인원, 다른 구성"을 같다고 오판할 수 있어 이름을 이어붙여 서명으로 사용합니다.
     const namesSig = players.map(p => p && p.name).join(',');
-    cacheKey = `${dateFrom}|${dateTo}|${saveSig}|${namesSig}`;
+    cacheKey = `${dateFrom}|${dateTo}|${_inclPro?'PRO':'NOPRO'}|${saveSig}|${namesSig}`;
     const hit = _b2WeeklyAggregateCache.find(e => e.key === cacheKey);
     if (hit) return hit.result;
   } catch(e) { cacheKey = null; }
 
-  const result = _b2WeeklyAggregateCompute(players, dateFrom, dateTo);
+  const result = _b2WeeklyAggregateCompute(players, dateFrom, dateTo, opts);
 
   if (cacheKey) {
     _b2WeeklyAggregateCache.push({ key: cacheKey, result });
@@ -144,7 +145,9 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   return result;
 }
 
-function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
+function _b2WeeklyAggregateCompute(players, dateFrom, dateTo, opts) {
+  // 2026-08-06: 통계탭 "이번 달/지난달 MVP(남자)"는 프로리그 기록도 포함해 집계한다.
+  const includeProLeague = !!(opts && opts.includeProLeague);
   const dateNum = s => parseInt(String(s || '').replace(/[-\.\/]/g, '')) || 0;
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
   const inRange = d => { const dn = dateNum(d); return dn >= fromN && dn <= toN; };
@@ -152,7 +155,9 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   // 브리핑 집계 제외 모드: 개인전 / 끝장전 / 프로리그 기록은 반영하지 않음
   const isBriefingExcluded = mode => {
     const m = String(mode||'').trim();
-    return m.indexOf('프로리그') !== -1 || m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1;
+    if (m.indexOf('프로리그') !== -1) return !includeProLeague;
+    return m.indexOf('개인전') !== -1 || m.indexOf('끝장전') !== -1
+      || m.indexOf('시빌워') !== -1 || m.indexOf('내전') !== -1;
   };
 
   // ── 외부 소스에서 플레이어별 경기 목록 구성 ──────────────────
@@ -239,6 +244,8 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   const _scanTeamMatches = (arr, modeLabel) => {
     try { (Array.isArray(arr)?arr:[]).forEach(m=>{
       if (!m || !m.d) return;
+      // 시빌워(내전)는 브리핑 MVP/집계에서 제외 (miniM 배열을 미니대전과 공유)
+      if (String(m.type||'') === 'civil') return;
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
           if (!g || !g.winner) return;
@@ -780,53 +787,60 @@ function _b2WeeklyForm(hist) {
   return out;
 }
 
-// ─── 막대 차트 SVG ────────────────────────────
+// ─── 대학별 전적 순위표 ────────────────────────
 function _b2WeeklyBarChart(univStats) {
   const visible = univStats.filter(ud => ud.tg > 0).slice(0, 10);
   if (!visible.length) return '';
   const maxGames = Math.max(...visible.map(ud => ud.tg), 1);
-  const ROW_H = 34, BAR_H = 13, LEFT = 90, RIGHT = 160, TOP = 14, BOT = 10;
-  const H = visible.length * ROW_H + TOP + BOT;
-  const MAX_W = 520 - LEFT - RIGHT;
+  const MEDAL = ['gold', 'silver', 'bronze'];
 
   const rows = visible.map((ud, i) => {
-    const y = TOP + i * ROW_H;
     const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
-    // 승+패를 하나의 막대에 이어붙여서 그림 — 전체 길이(=totalW)가 팀 간 총 전적 비교 기준이 됨
-    const totalW = Math.max(2, Math.round(ud.tg / maxGames * MAX_W));
-    const winW   = ud.tg > 0 ? Math.round(totalW * ud.tw / ud.tg) : 0;
-    const lossW  = Math.max(0, totalW - winW);
+    const totalPct = Math.max(4, Math.round(ud.tg / maxGames * 100));
+    const winPct   = ud.tg > 0 ? Math.round(ud.tw / ud.tg * 100) : 0;
+    const lossPct  = Math.max(0, 100 - winPct);
     const wr = ud.wr !== null ? `${ud.wr}%` : '-';
     const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
-    const name = ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name;
-    const clipId = `b2wbar-clip-${i}`;
+    const rankCls = MEDAL[i] || 'plain';
+    const nameEsc = (typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''));
+    const nameAttr = ud.u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const logo = typeof gUI==='function' ? gUI(ud.u.name,'20px') : '';
     return `
-      <text x="${LEFT-6}" y="${y+BAR_H*0.9}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
-      <defs><clipPath id="${clipId}"><rect x="${LEFT}" y="${y}" width="${totalW}" height="${BAR_H}" rx="4"/></clipPath></defs>
-      <rect x="${LEFT}" y="${y}" width="${MAX_W}" height="${BAR_H}" rx="4" fill="var(--border,#e2e8f0)" opacity="0.35"/>
-      <g clip-path="url(#${clipId})">
-        ${winW>0?`<rect x="${LEFT}" y="${y}" width="${winW}" height="${BAR_H}" fill="${color}"/>`:''}
-        ${lossW>0?`<rect x="${LEFT+winW}" y="${y}" width="${lossW}" height="${BAR_H}" fill="${color}" opacity="0.32"/>`:''}
-      </g>
-      <text x="${LEFT}" y="${y+BAR_H+12}" font-size="10" font-weight="800" fill="${color}">${ud.tw}승</text>
-      <text x="${LEFT+32}" y="${y+BAR_H+12}" font-size="10" fill="${color}" opacity="0.65">${ud.tl}패</text>
-      <text x="${520-RIGHT+8}" y="${y+BAR_H*0.9}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
-      <text x="${520-RIGHT+50}" y="${y+BAR_H*0.9}" font-size="11" fill="var(--text3)">${ud.tg}전 ${ud.active.length}명</text>`;
+      <div class="b2w2-rank-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${nameAttr}')">
+        <div class="b2w2-rank-badge ${rankCls}">${i+1}</div>
+        <span class="b2w2-rank-logo">${logo}</span>
+        <div class="b2w2-rank-main">
+          <div class="b2w2-rank-top">
+            <span class="b2w2-rank-name">${nameEsc}</span>
+            <span class="b2w2-rank-wr" style="color:${wrColor}">${wr}</span>
+          </div>
+          <div class="b2w2-rank-track">
+            <div class="b2w2-rank-track-fill" style="width:${totalPct}%">
+              <div class="b2w2-rank-bar-win" style="width:${winPct}%;background:${color}"></div>
+              <div class="b2w2-rank-bar-loss" style="width:${lossPct}%;background:${color}"></div>
+            </div>
+          </div>
+          <div class="b2w2-rank-bottom">
+            <span style="color:${color};font-weight:800">${ud.tw}승</span>
+            <span style="opacity:.65">${ud.tl}패</span>
+            <span class="b2w2-rank-dot">·</span>
+            <span>${ud.tg}전</span>
+            <span class="b2w2-rank-dot">·</span>
+            <span>${ud.active.length}명</span>
+          </div>
+        </div>
+      </div>`;
   }).join('');
 
-  return `<div style="width:100%;overflow:hidden;padding:4px 0">
-    <svg viewBox="0 0 520 ${H}" width="100%" style="overflow:visible;display:block">
-      ${rows}
-    </svg>
-  </div>`;
+  return `<div class="b2w2-rank-list">${rows}</div>`;
 }
 
 // ─── 종족별 통계 렌더 ─────────────────────────
 function _b2WeeklyRaceStats(raceCount) {
   const races = [
-    { key:'P', label:'프로토스', ico:'🔮', color:'#8b5cf6' },
-    { key:'T', label:'테란',     ico:'⚔️', color:'#3b82f6' },
-    { key:'Z', label:'저그',     ico:'🦎', color:'#f59e0b' }
+    { key:'P', label:'프로토스', ico:'P', color:'#8b5cf6' },
+    { key:'T', label:'테란',     ico:'T', color:'#3b82f6' },
+    { key:'Z', label:'저그',     ico:'Z', color:'#f59e0b' }
   ];
   const rows = races.map(({ key, label, ico, color }) => {
     const { w, l } = raceCount[key];
@@ -835,7 +849,7 @@ function _b2WeeklyRaceStats(raceCount) {
     const wrColor = wr===null ? '#94a3b8' : wr>=60 ? '#10b981' : wr>=40 ? '#f59e0b' : '#ef4444';
     return `<div class="b2w2-race-row">
       <div class="b2w2-race-cell b2w2-race-cell-main">
-        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0">${ico}</span>
+        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0;font-weight:900;color:${color}">${ico}</span>
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text2);white-space:nowrap">${label}</span>
       </div>
       <div class="b2w2-race-cell"><span class="b2w2-race-pill win">${w}</span></div>

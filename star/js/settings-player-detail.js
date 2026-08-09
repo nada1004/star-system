@@ -61,7 +61,7 @@ function _renderCfgPdSection(){
       <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
     </div>`;
   }).join('');
-  const _validPdLayoutModes=['default','board','tabs','report','flip','story'];
+  const _validPdLayoutModes=['default','board','tabs','report','flip','story','gallery','brief','analyst'];
   const dm = _validPdDesignModes.includes(s.design_mode) ? s.design_mode : 'classic';
   const lm = _validPdLayoutModes.includes(s.layout_mode) ? s.layout_mode : 'default';
   const dmCards = [
@@ -100,7 +100,10 @@ function _renderCfgPdSection(){
     ['tabs','탭 전환형','스크롤 대신 개요/전적/최근경기/기타 탭으로 전환','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:1fr 1fr 1fr;'],
     ['report','보고서형','목차 사이드바 + 번호 매긴 문서형 섹션, 격식 있는 느낌','linear-gradient(180deg,#f8fafc 0 34%,#ffffff 34% 100%)','grid-template-columns:1fr;'],
     ['flip','플립카드형','앞면은 요약만, 버튼 누르면 카드가 뒤집히며 상세 공개','linear-gradient(180deg,#eef2ff 0 50%,#ffffff 50% 100%)','grid-template-columns:1fr;'],
-    ['story','스토리형','인스타 스토리처럼 세로 슬라이드+진행바로 넘겨보기','linear-gradient(180deg,#0f172a 0 60%,#1e293b 60% 100%)','grid-template-columns:1fr;']
+    ['story','스토리형','인스타 스토리처럼 세로 슬라이드+진행바로 넘겨보기','linear-gradient(180deg,#0f172a 0 60%,#1e293b 60% 100%)','grid-template-columns:1fr;'],
+    ['gallery','✨ 갤러리형','대형 히어로 + 광택 카드 그리드, 가장 예쁜 프리미엄 배치','linear-gradient(135deg,#ffe4f0 0%,#e0e7ff 50%,#ccfbf1 100%)','grid-template-columns:1fr 1fr;'],
+    ['brief','🗂 브리프 리포트','문서 머리글·발행일·번호 섹션의 정식 보고서 문서 스타일','linear-gradient(180deg,#fbfaf7 0 40%,#f1efe9 40% 100%)','grid-template-columns:1fr;'],
+    ['analyst','📈 애널리스트 콘솔','좌측 인덱스 + 코드 라벨 데이터 블록의 전문 분석 화면','linear-gradient(180deg,#0b1220 0 46%,#111c2e 46% 100%)','grid-template-columns:64px 1fr;']
   ].map(([key,label,desc,bg,grid])=>`
     <button class="btn btn-xs ${lm===key?'btn-b':'btn-w'}" onclick="_setPdLayoutMode('${key}')"
       style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${lm===key?'2px':'1px'}">
@@ -607,7 +610,7 @@ function _setPdDesignMode(mode){
   _pdTouchPrefs();
 }
 function _setPdLayoutMode(mode){
-  const valid=['default','board','tabs','report','flip','story'];
+  const valid=['default','board','tabs','report','flip','story','gallery','brief','analyst'];
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.layout_mode=valid.includes(mode)?mode:'default';
   localStorage.setItem('su_pd_style',JSON.stringify(s));
@@ -763,7 +766,8 @@ function _pdToggleStylePicker(){
   ];
   const layouts = [
     ['default','기본'],['board','보드'],['tabs','탭 전환'],['report','보고서'],
-    ['flip','플립카드'],['story','스토리']
+    ['flip','플립카드'],['story','스토리'],
+    ['gallery','갤러리'],['brief','브리프'],['analyst','애널리스트']
   ];
   const _chip = (key,label,active,fn) => `<button type="button" onclick="${fn}('${key}');_pdRefreshStylePicker()"
     style="font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer;

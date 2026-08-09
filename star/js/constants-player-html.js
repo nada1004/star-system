@@ -7,14 +7,14 @@ function _getPPHCache() {
   if (_pphCache) return _pphCache;
   try {
     const scale = Math.max(0.7, Math.min(1.6, parseFloat(localStorage.getItem('su_avatar_scale')||'1')||1));
-    const fit = (localStorage.getItem('su_avatar_fit')||'contain').trim();
-    const recFit = (localStorage.getItem('su_rec_avatar_fit')||fit).trim();
+    const fit = (localStorage.getItem('su_avatar_fit')||'cover').trim();
+    const recFit = (localStorage.getItem('su_rec_avatar_fit')||'contain').trim();
     _pphCache = {
       scale: isNaN(scale) ? 1 : scale,
-      fit: ['contain','cover'].includes(fit) ? fit : 'contain',
+      fit: ['contain','cover'].includes(fit) ? fit : 'cover',
       recFit: ['contain','cover'].includes(recFit) ? recFit : 'contain'
     };
-  } catch(e) { _pphCache = { scale:1, fit:'contain', recFit:'contain' }; }
+  } catch(e) { _pphCache = { scale:1, fit:'cover', recFit:'contain' }; }
   // 次の render() 呼び出し時にキャッシュをクリア
   requestAnimationFrame(() => { _pphCache = null; });
   return _pphCache;
@@ -71,8 +71,12 @@ function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="event.stopPropagation();openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
-    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
-    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
+    const RMAP={
+      T:{bg:'var(--pph-fb-t-bg,#dbeafe)',col:'var(--pph-fb-t-col,#1e40af)'},
+      Z:{bg:'var(--pph-fb-z-bg,#ede9fe)',col:'var(--pph-fb-z-col,#5b21b6)'},
+      P:{bg:'var(--pph-fb-p-bg,#fef3c7)',col:'var(--pph-fb-p-col,#92400e)'}
+    };
+    const rm=RMAP[p?.race]||{bg:'var(--pph-fb-n-bg,#e2e8f0)',col:'var(--pph-fb-n-col,#64748b)'};
     const txt=p?.race||'?';
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
@@ -117,7 +121,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   const _prio = opts.lazy ? 'auto' : (opts.priority || 'high');
   const _prioAttr = ' fetchpriority="' + _prio + '"';
   const _origAttr = ' data-orig="'+String(origSrc).replace(/"/g,'&quot;')+'"';
-  const _imgHtml = '<img '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
+  const _imgHtml = '<img class="pph-avatar-img" '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
   if (p && p.secondProfileFile && typeof _phSwap2ndHTML === 'function') {
     const _2ndImgHtml = _phSwap2ndHTML(p.secondProfileFile, { style: 'border-radius:inherit;'+(fit?('object-fit:'+fit+';'):'') });
     const _innerImg = _imgHtml.replace('style="'+base, 'style="position:absolute;inset:0;'+base);
