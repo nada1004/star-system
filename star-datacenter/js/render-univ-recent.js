@@ -24,6 +24,11 @@ function _bindUnivRecentDelegatedEvents(){
 function buildUnivRecentMatchesHTML(opts){
   const { myMatches=[], univName='', isMobile=false, isTablet=false } = opts || {};
   if(!myMatches.length) return '';
+  // (요청사항) 대전기록 탭처럼 연도/월 필터 + 최신순/오래된순 정렬을 이 위젯에도 추가
+  const _sectionKey = 'univ-recent';
+  const _filtered = myMatches.filter(m => typeof passDateFilter!=='function' || passDateFilter(m.d||'', _sectionKey));
+  const _dir = (typeof recSortDir!=='undefined' && (recSortDir==='asc'||recSortDir==='desc')) ? recSortDir : 'desc';
+  const _sorted = [..._filtered].sort((a,b)=> _dir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
   const _col = gc(univName) || '#2563eb';
   const _hexToRgb = h => { const m=String(h||'').match(/^#([0-9a-f]{6})$/i); if(!m)return '59,130,246'; const n=parseInt(m[1],16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; };
   const colRgb = _hexToRgb(_col);
@@ -41,9 +46,30 @@ function buildUnivRecentMatchesHTML(opts){
     if(mode.includes('프로')) return '#0891b2';
     return '#64748b';
   };
-  const recent = myMatches.slice(0,15);
+  // 더보기(누적 로드) 페이지네이션
+  const _pageSize=15;
+  window._univRecentPage = window._univRecentPage || {};
+  if(window._univRecentPage[univName]===undefined) window._univRecentPage[univName]=0;
+  const _loadedCount=(window._univRecentPage[univName]+1)*_pageSize;
+  const recent = _sorted.slice(0,_loadedCount);
+  const _hasMore = _sorted.length>recent.length;
+
+  const _univNameEsc = univName.replace(/'/g,"\\'");
+  const _filterBar = (typeof buildYearMonthFilterControls==='function')
+    ? `<div class="hist-inlinebar no-export" style="margin-bottom:10px">
+        ${buildYearMonthFilterControls(_sectionKey, true)}
+        <span class="hist-inline-sep"></span>
+        <div class="hist-ctrl-group">
+          <button class="pill ${_dir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';window._univRecentPage=window._univRecentPage||{};window._univRecentPage['${_univNameEsc}']=0;render()">최신순 ↓</button>
+          <button class="pill ${_dir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._univRecentPage=window._univRecentPage||{};window._univRecentPage['${_univNameEsc}']=0;render()">오래된순 ↑</button>
+        </div>
+      </div>`
+    : '';
+
   let h = `<div class="su-sec" style="--su-sec-accent:${_col}">
-    <div class="su-sec__title">최근 대전 기록 <small>${recent.length}경기</small></div>
+    <div class="su-sec__title">최근 대전 기록 <small>${_sorted.length}경기</small></div>
+    ${_filterBar}
+    ${!recent.length?`<div style="padding:24px;text-align:center;color:var(--gray-l)">선택한 기간에 기록이 없습니다.</div>`:''}
     <div style="display:flex;flex-direction:column;gap:6px">`;
 
   recent.forEach((m, idx) => {
@@ -105,7 +131,15 @@ function buildUnivRecentMatchesHTML(opts){
       </div>
     </div>`;
   });
-  h += `</div></div>`;
+  h += `</div>`;
+  if(_sorted.length>_pageSize){
+    h += `<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">${recent.length} / ${_sorted.length}건 표시 중</span>
+      ${_hasMore?`<button class="btn btn-sm" onclick="window._univRecentPage=window._univRecentPage||{};window._univRecentPage['${_univNameEsc}']=(window._univRecentPage['${_univNameEsc}']||0)+1;render()">더 보기 ↓</button>`:''}
+      ${window._univRecentPage[univName]>0?`<button class="btn btn-sm btn-w" onclick="window._univRecentPage=window._univRecentPage||{};window._univRecentPage['${_univNameEsc}']=0;render()">처음으로</button>`:''}
+    </div>`;
+  }
+  h += `</div>`;
   return h;
 }
 

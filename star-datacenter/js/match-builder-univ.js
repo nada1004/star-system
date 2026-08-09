@@ -19,7 +19,9 @@ function rUnivM(C,T){
     : [{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
   let h='';
   const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
-    ? (buildYearMonthFilterControls('univm', true))
+    ? (buildYearMonthFilterControls('univm', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
   h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra, 'univm');
   if(univmSub==='input'&&_li){
