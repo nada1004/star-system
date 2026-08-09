@@ -285,27 +285,28 @@ function _grpStandingsMiniHTML(ranked){
 /* ── 컴팩트 리스트 뷰 ── */
 function _grpCompactRow(m,tnId,opts){
   const o=opts||{};
-  const plain=!!o.plain; // 조별뷰: 승자 체크표시 · 좌측 색상바 제거
+  const plain=!!o.plain; // 조별뷰: 좌측 색상바 제거
   const isDone=m.sa!=null&&m.sb!=null;
   const aWin=isDone&&m.sa>m.sb;const bWin=isDone&&m.sb>m.sa;
   const clickable=isDone&&tnId;
-  const ca=gc(m.a||''),cb=gc(m.b||'');
-  const accentCol=isDone?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
-  const leftBar=plain?'':`border-left:4px solid ${accentCol};`;
+  const _uc=(n)=>{const c=(typeof gc==='function'&&n)?gc(n):'';return c||'var(--text)';};
+  const ca=_uc(m.a);
+  const cb=_uc(m.b);
+  const leftBar=plain?'':`border-left:4px solid ${isDone?(aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--border)'):'var(--border)'};`;
   return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',${m.grpIdx},${m.matchNum-1})"`:''} style="display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--white);border:1px solid var(--border);${leftBar}border-radius:var(--r2);cursor:${clickable?'pointer':'default'};box-shadow:0 1px 3px rgba(0,0,0,.03)">
-    ${o.hideGroupBadge?'':`<span style="font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);padding:3px 8px;border-radius:99px;flex-shrink:0;box-shadow:0 1px 4px ${m.grpColor}55">${m.grpLetter}조</span>`}
-    ${m.d?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px;font-weight:600">${m.d.slice(5).replace('-','/')}</span>`:''}
+    ${o.hideGroupBadge?'':`<span class="grp-badge" style="font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);padding:3px 8px;border-radius:99px;flex-shrink:0;box-shadow:0 1px 4px ${m.grpColor}55"><span class="grp-badge-full">${m.grpLetter}조</span><span class="grp-badge-short">${m.grpLetter}</span></span>`}
     <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:7px;text-align:right">
-      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.5':'1'};color:${ca}">${(aWin&&!plain)?'✓ ':''}${m.a||'—'}</span>
-      ${_univIconTag(m.a,19)}
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.7':'1'};color:${ca}">${m.a||'—'}</span>
+      <span class="grp-uic">${_univIconTag(m.a,19)}</span>
     </div>
-    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${m.sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${m.sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <span class="grp-score" style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${m.sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${m.sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
     <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left">
-      ${_univIconTag(m.b,19)}
-      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.5':'1'};color:${cb}">${m.b||'—'}${(bWin&&!plain)?' ✓':''}</span>
+      <span class="grp-uic">${_univIconTag(m.b,19)}</span>
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.7':'1'};color:${cb}">${m.b||'—'}</span>
     </div>
   </div>`;
 }
+
 
 
 function _grpRenderCompact(matches,sortDir,tnId){

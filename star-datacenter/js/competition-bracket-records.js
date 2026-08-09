@@ -296,24 +296,27 @@ function openBktBulkPaste(tnId, roundLabel){
 function _bktRoundRow(mc,tnId){
   const {r,mi,teamA,teamB,detail,isDone,winner,isManual}=mc;
   const aWin=isDone&&winner===teamA;const bWin=isDone&&winner===teamB;
-  const ca=gc(teamA||''),cb=gc(teamB||'');
+  const _uc=(n)=>{const c=(typeof gc==='function'&&n)?gc(n):'';return c||'var(--text)';};
+  const ca=_uc(teamA);
+  const cb=_uc(teamB);
   const sa=detail?.sa??'';const sb=detail?.sb??'';
   const dateStr=detail?.d?detail.d.slice(5).replace('-','/'):'';
   const clickable=isDone&&tnId;
   const accentCol=isDone?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
   return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',null,${mi},${r},${isManual})"`:''} style="display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--white);border:1px solid var(--border);border-left:4px solid ${accentCol};border-radius:var(--r2);cursor:${clickable?'pointer':'default'};box-shadow:0 1px 3px rgba(0,0,0,.03)">
-    ${dateStr?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px;font-weight:600">${dateStr}</span>`:''}
+    ${dateStr?`<span class="grp-date" style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px;font-weight:600">${dateStr}</span>`:''}
     <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:7px;text-align:right">
-      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.5':'1'};color:${ca}">${aWin?'✓ ':''}${teamA||'미정'}</span>
-      ${_univIconTag(teamA,19)}
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.7':'1'};color:${ca}">${teamA||'미정'}</span>
+      <span class="grp-uic">${_univIconTag(teamA,19)}</span>
     </div>
-    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <span class="grp-score" style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
     <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left">
-      ${_univIconTag(teamB,19)}
-      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.5':'1'};color:${cb}">${teamB||'미정'}${bWin?' ✓':''}</span>
+      <span class="grp-uic">${_univIconTag(teamB,19)}</span>
+      <span class="grp-team" style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.7':'1'};color:${cb}">${teamB||'미정'}</span>
     </div>
   </div>`;
 }
+
 
 function _bktRenderRoundView(matches,tnId){
   const groups={};
@@ -323,20 +326,38 @@ function _bktRenderRoundView(matches,tnId){
     groups[mc.rLabel].push(mc);
   });
   order.sort((ra,rb)=>{const a=groups[ra][0].r,b=groups[rb][0].r;const av=a===-1?9999:a,bv=b===-1?9999:b;return av-bv;});
-  const roundIcon={'결승':'🏆','4강':'🥈','8강':'⚔️'};
+  const roundIcon={'결승':'🏆','4강':'🥈','8강':'⚔️','16강':'🛡️'};
+  // 라운드 위계 색상 (결승 → 8강 이하, 4단계)
+  const roundTier={
+    '결승':{a:'#d97706',b:'#f59e0b',soft:'#f59e0b'},
+    '4강' :{a:'#7c3aed',b:'#a855f7',soft:'#a855f7'},
+    '8강' :{a:'#1e3a8a',b:'#2563eb',soft:'#2563eb'},
+    '16강':{a:'#0f766e',b:'#14b8a6',soft:'#14b8a6'}
+  };
+  const tierFallback={a:'#334155',b:'#64748b',soft:'#64748b'};
   let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">`;
   order.forEach(rl=>{
     const list=groups[rl];
     const doneCnt=list.filter(mc=>mc.isDone).length;
     const pct=list.length?Math.round(doneCnt/list.length*100):0;
     const isFinal=rl==='결승';
-    h+=`<div style="background:${isFinal?'linear-gradient(180deg,#f59e0b12,var(--white) 90px)':'var(--white)'};border:1px solid var(--border);border-top:4px solid ${isFinal?'#f59e0b':'#2563eb'};border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+    const tc=roundTier[rl]||tierFallback;
+    const champ=isFinal?(list.filter(mc=>mc.isDone&&mc.winner).slice(-1)[0]||null):null;
+    const champName=champ?champ.winner:'';
+    const champCol=champName&&typeof gc==='function'?(gc(champName)||'#f59e0b'):'#f59e0b';
+    h+=`<div style="background:${isFinal?'linear-gradient(180deg,#f59e0b12,var(--white) 90px)':`linear-gradient(180deg,${tc.soft}0d,var(--white) 90px)`};border:1px solid var(--border);border-top:4px solid ${tc.b};border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+      ${champName?`<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;margin:-4px 0 3px;border-radius:var(--r2);background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 3px 10px rgba(245,158,11,.35)">
+        <span style="font-size:17px;line-height:1">🏆</span>
+        <span style="font-size:10px;font-weight:900;color:#fff;background:rgba(0,0,0,.18);padding:2px 8px;border-radius:99px;letter-spacing:.5px">우승</span>
+        <span style="font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);word-break:keep-all">${champName}</span>
+        <span style="width:10px;height:10px;border-radius:99px;background:${champCol};border:2px solid rgba(255,255,255,.85);margin-left:auto;flex-shrink:0"></span>
+      </div>`:''}
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${isFinal?'#d97706,#f59e0b':'#1e3a8a,#2563eb'});padding:4px 12px;border-radius:99px;box-shadow:0 2px 6px ${isFinal?'#f59e0b44':'#2563eb44'}">${roundIcon[rl]||'⚔️'} ${rl}</span>
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${tc.a},${tc.b});padding:4px 12px;border-radius:99px;box-shadow:0 2px 6px ${tc.b}44">${roundIcon[rl]||'⚔️'} ${rl}</span>
         <span style="font-size:11px;color:var(--gray-l);margin-left:auto;font-weight:700">${doneCnt}/${list.length}경기 · ${pct}%</span>
       </div>
       <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${isFinal?'#f59e0b99,#f59e0b':'#2563eb99,#2563eb'});border-radius:99px;transition:.3s"></div>
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${tc.b}99,${tc.b});border-radius:99px;transition:.3s"></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">`;
     list.forEach(mc=>{ h+=_bktRoundRow(mc,tnId); });

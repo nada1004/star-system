@@ -907,6 +907,17 @@ b,strong{font-weight:600;}
 .grp-match-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
 .grp-compact-row{transition:box-shadow var(--tr),transform var(--tr);}
 .grp-compact-row.clickable:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
+.grp-badge-short{display:none;}
+@media(max-width:480px){
+  .grp-compact-row{gap:6px!important;padding:9px 10px!important;}
+  .grp-compact-row .grp-uic{display:none!important;}
+  .grp-compact-row .grp-team{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .grp-compact-row .grp-score{font-size:12px!important;min-width:44px!important;padding:3px 6px!important;}
+  .grp-compact-row .grp-badge-full{display:none;}
+  .grp-compact-row .grp-badge-short{display:inline;}
+  .grp-compact-row .grp-badge{padding:3px 6px!important;}
+}
+
 .grp-match-card.match-card-v3{
   border-radius:22px;
   padding:14px 18px;
