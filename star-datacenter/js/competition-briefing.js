@@ -179,11 +179,16 @@ function _cbPlayerAvatar(name,size){
   try{ p=(typeof players!=='undefined'?players:[]).find(x=>x.name===name)||null; }catch(e){}
   const col=(p&&p.univ)?_cbUcol(p.univ):'#94a3b8';
   const photo=p&&p.photo?p.photo:'';
+  const second=(p&&typeof p.secondProfileFile==='string')?p.secondProfileFile.trim():'';
+  const hasSwap=!!(photo&&second&&typeof _phSwap2ndHTML==='function');
+  const wrapS=`position:relative;display:inline-flex;align-items:center;justify-content:center;width:${s}px;height:${s}px;${shape};overflow:hidden;flex-shrink:0;border:1.5px solid ${col}55;background:${photo?'#e2e8f0':col}`;
+  const inner2=hasSwap?_phSwap2ndHTML(second,{px:Math.max(160,s*4),style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit'}):'';
   if(photo){
     const src=(typeof toThumbUrl==='function')?toThumbUrl(photo,s*2):((typeof toHttpsUrl==='function')?toHttpsUrl(photo):photo);
-    return `<img src="${src}" loading="lazy" decoding="async" style="width:${s}px;height:${s}px;${shape};object-fit:cover;flex-shrink:0;border:1.5px solid ${col}55;background:#e2e8f0" onerror="this.style.display='none'">`;
+    const orig=(typeof toHttpsUrl==='function')?toHttpsUrl(photo):photo;
+    return `<span class="${hasSwap?'ph-swap':''}" style="${wrapS}"><img src="${src}" data-orig="${orig}" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';}">${inner2}</span>`;
   }
-  return `<span style="width:${s}px;height:${s}px;${shape};background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.44)}px;color:#fff;flex-shrink:0">${_cbEsc(String(name||'?').slice(0,1))}</span>`;
+  return `<span class="${hasSwap?'ph-swap':''}" style="${wrapS};font-weight:900;font-size:${Math.round(s*0.44)}px;color:#fff">${_cbEsc(String(name||'?').slice(0,1))}${inner2}</span>`;
 }
 
 function _cbRankList(rows){
@@ -191,8 +196,8 @@ function _cbRankList(rows){
   return `<div class="b2w2-rank-list">${rows.map((r,i)=>{
     const col=r.color||_cbUcol(r.name);
     return `<div class="b2w2-rank-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--b2w-rule-soft,#e5e7eb);border-left:4px solid ${col};border-radius:10px;background:var(--b2w-paper-alt,#fff);margin-bottom:6px">
-      <span class="b2w2-rank-badge" style="min-width:22px;font-weight:900;color:${i===0?'var(--b2w-gold,#b8862c)':'var(--b2w-ink-soft,#6b7280)'}">${i+1}</span>
-      <span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:900;color:${col}">${r.icon||''}<span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_cbEsc(r.name)}</span></span>
+      <span class="b2w2-rank-badge" style="background:${col}18;color:${col}">${i+1}</span>
+      <span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-weight:900;color:${col}">${r.icon||''}<span style="min-width:0;white-space:normal;word-break:break-word;line-height:1.25">${_cbEsc(r.name)}</span></span>
       ${r.sub?`<span style="font-size:11px;font-weight:700;color:var(--b2w-ink-soft,#6b7280);white-space:nowrap">${r.sub}</span>`:''}
       <span style="font-weight:900;color:var(--b2w-ink,#111827);white-space:nowrap">${r.value}</span>
     </div>`;
@@ -465,6 +470,35 @@ function rCompOverallBriefing(tn){
     ['참가 선수',`${allPs.length}명`,`누적 ${setTotal}세트`]
   ]);
   body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'#16a34a':'var(--b2w-accent,#2563eb)')}</div>`;
+
+  /* ── 대회 MVP (다승 + 대진표 가중 + 승률) ── */
+  const mvpCands=allPs.slice().map(p=>({...p,score:p.w*10+p.bkW*6+p.rate*0.4+(champ&&p.univ===champ?12:0)}))
+    .sort((a,b)=>b.score-a.score||b.w-a.w||b.rate-a.rate);
+  const mvpTop=mvpCands[0]||null;
+  if(mvpTop){
+    const mCol=_cbUcol(mvpTop.univ);
+    body+=_cbSection('대회 MVP','다승 · 대진표 기여 · 승률 종합',
+      `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;border:1px solid ${mCol}33;background:linear-gradient(135deg,${mCol}14,var(--b2w-paper-alt,#fff))">
+          <span style="position:relative;display:inline-flex">${_cbPlayerAvatar(mvpTop.name,64)}
+            <span style="position:absolute;bottom:-4px;right:-4px;font-size:16px">🏅</span></span>
+          <div style="min-width:0">
+            <div style="font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--b2w-gold,#b8862c)">MOST VALUABLE PLAYER</div>
+            <div style="font-size:19px;font-weight:900;color:${mCol};line-height:1.25;word-break:break-word">${_cbEsc(mvpTop.name)}</div>
+            <div style="margin-top:3px;font-size:12px;font-weight:800;color:var(--b2w-ink-soft,#6b7280);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              ${mvpTop.univ?_cbTeamChip(mvpTop.univ):''}
+              <span>${mvpTop.w}승 ${mvpTop.l}패 · 승률 ${mvpTop.rate}%</span>
+            </div>
+            <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--b2w-ink-soft,#6b7280)">조별리그 ${mvpTop.lgW}승 · 대진표 ${mvpTop.bkW}승</div>
+          </div>
+        </div>
+        <div>${_cbRankList(mvpCands.slice(0,5).map(p=>({
+          name:p.name,color:_cbUcol(p.univ),icon:_cbPlayerAvatar(p.name,28),
+          sub:`${p.w}승 ${p.l}패 · ${p.rate}%`,value:`${Math.round(p.score)}pt`
+        })))}</div>
+      </div>`);
+  }
+
 
   body+=_cbSection('단계별 진행','조별리그와 대진표 진행 현황',
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
