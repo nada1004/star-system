@@ -755,7 +755,7 @@ function _applyOpenHistDetailTeamHeaderColors(){
 function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo','league','noir','blueprint'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{
     window._lastHistDetailState = {

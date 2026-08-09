@@ -3,7 +3,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo','league','noir','blueprint'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const _wrapMdDetail = (inner)=>`<div class="cmd-detail-shell" data-md-mode="${_mdDesignMode}" data-md-layout="${_mdLayoutMode}">${inner}</div>`;
   const _modeLabel = (mk)=>{
