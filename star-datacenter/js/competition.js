@@ -120,9 +120,10 @@ function rComp(C,T){
       {id:'tour',lbl:'🗂️ 대진표'},
       {id:'tourschedule',lbl:'📋 대진표 기록'},
       {id:'comprank',lbl:'🏅 개인 순위'},
+      {id:'compbrief',lbl:'📰 대회 브리핑'},
       ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
     ];
-    if(compSub==='tiertour'||compSub==='input') compSub='league';
+    if(compSub==='tiertour'||compSub==='input'||compSub==='leaguebrief'||compSub==='tourbrief') compSub='league';
   }
   subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('comp', subOpts) : subOpts;
   // (요청사항) 대회 하위메뉴도 '필터'로 접기/펼치기
@@ -154,6 +155,7 @@ function rComp(C,T){
   }
   else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
+  else if(compSub==='compbrief') h+=typeof rCompOverallBriefing==='function'?rCompOverallBriefing(tn):'';
   else if(compSub==='grpedit'){
     // 현재 선택된 대회가 있으면 바로 그 대회 편집 화면으로 이동
     if(tn){grpEditId=tn.id;grpSub='edit';}

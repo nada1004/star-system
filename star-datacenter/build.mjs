@@ -165,6 +165,7 @@ const MATCH_FILES = [
   'js/competition-detail-modal.js',
   'js/competition-group-records.js',
   'js/competition-bracket-records.js',
+  'js/competition-briefing.js',
   'js/competition-bracket-editor.js',
   'js/competition-group-editor.js',
   'js/competition-normal-matches.js',
