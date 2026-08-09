@@ -29,6 +29,7 @@ var leagueSortDir='desc';
 var leagueViewMode='card';
 var bktSchedSortDir='desc';
 var bktViewMode='card';
+var compBriefView='overall'; // 대회 브리핑 탭 내부 보기 전환: overall | league | tour
 
 function _compMenuTint(hex, alpha){
   try{
@@ -155,7 +156,7 @@ function rComp(C,T){
   }
   else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
-  else if(compSub==='compbrief') h+=typeof rCompOverallBriefing==='function'?rCompOverallBriefing(tn):'';
+  else if(compSub==='compbrief') h+=_rCompBriefingWithSwitcher(tn);
   else if(compSub==='grpedit'){
     // 현재 선택된 대회가 있으면 바로 그 대회 편집 화면으로 이동
     if(tn){grpEditId=tn.id;grpSub='edit';}
@@ -163,6 +164,45 @@ function rComp(C,T){
   }
   else if(compSub==='tiertour') h+=rTierTour();
   C.innerHTML=h;
+}
+
+/* ── 대회 브리핑: 종합/조별리그/토너먼트 3종 보기 전환 스위처 ──
+   기존에는 rCompLeagueBriefing / rCompTourBriefing이 화면 어디서도 호출되지
+   않아 완성된 화면이 있어도 사용자가 접근할 방법이 없었다. 종합 브리핑 위에
+   보기 전환 카드를 얹어 세 가지 브리핑을 모두 오갈 수 있게 한다.
+   (b2w2 브리핑 디자인 시스템의 모드카드 패턴을 그대로 재사용해 시각적 일관성 유지) */
+function _rCompBriefingWithSwitcher(tn){
+  if(!tn) return typeof rCompOverallBriefing==='function'?rCompOverallBriefing(tn):'';
+  const view = ['overall','league','tour'].includes(compBriefView) ? compBriefView : 'overall';
+  const theme = (typeof _b2BriefingThemeLoad==='function') ? _b2BriefingThemeLoad() : 'paper';
+  const modes = [
+    {id:'overall', kicker:'전체 요약', icon:'🏆', title:'종합 브리핑', badgeOn:'보는 중', badgeOff:'대회 전체',
+      desc:'조별리그와 대진표를 합쳐 대회 전체 흐름·MVP·우승팀을 한 화면에서 봅니다.'},
+    {id:'league', kicker:'조별리그', icon:'📅', title:'조별리그 브리핑', badgeOn:'보는 중', badgeOff:'조 편성',
+      desc:'조별 순위, 팀·개인 다승, 무패 팀과 접전 경기를 조별리그 기준으로 짚어봅니다.'},
+    {id:'tour', kicker:'대진표', icon:'🗂️', title:'토너먼트 브리핑', badgeOn:'보는 중', badgeOff:'토너먼트',
+      desc:'라운드별 진행, 우승·준우승, 완승과 접전 경기를 토너먼트 기준으로 봅니다.'}
+  ];
+  let sw = `<div class="b2w2-wrap" data-theme="${theme}" style="margin-bottom:16px">
+    <div class="b2w2-modebar" role="tablist" aria-label="대회 브리핑 보기 전환">
+      ${modes.map(m=>`<div class="b2w2-modecard${view===m.id?' is-active':''}" role="tab" aria-selected="${view===m.id}"
+          tabindex="0" onclick="compBriefView='${m.id}';render()"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();compBriefView='${m.id}';render()}">
+        <div class="b2w2-modehead">
+          <div>
+            <div class="b2w2-modekicker">${m.kicker}</div>
+            <div class="b2w2-modetitle">${m.icon} ${m.title}</div>
+          </div>
+          <span class="b2w2-modebadge">${view===m.id?m.badgeOn:m.badgeOff}</span>
+        </div>
+        <div class="b2w2-modedesc">${m.desc}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  const body = view==='league' ? (typeof rCompLeagueBriefing==='function'?rCompLeagueBriefing(tn):'')
+    : view==='tour' ? (typeof rCompTourBriefing==='function'?rCompTourBriefing(tn):'')
+    : (typeof rCompOverallBriefing==='function'?rCompOverallBriefing(tn):'');
+  return sw + body;
 }
 
 // 승리 색(대학색) → "r,g,b" 변환 (대회 카드 테마용)
