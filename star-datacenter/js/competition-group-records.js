@@ -265,16 +265,17 @@ function grpMatchDetail(m){
 function _grpStandingsMiniHTML(ranked){
   if(!ranked||!ranked.length) return '';
   const medals=['🥇','🥈','🥉'];
-  let h=`<div style="display:flex;flex-direction:column;gap:3px">`;
+  let h=`<div style="display:flex;flex-direction:column;gap:4px">`;
   ranked.forEach((r,i)=>{
     const col=gc(r.u);
     const diff=r.sw-r.sl;
-    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:${i===0?'var(--surface)':'transparent'};border-radius:6px;font-size:11px">
-      <span style="width:16px;text-align:center;flex-shrink:0">${medals[i]||(i+1)}</span>
-      ${_univIconTag(r.u,16)}
-      <span style="flex:1;min-width:0;word-break:keep-all;font-weight:700;color:${col}">${r.u}</span>
-      <span style="flex-shrink:0;font-weight:800;color:var(--text2)">${r.w}승 ${r.l}패</span>
-      <span style="flex-shrink:0;color:var(--gray-l);min-width:32px;text-align:right">${diff>0?'+':''}${diff}</span>
+    const isTop=i===0;
+    h+=`<div style="display:flex;align-items:center;gap:7px;padding:6px 9px;background:${isTop?`linear-gradient(90deg,${col}14,transparent)`:'transparent'};border-left:2px solid ${isTop?col:'transparent'};border-radius:6px;font-size:11px">
+      <span style="width:18px;text-align:center;flex-shrink:0;font-size:${i<3?'13px':'10px'};font-weight:${i<3?'400':'800'};color:${i<3?'inherit':'var(--gray-l)'}">${medals[i]||(i+1)}</span>
+      ${_univIconTag(r.u,17)}
+      <span style="flex:1;min-width:0;word-break:keep-all;font-weight:${isTop?'900':'700'};color:${col}">${r.u}</span>
+      <span style="flex-shrink:0;font-weight:800;color:var(--text2);letter-spacing:-.2px">${r.w}<span style="color:var(--gray-l);font-weight:500">승</span> ${r.l}<span style="color:var(--gray-l);font-weight:500">패</span></span>
+      <span style="flex-shrink:0;font-weight:700;color:${diff>0?'var(--win-col)':diff<0?'var(--lose-col)':'var(--gray-l)'};min-width:30px;text-align:right">${diff>0?'+':''}${diff}</span>
     </div>`;
   });
   h+=`</div>`;
@@ -282,26 +283,30 @@ function _grpStandingsMiniHTML(ranked){
 }
 
 /* ── 컴팩트 리스트 뷰 ── */
-function _grpCompactRow(m,tnId){
+function _grpCompactRow(m,tnId,opts){
+  const o=opts||{};
+  const plain=!!o.plain; // 조별뷰: 승자 체크표시 · 좌측 색상바 제거
   const isDone=m.sa!=null&&m.sb!=null;
   const aWin=isDone&&m.sa>m.sb;const bWin=isDone&&m.sb>m.sa;
   const clickable=isDone&&tnId;
   const ca=gc(m.a||''),cb=gc(m.b||'');
   const accentCol=isDone?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
-  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',${m.grpIdx},${m.matchNum-1})"`:''} style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${accentCol};border-radius:var(--r);cursor:${clickable?'pointer':'default'}">
-    <span style="font-size:10px;font-weight:900;color:#fff;background:${m.grpColor};padding:2px 7px;border-radius:99px;flex-shrink:0">${m.grpLetter}조</span>
-    ${m.d?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px">${m.d.slice(5).replace('-','/')}</span>`:''}
-    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:6px;text-align:right">
-      <span style="word-break:keep-all;line-height:1.3;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.55':'1'};color:${ca}">${m.a||'—'}</span>
-      ${_univIconTag(m.a,18)}
+  const leftBar=plain?'':`border-left:4px solid ${accentCol};`;
+  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',${m.grpIdx},${m.matchNum-1})"`:''} style="display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--white);border:1px solid var(--border);${leftBar}border-radius:var(--r2);cursor:${clickable?'pointer':'default'};box-shadow:0 1px 3px rgba(0,0,0,.03)">
+    ${o.hideGroupBadge?'':`<span style="font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);padding:3px 8px;border-radius:99px;flex-shrink:0;box-shadow:0 1px 4px ${m.grpColor}55">${m.grpLetter}조</span>`}
+    ${m.d?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px;font-weight:600">${m.d.slice(5).replace('-','/')}</span>`:''}
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:7px;text-align:right">
+      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.5':'1'};color:${ca}">${(aWin&&!plain)?'✓ ':''}${m.a||'—'}</span>
+      ${_univIconTag(m.a,19)}
     </div>
-    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:48px;text-align:center;padding:3px 8px;border-radius:8px;background:${isDone?'var(--surface)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${m.sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${m.sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
-    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left">
-      ${_univIconTag(m.b,18)}
-      <span style="word-break:keep-all;line-height:1.3;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.55':'1'};color:${cb}">${m.b||'—'}</span>
+    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${m.sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${m.sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left">
+      ${_univIconTag(m.b,19)}
+      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.5':'1'};color:${cb}">${m.b||'—'}${(bWin&&!plain)?' ✓':''}</span>
     </div>
   </div>`;
 }
+
 
 function _grpRenderCompact(matches,sortDir,tnId){
   const byDate={};
@@ -315,12 +320,15 @@ function _grpRenderCompact(matches,sortDir,tnId){
       dateLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${days[dt.getDay()]}요일`;
     }
     const doneCnt=byDate[date].filter(m=>m.sa!=null&&m.sb!=null).length;
-    h+=`<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-left:2px">
-        <span style="font-size:12px;font-weight:800;color:#1e3a8a">📅 ${dateLabel}</span>
-        <span style="font-size:10px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:99px">${doneCnt}/${byDate[date].length}경기</span>
+    const pct=byDate[date].length?Math.round(doneCnt/byDate[date].length*100):0;
+    h+=`<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:7px 14px;background:linear-gradient(90deg,#1e3a8a0d,transparent);border-left:3px solid #2563eb;border-radius:0 8px 8px 0">
+        <span style="font-size:12px;font-weight:900;color:#1e3a8a">📅 ${dateLabel}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${doneCnt}/${byDate[date].length}경기</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:800">${pct}%</span>
+
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px">`;
+      <div style="display:flex;flex-direction:column;gap:6px">`;
     byDate[date].forEach(m=>{ h+=_grpCompactRow(m,tnId); });
     h+=`</div></div>`;
   });
@@ -335,7 +343,7 @@ function _grpRenderGroupView(tn,matches,sortDir){
     groups[m.grpIdx].list.push(m);
   });
   const order=Object.keys(groups).sort((a,b)=>a-b);
-  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;align-items:start">`;
+  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">`;
   order.forEach(gi=>{
     const g=groups[gi];
     g.list.sort((a,b)=>sortDir==='asc'?(a.d||'9999').localeCompare(b.d||'9999'):(b.d||'').localeCompare(a.d||''));
@@ -343,17 +351,20 @@ function _grpRenderGroupView(tn,matches,sortDir){
     const pct=g.list.length?Math.round(doneCnt/g.list.length*100):0;
     const grpObj=(tn.groups||[])[gi];
     const ranked=grpObj?_calcGrpRank(grpObj):[];
-    h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+
+    h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${g.color},${g.color}cc);padding:4px 12px;border-radius:99px;letter-spacing:.3px">GROUP ${g.letter}</span>
-        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${doneCnt}/${g.list.length}경기</span>
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${g.color},${g.color}cc);padding:4px 12px;border-radius:99px;letter-spacing:.3px;box-shadow:0 2px 6px ${g.color}44">GROUP ${g.letter}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto;font-weight:700">${doneCnt}/${g.list.length}경기 · ${pct}%</span>
       </div>
-      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${g.color};border-radius:3px"></div>
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${g.color}99,${g.color});border-radius:99px;transition:.3s"></div>
       </div>
-      ${ranked.length?`<div style="font-size:10px;font-weight:800;color:var(--gray-l);margin-top:4px">순위</div>${_grpStandingsMiniHTML(ranked)}<div style="height:1px;background:var(--border);margin:2px 0"></div>`:''}
-      <div style="display:flex;flex-direction:column;gap:5px">`;
-    g.list.forEach(m=>{ h+=_grpCompactRow(m,tn.id); });
+      ${ranked.length?`<div style="display:flex;align-items:center;gap:5px;margin-top:6px"><span style="font-size:10px;font-weight:900;color:var(--gray-l);letter-spacing:.3px">🏅 순위</span><div style="flex:1;height:1px;background:var(--border)"></div></div>${_grpStandingsMiniHTML(ranked)}<div style="height:1px;background:var(--border);margin:4px 0 2px"></div>`:''}
+
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+    g.list.forEach(m=>{ h+=_grpCompactRow(m,tn.id,{plain:true}); });
+
     h+=`</div></div>`;
   });
   h+=`</div>`;
@@ -375,22 +386,22 @@ function _grpRenderMatrix(tn,filterGrp){
       cellMap[m.a+'|'+m.b]={sa:m.sa,sb:m.sb,done:m.sa!=null&&m.sb!=null};
     });
     const ranked=_calcGrpRank(grp);
-    h+=`<div style="margin-bottom:26px">
+    h+=`<div style="margin-bottom:28px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${col},${col}cc);padding:4px 12px;border-radius:99px">GROUP ${gl}</span>
-        <span style="font-size:11px;color:var(--gray-l)">${teams.length}개 팀</span>
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${col},${col}cc);padding:4px 12px;border-radius:99px;box-shadow:0 2px 6px ${col}44">GROUP ${gl}</span>
+        <span style="font-size:11px;color:var(--gray-l);font-weight:700">${teams.length}개 팀</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start">
-      <div style="min-width:0;overflow-x:auto">
-      <table style="border-collapse:collapse;width:100%;min-width:${(teams.length+1)*88}px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start">
+      <div style="min-width:0;overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <table style="border-collapse:separate;border-spacing:0;width:100%;min-width:${(teams.length+1)*88}px">
         <thead><tr>
-          <th style="padding:8px;border:1px solid var(--border);background:var(--surface)"></th>
-          ${teams.map(t=>`<th style="padding:8px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:800;color:${gc(t)};white-space:nowrap"><div style="display:flex;align-items:center;justify-content:center;gap:5px">${_univIconTag(t,18)}<span>${t}</span></div></th>`).join('')}
+          <th style="padding:9px;background:var(--surface);position:sticky;left:0;z-index:2;border-bottom:2px solid ${col}"></th>
+          ${teams.map(t=>`<th style="padding:9px;border-bottom:2px solid ${col};border-left:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:800;color:${gc(t)};white-space:nowrap"><div style="display:flex;align-items:center;justify-content:center;gap:5px">${_univIconTag(t,18)}<span>${t}</span></div></th>`).join('')}
         </tr></thead><tbody>`;
     teams.forEach((rowT,ri)=>{
-      h+=`<tr style="background:${ri%2?'rgba(148,163,184,.06)':'transparent'}"><th style="padding:8px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:800;color:${gc(rowT)};text-align:left;white-space:nowrap"><div style="display:flex;align-items:center;gap:6px">${_univIconTag(rowT,18)}<span>${rowT}</span></div></th>`;
+      h+=`<tr style="background:${ri%2?'rgba(148,163,184,.05)':'transparent'}"><th style="padding:9px;position:sticky;left:0;z-index:1;border-right:2px solid ${col};background:var(--surface);font-size:11px;font-weight:800;color:${gc(rowT)};text-align:left;white-space:nowrap"><div style="display:flex;align-items:center;gap:6px">${_univIconTag(rowT,18)}<span>${rowT}</span></div></th>`;
       teams.forEach(colT=>{
-        if(rowT===colT){ h+=`<td style="padding:8px;border:1px solid var(--border);text-align:center;color:var(--border2);background:var(--surface)">–</td>`; return; }
+        if(rowT===colT){ h+=`<td style="padding:9px;border-left:1px solid var(--border);border-top:1px solid var(--border);text-align:center;color:var(--border2);background:repeating-linear-gradient(135deg,var(--surface),var(--surface) 4px,transparent 4px,transparent 8px)">–</td>`; return; }
         const fwd=cellMap[rowT+'|'+colT];
         const rev=cellMap[colT+'|'+rowT];
         let content=`<span style="color:var(--gray-l);font-size:10px">미대결</span>`;
@@ -398,21 +409,21 @@ function _grpRenderMatrix(tn,filterGrp){
         if(fwd&&fwd.done){
           const win=fwd.sa>fwd.sb;
           content=`<span style="font-weight:900;color:${win?'var(--win-col)':'var(--lose-col)'}">${fwd.sa}:${fwd.sb}</span>`;
-          bg=win?'rgba(220,38,38,.08)':'rgba(37,99,235,.08)';
+          bg=win?'rgba(220,38,38,.09)':'rgba(37,99,235,.09)';
         }else if(rev&&rev.done){
           const win=rev.sb>rev.sa;
           content=`<span style="font-weight:900;color:${win?'var(--win-col)':'var(--lose-col)'}">${rev.sb}:${rev.sa}</span>`;
-          bg=win?'rgba(220,38,38,.08)':'rgba(37,99,235,.08)';
+          bg=win?'rgba(220,38,38,.09)':'rgba(37,99,235,.09)';
         }else if((fwd&&!fwd.done)||(rev&&!rev.done)){
           content=`<span style="color:var(--text2);font-size:11px">예정</span>`;
         }
-        h+=`<td style="padding:8px;border:1px solid var(--border);text-align:center;background:${bg}">${content}</td>`;
+        h+=`<td style="padding:9px;border-left:1px solid var(--border);border-top:1px solid var(--border);text-align:center;background:${bg}">${content}</td>`;
       });
       h+=`</tr>`;
     });
     h+=`</tbody></table></div>
-      <div style="min-width:0">
-        <div style="font-size:10px;font-weight:800;color:var(--gray-l);margin-bottom:6px">순위</div>
+      <div style="min-width:0;background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+        <div style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:8px;letter-spacing:.3px">🏅 순위</div>
         ${_grpStandingsMiniHTML(ranked)}
       </div>
       </div></div>`;

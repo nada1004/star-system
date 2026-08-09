@@ -301,16 +301,16 @@ function _bktRoundRow(mc,tnId){
   const dateStr=detail?.d?detail.d.slice(5).replace('-','/'):'';
   const clickable=isDone&&tnId;
   const accentCol=isDone?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
-  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',null,${mi},${r},${isManual})"`:''} style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${accentCol};border-radius:var(--r);cursor:${clickable?'pointer':'default'}">
-    ${dateStr?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px">${dateStr}</span>`:''}
-    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:6px;text-align:right">
-      <span style="word-break:keep-all;line-height:1.3;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.55':'1'};color:${ca}">${teamA||'미정'}</span>
-      ${_univIconTag(teamA,18)}
+  return `<div class="grp-compact-row${clickable?' clickable':''}"${clickable?` onclick="openCompMatchDetailModal('${tnId}',null,${mi},${r},${isManual})"`:''} style="display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--white);border:1px solid var(--border);border-left:4px solid ${accentCol};border-radius:var(--r2);cursor:${clickable?'pointer':'default'};box-shadow:0 1px 3px rgba(0,0,0,.03)">
+    ${dateStr?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;min-width:34px;font-weight:600">${dateStr}</span>`:''}
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-end;gap:7px;text-align:right">
+      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${aWin?'900':'600'};opacity:${isDone&&bWin?'.5':'1'};color:${ca}">${aWin?'✓ ':''}${teamA||'미정'}</span>
+      ${_univIconTag(teamA,19)}
     </div>
-    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:48px;text-align:center;padding:3px 8px;border-radius:8px;background:${isDone?'var(--surface)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
-    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:6px;text-align:left">
-      ${_univIconTag(teamB,18)}
-      <span style="word-break:keep-all;line-height:1.3;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.55':'1'};color:${cb}">${teamB||'미정'}</span>
+    <span style="flex-shrink:0;font-weight:900;font-size:13px;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;background:${isDone?'var(--surface)':'transparent'};border:1px solid ${isDone?'var(--border)':'transparent'};color:var(--text2)">${isDone?`<span style="color:${aWin?'var(--win-col)':'var(--lose-col)'}">${sa}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${bWin?'var(--win-col)':'var(--lose-col)'}">${sb}</span>`:'<span style="font-size:10px;color:var(--gray-l);font-weight:700">예정</span>'}</span>
+    <div style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left">
+      ${_univIconTag(teamB,19)}
+      <span style="word-break:keep-all;line-height:1.3;font-size:13px;font-weight:${bWin?'900':'600'};opacity:${isDone&&aWin?'.5':'1'};color:${cb}">${teamB||'미정'}${bWin?' ✓':''}</span>
     </div>
   </div>`;
 }
@@ -324,20 +324,21 @@ function _bktRenderRoundView(matches,tnId){
   });
   order.sort((ra,rb)=>{const a=groups[ra][0].r,b=groups[rb][0].r;const av=a===-1?9999:a,bv=b===-1?9999:b;return av-bv;});
   const roundIcon={'결승':'🏆','4강':'🥈','8강':'⚔️'};
-  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;align-items:start">`;
+  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">`;
   order.forEach(rl=>{
     const list=groups[rl];
     const doneCnt=list.filter(mc=>mc.isDone).length;
     const pct=list.length?Math.round(doneCnt/list.length*100):0;
-    h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+    const isFinal=rl==='결승';
+    h+=`<div style="background:${isFinal?'linear-gradient(180deg,#f59e0b12,var(--white) 90px)':'var(--white)'};border:1px solid var(--border);border-top:4px solid ${isFinal?'#f59e0b':'#2563eb'};border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.05)">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:4px 12px;border-radius:99px">${roundIcon[rl]||'⚔️'} ${rl}</span>
-        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${doneCnt}/${list.length}경기</span>
+        <span style="font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,${isFinal?'#d97706,#f59e0b':'#1e3a8a,#2563eb'});padding:4px 12px;border-radius:99px;box-shadow:0 2px 6px ${isFinal?'#f59e0b44':'#2563eb44'}">${roundIcon[rl]||'⚔️'} ${rl}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto;font-weight:700">${doneCnt}/${list.length}경기 · ${pct}%</span>
       </div>
-      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:#2563eb;border-radius:3px"></div>
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${isFinal?'#f59e0b99,#f59e0b':'#2563eb99,#2563eb'});border-radius:99px;transition:.3s"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px">`;
+      <div style="display:flex;flex-direction:column;gap:6px">`;
     list.forEach(mc=>{ h+=_bktRoundRow(mc,tnId); });
     h+=`</div></div>`;
   });
