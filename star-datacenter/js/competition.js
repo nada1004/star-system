@@ -1198,29 +1198,31 @@ function rCompGrpEdit(){
   if(grpSub==='edit'&&grpEditId) return rGrpEditInner();
   if(!window._grpTierFilters)window._grpTierFilters=[];
   const tfs=window._grpTierFilters;
-  let h=`<div class="grp-edit-header">
-    <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏗️ 대회 조편성 관리</span>
-    <button class="btn btn-b btn-sm" onclick="grpNewTourney()">+ 새 대회 만들기</button>
-    <div style="margin-left:auto;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">출전 티어 <span style="font-weight:400;font-size:10px">(복수선택)</span>:</span>
+  let h=`<div class="grp-edit-header" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">🏗️ 대회 조편성 관리</span>
+      <button class="btn btn-b btn-sm" style="margin-left:auto" onclick="grpNewTourney()">+ 새 대회 만들기</button>
+    </div>
+    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">출전 티어:</span>
       <button class="tier-filter-btn ${tfs.length===0?'on':''}" onclick="window._grpTierFilters=[];render()">전체</button>
       ${TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tfs.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="grpToggleTierFilter('${t}')">${getTierLabel(t)}</button>`;}).join('')}
     </div>
   </div>`;
-  if(!tourneys.length){h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r);border:2px dashed var(--border2)">등록된 대회가 없습니다.</div>`;return h;}
+  if(!tourneys.length){h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r);border:2px dashed var(--border2)">등록된 대회가 없습니다.<br><button class="btn btn-b btn-sm" style="margin-top:10px" onclick="grpNewTourney()">+ 첫 대회 만들기</button></div>`;return h;}
   tourneys.forEach((tn,ti)=>{
     const isActive=tn.name===curComp;
-    h+=`<div style="background:${isActive?'var(--blue-l)':'var(--surface)'};border:${isActive?'2px solid var(--blue)':'1px solid var(--border)'};border-radius:12px;padding:16px 20px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md)">${isActive?'✅ ':''} ${tn.name}</span>
-        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${(tn.groups||[]).length}개조 / ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>
-        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-          ${!isActive?`<button class="btn btn-b btn-xs" onclick="curComp='${escJS(tn.name)}';save();render()">현재 대회로 설정</button>`:'<span style="font-size:var(--fs-caption);color:var(--blue);font-weight:700">📌 현재 대회</span>'}
-          <button class="btn btn-w btn-xs" onclick="grpEditId='${tn.id}';grpSub='edit';render()">📝 조편성 입력</button>
-          <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})">🗑️ 삭제</button>
-        </div>
+    const gCount=(tn.groups||[]).length;
+    const mCount=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0);
+    const mDone=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).filter(m=>m.sa!=null&&m.sb!=null).length,0);
+    h+=`<div style="background:${isActive?'var(--blue-l)':'var(--surface)'};border:${isActive?'2px solid var(--blue)':'1px solid var(--border)'};border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md)">${isActive?'📌 ':''}${tn.name}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">${gCount?`${gCount}개조 · ${mDone}/${mCount}경기 완료`:'조 없음'}</span>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ${!isActive?`<button class="btn btn-w btn-xs" onclick="curComp='${escJS(tn.name)}';save();render()">현재 대회로</button>`:''}
+        <button class="btn btn-b btn-sm" onclick="grpEditId='${tn.id}';grpSub='edit';render()">📝 조편성 편집</button>
+        <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})" title="삭제" style="padding:5px 8px">🗑️</button>
       </div>
-      ${tn.groups.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${tn.groups.map((g,gi)=>{const gl='ABCDEFGHIJ'[gi];const col=['var(--blue)','var(--red)','var(--green)','var(--gold)','var(--god)','#0891b2'][gi%6];return `<span style="background:${col};color:#fff;padding:2px 12px;border-radius:20px;font-size:var(--fs-caption);font-weight:700">GROUP ${gl}조 (${g.univs.length}팀, ${(g.matches||[]).length}경기)</span>`;}).join('')}</div>`:'<span style="font-size:var(--fs-caption);color:var(--gray-l)">조 없음</span>'}
     </div>`;
   });
   return h;
@@ -1252,24 +1254,25 @@ function rGrpEditInner(){
       ?(players||[]).filter(p=>p.name&&!grp.univs.includes(p.name)).map(p=>p.name)
       :getAllUnivs().filter(u=>!u.dissolved).map(u=>u.name).filter(n=>!grp.univs.includes(n));
     const _badgeCol=(name)=>isTier?gc((players||[]).find(p=>p.name===name)?.univ||''):gc(name);
-    h+=`<div style="background:${col}08;border:2px solid ${col}44;border-radius:12px;padding:16px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    const _gKey=`${tn.id}_${gi}`;
+    const _gOpen=_grpOpen(_gKey);
+    h+=`<details class="grp-acc" ${_gOpen?'open':''} ontoggle="_grpToggle('${_gKey}',this)" style="background:${col}08;border:2px solid ${col}44;border-radius:12px;margin-bottom:12px;overflow:hidden">
+      <summary style="cursor:pointer;list-style:none;outline:none;-webkit-appearance:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px">
         <span style="background:${col};color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;padding:3px 16px;border-radius:20px">GROUP ${gl}조</span>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${grp.univs.length}${_memberUnit} ${_memberLbl} · ${(grp.matches||[]).length}경기</span>
-        <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="grpDelGroup('${tn.id}',${gi})">조 삭제</button>
-      </div>
+        <span class="grp-acc-toggle" style="font-size:var(--fs-caption);color:var(--gray-l)">${_gOpen?'▴ 접기':'▾ 펼치기'}</span>
+        <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="event.preventDefault();event.stopPropagation();grpDelGroup('${tn.id}',${gi})">조 삭제</button>
+      </summary>
+      <div style="padding:2px 16px 16px">
       <div style="margin-bottom:14px">
         <div style="font-size:var(--fs-sm);font-weight:700;color:${col};margin-bottom:8px">① ${_memberLbl} 선택</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           ${grp.univs.map((u,ui)=>`<span class="ubadge" style="background:${_badgeCol(u)};font-size:var(--fs-sm)">${u}<button onclick="grpRemoveUniv('${tn.id}',${gi},${ui})" style="background:rgba(255,255,255,.3);border:none;border-radius:50%;color:#fff;width:16px;height:16px;font-size:9px;cursor:pointer;margin-left:3px;line-height:16px;text-align:center">×</button></span>`).join('')}
           ${!grp.univs.length?`<span style="color:var(--gray-l);font-size:var(--fs-sm)">아직 없음</span>`:''}
         </div>
-        ${availU.length?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <div style="position:relative;flex:1;min-width:150px">
-            <input type="text" id="grp-univ-search-${gi}" placeholder="🔍 ${_memberLbl} 검색..." style="width:100%;padding:6px 10px;font-size:var(--fs-sm);border:1px solid var(--border2);border-radius:6px" oninput="grpFilterUnivSel(${gi})">
-          </div>
-          <select id="grp-univ-sel-${gi}" style="max-width:200px"><option value="">— ${_memberLbl} 선택 —</option>${availU.map(u=>`<option value="${u}">${u}</option>`).join('')}</select>
-          <button class="btn btn-b btn-sm" onclick="grpAddUniv('${tn.id}',${gi})">+ 추가</button>
+        ${availU.length?`<input type="text" id="grp-univ-search-${gi}" placeholder="🔍 ${_memberLbl} 검색 후 클릭해서 추가" style="width:100%;padding:6px 10px;font-size:var(--fs-sm);border:1px solid var(--border2);border-radius:6px;margin-bottom:6px" oninput="grpFilterUnivChips('${tn.id}',${gi})" onkeydown="if(event.key==='Enter'){event.preventDefault();grpAddFirstVisible('${tn.id}',${gi});}">
+        <div id="grp-univ-chips-${gi}" style="display:flex;gap:5px;flex-wrap:wrap;max-height:130px;overflow-y:auto;padding:2px">
+          ${availU.map(u=>`<button type="button" class="grp-add-chip" data-name="${escAttr(u.toLowerCase())}" onclick="grpAddUniv('${tn.id}',${gi},'${escJS(u)}')" style="padding:4px 10px;font-size:var(--fs-caption);border:1px solid var(--border2);border-radius:14px;background:var(--white);cursor:pointer;white-space:nowrap">+ ${u}</button>`).join('')}
         </div>`:`<div style="font-size:var(--fs-caption);color:var(--gray-l)">모든 ${_memberLbl}이 추가됨</div>`}
       </div>
       <div>
@@ -1298,7 +1301,8 @@ function rGrpEditInner(){
         }).join('')}</div>`:''}
         ${grp.univs.length>=2?`<button class="btn btn-b btn-sm" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조 경기 추가</button>`:`<span style="font-size:var(--fs-caption);color:var(--gray-l)">※ ${_memberLbl} 2${_memberUnit} 이상 추가 후 경기 등록 가능</span>`}
       </div>
-    </div>`;
+      </div>
+    </details>`;
   });
   return h;
 }

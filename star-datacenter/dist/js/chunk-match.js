@@ -287,47 +287,45 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
   <button class="btn btn-sm" ${_cp===0?"disabled":""} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">\u2190 \uC774\uC804</button>
   <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}\uBA85)</span>
   <button class="btn btn-sm" ${_cp>=_totP-1?"disabled":""} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">\uB2E4\uC74C \u2192</button>
-</div>`:"";return h+"</tbody></table>"+_pageNav}function grpToggleTierFilter(t){window._grpTierFilters||(window._grpTierFilters=[]);const i=window._grpTierFilters.indexOf(t);i>=0?window._grpTierFilters.splice(i,1):window._grpTierFilters.push(t),render()}function rCompGrpEdit(){if(!isLoggedIn)return'<div style="padding:30px;text-align:center;color:var(--gray-l)">\uB85C\uADF8\uC778 \uD6C4 \uC774\uC6A9 \uAC00\uB2A5\uD569\uB2C8\uB2E4.</div>';if(grpSub==="edit"&&grpEditId)return rGrpEditInner();window._grpTierFilters||(window._grpTierFilters=[]);const tfs=window._grpTierFilters;let h=`<div class="grp-edit-header">
-    <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">\u{1F3D7}\uFE0F \uB300\uD68C \uC870\uD3B8\uC131 \uAD00\uB9AC</span>
-    <button class="btn btn-b btn-sm" onclick="grpNewTourney()">+ \uC0C8 \uB300\uD68C \uB9CC\uB4E4\uAE30</button>
-    <div style="margin-left:auto;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">\uCD9C\uC804 \uD2F0\uC5B4 <span style="font-weight:400;font-size:10px">(\uBCF5\uC218\uC120\uD0DD)</span>:</span>
+</div>`:"";return h+"</tbody></table>"+_pageNav}function grpToggleTierFilter(t){window._grpTierFilters||(window._grpTierFilters=[]);const i=window._grpTierFilters.indexOf(t);i>=0?window._grpTierFilters.splice(i,1):window._grpTierFilters.push(t),render()}function rCompGrpEdit(){if(!isLoggedIn)return'<div style="padding:30px;text-align:center;color:var(--gray-l)">\uB85C\uADF8\uC778 \uD6C4 \uC774\uC6A9 \uAC00\uB2A5\uD569\uB2C8\uB2E4.</div>';if(grpSub==="edit"&&grpEditId)return rGrpEditInner();window._grpTierFilters||(window._grpTierFilters=[]);const tfs=window._grpTierFilters;let h=`<div class="grp-edit-header" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">\u{1F3D7}\uFE0F \uB300\uD68C \uC870\uD3B8\uC131 \uAD00\uB9AC</span>
+      <button class="btn btn-b btn-sm" style="margin-left:auto" onclick="grpNewTourney()">+ \uC0C8 \uB300\uD68C \uB9CC\uB4E4\uAE30</button>
+    </div>
+    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">\uCD9C\uC804 \uD2F0\uC5B4:</span>
       <button class="tier-filter-btn ${tfs.length===0?"on":""}" onclick="window._grpTierFilters=[];render()">\uC804\uCCB4</button>
       ${TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tfs.includes(t);return`<button class="tier-filter-btn ${_on?"on":""}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:""}" onclick="grpToggleTierFilter('${t}')">${getTierLabel(t)}</button>`}).join("")}
     </div>
-  </div>`;return tourneys.length?(tourneys.forEach((tn,ti)=>{const isActive=tn.name===curComp;h+=`<div style="background:${isActive?"var(--blue-l)":"var(--surface)"};border:${isActive?"2px solid var(--blue)":"1px solid var(--border)"};border-radius:12px;padding:16px 20px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md)">${isActive?"\u2705 ":""} ${tn.name}</span>
-        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${(tn.groups||[]).length}\uAC1C\uC870 / ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}\uACBD\uAE30</span>
-        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-          ${isActive?'<span style="font-size:var(--fs-caption);color:var(--blue);font-weight:700">\u{1F4CC} \uD604\uC7AC \uB300\uD68C</span>':`<button class="btn btn-b btn-xs" onclick="curComp='${escJS(tn.name)}';save();render()">\uD604\uC7AC \uB300\uD68C\uB85C \uC124\uC815</button>`}
-          <button class="btn btn-w btn-xs" onclick="grpEditId='${tn.id}';grpSub='edit';render()">\u{1F4DD} \uC870\uD3B8\uC131 \uC785\uB825</button>
-          <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})">\u{1F5D1}\uFE0F \uC0AD\uC81C</button>
-        </div>
+  </div>`;return tourneys.length?(tourneys.forEach((tn,ti)=>{const isActive=tn.name===curComp,gCount=(tn.groups||[]).length,mCount=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0),mDone=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).filter(m=>m.sa!=null&&m.sb!=null).length,0);h+=`<div style="background:${isActive?"var(--blue-l)":"var(--surface)"};border:${isActive?"2px solid var(--blue)":"1px solid var(--border)"};border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md)">${isActive?"\u{1F4CC} ":""}${tn.name}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">${gCount?`${gCount}\uAC1C\uC870 \xB7 ${mDone}/${mCount}\uACBD\uAE30 \uC644\uB8CC`:"\uC870 \uC5C6\uC74C"}</span>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ${isActive?"":`<button class="btn btn-w btn-xs" onclick="curComp='${escJS(tn.name)}';save();render()">\uD604\uC7AC \uB300\uD68C\uB85C</button>`}
+        <button class="btn btn-b btn-sm" onclick="grpEditId='${tn.id}';grpSub='edit';render()">\u{1F4DD} \uC870\uD3B8\uC131 \uD3B8\uC9D1</button>
+        <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})" title="\uC0AD\uC81C" style="padding:5px 8px">\u{1F5D1}\uFE0F</button>
       </div>
-      ${tn.groups.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${tn.groups.map((g,gi)=>{const gl="ABCDEFGHIJ"[gi];return`<span style="background:${["var(--blue)","var(--red)","var(--green)","var(--gold)","var(--god)","#0891b2"][gi%6]};color:#fff;padding:2px 12px;border-radius:20px;font-size:var(--fs-caption);font-weight:700">GROUP ${gl}\uC870 (${g.univs.length}\uD300, ${(g.matches||[]).length}\uACBD\uAE30)</span>`}).join("")}</div>`:'<span style="font-size:var(--fs-caption);color:var(--gray-l)">\uC870 \uC5C6\uC74C</span>'}
-    </div>`}),h):(h+='<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r);border:2px dashed var(--border2)">\uB4F1\uB85D\uB41C \uB300\uD68C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.</div>',h)}function rGrpEditInner(){const tn=tourneys.find(t=>t.id===grpEditId);if(!tn)return grpSub="list",render(),"";const isTier=tn.type==="tier",_memberLbl=isTier?"\uC120\uC218":"\uB300\uD559",_memberUnit=isTier?"\uBA85":"\uAC1C",GL="ABCDEFGHIJ";let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    </div>`}),h):(h+='<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r);border:2px dashed var(--border2)">\uB4F1\uB85D\uB41C \uB300\uD68C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.<br><button class="btn btn-b btn-sm" style="margin-top:10px" onclick="grpNewTourney()">+ \uCCAB \uB300\uD68C \uB9CC\uB4E4\uAE30</button></div>',h)}function rGrpEditInner(){const tn=tourneys.find(t=>t.id===grpEditId);if(!tn)return grpSub="list",render(),"";const isTier=tn.type==="tier",_memberLbl=isTier?"\uC120\uC218":"\uB300\uD559",_memberUnit=isTier?"\uBA85":"\uAC1C",GL="ABCDEFGHIJ";let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-w btn-sm" onclick="grpSub='list';render()">\u2190 \uBAA9\uB85D</button>
     <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">\u{1F3C6} ${tn.name} \u2014 \uC870\uD3B8\uC131</span>
     <button class="btn btn-b btn-sm" style="margin-left:auto" onclick="grpAddGroup('${tn.id}')">+ ${GL[tn.groups.length]||"?"}\uC870 \uCD94\uAC00</button>
-  </div>`;return tn.groups.length?(tn.groups.forEach((grp,gi)=>{const gl=GL[gi]||gi,col=["var(--blue)","var(--red)","var(--green)","var(--gold)","var(--god)","#0891b2"][gi%6],availU=isTier?(players||[]).filter(p=>p.name&&!grp.univs.includes(p.name)).map(p=>p.name):getAllUnivs().filter(u=>!u.dissolved).map(u=>u.name).filter(n=>!grp.univs.includes(n)),_badgeCol=name=>{var _a;return isTier?gc(((_a=(players||[]).find(p=>p.name===name))==null?void 0:_a.univ)||""):gc(name)};h+=`<div style="background:${col}08;border:2px solid ${col}44;border-radius:12px;padding:16px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  </div>`;return tn.groups.length?(tn.groups.forEach((grp,gi)=>{const gl=GL[gi]||gi,col=["var(--blue)","var(--red)","var(--green)","var(--gold)","var(--god)","#0891b2"][gi%6],availU=isTier?(players||[]).filter(p=>p.name&&!grp.univs.includes(p.name)).map(p=>p.name):getAllUnivs().filter(u=>!u.dissolved).map(u=>u.name).filter(n=>!grp.univs.includes(n)),_badgeCol=name=>{var _a;return isTier?gc(((_a=(players||[]).find(p=>p.name===name))==null?void 0:_a.univ)||""):gc(name)},_gKey=`${tn.id}_${gi}`,_gOpen=_grpOpen(_gKey);h+=`<details class="grp-acc" ${_gOpen?"open":""} ontoggle="_grpToggle('${_gKey}',this)" style="background:${col}08;border:2px solid ${col}44;border-radius:12px;margin-bottom:12px;overflow:hidden">
+      <summary style="cursor:pointer;list-style:none;outline:none;-webkit-appearance:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px">
         <span style="background:${col};color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;padding:3px 16px;border-radius:20px">GROUP ${gl}\uC870</span>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">${grp.univs.length}${_memberUnit} ${_memberLbl} \xB7 ${(grp.matches||[]).length}\uACBD\uAE30</span>
-        <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="grpDelGroup('${tn.id}',${gi})">\uC870 \uC0AD\uC81C</button>
-      </div>
+        <span class="grp-acc-toggle" style="font-size:var(--fs-caption);color:var(--gray-l)">${_gOpen?"\u25B4 \uC811\uAE30":"\u25BE \uD3BC\uCE58\uAE30"}</span>
+        <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="event.preventDefault();event.stopPropagation();grpDelGroup('${tn.id}',${gi})">\uC870 \uC0AD\uC81C</button>
+      </summary>
+      <div style="padding:2px 16px 16px">
       <div style="margin-bottom:14px">
         <div style="font-size:var(--fs-sm);font-weight:700;color:${col};margin-bottom:8px">\u2460 ${_memberLbl} \uC120\uD0DD</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           ${grp.univs.map((u,ui)=>`<span class="ubadge" style="background:${_badgeCol(u)};font-size:var(--fs-sm)">${u}<button onclick="grpRemoveUniv('${tn.id}',${gi},${ui})" style="background:rgba(255,255,255,.3);border:none;border-radius:50%;color:#fff;width:16px;height:16px;font-size:9px;cursor:pointer;margin-left:3px;line-height:16px;text-align:center">\xD7</button></span>`).join("")}
           ${grp.univs.length?"":'<span style="color:var(--gray-l);font-size:var(--fs-sm)">\uC544\uC9C1 \uC5C6\uC74C</span>'}
         </div>
-        ${availU.length?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <div style="position:relative;flex:1;min-width:150px">
-            <input type="text" id="grp-univ-search-${gi}" placeholder="\u{1F50D} ${_memberLbl} \uAC80\uC0C9..." style="width:100%;padding:6px 10px;font-size:var(--fs-sm);border:1px solid var(--border2);border-radius:6px" oninput="grpFilterUnivSel(${gi})">
-          </div>
-          <select id="grp-univ-sel-${gi}" style="max-width:200px"><option value="">\u2014 ${_memberLbl} \uC120\uD0DD \u2014</option>${availU.map(u=>`<option value="${u}">${u}</option>`).join("")}</select>
-          <button class="btn btn-b btn-sm" onclick="grpAddUniv('${tn.id}',${gi})">+ \uCD94\uAC00</button>
+        ${availU.length?`<input type="text" id="grp-univ-search-${gi}" placeholder="\u{1F50D} ${_memberLbl} \uAC80\uC0C9 \uD6C4 \uD074\uB9AD\uD574\uC11C \uCD94\uAC00" style="width:100%;padding:6px 10px;font-size:var(--fs-sm);border:1px solid var(--border2);border-radius:6px;margin-bottom:6px" oninput="grpFilterUnivChips('${tn.id}',${gi})" onkeydown="if(event.key==='Enter'){event.preventDefault();grpAddFirstVisible('${tn.id}',${gi});}">
+        <div id="grp-univ-chips-${gi}" style="display:flex;gap:5px;flex-wrap:wrap;max-height:130px;overflow-y:auto;padding:2px">
+          ${availU.map(u=>`<button type="button" class="grp-add-chip" data-name="${escAttr(u.toLowerCase())}" onclick="grpAddUniv('${tn.id}',${gi},'${escJS(u)}')" style="padding:4px 10px;font-size:var(--fs-caption);border:1px solid var(--border2);border-radius:14px;background:var(--white);cursor:pointer;white-space:nowrap">+ ${u}</button>`).join("")}
         </div>`:`<div style="font-size:var(--fs-caption);color:var(--gray-l)">\uBAA8\uB4E0 ${_memberLbl}\uC774 \uCD94\uAC00\uB428</div>`}
       </div>
       <div>
@@ -348,7 +346,8 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
           </div>`}).join("")}</div>`:""}
         ${grp.univs.length>=2?`<button class="btn btn-b btn-sm" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}\uC870 \uACBD\uAE30 \uCD94\uAC00</button>`:`<span style="font-size:var(--fs-caption);color:var(--gray-l)">\u203B ${_memberLbl} 2${_memberUnit} \uC774\uC0C1 \uCD94\uAC00 \uD6C4 \uACBD\uAE30 \uB4F1\uB85D \uAC00\uB2A5</span>`}
       </div>
-    </div>`}),h):(h+=`<div style="text-align:center;padding:50px;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
+      </div>
+    </details>`}),h):(h+=`<div style="text-align:center;padding:50px;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:32px;margin-bottom:12px">\u{1F3C6}</div>
       <div style="font-weight:700;margin-bottom:10px">A\uC870\uBD80\uD130 \uC21C\uCC28\uC801\uC73C\uB85C \uC870\uB97C \uB9CC\uB4E4\uC5B4\uC8FC\uC138\uC694</div>
       <button class="btn btn-b" onclick="grpAddGroup('${tn.id}')">+ GROUP A\uC870 \uB9CC\uB4E4\uAE30</button>

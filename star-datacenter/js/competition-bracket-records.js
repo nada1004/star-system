@@ -76,10 +76,12 @@ function rBracketSchedule(tn){
       bMembers = Array.from(bSet).map(n => ({ name: n }));
     }
     const _sideAB = {a:aMembers||[], b:bMembers||[]};
-    const _sideM = Object.assign({}, detail||{}, {a:(teamA||''), b:(teamB||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])});
-    const _bktSide=(typeof window._buildRecSideProfilePanel==='function')
-      ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
-      : {left:'', right:''};
+    const _sideM = Object.assign({}, detail||{}, {a:(teamA||''), b:(teamB||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[]), matchNum:(_globalSlot!=null?_globalSlot+1:undefined)});
+    const _bktSide=(typeof window._buildCompSidePanel==='function')
+      ? window._buildCompSidePanel(teamA, teamB, aWin, bWin, ca, cb, _sideM)
+      : (typeof window._buildRecSideProfilePanel==='function')
+        ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
+        : {left:'', right:''};
     const _bktActions = [
       isLoggedIn?{ t:'✏️ 결과 입력', d:'대진표 경기 결과 입력', kind:'normal', on:()=>openBracketMatchModal(tn.id,r,mi,teamA,teamB) }:null,
       isLoggedIn?{ t:'📋 붙여넣기', d:'결과 텍스트 빠르게 입력', kind:'accent', on:()=>{ bracketMatchState={tnId:tn.id,rnd:r,mi:mi,teamA:teamA,teamB:teamB}; openBktPasteModal(); } }:null,

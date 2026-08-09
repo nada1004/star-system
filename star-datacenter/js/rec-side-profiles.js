@@ -533,13 +533,10 @@
           orderedPlayers = _toPlayerList(winN, true).concat(_toPlayerList(loseN, false));
         }
 
-        var players = orderedPlayers;
-
-        if(!players.length && Array.isArray(window.players)){
-          var pool = window.players.filter(function(p){ return p.univ === univName; });
-          players = pool.map(function(p){ return {name:p.name, isWinner:isWinSide}; });
-        }
-        return players;
+        // (수정) 경기 데이터/멤버 배정이 전혀 없으면 소속 대학 선수 전원을 무작위로
+        // 보여주는 대신, 패널 자체를 비워서 "경기 미입력" 매치에 엉뚱한 선수 사진이
+        // 뜨지 않도록 함 (사진은 실제 배정/기록된 선수에게만 표시)
+        return orderedPlayers;
       };
 
       return {

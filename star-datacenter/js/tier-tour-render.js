@@ -680,19 +680,27 @@ function grpDelTourney(ti){
   if(!confirm(`"${tourneys[ti].name}" 대회를 삭제하시겠습니까?`))return;
   if(curComp===tourneys[ti].name)curComp='';tourneys.splice(ti,1);save();render();
 }
-function grpFilterUnivSel(gi){
-  const searchEl=document.getElementById(`grp-univ-search-${gi}`);
-  const selEl=document.getElementById(`grp-univ-sel-${gi}`);
-  if(!searchEl||!selEl)return;
-  const q=searchEl.value.trim().toLowerCase();
-  Array.from(selEl.options).forEach(opt=>{
-    if(!opt.value)return;
-    opt.style.display=(!q||opt.text.toLowerCase().includes(q))?'':'none';
+// (요청사항) 검색어 입력 시 아래 칩 목록을 즉시 필터링 — 클릭 한 번으로 바로 추가되는 방식
+function grpFilterUnivChips(tnId,gi){
+  const inp=document.getElementById(`grp-univ-search-${gi}`);
+  const box=document.getElementById(`grp-univ-chips-${gi}`);
+  if(!inp||!box)return;
+  const q=inp.value.trim().toLowerCase();
+  Array.from(box.children).forEach(btn=>{
+    const name=(btn.dataset.name||'');
+    btn.style.display=(!q||name.includes(q))?'':'none';
   });
-  // 첫 번째 매칭 옵션 자동 선택
-  const firstMatch=Array.from(selEl.options).find(o=>o.value&&o.style.display!=='none');
-  if(firstMatch)selEl.value=firstMatch.value;
 }
+// (요청사항) 검색창에서 엔터 시 현재 보이는 첫 칩을 바로 추가
+function grpAddFirstVisible(tnId,gi){
+  const box=document.getElementById(`grp-univ-chips-${gi}`);
+  if(!box)return;
+  const first=Array.from(box.children).find(el=>el.style.display!=='none');
+  if(first)first.click();
+}
+// (요청사항) 조편성 카드 접기/펼치기 상태 영속 헬퍼 (기본값: 펼침)
+function _grpOpen(key){try{const o=JSON.parse(localStorage.getItem('su_grp_open')||'{}');return key in o ? !!o[key] : true;}catch(e){return true;}}
+function _grpToggle(key,el){try{const o=JSON.parse(localStorage.getItem('su_grp_open')||'{}');o[key]=el.open;localStorage.setItem('su_grp_open',JSON.stringify(o));const sp=el.querySelector('summary .grp-acc-toggle');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
 
 function grpAddGroup(tnId){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
@@ -704,9 +712,9 @@ function grpDelGroup(tnId,gi){
   if(!confirm(`"${tn.groups[gi].name}"을 삭제하시겠습니까?`))return;
   tn.groups.splice(gi,1);save();render();
 }
-function grpAddUniv(tnId,gi){
+// (요청사항) 검색+드롭다운+버튼 3단계였던 것을 클릭 한 번으로 즉시 추가하도록 변경 — val을 칩 클릭에서 직접 전달받음
+function grpAddUniv(tnId,gi,val){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
-  const sel=document.getElementById(`grp-univ-sel-${gi}`);const val=sel?sel.value:'';
   if(!val){alert(tn.type==='tier'?'선수를 선택하세요.':'대학을 선택하세요.');return;}
   if(tn.groups[gi].univs.includes(val)){alert(tn.type==='tier'?'이미 추가된 선수입니다.':'이미 추가된 대학입니다.');return;}
   tn.groups[gi].univs.push(val);save();render();

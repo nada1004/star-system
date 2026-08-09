@@ -138,10 +138,12 @@ function rCompLeague(tn){
       const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
       const _sideRgbVars=`--rec-side-left-rgb:${_hexRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb(cb||'#ef4444')};`;
       const _sideAB = {a:aMembers||[], b:bMembers||[]};
-      const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])};
-      const _compSide=(typeof window._buildRecSideProfilePanel==='function')
-        ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
-        : {left:'',right:''};
+      const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[]), matchNum:m.matchNum};
+      const _compSide=(typeof window._buildCompSidePanel==='function')
+        ? window._buildCompSidePanel(m.a||'', m.b||'', aWin, bWin, ca, cb, _sideM)
+        : (typeof window._buildRecSideProfilePanel==='function')
+          ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
+          : {left:'',right:''};
       const _grpWinnerName = isDone ? (aWin ? (m.a||'') : bWin ? (m.b||'') : '') : '';
       const _grpWinnerCol  = isDone ? (aWin ? ca : bWin ? cb : '') : '';
       const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
