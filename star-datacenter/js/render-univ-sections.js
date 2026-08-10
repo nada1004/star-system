@@ -197,9 +197,32 @@ function buildUnivHeaderCardHTML(opts){
   const _nameOffYRaw = parseInt(_univCfgEntry.udNameOffY, 10);
   const _nameOffY = Number.isFinite(_nameOffYRaw) ? _clampOff(_nameOffYRaw) : 0;
 
+  // 기존에는 padding 값에 비율(pct/100)만 곱해서, base 값(20~26px)이 워낙 작아
+  // 슬라이더를 50%~200%까지 움직여도 실제 배너 높이가 몇 px밖에 안 바뀌어
+  // "조절해도 크기가 안 바뀐다"고 느껴지는 문제가 있었음.
+  // → 이후 100% 기준으로 위/아래 각각 비례 증가하도록 고쳤지만, 감소 방향(50~100%)은
+  //   변화폭이 너무 커서 곧바로 최소값(4px)에 눌려버려 50~82% 구간이 전부 똑같아
+  //   보이는 문제가 있었음.
+  // → 50~100%, 100~200% 구간을 각각 별도 기울기로 선형 보간해서, 줄이는 방향도
+  //   끝까지 고르게 체감되도록 수정.
+  const _hdrPadScalePct = Math.max(50, Math.min(200, parseInt(_univCfgEntry.udHeaderPadY, 10) || 100));
+  const _hdrPadBaseTop = isMobile ? 16 : 20;
+  const _hdrPadBaseBottom = isMobile ? 18 : 20;
+  const _hdrPadCalc = (base, pct) => {
+    if (pct <= 100) {
+      const floor = Math.max(4, Math.round(base * 0.3));
+      return Math.round(floor + (base - floor) * ((pct - 50) / 50));
+    }
+    return Math.round(base + (pct - 100) * 0.9);
+  };
+  const _hdrPadTop = _hdrPadCalc(_hdrPadBaseTop, _hdrPadScalePct);
+  const _hdrPadBottom = _hdrPadCalc(_hdrPadBaseBottom, _hdrPadScalePct);
+  const _hdrPadX = isMobile ? 16 : 24;
+
+
   return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
-    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 22px':'26px 24px 26px'};position:relative;overflow:hidden">
+    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${_hdrPadTop}px ${_hdrPadX}px ${_hdrPadBottom}px;position:relative;overflow:hidden">
       ${bgLayerHTML}
       <!-- 장식 원 -->
       <div style="position:absolute;top:-34px;right:-24px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>

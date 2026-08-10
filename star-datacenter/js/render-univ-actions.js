@@ -306,6 +306,14 @@ function toggleUnivEdit(){
             <input type="color" id="ue-name-color-custom" value="${u.udNameColorCustom||'#ffffff'}" style="width:40px;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
           </div>
         </div>
+        <div style="margin-top:10px">
+          <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">상단 배너 세로 폭 <span style="font-weight:400;color:var(--gray-l)">(로고·이름이 들어가는 헤더 높이)</span></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ue-hdr-pady" min="50" max="200" step="5" value="${Number(u.udHeaderPadY||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hdr-pady-val').textContent=this.value+'%'">
+            <span id="ue-hdr-pady-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number(u.udHeaderPadY||100)||100}%</span>
+          </div>
+          <button type="button" onclick="applyHdrPadYToAllUnivs()" style="margin-top:6px;padding:5px 10px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer">↕ 이 값을 전체 대학에 일괄 적용</button>
+        </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
         <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
@@ -482,6 +490,31 @@ function toggleUnivEdit(){
   }
 }
 
+function applyHdrPadYToAllUnivs(){
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const pct=parseInt(document.getElementById('ue-hdr-pady')?.value||'100',10)||100;
+  if(!confirm(`상단 배너 세로 폭을 ${pct}%로 전체 대학(${univCfg.length}개)에 일괄 적용할까요?`)) return;
+  univCfg.forEach(x=>{ if(pct!==100) x.udHeaderPadY=Math.max(50,Math.min(200,pct)); else delete x.udHeaderPadY; });
+  save();render();
+  const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
+  const curName=st.currentName;
+  {
+    const _fn = (typeof buildUnivDetailHTML==='function')
+      ? buildUnivDetailHTML
+      : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
+    const body=document.getElementById('univModalBody');
+    if(body && _fn && curName){
+      body.innerHTML = _fn(curName);
+      injectUnivIcons(body);
+    }
+  }
+  st.editOpen=false;
+  const btn=document.getElementById('univEditBtn');
+  if(btn) btn.textContent='✏️ 수정';
+  alert('전체 대학에 적용했습니다.');
+}
+
 function saveUnivEdit(){
   const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
   if(!canEdit) return;
@@ -504,6 +537,7 @@ function saveUnivEdit(){
   const newLogoOffY=parseInt(document.getElementById('ue-logo-offy')?.value||'0',10);
   const newNameOffX=parseInt(document.getElementById('ue-name-offx')?.value||'0',10);
   const newNameOffY=parseInt(document.getElementById('ue-name-offy')?.value||'0',10);
+  const newHdrPadY=parseInt(document.getElementById('ue-hdr-pady')?.value||'100',10)||100;
   const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
   const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
   const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
@@ -541,6 +575,7 @@ function saveUnivEdit(){
   if(Number.isFinite(newLogoOffY) && newLogoOffY!==0) u.udLogoOffY=Math.max(-60,Math.min(60,newLogoOffY)); else delete u.udLogoOffY;
   if(Number.isFinite(newNameOffX) && newNameOffX!==0) u.udNameOffX=Math.max(-60,Math.min(60,newNameOffX)); else delete u.udNameOffX;
   if(Number.isFinite(newNameOffY) && newNameOffY!==0) u.udNameOffY=Math.max(-60,Math.min(60,newNameOffY)); else delete u.udNameOffY;
+  if(newHdrPadY && newHdrPadY!==100) u.udHeaderPadY=Math.max(50,Math.min(200,newHdrPadY)); else delete u.udHeaderPadY;
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;
