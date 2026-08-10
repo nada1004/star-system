@@ -74,16 +74,22 @@ function rCompLeague(tn){
         <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';render()">오래된순</button>
         <span class="hist-inline-sep"></span>
         <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
-        <button class="pill ${leagueViewMode==='card'?'on':''}" onclick="leagueViewMode='card';render()">🗂️ 카드형</button>
-        <button class="pill ${leagueViewMode==='compact'?'on':''}" onclick="leagueViewMode='compact';render()">📃 컴팩트</button>
-        <button class="pill ${leagueViewMode==='group'?'on':''}" onclick="leagueViewMode='group';render()">🗃️ 조별뷰</button>
-        <button class="pill ${leagueViewMode==='matrix'?'on':''}" onclick="leagueViewMode='matrix';render()">🔲 매트릭스</button>
+        ${(()=>{const _alt=(typeof compAltViewMode==='function')?compAltViewMode('cpleague'):'basic';const _on=(v)=>(_alt==='basic'&&leagueViewMode===v)?'on':'';const _go=(v)=>`leagueViewMode='${v}';(typeof compAltClearMode==='function')?compAltClearMode('cpleague'):render()`;return `
+        <button class="pill ${_on('card')}" onclick="${_go('card')}">🗂️ 카드형</button>
+        ${(typeof compAltToggleBarHTML==='function')?compAltToggleBarHTML('cpleague',['mini','grid']):''}
+        <button class="pill ${_on('compact')}" onclick="${_go('compact')}">📃 컴팩트</button>
+        <button class="pill ${_on('group')}" onclick="${_go('group')}">🗃️ 조별뷰</button>
+        <button class="pill ${_on('matrix')}" onclick="${_go('matrix')}">🔲 매트릭스</button>`;})()}
+
       </div>
     </div>`;
   }
   let filtered=allMatches;
   if(leagueFilterDate) filtered=filtered.filter(m=>m.d===leagueFilterDate);
   if(leagueFilterGrp) filtered=filtered.filter(m=>m.grpName===leagueFilterGrp);
+  if(typeof compAltViewMode==='function' && compAltViewMode('cpleague')!=='basic'){
+    return h + compAltRenderHTML('cpleague', compAltLeagueItems(filtered));
+  }
   if(!filtered.length){
     h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">
       ${allMatches.length?'해당 조건의 경기가 없습니다.':'아직 등록된 경기가 없습니다.'}

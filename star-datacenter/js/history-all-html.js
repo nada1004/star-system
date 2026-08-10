@@ -26,12 +26,26 @@ function histAllViewModeBarHTML(){
   ).join('')}</div>`;
 }
 
+
+// (수정, 2026-08-10) 대회/티어대회 팀 기록: 팀명으로 로고를 못 찾을 때 멤버 프로필로 대체.
+// 요청에 따라 그리드 모드는 '1장만' 표시하고, 미니 기본 모드에서는 사용하지 않는다.
+function _altMembersThumbHTML(members, size, maxCount){
+  try{
+    if(typeof getPlayerPhotoHTML!=='function') return '';
+    const max=Math.max(1, maxCount||1);
+    const list=(members||[]).map(x=> typeof x==='string'?x:(x&&x.name)||'').filter(Boolean).slice(0,max);
+    if(!list.length) return '';
+    const inner=list.map((n,i)=>`<span style="display:inline-block;margin-left:${i?-Math.round(parseInt(size)*0.35):0}px">${getPlayerPhotoHTML(n,size,'border:none;',{lazy:true})}</span>`).join('');
+    return `<span style="display:inline-flex;align-items:center;flex-shrink:0">${inner}</span>`;
+  }catch(e){ return ''; }
+}
+
 // (신규기능) 신규 보기모드가 공통으로 쓰는 매치 기본정보 추출 (팀명/점수/승자/날짜라벨/썸네일)
 // 기존 기본형 카드(로스터 팝업/인라인 수정 등)는 손대지 않고, 신규 모드는 읽기전용 요약 표시로 단순화
 function _histAllBasicFields(type,d,m,typeInfo){
   const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
   const isCK=(type==='ck'||type==='pro');
-  const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp');
+  const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
   let teamA='',teamB='',scoreA='',scoreB='';
   if(isInd){ teamA=m.wName||''; teamB=m.lName||''; }
   else if(isCK){ teamA='A팀'; teamB='B팀'; scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:''; }
@@ -47,11 +61,20 @@ function _histAllBasicFields(type,d,m,typeInfo){
     } else if(!isCK){
       const logo=(n)=>{
         const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
-        if(!url) return '';
-        const src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
-        return `<img src="${src}" loading="lazy" style="width:40px;height:40px;object-fit:contain;flex-shrink:0">`;
+        if(url){
+          const src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+          return `<img src="${src}" loading="lazy" style="width:40px;height:40px;object-fit:contain;flex-shrink:0">`;
+        }
+        // (보완) 선수(스트리머)명이면 프로필 사진으로 대체 — 프로리그 대회 중장전 등
+        if(typeof getPlayerPhotoHTML==='function'&&typeof players!=='undefined'){
+          const p=players.find(x=>x&&x.name===n);
+          if(p) return getPlayerPhotoHTML(p.name,'40px','border:none;',{lazy:true});
+        }
+        return '';
       };
-      thumbA=logo(teamA); thumbB=logo(teamB);
+      thumbA=logo(teamA)||_altMembersThumbHTML(m.teamAMembers,'44px',1);
+      thumbB=logo(teamB)||_altMembersThumbHTML(m.teamBMembers,'44px',1);
+
     }
   }catch(e){}
   const memberTagA = isCK && Array.isArray(m.teamAMembers) && m.teamAMembers.length ? `👥${m.teamAMembers.length}` : '';
@@ -123,7 +146,7 @@ function histAllCompactTableModeHTML(paged,typeInfo){
 function _histAllCardItemHTML(type,d,m,idx,_ref,typeInfo){
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
     const isCK=(type==='ck'||type==='pro');
-    const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp');
+    const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
     let teamA='',teamB='',scoreA='',scoreB='';
     // (UI/UX 개선) CK/프로리그처럼 팀원이 많은 경기는 이름을 전부 나열하면 카드가 쓸데없이 길어짐 →
     // 헤더에는 짧은 팀 라벨만 표시하고, 팀원 목록은 "참여자 보기" 버튼으로 팝업(openProMembersPopup, 개별 탭과 동일 컴포넌트 재사용)에서 확인
@@ -156,7 +179,7 @@ function _histAllCardItemHTML(type,d,m,idx,_ref,typeInfo){
     const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',ind:'ind',gj:'gj',progj:'progj',tourney:'tourney',procomp:'procomp'};
     const mode=modeMap[type]||'comp';
     const _detM = _ref ? {...m, _editRef:_ref} : m;
-    const _isIndLike = (type==='ind'||type==='gj'||type==='progj'||type==='procomp');
+    const _isIndLike = (type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
     let dotA=ca, dotB=cb;
     let _raceA='', _raceB='';
     let _thumbA='', _thumbB='';
@@ -174,15 +197,19 @@ function _histAllCardItemHTML(type,d,m,idx,_ref,typeInfo){
       const _univLogoHTML=(n,side)=>{
         try{
           const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
+          // (요청, 2026-08-10) 미니 기본: 팀 이름 위에는 로고만 표시하고, 프로필 사진 대체는 하지 않는다.
           if(!url) return '';
           const _src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+
           const _won=side==='a'?aWin:bWin;
           const _filt=_won?'none':'grayscale(0.7) opacity(0.8)';
           const _nAttr=String(n).replace(/"/g,'&quot;');
           return `<img src="${_src}" loading="lazy" title="${_nAttr}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:${_filt}" onerror="this.style.display='none'">`;
         }catch(e){ return ''; }
       };
-      _thumbA=_univLogoHTML(teamA,'a'); _thumbB=_univLogoHTML(teamB,'b');
+      // (요청, 2026-08-10) 미니 기본 모드에서는 팀 위 멤버 프로필 겹침 이미지를 표시하지 않는다.
+      _thumbA=_univLogoHTML(teamA,'a');
+      _thumbB=_univLogoHTML(teamB,'b');
     }
     // (UI/UX 개선) 대학 대 대학 매치: 세트/게임 기록에서 실제 출전한 선수를 게임 순서대로 모아
     // 로고 아래에 프로필 사진 1장을 슬라이드쇼처럼 순환 표시. 팀 승패 × 개인 승패 조합으로 명암 처리:
@@ -240,7 +267,7 @@ function _histAllCardItemHTML(type,d,m,idx,_ref,typeInfo){
       return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:1px 7px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:9px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥${members.length}</button>`;
     };
     const _extraTag = m._src==='tour_normal'?'일반경기':(m._src==='tour_bracket'||m._src==='tour_manual')?'토너먼트':(m._teamMatchType?m._teamMatchType.replace('v',':')+'전':'');
-    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp');
+    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp'&&type!=='procompbkt');
     const _editBtn = (()=>{
       if(!_canEdit) return '';
       if(type==='ind'||type==='gj'||type==='progj'){

@@ -146,14 +146,17 @@ function rTierTourTab(C, T){
       }catch(e){}
     }
     const _allBkt=_ttm.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
+    h+=(typeof compAltTitleModeBarHTML==='function')
+      ? compAltTitleModeBarHTML('ttbktrecords', `🏆 ${_ttCurComp||''} 토너먼트 기록`, {bg:'#f5f3ff',bd:'#ddd6fe',col:'#7c3aed',sort:true})
+      : '';
     if(_li && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
         <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">결과는 “토너먼트 기록”으로 저장됩니다. (대진표 자동 반영은 하지 않음)</span>
       </div>`;
     }
-    h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
+    const _bktAltMode=(typeof compAltViewMode==='function')?compAltViewMode('ttbktrecords'):'basic';
+    h+=_allBkt.length?(_bktAltMode!=='basic'?compAltRenderHTML('ttbktrecords',compAltRecItems(_allBkt,'ttbkt')):recSummaryListHTML(_allBkt,'tt','tiertour')):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
     } // end guard: _ttCurComp 선택된 경우
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
@@ -186,8 +189,11 @@ function rTierTourTab(C, T){
       }catch(e){}
     }
     const _allGrp=_ttm.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
-    if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
-    h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
+    h+=(typeof compAltTitleModeBarHTML==='function')
+      ? compAltTitleModeBarHTML('ttgrprecords', `📅 ${_ttCurComp||''} 조별리그 기록`, {bg:'#f0fdf4',bd:'#86efac',col:'#16a34a',sort:true})
+      : '';
+    const _grpAltMode=(typeof compAltViewMode==='function')?compAltViewMode('ttgrprecords'):'basic';
+    h+=_allGrp.length?(_grpAltMode!=='basic'?compAltRenderHTML('ttgrprecords',compAltRecItems(_allGrp,'ttleague')):recSummaryListHTML(_allGrp,'tt','tiertour')):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
     // records 탭 (일반 기록)
     const _ttGeneralBase = _ttm.filter(m=>!m?.stage || m.stage==='general' || m.stage==='normal');
@@ -209,8 +215,11 @@ function rTierTourTab(C, T){
         _ttFiltered = _ttGeneralBase.filter(m=>_eqComp(m,_ttCurComp));
       }
     }
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 일반 기록</div>`;
-    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">일반 기록이 없습니다.</div>';
+    h+=(typeof compAltTitleModeBarHTML==='function')
+      ? compAltTitleModeBarHTML('ttrecords', `🎯 ${_ttCurComp||''} 일반 기록`, {bg:'#f5f3ff',bd:'#ddd6fe',col:'#7c3aed',sort:true})
+      : '';
+    const _genAltMode=(typeof compAltViewMode==='function')?compAltViewMode('ttrecords'):'basic';
+    h+=_ttFiltered.length?(_genAltMode!=='basic'?compAltRenderHTML('ttrecords',compAltRecItems(_ttFiltered,'ttgen')):recSummaryListHTML(_ttFiltered,'tt','tiertour')):'<div style="padding:40px;text-align:center;color:var(--gray-l)">일반 기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }

@@ -173,3 +173,23 @@ function _getHistTourneyMatchObj(idx, context){
 }
 
 
+
+
+/* (요청, 2026-08-10) 대전기록 > 대회 탭 보기모드(그리드/컴팩트 테이블형)용
+   경기 목록 — histTourneyHTML과 동일한 소스/필터/정렬을 사용한다. */
+function histTourneyAltMatches(){
+  const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
+  const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : 'desc';
+  const compItems=[..._comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx,a:(m.a||m.u||''),b:(m.b||'')}));
+  const all=[...tourItems,...nmItems,...compItems].filter(m=>{
+    if(!m.a||!m.b) return false;
+    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
+    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
+  });
+  all.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+  return all;
+}
+if(typeof window!=='undefined') window.histTourneyAltMatches=histTourneyAltMatches;

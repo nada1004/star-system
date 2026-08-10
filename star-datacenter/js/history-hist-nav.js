@@ -145,9 +145,12 @@ function rHist(C,T){
       h+=`<div class="hist-ctrl-group">`;
       // (요청사항) 메뉴 버튼 우측: 연/월 → 구분선 → 최신/오래된순 → 구분선 → 보기모드
       h+=buildYearMonthFilterControls('hist', true);
+      const _sortInModeBar = (histSub==='tourney'||String(histSub||'').startsWith('tiertour'));
+      if(!_sortInModeBar){
       h+=`<span class="hist-inline-sep"></span>`;
       h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">최신순 ↓</button>`;
       h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
+      }
       if(histSub==='all'){
         h+=`<span class="hist-inline-sep"></span>`;
         h+=histAllViewModeBarHTML();
@@ -200,7 +203,16 @@ function rHist(C,T){
     ? histTabWithViewModes('univm', ()=>recSummaryListHTML(_univm,'univm','hist'), {suppressBar:true})
     : recSummaryListHTML(_univm,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
-  else if(histSub==='tourney') h+=histTourneyHTML('hist');
+  else if(histSub==='tourney'){
+    // (요청, 2026-08-10) 대회 탭: 기본 / 미니 기본 / 그리드 / 컴팩트 테이블형
+    const _tcMode=(typeof compAltViewMode==='function')?compAltViewMode('histtourney'):'basic';
+    if(typeof compAltTitleModeBarHTML==='function'){
+      h+=compAltTitleModeBarHTML('histtourney','🎖️ 대회 기록',{bg:'#eff6ff',bd:'#bfdbfe',col:'#2563eb',modes:['basic','mini','grid','compact'],sort:true});
+    }
+    h+=(_tcMode!=='basic' && typeof compAltRenderHTML==='function')
+      ? compAltRenderHTML('histtourney', compAltRecItems((typeof histTourneyAltMatches==='function')?histTourneyAltMatches():[], 'histcomp'))
+      : histTourneyHTML('hist');
+  }
   else if(histSub==='tiertour'||histSub==='tiertour-gen'||histSub==='tiertour-league'||histSub==='tiertour-bkt'){
     // 티어대회 하위탭 색상: 에메랄드/초록 계열
     const _ttOnStyle=(active)=>active?'background:linear-gradient(135deg,#064e3b,#10b981 58%,#6ee7b7);border-color:rgba(110,231,183,.30);box-shadow:0 12px 26px rgba(16,185,129,.24);color:#fff;font-weight:800;':'';
@@ -227,6 +239,18 @@ function rHist(C,T){
     const _emptyMsg=histSub==='tiertour-bkt'?'토너먼트 기록이 없습니다':histSub==='tiertour-league'?'조별리그 기록이 없습니다':histSub==='tiertour-gen'?'일반 기록이 없습니다':'티어대회 기록이 없습니다';
     // tiertour-gen 전용 페이지네이션 (20개 단위)
     const _ttPageOpts = histSub==='tiertour-gen' ? {pageSize:20, pageKey:'tiertour-gen'} : null;
+    // (요청, 2026-08-10) 티어대회 탭: 기본 / 미니 기본 / 그리드 / 컴팩트 테이블형
+    const _ttAltMode=(typeof compAltViewMode==='function')?compAltViewMode('histtt'):'basic';
+    if(typeof compAltTitleModeBarHTML==='function'){
+      const _ttTitle=histSub==='tiertour-bkt'?'🏆 토너먼트 기록':histSub==='tiertour-league'?'📅 조별리그 기록':histSub==='tiertour-gen'?'📝 일반 기록':'🎯 티어대회 기록';
+      h+=compAltTitleModeBarHTML('histtt',_ttTitle,{bg:'#ecfdf5',bd:'#86efac',col:'#059669',modes:['basic','mini','grid','compact'],sort:true});
+    }
+    if(_ttAltMode!=='basic' && typeof compAltRenderHTML==='function'){
+      const _ttAltType=histSub==='tiertour-bkt'?'ttbkt':histSub==='tiertour-league'?'ttleague':'ttgen';
+      h+=compAltRenderHTML('histtt', compAltRecItems(_ttSrc.filter(m=>typeof passDateFilter!=='function'||passDateFilter(m.d||'')), _ttAltType));
+      C.innerHTML=h;
+      return;
+    }
     h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist',undefined,_ttPageOpts):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
   }
   else if(histSub==='pro') h+=(typeof histTabWithViewModes==='function')

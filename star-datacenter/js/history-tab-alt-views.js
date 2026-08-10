@@ -25,7 +25,13 @@ function _histTabAltSupported(tabId){
 const _HIST_TAB_ALT_ALLOWED_MODES = {
   ck: ['basic', 'mini'],
   civil: ['basic', 'mini'],
+  // (요청, 2026-08-10) 대전기록 > 대회 / 티어대회 : 기본·그리드·컴팩트 테이블형 3종
+  histtourney: ['basic', 'mini', 'grid', 'compact'],
+  histtt: ['basic', 'mini', 'grid', 'compact'],
+  // (요청, 2026-08-10) 일반대회 조별리그 : 기본(기존 화면) + 미니 기본 / 그리드 토글
+  cpleague: ['basic', 'mini', 'grid'],
 };
+
 function _histTabAltAllowedModes(tabId){
   return _HIST_TAB_ALT_ALLOWED_MODES[tabId] || ['basic', 'mini', 'grid', 'compact'];
 }

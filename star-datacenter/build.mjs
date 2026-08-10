@@ -177,6 +177,8 @@ const MATCH_FILES = [
   'js/history-bulk-map.js',
   'js/history-all-html.js',
   'js/history-tab-alt-views.js',
+  'js/pro-comp-alt-views.js',
+  'js/comp-alt-views.js',
   'js/history-tourney-html.js',
   'js/history-univ-stat.js',
   'js/history-render-utils.js',

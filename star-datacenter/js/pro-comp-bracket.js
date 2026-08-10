@@ -569,7 +569,9 @@ function proCompTourMatchInput(tn){
   const roundBtns = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
     <button class="btn ${viewRound==='ALL'?'btn-b':'btn-w'} btn-xs" onclick="window._pcStageRecRound='ALL';render()">전체 <span style="opacity:.8">(${_counts.ALL||0})</span></button>
     ${_roundList.map(r=>`<button class="btn ${viewRound===r?'btn-b':'btn-w'} btn-xs" onclick="window._pcStageRecRound='${r}';render()">${r} <span style="opacity:.8">(${_counts[r]||0})</span></button>`).join('')}
+    ${(typeof pcAltViewModeBarHTML==='function')?`<span class="hist-inline-sep"></span>${pcAltViewModeBarHTML('pctourmatch')}`:''}
   </div>`;
+  const _pcAltHTML = ((typeof pcAltViewMode==='function') && pcAltViewMode('pctourmatch')!=='basic') ? pcAltRecordsHTML('pctourmatch', tn) : '';
 
   const card = (item, displayNo)=>{
     const m = item.m;
@@ -711,7 +713,7 @@ function proCompTourMatchInput(tn){
     </div>
     ${window._pcStageMergeMode?`<div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">같은 라운드 · 같은 두 선수(팀)의 "📝 입력" 기록만 선택해서 합칠 수 있습니다. (🗂️ 대진표에서 온 기록은 이미 자동으로 합쳐져 있습니다)</div>`:''}
     ${roundBtns}
-    ${listHTML}
+    ${_pcAltHTML || listHTML}
   </div>`;
 }
 

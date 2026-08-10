@@ -313,7 +313,12 @@ function proCompLeague(tn) {
         <button class="pill ${proCompSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='desc';render()">최신순</button>
         <button class="pill ${proCompSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='asc';render()">오래된순</button>
       </div>
+      ${(typeof pcAltViewModeBarHTML==='function')?pcAltViewModeBarHTML('pcleague'):''}
     </div>`;
+  }
+  // (신규기능) 미니 기본/그리드/컴팩트 테이블형 보기모드
+  if((typeof pcAltViewMode==='function') && pcAltViewMode('pcleague')!=='basic'){
+    return h + pcAltRecordsHTML('pcleague', tn);
   }
   if (grpList.length > 1) {
     // 조 선택은 "전체/일자" 메뉴 영역 우측으로 이동됨
