@@ -55,8 +55,14 @@ function compAltToggleBarHTML(tabId, modes){
 
 // (요청, 2026-08-10) 제목 우측에 "모드" 라벨 + 보기모드 버튼을 붙인 헤더 줄
 // titleHTML: 제목(아이콘 포함) HTML, opts: {bg,bd,col,modes}
+// (수정, 2026-08-10) 최신순/오래된순 + 보기모드 버튼이 상단 "연도" 필터 줄로 이동함에 따라,
+// opts.controls=false를 주면 제목 배지만 표시하고 정렬/모드 버튼은 생략한다 (중복 방지)
 function compAltTitleModeBarHTML(tabId, titleHTML, opts){
   const o = opts || {};
+  const showControls = o.controls !== false;
+  if(!showControls){
+    return titleHTML ? `<span class="no-export" style="display:inline-block;font-size:var(--fs-sm);color:${o.col || 'var(--text3)'};font-weight:700;background:${o.bg || 'var(--surface)'};border:1px solid ${o.bd || 'var(--border2)'};border-radius:8px;padding:6px 12px;margin-bottom:10px">${titleHTML}</span>` : '';
+  }
   const modes = o.modes || ['basic', 'mini', 'grid', 'compact'];
   const cur = compAltViewMode(tabId);
   const btns = modes.map(id =>

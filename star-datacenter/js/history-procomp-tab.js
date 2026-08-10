@@ -2,6 +2,24 @@
    대전기록 - 프로리그 대회 탭 (history-search.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// (신규기능, 2026-08-10) 대전기록 > 프로리그 > 대회 기록 탭: 조별리그/토너먼트/팀전/중장전
+// 각 하위탭 → 프로리그 대회 관리화면(pro-comp-alt-views.js)이 쓰는 보기모드 탭id로 매핑
+// (동일 tabId를 재사용해 보기모드 상태(su_hist_tab_view_mode_*)를 공유한다)
+const _HIST_PC_SUB_TO_ALT_TAB = { league: 'pcleague', tourney: 'pctourmatch', team: 'pcteam', gj: 'pcgj' };
+
+// 모든 프로리그 대회(proTourneys)를 통합해 보기모드용 {type,d,m,idx} 아이템 목록 생성
+function _histProCompAllAltItems(altTabId){
+  let items = [];
+  try{
+    (proTourneys||[]).forEach(tn=>{
+      if(typeof _pcAltItems === 'function') items = items.concat(_pcAltItems(altTabId, tn) || []);
+    });
+  }catch(e){}
+  const dir = (typeof recSortDir !== 'undefined' && recSortDir === 'asc') ? 'asc' : 'desc';
+  items.sort((a, b) => dir === 'asc' ? (a.d || '').localeCompare(b.d || '') : (b.d || '').localeCompare(a.d || ''));
+  return items;
+}
+
 function histProCompHTML() {
   // (요청사항) 대전기록 > 프로리그 > 대회 탭 아래 하위메뉴:
   // 조별리그 / 토너먼트 / 팀전 / 중장전
@@ -15,12 +33,34 @@ function histProCompHTML() {
     <button class="pill ${sub==='team'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('team')}" onclick="window._histProCompSub='team';render()">🤝 팀전</button>
     <button class="pill ${sub==='gj'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('gj')}" onclick="window._histProCompSub='gj';render()">⚔️ 중장전</button>
   </div>`;
+  // (신규기능, 2026-08-10) "프로리그" 관리탭에 이미 있는 기본/미니 기본/그리드/컴팩트 테이블형
+  // 보기모드를 대전기록 탭 쪽에도 동일하게 적용한다.
+  // (수정, 2026-08-10) 보기모드 버튼 자체는 상단 "연도/최신순" 줄로 이동했으므로
+  // 여기서는 더 이상 별도의 버튼줄을 그리지 않고, 선택된 모드에 맞춰 본문만 바꿔 그린다.
+  const _altTabId = _HIST_PC_SUB_TO_ALT_TAB[sub] || 'pcleague';
+  const _altMode = (typeof pcAltViewMode==='function') ? pcAltViewMode(_altTabId) : 'basic';
+
   let inner = '';
-  if(sub==='league') inner = _histProCompLeagueListHTML();
-  else if(sub==='tourney') inner = histProCompTourneyHTML(true);
-  else if(sub==='team') inner = histProCompTeamHTML(true);
-  else if(sub==='gj') inner = histProCompGJHTML(true);
-  else inner = _histProCompLeagueListHTML();
+  if(_altMode !== 'basic'){
+    const items = _histProCompAllAltItems(_altTabId);
+    const _typeInfo = (typeof _PC_ALT_TYPE_INFO !== 'undefined') ? _PC_ALT_TYPE_INFO : {};
+    if(!items.length){
+      inner = `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+    } else if(_altMode === 'grid' && typeof histAllGridModeHTML === 'function'){
+      inner = histAllGridModeHTML(items, _typeInfo);
+    } else if(_altMode === 'compact' && typeof histAllCompactTableModeHTML === 'function'){
+      inner = histAllCompactTableModeHTML(items, _typeInfo);
+    } else if(typeof _histCardGridWithDayHeaders === 'function'){
+      inner = _histCardGridWithDayHeaders(items, _typeInfo);
+    }
+  }
+  if(!inner){
+    if(sub==='league') inner = _histProCompLeagueListHTML();
+    else if(sub==='tourney') inner = histProCompTourneyHTML(true);
+    else if(sub==='team') inner = histProCompTeamHTML(true);
+    else if(sub==='gj') inner = histProCompGJHTML(true);
+    else inner = _histProCompLeagueListHTML();
+  }
   return _pcSubBar + inner;
 }
 

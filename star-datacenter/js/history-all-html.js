@@ -58,6 +58,11 @@ function _histAllBasicFields(type,d,m,typeInfo){
       const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
       if(wp) thumbA=getPlayerPhotoHTML(wp.name,'40px','border:none;',{lazy:true});
       if(lp) thumbB=getPlayerPhotoHTML(lp.name,'40px','border:none;',{lazy:true});
+    } else if(isCK){
+      // (버그픽스, 2026-08-10) CK/프로리그는 A팀/B팀 고정 라벨이라 로고를 찾을 수 없으므로
+      // 팀원 프로필 사진 1장으로 대체 (그리드/컴팩트 테이블형에서 프로필 이미지가 비어보이던 문제)
+      thumbA=_altMembersThumbHTML(m.teamAMembers,'44px',1);
+      thumbB=_altMembersThumbHTML(m.teamBMembers,'44px',1);
     } else if(!isCK){
       const logo=(n)=>{
         const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';

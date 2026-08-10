@@ -23,10 +23,12 @@ function rHist(C,T){
     {id:'psearch',  grp:'종합',   lbl:'스트리머별 검색'},
     {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
     {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전'},
-    {id:'mini',     grp:'팀경기',  lbl:'⚡ 미니대전'},
-    {id:'ck',       grp:'팀경기',  lbl:'🤝 대학CK'},
-    {id:'univm',    grp:'팀경기',  lbl:'🏟️ 대학대전'},
+    // (요청, 2026-08-10) 팀경기 탭 순서: 시빌워 → 미니대전 → 대학대전 → 대학CK
+    // (다른 화면의 "팀경기" 탭 순서와 동일하게 맞춤)
     {id:'civil',    grp:'팀경기',  lbl:'⚔️ 시빌워'},
+    {id:'mini',     grp:'팀경기',  lbl:'⚡ 미니대전'},
+    {id:'univm',    grp:'팀경기',  lbl:'🏟️ 대학대전'},
+    {id:'ck',       grp:'팀경기',  lbl:'🤝 대학CK'},
     {id:'tourney',  grp:'대회',    lbl:'🎖️ 대회 (토너먼트)'},
     {id:'tiertour', grp:'대회',    lbl:'🎯 티어대회'},
     // (요청) 표기/순서: 일반 → 중장전 → 대회 …
@@ -54,7 +56,10 @@ function rHist(C,T){
       tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext3','🌐 외부3'):'🌐 외부3')});
     }
   }catch(e){}
-  const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
+  // (버그픽스, 2026-08-10) 티어대회 하위탭(tiertour-gen/-league/-bkt)은 tabDefs에 별도 등록돼 있지
+  // 않아 그룹(대회) 인식이 깨지던 문제 → 'tiertour'로 정규화해서 찾는다
+  const _histSubForGroup = String(histSub||'').startsWith('tiertour-') ? 'tiertour' : histSub;
+  const curTab=tabDefs.find(t=>t.id===_histSubForGroup)||tabDefs[0];
   let _histLastByGroup={};
   try{ _histLastByGroup = JSON.parse(localStorage.getItem('su_hist_last_by_group')||'{}')||{}; }catch(e){ _histLastByGroup={}; }
   try{
@@ -74,7 +79,7 @@ function rHist(C,T){
     histSub='all';
     try{ openDetails={}; }catch(e){}
   }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','ind','gj','progj','tiertour','tiertour-gen','tiertour-league','tiertour-bkt','procomp','all'].includes(histSub);
   const _histBulkKeyTop = (()=>{
     if(!isLoggedIn) return '';
     if(histSub==='mini' || histSub==='civil' || histSub==='univm' || histSub==='ck' || histSub==='pro') return histSub;
@@ -145,12 +150,11 @@ function rHist(C,T){
       h+=`<div class="hist-ctrl-group">`;
       // (요청사항) 메뉴 버튼 우측: 연/월 → 구분선 → 최신/오래된순 → 구분선 → 보기모드
       h+=buildYearMonthFilterControls('hist', true);
-      const _sortInModeBar = (histSub==='tourney'||String(histSub||'').startsWith('tiertour'));
-      if(!_sortInModeBar){
+      // (수정, 2026-08-10) 대회/티어대회 탭도 다른 탭과 동일하게 "연도" 필터 바로 우측
+      // 같은 줄에 최신순/오래된순 버튼을 둔다 (이전엔 별도의 콘텐츠 내 줄에 있었음)
       h+=`<span class="hist-inline-sep"></span>`;
       h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">최신순 ↓</button>`;
       h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
-      }
       if(histSub==='all'){
         h+=`<span class="hist-inline-sep"></span>`;
         h+=histAllViewModeBarHTML();
@@ -159,6 +163,20 @@ function rHist(C,T){
         // 컴팩트 테이블형" 보기모드 버튼도 "최신순/오래된순" 바로 우측(같은 줄)에 이어붙인다
         h+=`<span class="hist-inline-sep"></span>`;
         h+=histTabViewModeBarHTML(histSub, true);
+      } else if(histSub==='tourney' && typeof compAltViewModeBarHTML==='function'){
+        // (수정, 2026-08-10) 대회 탭 보기모드 버튼도 같은 줄로 이동
+        h+=`<span class="hist-inline-sep"></span>`;
+        h+=compAltViewModeBarHTML('histtourney', true);
+      } else if(String(histSub||'').startsWith('tiertour') && typeof compAltViewModeBarHTML==='function'){
+        // (수정, 2026-08-10) 티어대회 탭(전체/일반/조별리그/토너먼트) 보기모드 버튼도 같은 줄로 이동
+        h+=`<span class="hist-inline-sep"></span>`;
+        h+=compAltViewModeBarHTML('histtt', true);
+      } else if(histSub==='procomp' && typeof pcAltViewModeBarHTML==='function'){
+        // (수정, 2026-08-10) 프로리그 > 대회 기록 탭의 기본/미니 기본/그리드/컴팩트 테이블형
+        // 보기모드 버튼도 하위메뉴 아래 별도 줄이 아니라 "연도/최신순" 줄에 이어붙인다
+        const _pcAltTab = (typeof _HIST_PC_SUB_TO_ALT_TAB!=='undefined' && _HIST_PC_SUB_TO_ALT_TAB[window._histProCompSub||'league']) || 'pcleague';
+        h+=`<span class="hist-inline-sep"></span>`;
+        h+=pcAltViewModeBarHTML(_pcAltTab, true);
       }
       h+=_histBulkBtnTop;
       h+=`</div>`;
@@ -207,7 +225,8 @@ function rHist(C,T){
     // (요청, 2026-08-10) 대회 탭: 기본 / 미니 기본 / 그리드 / 컴팩트 테이블형
     const _tcMode=(typeof compAltViewMode==='function')?compAltViewMode('histtourney'):'basic';
     if(typeof compAltTitleModeBarHTML==='function'){
-      h+=compAltTitleModeBarHTML('histtourney','🎖️ 대회 기록',{bg:'#eff6ff',bd:'#bfdbfe',col:'#2563eb',modes:['basic','mini','grid','compact'],sort:true});
+      // (수정, 2026-08-10) 정렬/보기모드 버튼은 상단 "연도" 필터 줄로 이동 → 제목 배지만 표시
+      h+=compAltTitleModeBarHTML('histtourney','🎖️ 대회 기록',{bg:'#eff6ff',bd:'#bfdbfe',col:'#2563eb',controls:false});
     }
     h+=(_tcMode!=='basic' && typeof compAltRenderHTML==='function')
       ? compAltRenderHTML('histtourney', compAltRecItems((typeof histTourneyAltMatches==='function')?histTourneyAltMatches():[], 'histcomp'))
@@ -243,7 +262,8 @@ function rHist(C,T){
     const _ttAltMode=(typeof compAltViewMode==='function')?compAltViewMode('histtt'):'basic';
     if(typeof compAltTitleModeBarHTML==='function'){
       const _ttTitle=histSub==='tiertour-bkt'?'🏆 토너먼트 기록':histSub==='tiertour-league'?'📅 조별리그 기록':histSub==='tiertour-gen'?'📝 일반 기록':'🎯 티어대회 기록';
-      h+=compAltTitleModeBarHTML('histtt',_ttTitle,{bg:'#ecfdf5',bd:'#86efac',col:'#059669',modes:['basic','mini','grid','compact'],sort:true});
+      // (수정, 2026-08-10) 정렬/보기모드 버튼은 상단 "연도" 필터 줄로 이동 → 제목 배지만 표시
+      h+=compAltTitleModeBarHTML('histtt',_ttTitle,{bg:'#ecfdf5',bd:'#86efac',col:'#059669',controls:false});
     }
     if(_ttAltMode!=='basic' && typeof compAltRenderHTML==='function'){
       const _ttAltType=histSub==='tiertour-bkt'?'ttbkt':histSub==='tiertour-league'?'ttleague':'ttgen';

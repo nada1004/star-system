@@ -30,6 +30,9 @@ const _HIST_TAB_ALT_ALLOWED_MODES = {
   histtt: ['basic', 'mini', 'grid', 'compact'],
   // (요청, 2026-08-10) 일반대회 조별리그 : 기본(기존 화면) + 미니 기본 / 그리드 토글
   cpleague: ['basic', 'mini', 'grid'],
+  // (요청, 2026-08-10) 프로리그 대회 > 팀전 : 대학CK처럼 팀원이 많이 나열돼 컴팩트 테이블형은
+  // 어울리지 않는다는 피드백에 따라 기본/미니 기본/그리드 3종만 노출 (컴팩트 테이블형 제외)
+  pcteam: ['basic', 'mini', 'grid'],
 };
 
 function _histTabAltAllowedModes(tabId){
