@@ -16,10 +16,13 @@ function rMini(C,T){
   const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
   const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
   let h='';
+  const _miniAltTab = miniType==='civil' ? 'civil' : 'mini';
   const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('mini', true)
+      + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`
+      + (miniSub==='records' && typeof histTabViewModeBarHTML==='function' ? `<span class="hist-inline-sep"></span>${histTabViewModeBarHTML(_miniAltTab, true)}` : ''))
     : '';
   h+=_buildMatchSubtabShell(miniSub, _miniSubOpts, '_miniFilterOpen', extra, miniType==='civil'?'civil':'mini');
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
@@ -33,7 +36,11 @@ function rMini(C,T){
     h+=miniRankHTML(filteredMini);
   } else {
     // (수정) 시빌워는 'civil' 모드로 전달해 날짜 버튼 색상이 시빌워 색상(빨강)으로 표시되게 함
-    h+=recSummaryListHTML(miniM, miniType==='civil'?'civil':'mini', 'tab', _miniTypeFilter);
+    // (신규기능, 2026-08-10) 기본/미니 기본(+대학CK·시빌워 제외 그리드/컴팩트 테이블형) 보기모드 지원
+    // 보기모드 버튼줄은 위 extra(오래된순 옆)에 이미 붙였으므로 suppressBar로 중복 방지
+    h += (typeof histTabWithViewModes==='function')
+      ? histTabWithViewModes(_miniAltTab, ()=>recSummaryListHTML(miniM, _miniAltTab, 'tab', _miniTypeFilter), {suppressBar:true})
+      : recSummaryListHTML(miniM, _miniAltTab, 'tab', _miniTypeFilter);
   }
   C.innerHTML=h;
 }

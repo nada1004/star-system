@@ -172,11 +172,19 @@ function rHist(C,T){
   if(histSub==='all') h+=histAllHTML();
   else if(histSub==='civil') h+=recSummaryListHTML(_mini.filter(m=>m && (m.type==='civil'||(m.a==='A팀'&&m.b==='B팀'))),'civil','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(_mini.filter(m=>m && (m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀'))),'mini','hist');
-  else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
-  else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
-  else if(histSub==='progj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(true):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
+  else if(histSub==='ind') h+=(typeof histTabWithViewModes==='function')
+    ? histTabWithViewModes('ind', ()=>typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>')
+    : (typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>');
+  else if(histSub==='gj') h+=(typeof histTabWithViewModes==='function')
+    ? histTabWithViewModes('gj', ()=>typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>')
+    : (typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>');
+  else if(histSub==='progj') h+=(typeof histTabWithViewModes==='function')
+    ? histTabWithViewModes('progj', ()=>typeof gjRecordsHTML==='function'?gjRecordsHTML(true):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>')
+    : (typeof gjRecordsHTML==='function'?gjRecordsHTML(true):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>');
   else if(histSub==='ck') h+=recSummaryListHTML(_ck,'ck','hist');
-  else if(histSub==='univm') h+=recSummaryListHTML(_univm,'univm','hist');
+  else if(histSub==='univm') h+=(typeof histTabWithViewModes==='function')
+    ? histTabWithViewModes('univm', ()=>recSummaryListHTML(_univm,'univm','hist'))
+    : recSummaryListHTML(_univm,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='tiertour'||histSub==='tiertour-gen'||histSub==='tiertour-league'||histSub==='tiertour-bkt'){
@@ -207,7 +215,9 @@ function rHist(C,T){
     const _ttPageOpts = histSub==='tiertour-gen' ? {pageSize:20, pageKey:'tiertour-gen'} : null;
     h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist',undefined,_ttPageOpts):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
   }
-  else if(histSub==='pro') h+=recSummaryListHTML(_pro,'pro','hist');
+  else if(histSub==='pro') h+=(typeof histTabWithViewModes==='function')
+    ? histTabWithViewModes('pro', ()=>recSummaryListHTML(_pro,'pro','hist'))
+    : recSummaryListHTML(_pro,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;

@@ -14,8 +14,10 @@ function rCK(C,T){
   let h='';
   const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('ck', true)
+      + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`
+      + (ckSub==='records' && typeof histTabViewModeBarHTML==='function' ? `<span class="hist-inline-sep"></span>${histTabViewModeBarHTML('ck', true)}` : ''))
     : '';
   h+=_buildMatchSubtabShell(ckSub, subOpts, '_ckFilterOpen', extra, 'ck');
   if(ckSub==='input'&&isLoggedIn){
@@ -23,7 +25,13 @@ function rCK(C,T){
     h+=buildCKInputHTML();
   }
   else if(ckSub==='rank'){h+=ckRankHTML();}
-  else{h+=recSummaryListHTML(ckM,'ck','tab');}
+  else{
+    // (신규기능, 2026-08-10) 기본/미니 기본 보기모드 지원(그리드·컴팩트 테이블형은 제외)
+    // 보기모드 버튼줄은 위 extra(오래된순 옆)에 이미 붙였으므로 suppressBar로 중복 방지
+    h += (typeof histTabWithViewModes==='function')
+      ? histTabWithViewModes('ck', ()=>recSummaryListHTML(ckM,'ck','tab'), {suppressBar:true})
+      : recSummaryListHTML(ckM,'ck','tab');
+  }
   C.innerHTML=h;
 }
 

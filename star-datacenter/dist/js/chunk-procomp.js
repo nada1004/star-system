@@ -50,7 +50,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           ${grpOpts.map(o=>`<option value="${o.name}"${proCompFilterGrp===o.name?" selected":""}>${o.label}</option>`).join("")}
         </select>
       </div>`:""}
-      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:nowrap">
+      <div style="display:flex;gap:6px;flex-wrap:nowrap">
         <button class="pill ${proCompSortDir==="desc"?"on":""}" style="flex-shrink:0" onclick="proCompSortDir='desc';render()">\uCD5C\uC2E0\uC21C</button>
         <button class="pill ${proCompSortDir==="asc"?"on":""}" style="flex-shrink:0" onclick="proCompSortDir='asc';render()">\uC624\uB798\uB41C\uC21C</button>
       </div>

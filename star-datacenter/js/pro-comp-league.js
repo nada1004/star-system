@@ -309,7 +309,7 @@ function proCompLeague(tn) {
           ${grpOpts.map(o=>`<option value="${o.name}"${proCompFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
         </select>
       </div>`:''}
-      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:nowrap">
+      <div style="display:flex;gap:6px;flex-wrap:nowrap">
         <button class="pill ${proCompSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='desc';render()">최신순</button>
         <button class="pill ${proCompSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='asc';render()">오래된순</button>
       </div>

@@ -20,8 +20,10 @@ function rUnivM(C,T){
   let h='';
   const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('univm', true)
+      + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`
+      + (univmSub==='records' && typeof histTabViewModeBarHTML==='function' ? `<span class="hist-inline-sep"></span>${histTabViewModeBarHTML('univm', true)}` : ''))
     : '';
   h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra, 'univm');
   if(univmSub==='input'&&_li){
@@ -29,7 +31,14 @@ function rUnivM(C,T){
     h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], ''), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '');
   }
   else if(univmSub==='rank'){h+=univMRankHTML();}
-  else{h+=recSummaryListHTML(univM,'univm','tab');}
+  else{
+    // (신규기능, 2026-08-10) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
+    // (대전기록 탭〉대학전 서브탭과 동일한 'univm' 상태를 공유해 두 화면에서 같은 보기모드가 유지됨)
+    // 보기모드 버튼줄은 위 extra(오래된순 옆)에 이미 붙였으므로 suppressBar로 중복 방지
+    h += (typeof histTabWithViewModes==='function')
+      ? histTabWithViewModes('univm', ()=>recSummaryListHTML(univM,'univm','tab'), {suppressBar:true})
+      : recSummaryListHTML(univM,'univm','tab');
+  }
   C.innerHTML=h;
 }
 

@@ -53,7 +53,7 @@ function rCompLeague(tn){
       return `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`;
     };
     const grpOpts=(tn.groups||[]).map((grp,gi)=>({name:grp.name,label:`GROUP ${'ABCDEFGHIJ'[gi]||gi+1}`}));
-    h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+    h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div class="ym-filter-controls compact">
         <span class="ym-lbl"></span>
         <select class="ym-sel" onchange="leagueFilterDate=this.value;render()">
@@ -61,24 +61,24 @@ function rCompLeague(tn){
           ${dates.map(d=>`<option value="${d}"${leagueFilterDate===d?' selected':''}>${fmt(d)}</option>`).join('')}
         </select>
       </div>
-      ${grpOpts.length>1?`<div class="ym-filter-controls compact">
-        <span class="ym-lbl">조</span>
-        <select class="ym-sel" onchange="leagueFilterGrp=this.value;render()">
-          <option value=""${!leagueFilterGrp?' selected':''}>전체</option>
-          ${grpOpts.map(o=>`<option value="${o.name}"${leagueFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
-        </select>
-      </div>`:''}
-      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:nowrap">
+      <span class="hist-inline-sep"></span>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        ${grpOpts.length>1?`<div class="ym-filter-controls compact">
+          <span class="ym-lbl">조</span>
+          <select class="ym-sel" onchange="leagueFilterGrp=this.value;render()">
+            <option value=""${!leagueFilterGrp?' selected':''}>전체</option>
+            ${grpOpts.map(o=>`<option value="${o.name}"${leagueFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
+          </select>
+        </div>`:''}
         <button class="pill ${leagueSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='desc';render()">최신순</button>
         <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';render()">오래된순</button>
+        <span class="hist-inline-sep"></span>
+        <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
+        <button class="pill ${leagueViewMode==='card'?'on':''}" onclick="leagueViewMode='card';render()">🗂️ 카드형</button>
+        <button class="pill ${leagueViewMode==='compact'?'on':''}" onclick="leagueViewMode='compact';render()">📃 컴팩트</button>
+        <button class="pill ${leagueViewMode==='group'?'on':''}" onclick="leagueViewMode='group';render()">🗃️ 조별뷰</button>
+        <button class="pill ${leagueViewMode==='matrix'?'on':''}" onclick="leagueViewMode='matrix';render()">🔲 매트릭스</button>
       </div>
-    </div>`;
-    h+=`<div class="no-export grp-viewmode-row" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
-      <button class="pill ${leagueViewMode==='card'?'on':''}" onclick="leagueViewMode='card';render()">🗂️ 카드형</button>
-      <button class="pill ${leagueViewMode==='compact'?'on':''}" onclick="leagueViewMode='compact';render()">📃 컴팩트</button>
-      <button class="pill ${leagueViewMode==='group'?'on':''}" onclick="leagueViewMode='group';render()">🗃️ 조별뷰</button>
-      <button class="pill ${leagueViewMode==='matrix'?'on':''}" onclick="leagueViewMode='matrix';render()">🔲 매트릭스</button>
     </div>`;
   }
   let filtered=allMatches;

@@ -40,6 +40,9 @@ window.histSub = window.histSub || histSub;
 var miniType='mini'; // 'mini' | 'civil'
 var histUniv='';
 var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
+var histAllViewMode='card'; // 대전기록 '종합〉전체 통합' 보기모드: card(기본)/grid(그리드카드)/compact(컴팩트테이블)
+try{ histAllViewMode = localStorage.getItem('su_hist_all_view_mode')||'card'; }catch(e){}
+window.histAllViewMode = window.histAllViewMode || histAllViewMode;
 var vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 
 // 공통 연도/월 필터 상태
