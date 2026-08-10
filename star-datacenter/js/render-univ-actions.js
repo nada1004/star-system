@@ -202,6 +202,112 @@ function toggleUnivEdit(){
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🎨 대학 상세 팝업 로고·이름 스타일</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">로고 효과</label>
+            <select id="ue-logo-fx" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
+              <option value="none"${!u.udLogoFx||u.udLogoFx==='none'?' selected':''}>없음</option>
+              <option value="glow"${u.udLogoFx==='glow'?' selected':''}>✨ 은은한 글로우</option>
+              <option value="aura"${u.udLogoFx==='aura'?' selected':''}>💡 맥동하는 빛(오라)</option>
+              <option value="spotlight"${u.udLogoFx==='spotlight'?' selected':''}>🔦 스포트라이트</option>
+              <option value="prism"${u.udLogoFx==='prism'||u.udLogoFx==='ring'?' selected':''}>🌈 프리즘 링(회전)</option>
+              <option value="sparkle"${u.udLogoFx==='sparkle'?' selected':''}>✦ 반짝반짝(별)</option>
+              <option value="shadow"${u.udLogoFx==='shadow'?' selected':''}>🌑 강한 그림자</option>
+              <option value="float"${u.udLogoFx==='float'?' selected':''}>🎈 둥실둥실</option>
+              <option value="shine"${u.udLogoFx==='shine'?' selected':''}>💫 반짝임(스윕)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">로고 크기</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-logo-scale" min="50" max="220" step="5" value="${Number(u.udLogoScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-logo-scale-val').textContent=this.value+'%'">
+              <span id="ue-logo-scale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number(u.udLogoScale||100)||100}%</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 글자 효과</label>
+            <select id="ue-name-fx" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
+              <option value="none"${!u.udNameFx||u.udNameFx==='none'?' selected':''}>없음</option>
+              <option value="outline"${u.udNameFx==='outline'?' selected':''}>✏️ 외곽선</option>
+              <option value="gradient"${u.udNameFx==='gradient'?' selected':''}>🌈 그라디언트</option>
+              <option value="neon"${u.udNameFx==='neon'?' selected':''}>💡 네온</option>
+              <option value="glow"${u.udNameFx==='glow'?' selected':''}>🔆 은은한 글로우</option>
+              <option value="shimmer"${u.udNameFx==='shimmer'?' selected':''}>✨ 시머(빛 스윕)</option>
+              <option value="holo"${u.udNameFx==='holo'?' selected':''}>💿 홀로그램</option>
+              <option value="shadow3d"${u.udNameFx==='shadow3d'?' selected':''}>🧱 입체 그림자</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 위치</label>
+            <select id="ue-name-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
+              <option value="side"${(!u.udNamePos||u.udNamePos==='side')?' selected':''}>로고 옆</option>
+              <option value="below"${u.udNamePos==='below'?' selected':''}>로고 아래(중앙정렬)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 크기</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-name-scale" min="50" max="220" step="5" value="${Number(u.udNameScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-name-scale-val').textContent=this.value+'%'">
+              <span id="ue-name-scale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number(u.udNameScale||100)||100}%</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">로고-이름 간격 <span style="font-weight:400;color:var(--gray-l)">(마이너스 = 겹치는 방향)</span></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ue-brand-gap" min="-40" max="80" step="2" value="${Number.isFinite(parseInt(u.udBrandGap,10))?Math.max(-40,Math.min(80,parseInt(u.udBrandGap,10))):12}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-brand-gap-val').textContent=this.value+'px'">
+            <span id="ue-brand-gap-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.udBrandGap,10))?Math.max(-40,Math.min(80,parseInt(u.udBrandGap,10))):12}px</span>
+          </div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:4px">로고 크기를 키우면 이름이 밀려 보일 수 있어요 — 여기서 간격을 줄이면(마이너스도 가능) 위치를 다시 맞출 수 있습니다.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">로고 좌우 이동</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-logo-offx" min="-60" max="60" step="2" value="${Number.isFinite(parseInt(u.udLogoOffX,10))?Math.max(-60,Math.min(60,parseInt(u.udLogoOffX,10))):-8}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-logo-offx-val').textContent=this.value+'px'">
+              <span id="ue-logo-offx-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.udLogoOffX,10))?Math.max(-60,Math.min(60,parseInt(u.udLogoOffX,10))):-8}px</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">로고 상하 이동</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-logo-offy" min="-60" max="60" step="2" value="${Number.isFinite(parseInt(u.udLogoOffY,10))?Math.max(-60,Math.min(60,parseInt(u.udLogoOffY,10))):0}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-logo-offy-val').textContent=this.value+'px'">
+              <span id="ue-logo-offy-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.udLogoOffY,10))?Math.max(-60,Math.min(60,parseInt(u.udLogoOffY,10))):0}px</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 좌우 이동</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-name-offx" min="-60" max="60" step="2" value="${Number.isFinite(parseInt(u.udNameOffX,10))?Math.max(-60,Math.min(60,parseInt(u.udNameOffX,10))):0}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-name-offx-val').textContent=this.value+'px'">
+              <span id="ue-name-offx-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.udNameOffX,10))?Math.max(-60,Math.min(60,parseInt(u.udNameOffX,10))):0}px</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 상하 이동</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-name-offy" min="-60" max="60" step="2" value="${Number.isFinite(parseInt(u.udNameOffY,10))?Math.max(-60,Math.min(60,parseInt(u.udNameOffY,10))):0}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-name-offy-val').textContent=this.value+'px'">
+              <span id="ue-name-offy-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.udNameOffY,10))?Math.max(-60,Math.min(60,parseInt(u.udNameOffY,10))):0}px</span>
+            </div>
+          </div>
+        </div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학명 색상</label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <select id="ue-name-color-mode" style="padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)" onchange="const c=document.getElementById('ue-name-color-custom-wrap');if(c)c.style.display=this.value==='custom'?'flex':'none'">
+            <option value="white"${(!u.udNameColorMode||u.udNameColorMode==='white')?' selected':''}>흰색(기본)</option>
+            <option value="univ"${u.udNameColorMode==='univ'?' selected':''}>대학 대표색</option>
+            <option value="custom"${u.udNameColorMode==='custom'?' selected':''}>직접 지정</option>
+          </select>
+          <div id="ue-name-color-custom-wrap" style="display:${u.udNameColorMode==='custom'?'flex':'none'};align-items:center;gap:6px">
+            <input type="color" id="ue-name-color-custom" value="${u.udNameColorCustom||'#ffffff'}" style="width:40px;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
         <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
         <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
         <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
@@ -386,6 +492,18 @@ function saveUnivEdit(){
   const newName=(document.getElementById('ue-name')?.value||'').trim();
   const newColor=document.getElementById('ue-color')?.value||u.color;
   const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
+  const newLogoFx=(document.getElementById('ue-logo-fx')?.value||'none').trim();
+  const newLogoScale=parseInt(document.getElementById('ue-logo-scale')?.value||'100',10)||100;
+  const newNameFx=(document.getElementById('ue-name-fx')?.value||'none').trim();
+  const newNameScale=parseInt(document.getElementById('ue-name-scale')?.value||'100',10)||100;
+  const newNamePos=(document.getElementById('ue-name-pos')?.value||'side').trim();
+  const newNameColorMode=(document.getElementById('ue-name-color-mode')?.value||'white').trim();
+  const newNameColorCustom=(document.getElementById('ue-name-color-custom')?.value||'#ffffff').trim();
+  const newBrandGap=parseInt(document.getElementById('ue-brand-gap')?.value||'12',10);
+  const newLogoOffX=parseInt(document.getElementById('ue-logo-offx')?.value||'-8',10);
+  const newLogoOffY=parseInt(document.getElementById('ue-logo-offy')?.value||'0',10);
+  const newNameOffX=parseInt(document.getElementById('ue-name-offx')?.value||'0',10);
+  const newNameOffY=parseInt(document.getElementById('ue-name-offy')?.value||'0',10);
   const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
   const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
   const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
@@ -411,6 +529,18 @@ function saveUnivEdit(){
   u.name=newName;
   u.color=newColor;
   if(newIcon) u.icon=newIcon; else delete u.icon;
+  if(newLogoFx && newLogoFx!=='none') u.udLogoFx=newLogoFx; else delete u.udLogoFx;
+  if(newLogoScale && newLogoScale!==100) u.udLogoScale=Math.max(50,Math.min(220,newLogoScale)); else delete u.udLogoScale;
+  if(newNameFx && newNameFx!=='none') u.udNameFx=newNameFx; else delete u.udNameFx;
+  if(newNameScale && newNameScale!==100) u.udNameScale=Math.max(50,Math.min(220,newNameScale)); else delete u.udNameScale;
+  if(newNamePos && newNamePos==='below') u.udNamePos=newNamePos; else delete u.udNamePos;
+  if(newNameColorMode && newNameColorMode!=='white') u.udNameColorMode=newNameColorMode; else delete u.udNameColorMode;
+  if(newNameColorMode==='custom' && newNameColorCustom) u.udNameColorCustom=newNameColorCustom; else delete u.udNameColorCustom;
+  if(Number.isFinite(newBrandGap) && newBrandGap!==12) u.udBrandGap=Math.max(-40,Math.min(80,newBrandGap)); else delete u.udBrandGap;
+  if(Number.isFinite(newLogoOffX) && newLogoOffX!==-8) u.udLogoOffX=Math.max(-60,Math.min(60,newLogoOffX)); else delete u.udLogoOffX;
+  if(Number.isFinite(newLogoOffY) && newLogoOffY!==0) u.udLogoOffY=Math.max(-60,Math.min(60,newLogoOffY)); else delete u.udLogoOffY;
+  if(Number.isFinite(newNameOffX) && newNameOffX!==0) u.udNameOffX=Math.max(-60,Math.min(60,newNameOffX)); else delete u.udNameOffX;
+  if(Number.isFinite(newNameOffY) && newNameOffY!==0) u.udNameOffY=Math.max(-60,Math.min(60,newNameOffY)); else delete u.udNameOffY;
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;

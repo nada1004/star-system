@@ -31,12 +31,53 @@ function _bindUnivSectionsDelegatedEvents(){
   });
 }
 
+;(function _injectUnivHeroFxStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('ud-hero-fx-style')) return;
+  const s=document.createElement('style');
+  s.id='ud-hero-fx-style';
+  s.textContent=[
+    // 로고 효과 (기존 '링(원)' 효과는 폐지 — 아래 prism으로 자동 대체)
+    '.ud-logo-fx-glow{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) drop-shadow(0 0 22px var(--ud-univ-col,rgba(255,255,255,.65))) drop-shadow(0 0 46px var(--ud-univ-col,rgba(255,255,255,.35)))!important}',
+    '.ud-logo-fx-shadow{filter:drop-shadow(0 24px 42px rgba(15,23,42,.46)) drop-shadow(0 6px 14px rgba(15,23,42,.30))!important}',
+    '.ud-logo-fx-aura{animation:udLogoAura 2.4s ease-in-out infinite}',
+    '@keyframes udLogoAura{0%,100%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) drop-shadow(0 0 8px var(--ud-univ-col,rgba(255,255,255,.35)))}50%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) drop-shadow(0 0 30px var(--ud-univ-col,rgba(255,255,255,.85)))}}',
+    '.ud-logo-fx-float{animation:udLogoFloat 3.4s ease-in-out infinite}',
+    '.ud-logo-fx-shine{position:relative;overflow:hidden;border-radius:22%}',
+    '.ud-logo-fx-shine::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-18deg);animation:udLogoShine 2.6s ease-in-out infinite;pointer-events:none}',
+    '@keyframes udLogoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}',
+    '@keyframes udLogoShine{0%{left:-60%}100%{left:130%}}',
+    '.ud-logo-fx-spotlight{position:relative}',
+    '.ud-logo-fx-spotlight::before{content:"";position:absolute;left:50%;top:-28%;width:220%;height:220%;transform:translateX(-50%);background:radial-gradient(circle,var(--ud-univ-col,rgba(255,255,255,.6)) 0%,transparent 60%);filter:blur(3px);z-index:-1;pointer-events:none;animation:udLogoSpotlight 3s ease-in-out infinite}',
+    '@keyframes udLogoSpotlight{0%,100%{opacity:.32}50%{opacity:.68}}',
+    '.ud-logo-fx-prism{position:relative;border-radius:50%}',
+    '.ud-logo-fx-prism::before{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg,#ff5f6d,#ffc371,#4ade80,#38bdf8,#a78bfa,#ff5f6d);filter:blur(6px);opacity:.85;z-index:-1;animation:udLogoPrismSpin 3.6s linear infinite}',
+    '@keyframes udLogoPrismSpin{to{transform:rotate(360deg)}}',
+    '.ud-logo-fx-sparkle{position:relative}',
+    '.ud-logo-fx-sparkle::before,.ud-logo-fx-sparkle::after{content:"✦";position:absolute;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.95);pointer-events:none;animation:udLogoSparkle 1.8s ease-in-out infinite}',
+    '.ud-logo-fx-sparkle::before{top:-6px;right:-2px;font-size:14px;animation-delay:0s}',
+    '.ud-logo-fx-sparkle::after{bottom:2px;left:-8px;font-size:10px;animation-delay:.6s}',
+    '@keyframes udLogoSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(90deg)}}',
+    // 대학명 효과
+    '.ud-name-fx-outline{-webkit-text-stroke:1.4px rgba(15,23,42,.4)}',
+    '.ud-name-fx-gradient{background:linear-gradient(92deg,#fff 0%,var(--ud-univ-col,#fff) 85%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}',
+    '.ud-name-fx-neon{text-shadow:0 0 6px currentColor,0 0 16px currentColor,0 0 32px currentColor,0 2px 10px rgba(0,0,0,.35)!important}',
+    '.ud-name-fx-shadow3d{text-shadow:1px 1px 0 rgba(0,0,0,.55),2px 2px 0 rgba(0,0,0,.45),3px 3px 0 rgba(0,0,0,.35),4px 5px 10px rgba(0,0,0,.35)!important}',
+    '.ud-name-fx-glow{text-shadow:0 0 10px var(--ud-univ-col,rgba(255,255,255,.75)),0 0 24px var(--ud-univ-col,rgba(255,255,255,.45)),0 4px 14px rgba(0,0,0,.3)!important}',
+    '.ud-name-fx-shimmer{background:linear-gradient(100deg,#fff 30%,var(--ud-univ-col,#fff) 45%,#fff 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameShimmer 2.6s linear infinite}',
+    '@keyframes udNameShimmer{0%{background-position:120% 0}100%{background-position:-40% 0}}',
+    '.ud-name-fx-holo{background:linear-gradient(92deg,#ff8fab,#ffd97d,#8affc1,#8ec5fc,#c8a2ff,#ff8fab);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameHolo 5s linear infinite}',
+    '@keyframes udNameHolo{0%{background-position:0% 0}100%{background-position:280% 0}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function buildUnivHeaderCardHTML(opts){
   const {
     univName='', col='', members=[], wins=0, losses=0, tot=0, pts=0, wr=0,
     hdrBg='', hdrBgLayer=null, isMobile=false, isTablet=false, logoSizeEff='46px'
   } = opts || {};
-  const uNameFs = isMobile ? 34 : (isTablet ? 44 : 52);
+  const uNameFs = isMobile ? 44 : (isTablet ? 55 : 64);
   const dissolvedBadge = (()=>{
     const u=univCfg.find(u=>u.name===univName);
     return u?.dissolved?`<span style="font-size:10px;font-weight:800;background:rgba(0,0,0,.38);color:#fca5a5;border-radius:8px;padding:2px 9px;margin-left:7px;vertical-align:middle;letter-spacing:.2px">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:'';
@@ -86,17 +127,14 @@ function buildUnivHeaderCardHTML(opts){
       </div>
     </div>`;
 
-  // 상위 3인 미니 아바타
-  const topAvatarsHTML = !isMobile && topNames.length
-    ? `<div class="ud-hero-top-avatars" style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:auto;margin-left:auto;align-self:flex-end;margin-bottom:2px;margin-right:-2px;transform:translateY(20px)">
-        <div style="display:flex;align-items:center;gap:5px;padding:8px 10px;border-radius:18px;background:rgba(15,23,42,.18);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 20px rgba(15,23,42,.14);backdrop-filter:blur(10px)">
-          ${topNames.map((p,i)=>`<div style="display:flex;align-items:center;gap:4px;background:rgba(15,23,42,.2);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:4px 9px;min-width:0">
-            <span style="font-size:10px;min-width:14px">${['🥇','🥈','🥉'][i]||''}</span>
-            ${getPlayerPhotoHTML(p.name,'18px')}
-            <span style="font-size:10px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62px">${p.name}</span>
-            <span style="font-size:9px;color:${ptColor};font-weight:800;white-space:nowrap">${p.points>0?'+':''}${p.points}pt</span>
-          </div>`).join('')}
-        </div>
+  // 상위 3인 스트리머 스트립 (로고/이름 아래, 별도 줄) — 포인트 표기 없이 사진+이름만
+  const topAvatarsHTML = topNames.length
+    ? `<div class="ud-hero-top-avatars" style="position:relative;display:flex;align-items:center;justify-content:flex-end;gap:${isMobile?'7px':'9px'};flex-wrap:nowrap;overflow-x:auto;padding-top:${isMobile?'2px':'4px'}">
+        ${topNames.map((p,i)=>`<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;background:rgba(15,23,42,.24);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:${isMobile?'4px 11px 4px 5px':'5px 13px 5px 6px'};min-width:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(15,23,42,.16);backdrop-filter:blur(10px)">
+          <span style="font-size:11px;min-width:13px">${['🥇','🥈','🥉'][i]||''}</span>
+          ${getPlayerPhotoHTML(p.name, isMobile?'20px':'22px')}
+          <span style="font-size:${isMobile?10.5:11.5}px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${isMobile?'80px':'104px'}">${p.name}</span>
+        </div>`).join('')}
       </div>`
     : '';
 
@@ -108,17 +146,60 @@ function buildUnivHeaderCardHTML(opts){
     { icon:'👥', label:'선수 수', value:`<span style="color:var(--text,#1e293b)">${members.length}<span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-l,#94a3b8)">명</span></span>`, fs: isMobile?17:19 }
   ];
 
-  // 로고: 등록된 아이콘이 있으면 그대로, 없으면 대학명 첫 글자로 큰 placeholder
-  const _univHasIcon = !!((univCfg.find(u=>u.name===univName)||{}).icon || (univCfg.find(u=>u.name===univName)||{}).img);
+  // 로고: 상세 팝업 전용 대형 사이즈 (현황판/리스트용 작은 로고 설정과 분리) — 관리자가 대학별로 지정한 크기가 있으면 그 값을 우선 사용, 크기 배율(udLogoScale)도 곱해서 적용
+  const _univCfgEntry = univCfg.find(u=>u.name===univName) || {};
+  const _customLogoPx = parseInt(_univCfgEntry.logoSizeDetail, 10);
+  const _baseLogoPx = isMobile ? 168 : (isTablet ? 202 : 232);
+  const _logoBasePx = (Number.isFinite(_customLogoPx) && _customLogoPx > 0) ? Math.max(60, _customLogoPx) : _baseLogoPx;
+  const _logoScalePct = Math.max(50, Math.min(220, parseInt(_univCfgEntry.udLogoScale, 10) || 100));
+  const logoPx = Math.round(_logoBasePx * (_logoScalePct / 100));
+  const logoBoxPx = Math.round(logoPx * 1.1);
+  const logoPxStr = `${logoPx}px`;
+  const _univHasIcon = !!(_univCfgEntry.icon || _univCfgEntry.img);
   const _logoContentHTML = _univHasIcon
-    ? gUI(univName,logoSizeEff)
+    ? gUI(univName,logoPxStr)
     : `<div style="width:100%;height:100%;border-radius:28%;background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.32);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)">
-        <span style="font-size:calc(${logoSizeEff} * 0.52);font-weight:1000;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.2)">${univName ? univName.trim().charAt(0) : '?'}</span>
+        <span style="font-size:${Math.round(logoPx*0.52)}px;font-weight:1000;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.2)">${univName ? univName.trim().charAt(0) : '?'}</span>
       </div>`;
+
+  // 대학 로고 효과 / 대학명 효과·색상·위치 (대학 정보 수정 패널에서 설정)
+  // 구버전 '링(원)' 효과는 폐지되어 prism(빛나는 회전 링)으로 자동 대체됨
+  const _logoFxRaw = String(_univCfgEntry.udLogoFx || 'none');
+  const _logoFx = _logoFxRaw === 'ring' ? 'prism' : _logoFxRaw;
+  const _isLogoFilterFx = (_logoFx === 'glow' || _logoFx === 'shadow' || _logoFx === 'aura');
+  const _isLogoBoxFx = (_logoFx === 'float' || _logoFx === 'shine' || _logoFx === 'spotlight' || _logoFx === 'prism' || _logoFx === 'sparkle');
+  const _logoOuterClass = _isLogoBoxFx ? ` ud-logo-fx-${_logoFx}` : '';
+  const _logoInnerClass = _isLogoFilterFx ? ` ud-logo-fx-${_logoFx}` : '';
+
+  const _nameFx = String(_univCfgEntry.udNameFx || 'none');
+  const _nameScalePct = Math.max(50, Math.min(220, parseInt(_univCfgEntry.udNameScale, 10) || 100));
+  const _nameFsFinal = Math.round(uNameFs * (_nameScalePct / 100));
+  const _nameColorMode = String(_univCfgEntry.udNameColorMode || 'white');
+  const _nameColorCustom = String(_univCfgEntry.udNameColorCustom || '').trim();
+  let _nameColor = '#fff';
+  if(_nameColorMode === 'univ' && col) _nameColor = col;
+  else if(_nameColorMode === 'custom' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(_nameColorCustom)) _nameColor = _nameColorCustom;
+  const _nameClass = _nameFx !== 'none' ? ` ud-name-fx-${_nameFx}` : '';
+  const _namePos = _univCfgEntry.udNamePos === 'below' ? 'below' : 'side';
+  const _defaultGap = isMobile ? 8 : 12;
+  const _brandGapRaw = parseInt(_univCfgEntry.udBrandGap, 10);
+  const _brandGap = Number.isFinite(_brandGapRaw) ? Math.max(-40, Math.min(80, _brandGapRaw)) : _defaultGap;
+
+  // 로고 / 대학명 좌우·상하 미세 위치 조정 (대학 정보 수정 패널에서 설정, 마이너스 값 허용)
+  const _clampOff = v => Math.max(-60, Math.min(60, v));
+  const _defaultLogoOffX = -8;
+  const _logoOffXRaw = parseInt(_univCfgEntry.udLogoOffX, 10);
+  const _logoOffX = Number.isFinite(_logoOffXRaw) ? _clampOff(_logoOffXRaw) : _defaultLogoOffX;
+  const _logoOffYRaw = parseInt(_univCfgEntry.udLogoOffY, 10);
+  const _logoOffY = Number.isFinite(_logoOffYRaw) ? _clampOff(_logoOffYRaw) : 0;
+  const _nameOffXRaw = parseInt(_univCfgEntry.udNameOffX, 10);
+  const _nameOffX = Number.isFinite(_nameOffXRaw) ? _clampOff(_nameOffXRaw) : 0;
+  const _nameOffYRaw = parseInt(_univCfgEntry.udNameOffY, 10);
+  const _nameOffY = Number.isFinite(_nameOffYRaw) ? _clampOff(_nameOffYRaw) : 0;
 
   return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
-    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 28px':'26px 22px 34px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'170px':'192px'}">
+    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 22px':'26px 24px 26px'};position:relative;overflow:hidden">
       ${bgLayerHTML}
       <!-- 장식 원 -->
       <div style="position:absolute;top:-34px;right:-24px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
@@ -129,16 +210,18 @@ function buildUnivHeaderCardHTML(opts){
       <div style="position:absolute;left:0;right:0;top:0;height:60px;background:linear-gradient(180deg,rgba(255,255,255,.08),transparent);pointer-events:none"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(15,23,42,.20));pointer-events:none"></div>
       <!-- 콘텐츠 -->
-      <div class="ud-hero-main" style="position:relative;display:flex;align-items:${isMobile?'flex-start':'center'};justify-content:flex-start;gap:${isMobile?'10px':'12px'}">
+      <div class="ud-hero-main" style="position:relative;display:flex;flex-direction:column;gap:${isMobile?'12px':'14px'}">
         <!-- 로고 + 이름 -->
-        <div class="ud-hero-brand" style="display:flex;align-items:center;gap:${isMobile?'6px':'10px'};min-width:0;flex:0 1 auto">
-          <div style="width:calc(var(--su_univ_logo_box_detail,160px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,160px)*var(--su_univ_detail_scale,1));flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin-right:${isMobile?'-6px':'-8px'}">
-            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 16px 28px rgba(15,23,42,.22)) drop-shadow(0 4px 10px rgba(255,255,255,.08))">
+        <div class="ud-hero-brand" style="${_namePos==='below'
+          ? `display:flex;flex-direction:column;align-items:center;text-align:center;gap:${_brandGap}px;min-width:0`
+          : `display:flex;align-items:center;gap:${_brandGap}px;min-width:0`}">
+          <div class="${_logoOuterClass.trim()}" style="width:${logoBoxPx}px;height:${logoBoxPx}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin:${_logoOffY}px 0 0 ${_logoOffX}px">
+            <div class="${_logoInnerClass.trim()}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) drop-shadow(0 4px 10px rgba(255,255,255,.08))">
               ${_logoContentHTML}
             </div>
           </div>
-          <div style="min-width:0;flex:0 1 auto;margin-left:${isMobile?'6px':'12px'}">
-            <div style="font-size:${Math.round(uNameFs*1.1)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.02;letter-spacing:-.04em;word-break:keep-all" class="ud-hero-name">${univName}${dissolvedBadge}</div>
+          <div style="min-width:0;max-width:100%;margin:${_nameOffY}px 0 0 ${_nameOffX}px;${_namePos==='below'?'flex:none;width:100%':'flex:1 1 auto'}">
+            <div style="font-size:${_nameFsFinal}px;font-weight:1000;color:${_nameColor};text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.08;letter-spacing:-.03em;word-break:keep-all;overflow-wrap:anywhere;max-width:100%" class="ud-hero-name${_nameClass}">${univName}${dissolvedBadge}</div>
           </div>
         </div>
         ${topAvatarsHTML}
