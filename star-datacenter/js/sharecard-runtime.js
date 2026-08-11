@@ -242,11 +242,15 @@
     ['minimal','미니멀'],
     ['aurora','오로라'],
     ['poster','포스터'],
-    ['mono','모노']
+    ['mono','모노'],
+    ['glacier','글레이셔'],
+    ['rose','로즈'],
+    ['midnight','미드나잇']
   ];
 
   function _scCanEditStyle(){
-    try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin); }catch(e){ return false; }
+    // 부관리자도 공유카드 스타일(색상/톤·레이아웃)을 미리보고 전환할 수 있도록 허용
+    try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn); }catch(e){ return false; }
   }
 
   function _scModeChipsHTML(){
