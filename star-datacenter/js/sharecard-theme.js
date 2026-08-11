@@ -93,17 +93,17 @@
     })();
     switch(k){
       case 'ring':
-        return { wrapExtra:`border:2px solid ${col};box-shadow:0 0 0 5px ${col}33,0 16px 32px rgba(0,0,0,.30);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:2px solid ${col} !important;box-shadow:0 0 0 5px ${col}33,0 16px 32px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
       case 'glass':
-        return { wrapExtra:`border:2px solid rgba(255,255,255,.62);box-shadow:0 0 0 4px rgba(255,255,255,.16),0 16px 30px rgba(0,0,0,.30);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:2px solid rgba(255,255,255,.62) !important;box-shadow:0 0 0 4px rgba(255,255,255,.16),0 16px 30px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
       case 'film':
-        return { wrapExtra:`border:5px solid #fff;border-radius:6px;box-shadow:0 16px 28px rgba(0,0,0,.36);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:5px solid #fff !important;border-radius:6px !important;box-shadow:0 16px 28px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
       case 'sticker':
-        return { wrapExtra:`border:4px solid #fff;transform:rotate(-4deg);box-shadow:0 14px 26px rgba(0,0,0,.36);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:4px solid #fff !important;transform:rotate(-4deg) !important;box-shadow:0 14px 26px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
       case 'mono':
-        return { wrapExtra:'', imgExtra:'filter:grayscale(1) contrast(1.08);', overlay:'' };
+        return { wrapExtra:'', imgExtra:'filter:grayscale(1) contrast(1.08) !important;', overlay:'' };
       case 'duotone':
-        return { wrapExtra:'', imgExtra:`filter:grayscale(.55) sepia(.35) saturate(2.4) hue-rotate(${hue}deg) contrast(1.05);`, overlay:'' };
+        return { wrapExtra:'', imgExtra:`filter:grayscale(.55) sepia(.35) saturate(2.4) hue-rotate(${hue}deg) contrast(1.05) !important;`, overlay:'' };
       case 'spotlight':
         return { wrapExtra:'', imgExtra:'', overlay:`<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(0,0,0,0) 32%,rgba(0,0,0,.55) 100%);pointer-events:none"></div>` };
       default:

@@ -47,17 +47,17 @@
     const col = _scHexNorm(accent||'#64748b');
     switch(k){
       case 'ring':
-        return { wrapExtra:`border:2px solid ${col};box-shadow:0 0 0 5px ${col}33,0 16px 32px rgba(0,0,0,.30);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:2px solid ${col} !important;box-shadow:0 0 0 5px ${col}33,0 16px 32px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
       case 'glass':
-        return { wrapExtra:`border:2px solid rgba(255,255,255,.62);box-shadow:0 0 0 4px rgba(255,255,255,.16),0 16px 30px rgba(0,0,0,.30);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:2px solid rgba(255,255,255,.62) !important;box-shadow:0 0 0 4px rgba(255,255,255,.16),0 16px 30px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
       case 'film':
-        return { wrapExtra:`border:5px solid #fff;border-radius:6px;box-shadow:0 16px 28px rgba(0,0,0,.36);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:5px solid #fff !important;border-radius:6px !important;box-shadow:0 16px 28px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
       case 'sticker':
-        return { wrapExtra:`border:4px solid #fff;transform:rotate(-4deg);box-shadow:0 14px 26px rgba(0,0,0,.36);`, imgExtra:'', overlay:'' };
+        return { wrapExtra:`border:4px solid #fff !important;transform:rotate(-4deg) !important;box-shadow:0 14px 26px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
       case 'mono':
-        return { wrapExtra:'', imgExtra:'filter:grayscale(1) contrast(1.08);', overlay:'' };
+        return { wrapExtra:'', imgExtra:'filter:grayscale(1) contrast(1.08) !important;', overlay:'' };
       case 'duotone':
-        return { wrapExtra:'', imgExtra:`filter:grayscale(.55) sepia(.35) saturate(2.4) hue-rotate(${_scHexHue(col)}deg) contrast(1.05);`, overlay:'' };
+        return { wrapExtra:'', imgExtra:`filter:grayscale(.55) sepia(.35) saturate(2.4) hue-rotate(${_scHexHue(col)}deg) contrast(1.05) !important;`, overlay:'' };
       case 'spotlight':
         return { wrapExtra:'', imgExtra:'', overlay:`<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(0,0,0,0) 32%,rgba(0,0,0,.55) 100%);pointer-events:none"></div>` };
       default:
@@ -175,8 +175,8 @@
       </div>
       <div class="share-player-top" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
         <div class="share-player-photo-wrap ${(photoUrl && p.secondProfileFile)?'ph-swap':''}" data-sc-img-fx="${scp.imgFx}" style="width:${profileW}px;height:${profileH}px;border-radius:20px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.28);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.26),0 0 0 5px ${baseCol}26;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;${_imgFxP.wrapExtra}">
-          ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${photoPos?`object-position:${photoPos};`:''}${_imgFxP.imgExtra}" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain${_imgFxP.imgExtra}" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
-          ${(photoUrl && p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : ''}
+          ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${photoPos?`object-position:${photoPos};`:''}${_imgFxP.imgExtra}" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain;${_imgFxP.imgExtra}" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
+          ${(photoUrl && p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:_imgFxP.imgExtra}) : ''}
           ${_imgFxP.overlay}
         </div>
         <div class="share-player-main" style="min-width:0">
@@ -283,7 +283,7 @@
       <div class="share-univ-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
         <div class="share-univ-main" style="display:flex;align-items:center;gap:12px;min-width:0">
           <div class="share-univ-icon-wrap" data-sc-img-fx="${scp.imgFx}" style="width:98px;height:98px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32));${iconUrl?'':`background:radial-gradient(circle,${uCol}66,${uCol}22);border-radius:22px;`}${_imgFxP.wrapExtra?`;${_imgFxP.wrapExtra}`:''}">
-            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:100%;height:100%;object-fit:contain${_imgFxP.imgExtra}" onerror="this.remove()">`:gUI(u.name,'46px')}
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:100%;height:100%;object-fit:contain;${_imgFxP.imgExtra}" onerror="this.remove()">`:gUI(u.name,'46px')}
             ${_imgFxP.overlay}
           </div>
           <div style="min-width:0">
