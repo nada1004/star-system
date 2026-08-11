@@ -4498,13 +4498,17 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   text-align:center !important;
   gap:14px !important;
 }
-.share-shell--player[data-sc-entity-layout="photocard"] .share-player-photo-wrap,
-.share-shell--univ[data-sc-entity-layout="photocard"] .share-univ-icon-wrap{
+.share-shell--player[data-sc-entity-layout="photocard"] .share-player-photo-wrap{
   margin:0 auto !important;
   width:108px !important;
   height:126px !important;
   border-radius:26px !important;
   box-shadow:0 18px 34px rgba(15,23,42,.24) !important;
+}
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-univ-icon-wrap{
+  margin:0 auto !important;
+  width:132px !important;
+  height:132px !important;
 }
 .share-shell--player[data-sc-entity-layout="photocard"] .share-player-main,
 .share-shell--univ[data-sc-entity-layout="photocard"] .share-univ-main{
@@ -4549,6 +4553,10 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   height:86px !important;
   border-radius:18px !important;
 }
+.share-shell--univ[data-sc-entity-layout="compact"] .share-univ-icon-wrap{
+  width:64px !important;
+  height:64px !important;
+}
 .share-shell--player[data-sc-entity-layout="compact"] .share-player-name,
 .share-shell--univ[data-sc-entity-layout="compact"] .share-univ-name{
   font-size:22px !important;
@@ -4563,6 +4571,145 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .share-shell--univ[data-sc-entity-layout="compact"] .share-stat-grid{
   gap:6px !important;
 }
+.share-shell--univ[data-sc-entity-layout="compact"] .share-ace-grid > *:nth-child(n+3),
+.share-shell--univ[data-sc-entity-layout="compact"] .share-member-chips > *:nth-child(n+7){
+  display:none !important;
+}
+
+/* 포토카드형: 더 큼직하고 화보 느낌의 통계/에이스 카드 */
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-photo img,
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-photo{
+  width:56px !important;height:56px !important;
+}
+.share-shell--player[data-sc-entity-layout="photocard"] .share-stat-card,
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-stat-card{
+  padding:14px 8px !important;
+}
+.share-shell--player[data-sc-entity-layout="photocard"] .share-stat-value,
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-stat-value{
+  font-size:20px !important;
+}
+
+/* 쇼케이스형: 히어로 수치를 큼직한 배너로, 통계 그리드는 2열로 크게 */
+.share-shell--player[data-sc-entity-layout="showcase"] .share-stat-grid,
+.share-shell--univ[data-sc-entity-layout="showcase"] .share-stat-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.share-shell--player[data-sc-entity-layout="showcase"] .share-stat-card,
+.share-shell--univ[data-sc-entity-layout="showcase"] .share-stat-card{
+  padding:14px 10px !important;
+}
+.share-shell--player[data-sc-entity-layout="showcase"] .share-stat-value,
+.share-shell--univ[data-sc-entity-layout="showcase"] .share-stat-value{
+  font-size:22px !important;
+}
+.share-shell--univ[data-sc-entity-layout="showcase"] .share-hero-number,
+.share-shell--player[data-sc-entity-layout="showcase"] .share-hero-number{
+  font-size:34px !important;
+}
+
+/* ============================================================
+   공유카드 색상/톤(su_sc_mode)별 개성 있는 룩앤필 차별화
+   — 단순 배경색 변화를 넘어 모서리/타이포/장식 요소까지 모드별로 달라짐 */
+.share-shell[data-sc-mode="vivid"]{ border-radius:32px !important; }
+.share-shell[data-sc-mode="vivid"] .share-univ-name,
+.share-shell[data-sc-mode="vivid"] .share-player-name{
+  background:linear-gradient(90deg,#fff,#fde68a,#fff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:none;
+}
+.share-shell[data-sc-mode="vivid"] .share-stat-card,
+.share-shell[data-sc-mode="vivid"] .share-ace-card{
+  box-shadow:0 0 0 1px rgba(255,255,255,.35) inset,0 6px 18px rgba(0,0,0,.18) !important;
+}
+.share-shell[data-sc-mode="vivid"] .share-blob--b{ filter:blur(2px) saturate(1.6); }
+
+.share-shell[data-sc-mode="soft"]{ border-radius:36px !important; }
+.share-shell[data-sc-mode="soft"] .share-surface{ border-radius:30px !important; }
+.share-shell[data-sc-mode="soft"] .share-stat-card,
+.share-shell[data-sc-mode="soft"] .share-ace-card,
+.share-shell[data-sc-mode="soft"] .share-hero-metric{ border-radius:20px !important; }
+.share-shell[data-sc-mode="soft"] .share-member-chips span{ border-radius:999px !important; font-weight:700 !important; }
+.share-shell[data-sc-mode="soft"] .share-blob{ filter:blur(6px); opacity:.85; }
+
+.share-shell[data-sc-mode="dark"] .share-univ-name,
+.share-shell[data-sc-mode="dark"] .share-player-name{ letter-spacing:.4px !important; }
+.share-shell[data-sc-mode="dark"] .share-surface{ border-color:rgba(255,255,255,.06) !important; }
+.share-shell[data-sc-mode="dark"] .share-stat-card,
+.share-shell[data-sc-mode="dark"] .share-ace-card{ box-shadow:0 0 0 1px rgba(255,255,255,.05) inset !important; }
+.share-shell[data-sc-mode="dark"] .share-blob{ opacity:.5; }
+
+.share-shell[data-sc-mode="minimal"]{ border-radius:14px !important; box-shadow:0 10px 24px rgba(15,23,42,.22) !important; }
+.share-shell[data-sc-mode="minimal"] .share-surface{ border-radius:10px !important; backdrop-filter:none !important; background:rgba(255,255,255,.03) !important; }
+.share-shell[data-sc-mode="minimal"] .share-blob{ display:none !important; }
+.share-shell[data-sc-mode="minimal"] .share-univ-name,
+.share-shell[data-sc-mode="minimal"] .share-player-name{ font-weight:800 !important; letter-spacing:.2px !important; text-shadow:none !important; }
+.share-shell[data-sc-mode="minimal"] .share-stat-card,
+.share-shell[data-sc-mode="minimal"] .share-ace-card,
+.share-shell[data-sc-mode="minimal"] .share-hero-metric,
+.share-shell[data-sc-mode="minimal"] .share-univ-icon-wrap ~ *{ box-shadow:none !important; }
+.share-shell[data-sc-mode="minimal"] .share-kicker{ letter-spacing:1.4px !important; }
+
+.share-shell[data-sc-mode="aurora"] .share-univ-name,
+.share-shell[data-sc-mode="aurora"] .share-player-name{
+  background:linear-gradient(100deg,#a7f3d0,#93c5fd,#e9d5ff,#a7f3d0);
+  -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;
+}
+.share-shell[data-sc-mode="aurora"] .share-surface{ border-color:rgba(255,255,255,.28) !important; }
+.share-shell[data-sc-mode="aurora"] .share-blob{ filter:blur(10px); opacity:.9; }
+
+.share-shell[data-sc-mode="poster"]{ border-radius:18px !important; }
+.share-shell[data-sc-mode="poster"] .share-surface{ border:2px solid rgba(255,255,255,.5) !important; border-radius:14px !important; }
+.share-shell[data-sc-mode="poster"] .share-univ-name,
+.share-shell[data-sc-mode="poster"] .share-player-name{
+  text-transform:uppercase !important; letter-spacing:1.2px !important; font-weight:1000 !important;
+  text-shadow:0 3px 0 rgba(0,0,0,.28) !important;
+}
+.share-shell[data-sc-mode="poster"] .share-kicker{ letter-spacing:2px !important; }
+.share-shell[data-sc-mode="poster"] .share-stat-card,
+.share-shell[data-sc-mode="poster"] .share-ace-card{ border-width:2px !important; }
+
+.share-shell[data-sc-mode="mono"]{ border-radius:10px !important; }
+.share-shell[data-sc-mode="mono"] *{ font-family:'JetBrains Mono','Courier New',monospace !important; }
+.share-shell[data-sc-mode="mono"] .share-surface{ border-radius:6px !important; }
+.share-shell[data-sc-mode="mono"] .share-stat-card,
+.share-shell[data-sc-mode="mono"] .share-ace-card,
+.share-shell[data-sc-mode="mono"] .share-hero-metric{ border-radius:4px !important; }
+.share-shell[data-sc-mode="mono"] .share-member-chips span{ border-radius:4px !important; }
+.share-shell[data-sc-mode="mono"] .share-blob{ display:none !important; }
+.share-shell[data-sc-mode="mono"] .share-kicker::before{ content:'// '; opacity:.6; }
+
+.share-shell[data-sc-mode="glacier"] .share-surface{ border:1px solid rgba(224,242,254,.55) !important; }
+.share-shell[data-sc-mode="glacier"] .share-stat-card,
+.share-shell[data-sc-mode="glacier"] .share-ace-card{ border-color:rgba(224,242,254,.5) !important; }
+.share-shell[data-sc-mode="glacier"] .share-univ-name,
+.share-shell[data-sc-mode="glacier"] .share-player-name{ text-shadow:0 1px 10px rgba(224,242,254,.7) !important; }
+.share-shell[data-sc-mode="glacier"] .share-blob{ filter:blur(14px); }
+
+.share-shell[data-sc-mode="rose"]{ border-radius:34px !important; }
+.share-shell[data-sc-mode="rose"] .share-surface{ border-radius:26px !important; }
+.share-shell[data-sc-mode="rose"] .share-univ-name,
+.share-shell[data-sc-mode="rose"] .share-player-name{ font-style:italic !important; }
+.share-shell[data-sc-mode="rose"] .share-stat-card,
+.share-shell[data-sc-mode="rose"] .share-ace-card,
+.share-shell[data-sc-mode="rose"] .share-hero-metric{ border-radius:18px !important; }
+.share-shell[data-sc-mode="rose"] .share-member-chips span{ border-radius:999px !important; }
+
+.share-shell[data-sc-mode="midnight"]{
+  background-image:radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.5) 50%,transparent 51%),
+    radial-gradient(1px 1px at 70% 20%,rgba(255,255,255,.4) 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 40% 70%,rgba(255,255,255,.45) 50%,transparent 51%),
+    radial-gradient(1px 1px at 85% 65%,rgba(255,255,255,.35) 50%,transparent 51%),
+    radial-gradient(1px 1px at 55% 45%,rgba(255,255,255,.3) 50%,transparent 51%) !important;
+}
+.share-shell[data-sc-mode="midnight"] .share-surface{ border-color:rgba(255,255,255,.10) !important; }
+.share-shell[data-sc-mode="midnight"] .share-univ-name,
+.share-shell[data-sc-mode="midnight"] .share-player-name{ text-shadow:0 0 18px rgba(147,197,253,.45),0 2px 8px rgba(0,0,0,.4) !important; }
 
 /* ============================================================
    경기 공유카드 레이아웃 모드 — 스포트라이트 / 브로드캐스트 / 컴팩트

@@ -83,7 +83,6 @@
     const bgPosX=((p.shareCardBgPosX||'center')+'').trim();
     const bgPosY=((p.shareCardBgPosY||'center')+'').trim();
     const bgPos=`${bgPosX} ${bgPosY}`;
-    const bgCss = `linear-gradient(135deg,${col}dd,${col}88)`;
     const bgSize = bgFit==='fill' ? `${bgScale}% ${bgScale}%` : `${bgScale}%`;
     const ptsColor=pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.8)';
     const ratePct=tot?rate:0;
@@ -110,17 +109,18 @@
     const entityLayout = ['default','photocard','showcase','compact'].includes(String(scp.entityLayout||'')) ? scp.entityLayout : 'default';
     const accentA = scp.mode==='soft' ? _scShadeHex(baseCol,.26) : scp.mode==='dark' ? _scShadeHex(baseCol,-.22) : scp.mode==='minimal' ? _scShadeHex(baseCol,.08) : scp.mode==='aurora' ? _scMixHex(baseCol,'#38bdf8',.18) : scp.mode==='poster' ? _scShadeHex(baseCol,-.10) : scp.mode==='mono' ? '#6b7280' : scp.mode==='glacier' ? _scMixHex(baseCol,'#67e8f9',.28) : scp.mode==='rose' ? _scMixHex(baseCol,'#fb7185',.24) : scp.mode==='midnight' ? _scMixHex(baseCol,'#0f172a',.36) : baseCol;
     const accentB = scp.mode==='vivid' ? _scMixHex(baseCol,'#ffffff',.18) : scp.mode==='dark' ? _scMixHex(baseCol,'#111827',.26) : scp.mode==='aurora' ? _scMixHex(baseCol,'#7c3aed',.22) : scp.mode==='poster' ? _scMixHex(baseCol,'#111827',.42) : scp.mode==='mono' ? '#111827' : scp.mode==='glacier' ? _scMixHex(baseCol,'#e0f2fe',.56) : scp.mode==='rose' ? _scMixHex(baseCol,'#fff1f2',.54) : scp.mode==='midnight' ? '#020617' : _scMixHex(baseCol,'#ffffff',.34);
-    const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='minimal' ? 'linear-gradient(180deg,#0f172a,#111827)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(baseCol,'#e0f2fe',.72)},${_scMixHex(baseCol,'#111827',.18)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#111827',.18)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#1f2937,#111827)' : scp.mode==='glacier' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#f0f9ff',.82)},${_scMixHex(baseCol,'#dbeafe',.56)})` : scp.mode==='rose' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#fff7ed',.76)},${_scMixHex(baseCol,'#ffe4e6',.58)})` : scp.mode==='midnight' ? `linear-gradient(180deg,#020617,${_scMixHex(baseCol,'#0f172a',.74)})` : `linear-gradient(180deg,${_scShadeHex(baseCol,-.22)},#111827)`;
+    const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='vivid' ? `linear-gradient(135deg,${_scMixHex(baseCol,'#ec4899',.30)},${_scMixHex(baseCol,'#7c3aed',.38)})` : scp.mode==='soft' ? `linear-gradient(160deg,${_scMixHex(baseCol,'#fdf4ff',.44)},${_scMixHex(baseCol,'#fbcfe8',.24)})` : scp.mode==='minimal' ? 'linear-gradient(180deg,#27272a,#18181b)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(baseCol,'#e0f2fe',.72)},${_scMixHex(baseCol,'#111827',.18)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#111827',.18)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#1f2937,#111827)' : scp.mode==='glacier' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#f0f9ff',.82)},${_scMixHex(baseCol,'#dbeafe',.56)})` : scp.mode==='rose' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#fff7ed',.76)},${_scMixHex(baseCol,'#ffe4e6',.58)})` : scp.mode==='midnight' ? `linear-gradient(180deg,#020617,${_scMixHex(baseCol,'#0f172a',.74)})` : `linear-gradient(180deg,${_scShadeHex(baseCol,-.22)},#111827)`;
     const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(accentA,'#ffffff',.10)},${_scMixHex(accentB,'#ffffff',.04)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
+    const bgCss = scp.mode==='campus' ? `linear-gradient(135deg,${col}dd,${col}88)` : `linear-gradient(135deg,${accentA}bb,${accentB}66)`;
     const surfaceBlur = bgImg ? '0px' : (scp.surface==='glass' ? '10px' : '4px');
     const _cacheKey = `player:${name}`;
     const _html = `<div class="share-shell share-shell--player" data-sc-mode="${scp.mode}" data-sc-entity-layout="${entityLayout}" style="background:${shellBg};padding:16px;border-radius:28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 24px 52px rgba(15,23,42,.30),0 2px 0 rgba(255,255,255,.45) inset">
-    <div style="position:absolute;inset:0;background:${bgCss};opacity:.96"></div>
+    <div style="position:absolute;inset:0;background:${bgCss};opacity:${scp.mode==='campus'?'.96':'.55'}"></div>
     ${bgImg?`<div style="position:absolute;inset:0;background-image:url('${toHttpsUrl(bgImg)}');background-position:${bgPos};background-size:${bgSize};background-repeat:no-repeat;opacity:1"></div>`:''}
     ${bgImg?`<div style="position:absolute;inset:0;background:linear-gradient(135deg, rgba(15,23,42,${(bgDark/100).toFixed(2)}), rgba(15,23,42,${Math.max(0, (bgDark-10)/100).toFixed(2)})), linear-gradient(135deg, rgba(255,255,255,${(bgFade/100).toFixed(2)}), rgba(255,255,255,${Math.max(0, (bgFade-25)/100).toFixed(2)}));pointer-events:none"></div>`:''}
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.10).toFixed(2)}),rgba(15,23,42,${(0.62+scp.fx*0.22).toFixed(2)}));pointer-events:none"></div>
-    <div style="position:absolute;top:-32px;right:-28px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-    <div style="position:absolute;left:-42px;bottom:-44px;width:160px;height:160px;border-radius:50%;background:${baseCol}${Math.round(20+scp.color*30).toString(16).padStart(2,'0')};pointer-events:none"></div>
+    <div class="share-blob share-blob--a" style="position:absolute;top:-32px;right:-28px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
+    <div class="share-blob share-blob--b" style="position:absolute;left:-42px;bottom:-44px;width:160px;height:160px;border-radius:50%;background:${baseCol}${Math.round(20+scp.color*30).toString(16).padStart(2,'0')};pointer-events:none"></div>
     <div class="share-surface" style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:20px;background:${glassBg};backdrop-filter:blur(${surfaceBlur})">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-size:9px;font-weight:900;letter-spacing:1.4px;color:rgba(255,255,255,.55);text-shadow:0 1px 2px rgba(0,0,0,.3)">STAR DATA CENTER</div>
@@ -195,19 +195,19 @@
     const scp=_getShareCardPrefs('univ');
     const uCol=_scHexNorm(u.color||'#64748b');
     const entityLayout = ['default','photocard','showcase','compact'].includes(String(scp.entityLayout||'')) ? scp.entityLayout : 'default';
-    const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(uCol,'#dbeafe',.70)},${_scMixHex(uCol,'#111827',.16)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(uCol,'#111827',.20)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#374151,#111827)' : scp.mode==='glacier' ? `linear-gradient(180deg,${_scMixHex(uCol,'#f0f9ff',.84)},${_scMixHex(uCol,'#dbeafe',.62)})` : scp.mode==='rose' ? `linear-gradient(180deg,${_scMixHex(uCol,'#fff7ed',.78)},${_scMixHex(uCol,'#ffe4e6',.62)})` : scp.mode==='midnight' ? `linear-gradient(180deg,#020617,${_scMixHex(uCol,'#0f172a',.76)})` : `linear-gradient(180deg,${_scShadeHex(uCol,-.18)},#111827)`;
+    const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='vivid' ? `linear-gradient(135deg,${_scMixHex(uCol,'#ec4899',.30)},${_scMixHex(uCol,'#7c3aed',.38)})` : scp.mode==='soft' ? `linear-gradient(160deg,${_scMixHex(uCol,'#fdf4ff',.44)},${_scMixHex(uCol,'#fbcfe8',.24)})` : scp.mode==='minimal' ? 'linear-gradient(180deg,#27272a,#18181b)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(uCol,'#dbeafe',.70)},${_scMixHex(uCol,'#111827',.16)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(uCol,'#111827',.20)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#374151,#111827)' : scp.mode==='glacier' ? `linear-gradient(180deg,${_scMixHex(uCol,'#f0f9ff',.84)},${_scMixHex(uCol,'#dbeafe',.62)})` : scp.mode==='rose' ? `linear-gradient(180deg,${_scMixHex(uCol,'#fff7ed',.78)},${_scMixHex(uCol,'#ffe4e6',.62)})` : scp.mode==='midnight' ? `linear-gradient(180deg,#020617,${_scMixHex(uCol,'#0f172a',.76)})` : `linear-gradient(180deg,${_scShadeHex(uCol,-.18)},#111827)`;
     const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(uCol,'#ffffff',.08)},${_scMixHex(uCol,'#000000',.08)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
     const _cacheKey = `univ:${univName}`;
     const _html = `<div class="share-shell share-shell--univ" data-sc-mode="${scp.mode}" data-sc-entity-layout="${entityLayout}" style="background:${shellBg};padding:16px;color:#fff;position:relative;overflow:hidden;border-radius:26px;box-shadow:0 24px 52px rgba(15,23,42,.30),0 2px 0 rgba(255,255,255,.45) inset">
-    <div style="position:absolute;inset:0;background:linear-gradient(135deg,${_scMixHex(uCol,'#ffffff',scp.mode==='soft' ? .22 : .08)}ee,${_scMixHex(uCol,'#000000',scp.mode==='dark' ? .18 : .08)}cc);opacity:.98"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,${_scMixHex(uCol,'#ffffff',scp.mode==='soft' ? .22 : .08)}${scp.mode==='campus'?'ee':'88'},${_scMixHex(uCol,'#000000',scp.mode==='dark' ? .18 : .08)}${scp.mode==='campus'?'cc':'55'});opacity:${scp.mode==='campus'?'.98':'.5'}"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.08).toFixed(2)}),rgba(15,23,42,${(0.36+scp.fx*0.16).toFixed(2)}));pointer-events:none"></div>
-    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-    <div style="position:absolute;left:-42px;bottom:-44px;width:150px;height:150px;border-radius:50%;background:${uCol}${Math.round(18+scp.color*32).toString(16).padStart(2,'0')};pointer-events:none"></div>
+    <div class="share-blob share-blob--a" style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+    <div class="share-blob share-blob--b" style="position:absolute;left:-42px;bottom:-44px;width:150px;height:150px;border-radius:50%;background:${uCol}${Math.round(18+scp.color*32).toString(16).padStart(2,'0')};pointer-events:none"></div>
     <div class="share-surface" style="position:relative;z-index:1;border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.12);background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
       <div class="share-univ-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
         <div class="share-univ-main" style="display:flex;align-items:center;gap:12px;min-width:0">
-          <div class="share-univ-icon-wrap" style="width:78px;height:78px;border-radius:22px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.30);overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.18)">
-            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:52px;height:52px;object-fit:contain" onerror="this.remove()">`:gUI(u.name,'42px')}
+          <div class="share-univ-icon-wrap" style="width:98px;height:98px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32))">
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:100%;height:100%;object-fit:contain" onerror="this.remove()">`:gUI(u.name,'66px')}
           </div>
           <div style="min-width:0">
             <div class="share-univ-name" style="font-size:28px;font-weight:1000;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.35)">${u.name}</div>
@@ -240,11 +240,14 @@
       ${aces.length?`<div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.92);margin-bottom:8px;text-shadow:0 1px 2px rgba(0,0,0,.3)">ACE LINE</div>
         <div class="share-ace-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-          ${aces.map((p,idx)=>`<div class="share-ace-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:var(--r2);padding:10px 9px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
-            <div style="font-size:9px;color:rgba(255,255,255,.85);font-weight:900;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">${idx===0?'TOP ACE':idx===1?'CORE PLAYER':'KEY MEMBER'}</div>
-            <div class="share-ace-photo" style="display:flex;justify-content:center;margin-bottom:7px">${getPlayerPhotoHTML(p.name,'42px')}</div>
-            <div style="font-size:var(--fs-sm);font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.85);margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.25)">${p.tier||'-'} · ${pS(p.points)}</div>
+          ${aces.map((p,idx)=>`<div class="share-ace-card" style="position:relative;aspect-ratio:.82;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(255,255,255,.20);background:rgba(255,255,255,.13);box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
+            ${getPlayerPhotoHTML(p.name,'100%','position:absolute;inset:0;width:100%;height:100%;border-radius:0;object-fit:cover;')}
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,0) 34%,rgba(0,0,0,.30) 62%,rgba(0,0,0,.82) 100%);pointer-events:none"></div>
+            <div style="position:absolute;top:7px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,.92);font-weight:900;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.45)">${idx===0?'TOP ACE':idx===1?'CORE PLAYER':'KEY MEMBER'}</div>
+            <div style="position:absolute;left:6px;right:6px;bottom:7px;text-align:center">
+              <div style="font-size:var(--fs-sm);font-weight:1000;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.55)">${p.name}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.88);margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,.5)">${p.tier||'-'} · ${pS(p.points)}</div>
+            </div>
           </div>`).join('')}
         </div>
       </div>`:''}

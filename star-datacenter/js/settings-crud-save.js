@@ -357,6 +357,11 @@ function savePlayer(){
   const _phbgPosX  = _intVal('ed-phbg-posx', 50);
   const _phbgPosY  = _intVal('ed-phbg-posy', 50);
 
+  // 프로필 이미지·이름·배너 효과
+  const _photoFx = (document.getElementById('ed-photo-fx')?.value || 'none').trim();
+  const _nameFx  = (document.getElementById('ed-name-fx')?.value || 'none').trim();
+  const _heroFx  = (document.getElementById('ed-hero-fx')?.value || 'none').trim();
+
   // 공유카드 배경 설정
   const _shareBg     = _strVal('ed-sharebg') || '';
   const _shareBgFit  = _strVal('ed-sharebg-fit') || '';
@@ -395,6 +400,9 @@ function savePlayer(){
   p.detailHeaderBgPos=_phbg ? _phbgPos : undefined;
   p.detailHeaderBgPosX=_phbg ? (isNaN(_phbgPosX)?50:Math.max(0,Math.min(100,_phbgPosX))) : undefined;
   p.detailHeaderBgPosY=_phbg ? (isNaN(_phbgPosY)?50:Math.max(0,Math.min(100,_phbgPosY))) : undefined;
+  p.pdPhotoFx=(_photoFx&&_photoFx!=='none') ? _photoFx : undefined;
+  p.pdNameFx=(_nameFx&&_nameFx!=='none') ? _nameFx : undefined;
+  p.pdHeroFx=(_heroFx&&_heroFx!=='none') ? _heroFx : undefined;
   p.shareCardBgImg=_shareBg||undefined;
   p.shareCardBgFit=_shareBgFit||undefined;
   p.shareCardBgScale=_shareBg ? _shareBgScale : undefined;

@@ -216,6 +216,16 @@ function toggleUnivEdit(){
               <option value="shadow"${u.udLogoFx==='shadow'?' selected':''}>🌑 강한 그림자</option>
               <option value="float"${u.udLogoFx==='float'?' selected':''}>🎈 둥실둥실</option>
               <option value="shine"${u.udLogoFx==='shine'?' selected':''}>💫 반짝임(스윕)</option>
+              <option value="pulse"${u.udLogoFx==='pulse'?' selected':''}>🫀 맥박(커졌다작아짐)</option>
+              <option value="tilt"${u.udLogoFx==='tilt'?' selected':''}>🌀 좌우 흔들림</option>
+              <option value="halo"${u.udLogoFx==='halo'?' selected':''}>⭕ 퍼지는 링(헤일로)</option>
+              <option value="rainbow"${u.udLogoFx==='rainbow'?' selected':''}>🌈 색상 순환</option>
+              <option value="flash"${u.udLogoFx==='flash'?' selected':''}>⚡ 플래시</option>
+              <option value="wobble"${u.udLogoFx==='wobble'?' selected':''}>🤸 왕복 기울임</option>
+              <option value="orbit"${u.udLogoFx==='orbit'?' selected':''}>🪐 공전하는 점</option>
+              <option value="flip"${u.udLogoFx==='flip'?' selected':''}>🔄 카드 플립</option>
+              <option value="bounce"${u.udLogoFx==='bounce'?' selected':''}>🏀 바운스</option>
+              <option value="flicker"${u.udLogoFx==='flicker'?' selected':''}>📺 지지직(플리커)</option>
             </select>
           </div>
           <div>
@@ -238,6 +248,16 @@ function toggleUnivEdit(){
               <option value="shimmer"${u.udNameFx==='shimmer'?' selected':''}>✨ 시머(빛 스윕)</option>
               <option value="holo"${u.udNameFx==='holo'?' selected':''}>💿 홀로그램</option>
               <option value="shadow3d"${u.udNameFx==='shadow3d'?' selected':''}>🧱 입체 그림자</option>
+              <option value="fire"${u.udNameFx==='fire'?' selected':''}>🔥 불꽃</option>
+              <option value="ice"${u.udNameFx==='ice'?' selected':''}>❄️ 아이스</option>
+              <option value="metallic"${u.udNameFx==='metallic'?' selected':''}>🥇 메탈릭(금속광)</option>
+              <option value="emboss"${u.udNameFx==='emboss'?' selected':''}>🪙 양각 각인</option>
+              <option value="candy"${u.udNameFx==='candy'?' selected':''}>🍬 캔디 레인보우</option>
+              <option value="flicker"${u.udNameFx==='flicker'?' selected':''}>⚡ 네온 플리커</option>
+              <option value="stone"${u.udNameFx==='stone'?' selected':''}>🪨 돌 각인</option>
+              <option value="glitch"${u.udNameFx==='glitch'?' selected':''}>👾 글리치</option>
+              <option value="chrome"${u.udNameFx==='chrome'?' selected':''}>🔩 크롬(은속광)</option>
+              <option value="pastel"${u.udNameFx==='pastel'?' selected':''}>🌸 파스텔 레인보우</option>
             </select>
           </div>
           <div>
@@ -313,6 +333,25 @@ function toggleUnivEdit(){
             <span id="ue-hdr-pady-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:36px;text-align:right;font-weight:700">${Number(u.udHeaderPadY||100)||100}%</span>
           </div>
           <button type="button" onclick="applyHdrPadYToAllUnivs()" style="margin-top:6px;padding:5px 10px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer">↕ 이 값을 전체 대학에 일괄 적용</button>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">상단 배너 전체 효과 <span style="font-weight:400;color:var(--gray-l)">(배너 전체에 걸리는 배경 연출)</span></label>
+          <select id="ue-hero-fx" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
+            <option value="none"${!u.udHeroFx||u.udHeroFx==='none'?' selected':''}>없음</option>
+            <option value="aurora"${u.udHeroFx==='aurora'?' selected':''}>🌌 오로라(부유하는 빛)</option>
+            <option value="grid"${u.udHeroFx==='grid'?' selected':''}>▦ 그리드 패턴</option>
+            <option value="particles"${u.udHeroFx==='particles'?' selected':''}>✨ 떠오르는 파티클</option>
+            <option value="shine"${u.udHeroFx==='shine'?' selected':''}>💫 전체 반짝임(스윕)</option>
+            <option value="spotlight"${u.udHeroFx==='spotlight'?' selected':''}>🔦 이동하는 스포트라이트</option>
+            <option value="stripes"${u.udHeroFx==='stripes'?' selected':''}>➗ 대각선 스트라이프</option>
+            <option value="confetti"${u.udHeroFx==='confetti'?' selected':''}>🎊 색종이(컨페티)</option>
+            <option value="vignette"${u.udHeroFx==='vignette'?' selected':''}>🌗 맥동하는 비네트</option>
+            <option value="wavebands"${u.udHeroFx==='wavebands'?' selected':''}>〰️ 흐르는 밴드</option>
+            <option value="snow"${u.udHeroFx==='snow'?' selected':''}>❄️ 눈송이</option>
+            <option value="beam"${u.udHeroFx==='beam'?' selected':''}>🔆 무빙 빔</option>
+            <option value="glowpulse"${u.udHeroFx==='glowpulse'?' selected':''}>💡 은은한 발광 펄스</option>
+          </select>
+          <button type="button" onclick="applyAllFxToAllUnivs()" style="margin-top:6px;padding:5px 10px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer">🎨 로고·이름·배너 효과를 전체 대학에 일괄 적용</button>
         </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
@@ -490,6 +529,37 @@ function toggleUnivEdit(){
   }
 }
 
+function applyAllFxToAllUnivs(){
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
+  const logoFx=(document.getElementById('ue-logo-fx')?.value||'none').trim();
+  const nameFx=(document.getElementById('ue-name-fx')?.value||'none').trim();
+  const heroFx=(document.getElementById('ue-hero-fx')?.value||'none').trim();
+  if(!confirm(`현재 로고 효과·대학명 효과·배너 효과를 전체 대학(${univCfg.length}개)에 일괄 적용할까요?`)) return;
+  univCfg.forEach(x=>{
+    if(logoFx && logoFx!=='none') x.udLogoFx=logoFx; else delete x.udLogoFx;
+    if(nameFx && nameFx!=='none') x.udNameFx=nameFx; else delete x.udNameFx;
+    if(heroFx && heroFx!=='none') x.udHeroFx=heroFx; else delete x.udHeroFx;
+  });
+  save();render();
+  const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
+  const curName=st.currentName;
+  {
+    const _fn = (typeof buildUnivDetailHTML==='function')
+      ? buildUnivDetailHTML
+      : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
+    const body=document.getElementById('univModalBody');
+    if(body && _fn && curName){
+      body.innerHTML = _fn(curName);
+      injectUnivIcons(body);
+    }
+  }
+  st.editOpen=false;
+  const btn=document.getElementById('univEditBtn');
+  if(btn) btn.textContent='✏️ 수정';
+  alert('전체 대학에 적용했습니다.');
+}
+
 function applyHdrPadYToAllUnivs(){
   const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
   if(!canEdit) return;
@@ -538,6 +608,7 @@ function saveUnivEdit(){
   const newNameOffX=parseInt(document.getElementById('ue-name-offx')?.value||'0',10);
   const newNameOffY=parseInt(document.getElementById('ue-name-offy')?.value||'0',10);
   const newHdrPadY=parseInt(document.getElementById('ue-hdr-pady')?.value||'100',10)||100;
+  const newHeroFx=(document.getElementById('ue-hero-fx')?.value||'none').trim();
   const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
   const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
   const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
@@ -576,6 +647,7 @@ function saveUnivEdit(){
   if(Number.isFinite(newNameOffX) && newNameOffX!==0) u.udNameOffX=Math.max(-60,Math.min(60,newNameOffX)); else delete u.udNameOffX;
   if(Number.isFinite(newNameOffY) && newNameOffY!==0) u.udNameOffY=Math.max(-60,Math.min(60,newNameOffY)); else delete u.udNameOffY;
   if(newHdrPadY && newHdrPadY!==100) u.udHeaderPadY=Math.max(50,Math.min(200,newHdrPadY)); else delete u.udHeaderPadY;
+  if(newHeroFx && newHeroFx!=='none') u.udHeroFx=newHeroFx; else delete u.udHeroFx;
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;

@@ -58,6 +58,31 @@ function _bindUnivSectionsDelegatedEvents(){
     '.ud-logo-fx-sparkle::before{top:-6px;right:-2px;font-size:14px;animation-delay:0s}',
     '.ud-logo-fx-sparkle::after{bottom:2px;left:-8px;font-size:10px;animation-delay:.6s}',
     '@keyframes udLogoSparkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(90deg)}}',
+    // 로고 효과 (추가분)
+    '.ud-logo-fx-pulse{animation:udLogoPulse 2.2s ease-in-out infinite}',
+    '@keyframes udLogoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}',
+    '.ud-logo-fx-tilt{animation:udLogoTilt 3.2s ease-in-out infinite}',
+    '@keyframes udLogoTilt{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}',
+    '.ud-logo-fx-halo{position:relative}',
+    '.ud-logo-fx-halo::before{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--ud-univ-col,rgba(255,255,255,.7));opacity:.8;animation:udLogoHalo 2.4s ease-out infinite;pointer-events:none;z-index:-1}',
+    '@keyframes udLogoHalo{0%{transform:scale(.85);opacity:.8}100%{transform:scale(1.4);opacity:0}}',
+    '.ud-logo-fx-rainbow{animation:udLogoRainbow 4s linear infinite}',
+    '@keyframes udLogoRainbow{0%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) hue-rotate(0deg)}100%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) hue-rotate(360deg)}}',
+    // 로고 효과 (2차 추가분)
+    '.ud-logo-fx-flash{animation:udLogoFlash 1.6s ease-in-out infinite}',
+    '@keyframes udLogoFlash{0%,100%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) brightness(1)}50%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) brightness(1.5)}}',
+    '.ud-logo-fx-wobble{animation:udLogoWobble 2.8s ease-in-out infinite}',
+    '@keyframes udLogoWobble{0%,100%{transform:rotate(0deg) scale(1)}25%{transform:rotate(-3deg) scale(1.03)}75%{transform:rotate(3deg) scale(1.03)}}',
+    '.ud-logo-fx-orbit{position:relative}',
+    '.ud-logo-fx-orbit::after{content:"";position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#fff;box-shadow:0 0 8px 2px rgba(255,255,255,.85);pointer-events:none;animation:udLogoOrbit 3.4s linear infinite}',
+    '@keyframes udLogoOrbit{0%{transform:rotate(0deg) translateX(calc(var(--ud-logo-box,60px) / 2 + 5px)) rotate(0deg)}100%{transform:rotate(360deg) translateX(calc(var(--ud-logo-box,60px) / 2 + 5px)) rotate(-360deg)}}',
+    // 로고 효과 (3차 추가분)
+    '.ud-logo-fx-flip{animation:udLogoFlip 3.6s ease-in-out infinite}',
+    '@keyframes udLogoFlip{0%,100%{transform:rotateY(0deg)}50%{transform:rotateY(180deg)}}',
+    '.ud-logo-fx-bounce{animation:udLogoBounce 1.4s cubic-bezier(.28,.84,.42,1) infinite}',
+    '@keyframes udLogoBounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-14px)}50%{transform:translateY(0)}65%{transform:translateY(-6px)}80%{transform:translateY(0)}}',
+    '.ud-logo-fx-flicker{animation:udLogoFlicker 2.4s linear infinite}',
+    '@keyframes udLogoFlicker{0%,19%,21%,23%,54%,56%,100%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) brightness(1)}20%,22%,55%{filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) brightness(.4)}}',
     // 대학명 효과
     '.ud-name-fx-outline{-webkit-text-stroke:1.4px rgba(15,23,42,.4)}',
     '.ud-name-fx-gradient{background:linear-gradient(92deg,#fff 0%,var(--ud-univ-col,#fff) 85%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}',
@@ -67,7 +92,53 @@ function _bindUnivSectionsDelegatedEvents(){
     '.ud-name-fx-shimmer{background:linear-gradient(100deg,#fff 30%,var(--ud-univ-col,#fff) 45%,#fff 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameShimmer 2.6s linear infinite}',
     '@keyframes udNameShimmer{0%{background-position:120% 0}100%{background-position:-40% 0}}',
     '.ud-name-fx-holo{background:linear-gradient(92deg,#ff8fab,#ffd97d,#8affc1,#8ec5fc,#c8a2ff,#ff8fab);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameHolo 5s linear infinite}',
-    '@keyframes udNameHolo{0%{background-position:0% 0}100%{background-position:280% 0}}'
+    '@keyframes udNameHolo{0%{background-position:0% 0}100%{background-position:280% 0}}',
+    // 대학명 효과 (추가분)
+    '.ud-name-fx-fire{background:linear-gradient(180deg,#fff58a 0%,#ffb703 35%,#fb5607 65%,#d00000 100%);background-size:100% 220%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameFire 1.8s ease-in-out infinite;text-shadow:0 4px 20px rgba(251,86,7,.35)!important}',
+    '@keyframes udNameFire{0%,100%{background-position:0 0}50%{background-position:0 40%}}',
+    '.ud-name-fx-ice{background:linear-gradient(100deg,#e0f7ff 0%,#7dd3fc 45%,#38bdf8 65%,#e0f7ff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameIce 3.4s linear infinite;text-shadow:0 0 16px rgba(125,211,252,.5)!important}',
+    '@keyframes udNameIce{0%{background-position:0% 0}100%{background-position:220% 0}}',
+    '.ud-name-fx-metallic{background:linear-gradient(100deg,#fef3c7 0%,#fbbf24 20%,#fef9c3 40%,#d97706 60%,#fef3c7 80%,#fbbf24 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameMetallic 3.2s linear infinite}',
+    '@keyframes udNameMetallic{0%{background-position:0% 0}100%{background-position:260% 0}}',
+    '.ud-name-fx-emboss{-webkit-text-fill-color:transparent;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(226,232,240,.75));-webkit-background-clip:text;background-clip:text;text-shadow:0 1px 0 rgba(255,255,255,.55),0 -1px 1px rgba(15,23,42,.55)!important}',
+    // 대학명 효과 (2차 추가분)
+    '.ud-name-fx-candy{background:linear-gradient(100deg,#f472b6,#facc15,#34d399,#38bdf8,#a78bfa,#f472b6);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameCandy 6s linear infinite}',
+    '@keyframes udNameCandy{0%{background-position:0% 0}100%{background-position:300% 0}}',
+    '.ud-name-fx-flicker{animation:udNameFlicker 2.6s linear infinite}',
+    '@keyframes udNameFlicker{0%,19%,21%,23%,54%,56%,100%{opacity:1;text-shadow:0 0 6px currentColor,0 0 16px currentColor,0 0 32px currentColor}20%,22%,55%{opacity:.4;text-shadow:none}}',
+    '.ud-name-fx-stone{text-shadow:0 1px 0 rgba(255,255,255,.25),0 2px 3px rgba(0,0,0,.7),0 -1px 1px rgba(0,0,0,.4)!important}',
+    // 대학명 효과 (3차 추가분)
+    '.ud-name-fx-glitch{position:relative;animation:udNameGlitch 2.2s infinite}',
+    '@keyframes udNameGlitch{0%,100%{text-shadow:0 0 0 transparent}92%{text-shadow:0 0 0 transparent}93%{text-shadow:-2px 0 #ff2d55,2px 0 #22d3ee}95%{text-shadow:2px 0 #ff2d55,-2px 0 #22d3ee}97%{text-shadow:-1px 0 #ff2d55,1px 0 #22d3ee}98%{text-shadow:0 0 0 transparent}}',
+    '.ud-name-fx-chrome{background:linear-gradient(100deg,#cbd5e1 0%,#f8fafc 20%,#94a3b8 40%,#e2e8f0 60%,#64748b 80%,#f1f5f9 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNameChrome 3.4s linear infinite}',
+    '@keyframes udNameChrome{0%{background-position:0% 0}100%{background-position:260% 0}}',
+    '.ud-name-fx-pastel{background:linear-gradient(100deg,#fbcfe8,#ddd6fe,#bae6fd,#bbf7d0,#fef08a,#fbcfe8);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:udNamePastel 7s linear infinite}',
+    '@keyframes udNamePastel{0%{background-position:0% 0}100%{background-position:300% 0}}',
+    // 상단 배너 전체 효과
+    '.ud-hero-fx-aurora::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.35),transparent 45%),radial-gradient(circle at 70% 60%,rgba(255,255,255,.22),transparent 50%);filter:blur(18px);animation:udHeroAurora 8s ease-in-out infinite;pointer-events:none;z-index:0}',
+    '@keyframes udHeroAurora{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(4%,-3%) rotate(8deg)}}',
+    '.ud-hero-fx-grid::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:26px 26px;pointer-events:none;z-index:0}',
+    '.ud-hero-fx-particles::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(rgba(255,255,255,.55) 1.5px,transparent 1.5px),radial-gradient(rgba(255,255,255,.35) 1.5px,transparent 1.5px),radial-gradient(rgba(255,255,255,.45) 1px,transparent 1px);background-size:120px 90px,160px 130px,90px 70px;background-position:0 0,40px 60px,90px 20px;animation:udHeroParticles 9s linear infinite}',
+    '@keyframes udHeroParticles{0%{background-position:0 0,40px 60px,90px 20px}100%{background-position:0 -180px,40px -260px,90px -140px}}',
+    '.ud-hero-fx-shine::after{content:"";position:absolute;top:0;left:-60%;width:35%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg);animation:udHeroShine 3.6s ease-in-out infinite;pointer-events:none;z-index:2}',
+    '@keyframes udHeroShine{0%{left:-60%}100%{left:130%}}',
+    '.ud-hero-fx-spotlight::before{content:"";position:absolute;top:-40%;left:-10%;width:60%;height:180%;background:radial-gradient(circle,rgba(255,255,255,.28),transparent 65%);filter:blur(4px);pointer-events:none;z-index:0;animation:udHeroSpotlightMove 6s ease-in-out infinite}',
+    '@keyframes udHeroSpotlightMove{0%,100%{left:-10%}50%{left:70%}}',
+    '.ud-hero-fx-stripes::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 12px,transparent 12px 24px);pointer-events:none;z-index:0}',
+    // 상단 배너 전체 효과 (2차 추가분)
+    '.ud-hero-fx-confetti::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.85;background-image:radial-gradient(circle,#fbbf24 2px,transparent 2px),radial-gradient(circle,#f472b6 2px,transparent 2px),radial-gradient(circle,#38bdf8 2px,transparent 2px),radial-gradient(circle,#34d399 2px,transparent 2px);background-size:140px 110px,170px 140px,120px 95px,155px 125px;background-position:10px 0,60px 30px,100px 10px,30px 60px;animation:udHeroConfetti 7s linear infinite}',
+    '@keyframes udHeroConfetti{0%{background-position:10px 0,60px 30px,100px 10px,30px 60px}100%{background-position:10px 220px,60px 250px,100px 230px,30px 280px}}',
+    '.ud-hero-fx-vignette::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;animation:udHeroVignette 3.2s ease-in-out infinite}',
+    '@keyframes udHeroVignette{0%,100%{box-shadow:inset 0 0 40px rgba(255,255,255,.06)}50%{box-shadow:inset 0 0 80px rgba(255,255,255,.24)}}',
+    '.ud-hero-fx-wavebands::before{content:"";position:absolute;inset:-20% -20%;background:repeating-linear-gradient(115deg,rgba(255,255,255,.10) 0 18px,transparent 18px 46px);animation:udHeroWaveBands 5.5s linear infinite;pointer-events:none;z-index:0}',
+    '@keyframes udHeroWaveBands{0%{transform:translateX(0)}100%{transform:translateX(64px)}}',
+    // 상단 배너 전체 효과 (3차 추가분)
+    '.ud-hero-fx-snow::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(circle,rgba(255,255,255,.9) 1.5px,transparent 1.5px),radial-gradient(circle,rgba(255,255,255,.7) 1.5px,transparent 1.5px),radial-gradient(circle,rgba(255,255,255,.8) 1px,transparent 1px);background-size:90px 70px,130px 100px,70px 55px;background-position:0 0,50px 30px,20px 10px;animation:udHeroSnow 6s linear infinite}',
+    '@keyframes udHeroSnow{0%{background-position:0 0,50px 30px,20px 10px}100%{background-position:0 160px,50px 190px,20px 130px}}',
+    '.ud-hero-fx-beam::before{content:"";position:absolute;top:-20%;left:-10%;width:16%;height:160%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.30),transparent);filter:blur(3px);pointer-events:none;z-index:0;animation:udHeroBeamMove 4.6s ease-in-out infinite}',
+    '@keyframes udHeroBeamMove{0%,100%{left:-10%}50%{left:90%}}',
+    '.ud-hero-fx-glowpulse::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.22),transparent 60%);animation:udHeroGlowPulse 3s ease-in-out infinite}',
+    '@keyframes udHeroGlowPulse{0%,100%{opacity:.4}50%{opacity:1}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -166,8 +237,8 @@ function buildUnivHeaderCardHTML(opts){
   // 구버전 '링(원)' 효과는 폐지되어 prism(빛나는 회전 링)으로 자동 대체됨
   const _logoFxRaw = String(_univCfgEntry.udLogoFx || 'none');
   const _logoFx = _logoFxRaw === 'ring' ? 'prism' : _logoFxRaw;
-  const _isLogoFilterFx = (_logoFx === 'glow' || _logoFx === 'shadow' || _logoFx === 'aura');
-  const _isLogoBoxFx = (_logoFx === 'float' || _logoFx === 'shine' || _logoFx === 'spotlight' || _logoFx === 'prism' || _logoFx === 'sparkle');
+  const _isLogoFilterFx = (_logoFx === 'glow' || _logoFx === 'shadow' || _logoFx === 'aura' || _logoFx === 'rainbow' || _logoFx === 'flash' || _logoFx === 'flicker');
+  const _isLogoBoxFx = (_logoFx === 'float' || _logoFx === 'shine' || _logoFx === 'spotlight' || _logoFx === 'prism' || _logoFx === 'sparkle' || _logoFx === 'pulse' || _logoFx === 'tilt' || _logoFx === 'halo' || _logoFx === 'wobble' || _logoFx === 'orbit' || _logoFx === 'flip' || _logoFx === 'bounce');
   const _logoOuterClass = _isLogoBoxFx ? ` ud-logo-fx-${_logoFx}` : '';
   const _logoInnerClass = _isLogoFilterFx ? ` ud-logo-fx-${_logoFx}` : '';
 
@@ -219,10 +290,13 @@ function buildUnivHeaderCardHTML(opts){
   const _hdrPadBottom = _hdrPadCalc(_hdrPadBaseBottom, _hdrPadScalePct);
   const _hdrPadX = isMobile ? 16 : 24;
 
+  // 상단 배너 전체 효과 (대학 정보 수정 패널에서 설정)
+  const _heroFx = String(_univCfgEntry.udHeroFx || 'none');
+  const _heroFxClass = _heroFx !== 'none' ? ` ud-hero-fx-${_heroFx}` : '';
 
   return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
-    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${_hdrPadTop}px ${_hdrPadX}px ${_hdrPadBottom}px;position:relative;overflow:hidden">
+    <div class="ud-hero-top${_heroFxClass}" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${_hdrPadTop}px ${_hdrPadX}px ${_hdrPadBottom}px;position:relative;overflow:hidden">
       ${bgLayerHTML}
       <!-- 장식 원 -->
       <div style="position:absolute;top:-34px;right:-24px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
@@ -238,7 +312,7 @@ function buildUnivHeaderCardHTML(opts){
         <div class="ud-hero-brand" style="${_namePos==='below'
           ? `display:flex;flex-direction:column;align-items:center;text-align:center;gap:${_brandGap}px;min-width:0`
           : `display:flex;align-items:center;gap:${_brandGap}px;min-width:0`}">
-          <div class="${_logoOuterClass.trim()}" style="width:${logoBoxPx}px;height:${logoBoxPx}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin:${_logoOffY}px 0 0 ${_logoOffX}px">
+          <div class="${_logoOuterClass.trim()}" style="width:${logoBoxPx}px;height:${logoBoxPx}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin:${_logoOffY}px 0 0 ${_logoOffX}px;--ud-logo-box:${logoBoxPx}px">
             <div class="${_logoInnerClass.trim()}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 16px 28px rgba(15,23,42,.24)) drop-shadow(0 4px 10px rgba(255,255,255,.08))">
               ${_logoContentHTML}
             </div>
