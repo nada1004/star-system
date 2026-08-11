@@ -191,9 +191,19 @@
     const _tiIdx=t=>{const i=TIERS.indexOf(t);return i<0?TIERS.length:i;};
     const sortedMem=[...mem].sort((a,b)=>_tiIdx(a.tier)-_tiIdx(b.tier)||(b.points||0)-(a.points||0));
     const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
-    const aces=sortedMem.slice(0,3);
+    // ACE LINE은 티어 대신 ELO(객관적 실력 지표) 기준으로 선정, 포인트는 동점자 타이브레이커
+    const _eloDef=typeof ELO_DEFAULT!=='undefined'?ELO_DEFAULT:1200;
+    const aces=[...mem].sort((a,b)=>(b.elo||_eloDef)-(a.elo||_eloDef)||(b.points||0)-(a.points||0)).slice(0,3);
     const scp=_getShareCardPrefs('univ');
     const uCol=_scHexNorm(u.color||'#64748b');
+    // 전체 대학 대비 TEAM POINT 순위
+    let _uRank='';
+    try{
+      const _allU=typeof getAllUnivs==='function'?getAllUnivs():uList;
+      const _ranked=_allU.map(x=>({name:x.name,pts:(typeof calcUnivRadar==='function'?calcUnivRadar(x.name,proIds).pts:0)})).sort((a,b)=>b.pts-a.pts);
+      const _ri=_ranked.findIndex(x=>x.name===u.name);
+      if(_ri>=0) _uRank=`전체 ${_ri+1}/${_ranked.length}위`;
+    }catch(e){}
     const entityLayout = ['default','photocard','showcase','compact'].includes(String(scp.entityLayout||'')) ? scp.entityLayout : 'default';
     const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='vivid' ? `linear-gradient(135deg,${_scMixHex(uCol,'#ec4899',.30)},${_scMixHex(uCol,'#7c3aed',.38)})` : scp.mode==='soft' ? `linear-gradient(160deg,${_scMixHex(uCol,'#fdf4ff',.44)},${_scMixHex(uCol,'#fbcfe8',.24)})` : scp.mode==='minimal' ? 'linear-gradient(180deg,#27272a,#18181b)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(uCol,'#dbeafe',.70)},${_scMixHex(uCol,'#111827',.16)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(uCol,'#111827',.20)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#374151,#111827)' : scp.mode==='glacier' ? `linear-gradient(180deg,${_scMixHex(uCol,'#f0f9ff',.84)},${_scMixHex(uCol,'#dbeafe',.62)})` : scp.mode==='rose' ? `linear-gradient(180deg,${_scMixHex(uCol,'#fff7ed',.78)},${_scMixHex(uCol,'#ffe4e6',.62)})` : scp.mode==='midnight' ? `linear-gradient(180deg,#020617,${_scMixHex(uCol,'#0f172a',.76)})` : `linear-gradient(180deg,${_scShadeHex(uCol,-.18)},#111827)`;
     const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(uCol,'#ffffff',.08)},${_scMixHex(uCol,'#000000',.08)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
@@ -206,8 +216,8 @@
     <div class="share-surface" style="position:relative;z-index:1;border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.12);background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
       <div class="share-univ-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
         <div class="share-univ-main" style="display:flex;align-items:center;gap:12px;min-width:0">
-          <div class="share-univ-icon-wrap" style="width:98px;height:98px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32))">
-            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:100%;height:100%;object-fit:contain" onerror="this.remove()">`:gUI(u.name,'66px')}
+          <div class="share-univ-icon-wrap" style="width:98px;height:98px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32));${iconUrl?'':`background:radial-gradient(circle,${uCol}66,${uCol}22);border-radius:22px;`}">
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:100%;height:100%;object-fit:contain" onerror="this.remove()">`:gUI(u.name,'46px')}
           </div>
           <div style="min-width:0">
             <div class="share-univ-name" style="font-size:28px;font-weight:1000;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.35)">${u.name}</div>
@@ -217,6 +227,7 @@
         <div class="share-hero-metric" style="min-width:102px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:10px 12px;text-align:center">
           <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.35)">TEAM POINT</div>
           <div class="share-hero-number" style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px;color:${ptsColor};text-shadow:0 1px 4px rgba(0,0,0,.3)">${sc.pts>=0?'+':''}${sc.pts}</div>
+          ${_uRank?`<div style="font-size:9px;color:rgba(255,255,255,.72);margin-top:3px;font-weight:700">${_uRank}</div>`:''}
         </div>
       </div>
       <div class="share-stat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px">
@@ -252,7 +263,11 @@
         </div>
       </div>`:''}
       <div class="share-member-chips" style="display:flex;gap:6px;flex-wrap:wrap">
-        ${sortedMem.slice(0,10).map(p=>`<span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800">${p.name}</span>`).join('')}
+        ${sortedMem.slice(0,10).map(p=>{
+          const tc=(typeof getTierBtnColor==='function'&&p.tier)?_scHexNorm(getTierBtnColor(p.tier)):null;
+          return tc?`<span style="background:${tc}2e;border:1px solid ${tc}80;border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800;color:#fff">${p.name}</span>`
+                    :`<span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800">${p.name}</span>`;
+        }).join('')}
         ${mem.length>10?`<span style="opacity:.72;font-size:10px;padding:4px 8px">+${mem.length-10}명</span>`:''}
       </div>
     </div>

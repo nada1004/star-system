@@ -4581,9 +4581,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   gap:10px !important;
 }
-.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-photo img,
-.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-photo{
-  width:56px !important;height:56px !important;
+.share-shell--univ[data-sc-entity-layout="photocard"] .share-ace-card{
+  aspect-ratio:.72 !important;
 }
 .share-shell--player[data-sc-entity-layout="photocard"] .share-stat-card,
 .share-shell--univ[data-sc-entity-layout="photocard"] .share-stat-card{

@@ -130,7 +130,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260811-acefull1');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260811-univfx1');
   await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
@@ -177,7 +177,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/sharecard-theme.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260811-acefull1');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260811-univfx1');
   await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
