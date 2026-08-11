@@ -10437,6 +10437,9 @@ body.dark table thead tr th {
 table tbody tr { transition: background .12s; }
 table tbody tr:not(.ugrp):not(.tgrp):hover td { background: rgba(37,99,235,.04) !important; }
 body.dark table tbody tr:not(.ugrp):not(.tgrp):hover td { background: rgba(59,130,246,.08) !important; }
+.cal-board-month table tbody tr:not(.ugrp):not(.tgrp):hover td { background: transparent !important; }
+body.dark .cal-board-month table tbody tr:not(.ugrp):not(.tgrp):hover td { background: transparent !important; }
+body.design-v2 .cal-board-month table tbody tr:not(.ugrp):not(.tgrp):hover td { background: transparent !important; }
 
 /* 순위 뱃지 */
 .rk1 {

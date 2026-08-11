@@ -39,7 +39,7 @@ function _nmBLDInit(tnId, editIdx) {
 /* ── 일반 경기 목록 + 인라인 빌더 렌더 ── */
 function rCompNormalMatches(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
-  const nm = tn.normalMatches || [];
+  const nmAll = tn.normalMatches || [];
   let h = '';
 
   // ── 인라인 빌더 (로그인 시) ──
@@ -47,15 +47,7 @@ function rCompNormalMatches(tn) {
     h += _nmBuilderHTML(tn);
   }
 
-  // ── 경기 목록 헤더 ──
-  if (nm.length) {
-    h += `<div style="margin-top:${isLoggedIn?'18px':'0'};margin-bottom:6px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text3)">📋 경기 목록</span>
-      <span style="font-size:var(--fs-sm);color:var(--gray-l)">총 ${nm.length}경기</span>
-    </div>`;
-  }
-
-  if (!nm.length && !isLoggedIn) {
+  if (!nmAll.length && !isLoggedIn) {
     return h + `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:40px;margin-bottom:12px">🎮</div>
       <div style="font-size:var(--fs-md);font-weight:700;margin-bottom:8px">일반 경기 기록이 없습니다</div>
@@ -63,10 +55,58 @@ function rCompNormalMatches(tn) {
     </div>`;
   }
 
-  if (!nm.length) return h;
+  if (!nmAll.length) return h;
 
-  // 날짜별 그룹화
-  const sorted = [...nm].map((m, i) => ({ m, i })).sort((a, b) => (b.m.d || '').localeCompare(a.m.d || ''));
+  // ── 상태값 초기화 (검색/필터/정렬/접기) ──
+  if (typeof window._nmSortAsc === 'undefined') window._nmSortAsc = false;
+  if (typeof window._nmResultFilter === 'undefined') window._nmResultFilter = 'all';
+  if (typeof window._nmSearchQ === 'undefined') window._nmSearchQ = '';
+  if (!window._nmCollapsedDates) window._nmCollapsedDates = {};
+
+  const doneCount = nmAll.filter(m => m.sa != null && m.sb != null).length;
+  const pendingCount = nmAll.length - doneCount;
+
+  // ── 검색어 / 결과 필터 적용 ──
+  const _q = String(window._nmSearchQ || '').trim().toLowerCase();
+  const nm = nmAll.map((m, i) => ({ m, i })).filter(({ m }) => {
+    const isDone = m.sa != null && m.sb != null;
+    if (window._nmResultFilter === 'done' && !isDone) return false;
+    if (window._nmResultFilter === 'pending' && isDone) return false;
+    if (_q) {
+      const hay = `${m.a || ''} ${m.b || ''} ${m.memo || ''}`.toLowerCase();
+      if (!hay.includes(_q)) return false;
+    }
+    return true;
+  });
+
+  // ── 경기 목록 툴바 (검색 · 결과필터 · 정렬 · CSV) ──
+  h += `<div style="margin-top:${isLoggedIn?'18px':'0'};margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text3)">📋 경기 목록</span>
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">총 ${nmAll.length}경기 (✅ 완료 ${doneCount} · ⏳ 미정 ${pendingCount})</span>
+      ${nm.length !== nmAll.length ? `<span style="font-size:var(--fs-caption);color:var(--blue);font-weight:700">· 필터링됨 ${nm.length}건</span>` : ''}
+      <button class="btn btn-w btn-xs no-export" style="margin-left:auto" onclick="_nmExportCsv('${tn.id}')">⬇️ CSV 내보내기</button>
+    </div>
+    <div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <input id="nm-search-input" type="text" placeholder="🔍 팀 이름/메모 검색" value="${String(window._nmSearchQ||'').replace(/"/g,'&quot;')}"
+        oninput="window._searchFocusId='nm-search-input';window._nmSearchQ=this.value;render()"
+        onfocus="window._searchFocusId='nm-search-input'"
+        style="flex:1;min-width:140px;max-width:240px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)">
+      <button class="pill ${window._nmResultFilter==='all'?'on':''}" onclick="window._nmResultFilter='all';render()">전체</button>
+      <button class="pill ${window._nmResultFilter==='done'?'on':''}" onclick="window._nmResultFilter='done';render()">✅ 완료</button>
+      <button class="pill ${window._nmResultFilter==='pending'?'on':''}" onclick="window._nmResultFilter='pending';render()">⏳ 미정</button>
+      <button class="pill" onclick="window._nmSortAsc=!window._nmSortAsc;render()">${window._nmSortAsc?'🔼 오래된순':'🔽 최신순'}</button>
+    </div>
+  </div>`;
+
+  if (!nm.length) {
+    return h + `<div style="padding:40px 20px;text-align:center;color:var(--gray-l)">검색/필터 조건에 맞는 경기가 없습니다.</div>`;
+  }
+
+  // 날짜별 그룹화 (정렬 방향 적용)
+  const sorted = [...nm].sort((a, b) => window._nmSortAsc
+    ? (a.m.d || '').localeCompare(b.m.d || '')
+    : (b.m.d || '').localeCompare(a.m.d || ''));
   const byDate = {};
   sorted.forEach(({ m, i }) => {
     const dk = m.d || '날짜 미정';
@@ -75,17 +115,22 @@ function rCompNormalMatches(tn) {
   });
 
   const days = ['일', '월', '화', '수', '목', '금', '토'];
-  Object.entries(byDate).sort((a, b) => b[0].localeCompare(a[0])).forEach(([dk, items]) => {
+  const dateKeys = Object.keys(byDate).sort((a, b) => window._nmSortAsc ? a.localeCompare(b) : b.localeCompare(a));
+  dateKeys.forEach((dk) => {
+    const items = byDate[dk];
     let dateLabel = dk;
     if (dk !== '날짜 미정') {
       const dt = new Date(dk + 'T00:00:00');
       dateLabel = `${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 (${days[dt.getDay()]})`;
     }
+    const _ckey = `${tn.id}::${dk}`;
+    const _collapsed = !!window._nmCollapsedDates[_ckey];
     h += `<div style="margin-bottom:22px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #6366f1;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer" onclick="_nmToggleDateCollapse('${_ckey.replace(/'/g,"\\'")}')">
+        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #6366f1;border-radius:0 8px 8px 0">📅 ${dateLabel} <span style="font-weight:700;color:var(--gray-l);font-size:var(--fs-caption)">(${items.length}경기)</span></div>
+        <span class="no-export" style="color:var(--gray-l);font-size:var(--fs-sm);white-space:nowrap">${_collapsed?'▶ 펼치기':'▼ 접기'}</span>
       </div>`;
-
+    if (!_collapsed) {
     items.forEach(({ m, i }) => {
       const a = m.a || '', b = m.b || '';
       const ca = gc(a), cb = gc(b);
@@ -171,10 +216,44 @@ function rCompNormalMatches(tn) {
         </div>
       </div>`;
     });
+    }
     h += `</div>`;
   });
 
   return h;
+}
+
+/* ── [개선] 날짜 그룹 접기/펼치기 ── */
+function _nmToggleDateCollapse(ckey) {
+  if (!window._nmCollapsedDates) window._nmCollapsedDates = {};
+  window._nmCollapsedDates[ckey] = !window._nmCollapsedDates[ckey];
+  render();
+}
+
+/* ── [개선] 경기 목록 CSV 내보내기 ── */
+function _nmExportCsv(tnId) {
+  const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId);
+  if (!tn) return;
+  const nm = tn.normalMatches || [];
+  if (!nm.length) { alert('내보낼 경기가 없습니다.'); return; }
+  const esc = (v) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const rows = [['날짜', '팀A', '팀B', '스코어A', '스코어B', '메모']];
+  [...nm].sort((a, b) => (a.d || '').localeCompare(b.d || '')).forEach(m => {
+    rows.push([m.d || '날짜 미정', m.a || '', m.b || '', m.sa ?? '', m.sb ?? '', m.memo || '']);
+  });
+  const csv = '\uFEFF' + rows.map(r => r.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(tn.name || '대회')}_일반경기.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /* ── 인라인 빌더 HTML ── */
@@ -972,4 +1051,6 @@ try {
   window.nmOpenShareCard = nmOpenShareCard;
   window.getNormalMatchesForHistory = getNormalMatchesForHistory;
   window.scanNormalMatchesForPlayer = scanNormalMatchesForPlayer;
+  window._nmToggleDateCollapse = _nmToggleDateCollapse;
+  window._nmExportCsv = _nmExportCsv;
 } catch (e) { }

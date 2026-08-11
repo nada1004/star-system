@@ -23,23 +23,50 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-hero-desc{font-size:var(--fs-base);line-height:1.6;color:var(--text3)}',
     '.cal-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
     '.cal-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-sm);font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:12px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    '.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:12px 14px;border-radius:22px;background:var(--white);border:1px solid rgba(148,163,184,.14);box-shadow:0 8px 18px rgba(15,23,42,.03)}',
     '.cal-toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
     '.cal-nav-group,.cal-view-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
     '.cal-filter-wrap{display:flex;flex-wrap:wrap;gap:6px}',
     '.cal-board-card{padding:14px 16px}',
-    '.cal-board-month table{border-collapse:separate;border-spacing:6px;table-layout:fixed;width:100%}',
+    '.cal-board-month{background:var(--white);border-radius:var(--r2)}',
+    '.cal-board-month table{border-collapse:separate;border-spacing:6px;table-layout:fixed;width:100%;background:var(--white)}',
     '.cal-board-month th{padding:8px 6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3)}',
-    '.cal-cell-empty{background:rgba(148,163,184,.08);border-radius:var(--r2);min-height:100px}',
-    '.cal-cell{vertical-align:top;padding:8px;min-height:100px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.14);box-shadow:0 8px 18px rgba(15,23,42,.04);transition:.15s}',
-    '.cal-cell.has-match{cursor:pointer;background:linear-gradient(180deg,#f8fbff,#eef6ff)}',
-    '.cal-cell.has-match:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.07)}',
-    '.cal-cell.active{outline:2px solid var(--blue);outline-offset:-2px;background:linear-gradient(180deg,#eaf3ff,#dbeafe)}',
+    '.cal-cell-empty{background:rgba(148,148,148,.06);border-radius:var(--r2);min-height:100px;transition:none}',
+    '.cal-cell-empty:hover{background:rgba(148,148,148,.06)}',
+    '.cal-cell{position:relative;vertical-align:top;padding:8px;min-height:100px;border-radius:18px;background:#fff;border:1px solid rgba(148,148,148,.22);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s;cursor:default}',
+    '.cal-cell.has-match{cursor:pointer}',
+    '.cal-cell:hover{background:linear-gradient(180deg,#f8fafc,#eef2f7);border-color:rgba(148,163,184,.5);box-shadow:0 8px 16px rgba(15,23,42,.06)}',
+    '.cal-cell.has-match:hover{transform:translateY(-3px);box-shadow:0 14px 26px rgba(15,23,42,.12);border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,#eff6ff,#e0edff);z-index:2}',
+    '.cal-cell.is-sun,.cal-cell.is-sat{background:rgba(148,163,184,.045)}',
+    '.cal-cell.is-today{border-width:2px;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.16) inset;background:linear-gradient(180deg,#eff6ff,#f7fbff)}',
+    '.cal-cell.is-past:not(.active){opacity:.6}',
+    '.cal-cell.active::after{content:"";position:absolute;bottom:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--text3);box-shadow:0 0 0 2px var(--white);transition:transform .15s}',
+    '.cal-cell.active:hover::after{transform:scale(1.4)}',
+    '.cal-board-month.cal-anim-in{animation:calFadeIn .25s ease}',
+    '.cal-board-month.cal-anim-in .cal-day-num.today{animation:calTodayPop .3s ease}',
+    '.cal-week-list.cal-anim-in{animation:calFadeIn .25s ease}',
+    '.cal-day-summary.cal-anim-in{animation:calFadeIn .25s ease}',
+    '.cal-day-sections.cal-anim-in{animation:calFadeIn .25s ease}',
+    '@keyframes calFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}',
+    '@keyframes calTodayPop{from{transform:scale(.7);opacity:.4}to{transform:scale(1);opacity:1}}',
+    '.cal-month-jump{display:flex;align-items:center;gap:4px}',
+    '.cal-month-jump select{padding:6px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:800;color:var(--text2);cursor:pointer}',
+    '.cal-week-summary{font-size:var(--fs-sm);font-weight:800;color:var(--text3);padding:2px 4px}',
+    '.cal-day-jump{padding:6px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:800;color:var(--text2)}',
+    '.cal-legend-item.is-dim{opacity:.32;filter:grayscale(.4)}',
+    '.cal-legend-item{cursor:pointer;transition:transform .12s,box-shadow .12s,opacity .12s}',
+    '.cal-legend-item:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(15,23,42,.18)}',
+    '.cal-legend-item.is-active{outline:2px solid var(--text1);outline-offset:1px}',
     '.cal-day-num{font-weight:700;font-size:var(--fs-sm);color:var(--text1);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:6px}',
     '.cal-day-num.today{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-weight:900;box-shadow:0 10px 18px rgba(37,99,235,.22)}',
     '.cal-week-list{display:flex;flex-direction:column;gap:8px}',
-    '.cal-week-card{display:flex;gap:12px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.cal-week-card{position:relative;display:flex;gap:12px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 10px 20px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
+    '.cal-week-card:hover{background:linear-gradient(180deg,#f8fafc,#eef2f7);border-color:rgba(148,163,184,.5);box-shadow:0 8px 16px rgba(15,23,42,.06)}',
     '.cal-week-card.today{background:linear-gradient(180deg,#eff6ff,#dbeafe);border-color:rgba(59,130,246,.35)}',
+    '.cal-week-card.today:hover{background:linear-gradient(180deg,#e3efff,#c9e0ff)}',
+    '.cal-week-card.is-past{opacity:.6}',
+    '.cal-week-card.has-match:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.08);border-color:rgba(59,130,246,.35);background:linear-gradient(180deg,#eff6ff,#e0edff)}',
+    '.cal-week-count{position:absolute;top:10px;right:14px;font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,#2563eb,#3b82f6);padding:2px 8px;border-radius:999px;box-shadow:0 6px 14px rgba(37,99,235,.25)}',
     '.cal-week-date{min-width:54px;text-align:center}',
     '.cal-week-day{font-size:10px;font-weight:800}',
     '.cal-week-num{font-family:"Noto Sans KR",sans-serif;font-weight:950;font-size:22px;color:var(--text1);line-height:1.1}',
@@ -76,13 +103,24 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-undated-chips{display:flex;flex-wrap:wrap;gap:6px}',
     '.cal-undated-chip{font-size:10px;background:#fff7d6;border:1px solid #fde68a;border-radius:999px;padding:3px 8px;color:#92400e;font-weight:800}',
     '.cal-empty-state{padding:40px 20px;text-align:center;color:var(--gray-l)}',
-    'body.dark .cal-hero,body.dark .cal-toolbar-card,body.dark .cal-board-card,body.dark .cal-soft-card,body.dark .cal-legend{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .cal-hero,body.dark .cal-toolbar-card,body.dark .cal-board-card,body.dark .cal-soft-card,body.dark .cal-legend{background:#0f172a;border-color:#334155;box-shadow:0 8px 18px rgba(0,0,0,.2)}',
+    'body.dark .cal-board-month,body.dark .cal-board-month table{background:#0f172a}',
     'body.dark .cal-hero-title{color:#f8fafc}',
     'body.dark .cal-hero-desc{color:#94a3b8}',
     'body.dark .cal-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
     'body.dark .cal-cell,body.dark .cal-week-card,body.dark .cal-day-sec{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
-    'body.dark .cal-cell.has-match{background:linear-gradient(180deg,#132033,#17263c)}',
-    'body.dark .cal-cell.active{background:linear-gradient(180deg,#17263c,#1e3a5f)}',
+    'body.dark .cal-cell.is-sun,body.dark .cal-cell.is-sat{background:linear-gradient(180deg,rgba(30,41,59,.98),rgba(15,23,42,.94))!important}',
+    'body.dark .cal-cell.is-today{border-color:#60a5fa!important;border-width:2px;box-shadow:0 0 0 3px rgba(96,165,250,.2) inset;background:linear-gradient(180deg,#17263c,#132033)!important}',
+    'body.dark .cal-cell.is-past:not(.active){opacity:.55}',
+    'body.dark .cal-cell.active::after{background:#cbd5e1;box-shadow:0 0 0 2px #0f172a}',
+    'body.dark .cal-cell:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
+    'body.dark .cal-cell.has-match:hover{box-shadow:0 14px 26px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
+    'body.dark .cal-cell-empty:hover{background:rgba(100,100,100,.2)}',
+    'body.dark .cal-week-card:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
+    'body.dark .cal-week-card.today{background:linear-gradient(180deg,#17263c,#132033)!important;border-color:rgba(96,165,250,.45)!important}',
+    'body.dark .cal-week-card.today:hover{background:linear-gradient(180deg,#1c3253,#152943)!important}',
+    'body.dark .cal-week-card.has-match:hover{box-shadow:0 16px 28px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
+    'body.dark .cal-month-jump select,body.dark .cal-day-jump{background:rgba(15,23,42,.7);border-color:#334155;color:#e2e8f0}',
     'body.dark .cal-week-num{color:#f8fafc}',
     'body.dark .cal-day-summary{background:linear-gradient(135deg,#132033,#17263c);border-color:#1d4ed8}',
     'body.dark .cal-day-summary-title{color:#93c5fd}',
@@ -95,11 +133,11 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-match-result.is-pending{background:rgba(148,163,184,.16);color:#cbd5e1}',
     'body.dark .cal-match-card .rec-sum-score{background:rgba(148,163,184,.1)}',
     'body.dark .cal-match-card .rec-detail-area{background:linear-gradient(180deg,rgba(2,6,23,.22),rgba(15,23,42,.68));border-top-color:#334155}',
-    'body.dark .cal-cell-empty{background:rgba(51,65,85,.24)}',
+    'body.dark .cal-cell-empty{background:rgba(100,100,100,.2)}',
     'body.dark .cal-day-num{color:#e2e8f0}',
     'body.dark .cal-undated{background:linear-gradient(180deg,rgba(120,53,15,.28),rgba(120,53,15,.18));border-color:#92400e}',
     'body.dark .cal-undated-chip{background:rgba(120,53,15,.18);border-color:#92400e;color:#fde68a}',
-    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-board-month table{border-spacing:4px}.cal-cell,.cal-cell-empty{min-height:86px}}',
+    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-board-month table{border-spacing:4px}.cal-cell,.cal-cell-empty{min-height:96px}.cal-month-chip{font-size:9px;padding:1px 5px}}',
     '@media (max-width:768px){.cal-hero{display:none}}'
   ].join('');
   document.head.appendChild(s);
@@ -120,6 +158,8 @@ function rCal(C,T){
   if(typeof calWeekOffset==='undefined' || !isFinite(calWeekOffset)) window.calWeekOffset=0;
   if(typeof calDayDate==='undefined') window.calDayDate='';
   if(typeof calTypeFilter==='undefined' || !String(calTypeFilter||'')) window.calTypeFilter='all';
+  if(typeof window._calSearchQ==='undefined') window._calSearchQ='';
+  if(typeof window._calUndatedExpanded==='undefined') window._calUndatedExpanded=false;
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
 
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
@@ -226,9 +266,20 @@ function rCal(C,T){
     });
     window._calRawDateMatchMap=rawMap;
   }
-  const allMatches=(calTypeFilter&&calTypeFilter!=='all')
+  // Feature: 타입별 건수 (필터 뱃지용, 검색어 미적용 - 전체 타입 분포 기준)
+  const _typeCounts={};
+  rawAll.forEach(m=>{ const t=matchType(m); _typeCounts[t]=(_typeCounts[t]||0)+1; });
+
+  // Feature: 팀/선수 이름 검색
+  const _searchQ=String(window._calSearchQ||'').trim().toLowerCase();
+  function _calMatchSearchText(m){
+    return `${getTeamA(m)||''} ${getTeamB(m)||''} ${m.note||''} ${m.wName||''} ${m.lName||''} ${m.compName||''}`.toLowerCase();
+  }
+
+  const typeFiltered=(calTypeFilter&&calTypeFilter!=='all')
     ? rawAll.filter(m=>matchType(m)===calTypeFilter)
     : rawAll;
+  const allMatches=_searchQ ? typeFiltered.filter(m=>_calMatchSearchText(m).includes(_searchQ)) : typeFiltered;
   window._rCalAllMatches=allMatches;
 
   const dateMatchMap={};
@@ -253,6 +304,10 @@ function rCal(C,T){
   const weekStart=new Date(today);
   weekStart.setDate(today.getDate()-today.getDay()+calWeekOffset*7);
   if(!calDayDate) calDayDate=todayStr;
+  const _calRenderSig=`${calView}|${calYear}|${calMonth}|${calWeekOffset}|${calDayDate}`;
+  const _calShouldAnim=window._calLastRenderSig!==_calRenderSig;
+  window._calLastRenderSig=_calRenderSig;
+  const _calAnimCls=_calShouldAnim?' cal-anim-in':'';
   const _viewLabel = calView==='month' ? '월간 보기' : calView==='week' ? '주간 보기' : '일간 보기';
   const _activeFilterInfo = calTypeFilter==='all'
     ? '전체 일정'
@@ -260,6 +315,7 @@ function rCal(C,T){
 
   let calHTML='';
   let navHTML='';
+  const _visibleTypes=new Set();
 
   // 달력 셀/주간 리스트를 "요약 칩"으로 단순화
   function calCellChips(ds, matches){
@@ -269,30 +325,36 @@ function rCal(C,T){
     matches.forEach(m=>{const t=matchType(m);byType[t]=(byType[t]||0)+1;});
     // 동률/애매함 방지: 타입 우선순위로 타이브레이크
     const prio = ['sched','comp','pro','tt','ck','univm','mini','ind','gj'];
-    const top=Object.entries(byType)
+    const sorted=Object.entries(byType)
       .sort((a,b)=>{
         const dc=(b[1]-a[1]);
         if(dc!==0) return dc;
         return (prio.indexOf(a[0])<0?99:prio.indexOf(a[0])) - (prio.indexOf(b[0])<0?99:prio.indexOf(b[0]));
-      })
-      .slice(0,2);
+      });
+    const top=sorted.slice(0,3);
     const used=top.reduce((s,[,c])=>s+c,0);
     const restCnt=Math.max(0, matches.length-used);
-    const chip=(txt,bg,fg)=>`<span class="cal-month-chip" style="border:1px solid ${bg};background:${bg};color:${fg}">${txt}</span>`;
-    const totalChip=chip(`총 ${matches.length}`,'rgba(37,99,235,.10)','var(--blue)');
+    const chip=(txt,bg,fg,title)=>`<span class="cal-month-chip"${title?` title="${title}"`:''} style="border:1px solid ${bg};background:${bg};color:${fg}">${txt}</span>`;
+    const fullBreakdown=sorted.map(([t,c])=>`${(TYPE_INFO[t]||TYPE_INFO.comp).lbl} ${c}건`).join(', ');
+    const totalChip=chip(`총 ${matches.length}`,'rgba(37,99,235,.10)','var(--blue)',fullBreakdown);
     if(chipMode==='total') return `<div class="cal-month-chip-row">${totalChip}</div>`;
     const typeChips=top.map(([t,c])=>{
       const ti=TYPE_INFO[t]||TYPE_INFO.comp;
       return chip(`${ti.emoji} ${c}`, ti.bg+'22', ti.bg);
     }).join('');
-    const more=restCnt>0?chip(`+${restCnt}`,'rgba(100,116,139,.10)','var(--text3)'):'';
+    const restBreakdown=sorted.slice(3).map(([t,c])=>`${(TYPE_INFO[t]||TYPE_INFO.comp).lbl} ${c}건`).join(', ');
+    const more=restCnt>0?chip(`+${restCnt}`,'rgba(100,116,139,.10)','var(--text3)',restBreakdown||undefined):'';
     return `<div class="cal-month-chip-row">${totalChip}${typeChips}${more}</div>`;
   }
 
   if(calView==='month'){
+    const _jumpYears=[];
+    for(let yy=today.getFullYear()-3;yy<=today.getFullYear()+1;yy++) _jumpYears.push(yy);
+    const yearSelHTML=`<select onchange="calYear=parseInt(this.value,10);render()">${_jumpYears.map(yy=>`<option value="${yy}"${yy===year?' selected':''}>${yy}년</option>`).join('')}</select>`;
+    const monthSelHTML=`<select onchange="calMonth=parseInt(this.value,10);render()">${Array.from({length:12},(_,i)=>i).map(mi=>`<option value="${mi}"${mi===month?' selected':''}>${mi+1}월</option>`).join('')}</select>`;
     navHTML=`
       <button class="btn btn-w btn-sm" onclick="calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀ 이전</button>
-      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;min-width:110px;text-align:center">${year}년 ${month+1}월</span>
+      <span class="cal-month-jump">${yearSelHTML}${monthSelHTML}</span>
       <button class="btn btn-w btn-sm" onclick="calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">다음 ▶</button>
       <button class="btn btn-w btn-sm" onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>`;
 
@@ -306,11 +368,14 @@ function rCal(C,T){
         } else {
           const ds=dateStr(year,month,day);
           const matches=dateMatchMap[ds]||[];
+          matches.forEach(m=>_visibleTypes.add(matchType(m)));
           const isToday=ds===todayStr;
           const hasMatch=matches.length>0;
           const isActive=ds===_calActiveDay;
+          const isPast=ds<todayStr;
           const chips=calCellChips(ds,matches);
-          rowHTML+=`<td data-ds="${ds}" class="cal-cell${hasMatch?' has-match':''}${isActive?' active':''}"
+          const isWeekend=col===0||col===6;
+          rowHTML+=`<td data-ds="${ds}" class="cal-cell${hasMatch?' has-match':''}${isActive?' active':''}${isToday?' is-today':''}${isPast?' is-past':''}${isWeekend?(col===0?' is-sun':' is-sat'):''}"
             ${hasMatch?`onclick="calShowDay('${ds}')"`:''}
           >
             <div class="cal-day-num${isToday?' today':''}">${day}</div>
@@ -323,7 +388,7 @@ function rCal(C,T){
       if(day>lastDate) break;
     }
     calHTML=`
-      <div class="cal-board-month">
+      <div class="cal-board-month${_calAnimCls}">
       <table>
         <thead><tr>${weeks.map((w,i)=>`<th style="padding:8px;font-size:var(--fs-caption);color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${w}</th>`).join('')}</tr></thead>
         <tbody>${cells}</tbody>
@@ -340,24 +405,30 @@ function rCal(C,T){
       <button class="btn btn-w btn-sm" onclick="calWeekOffset=0;render()">이번 주</button>`;
 
     let rows='';
+    let _weekTotal=0;
     for(let i=0;i<7;i++){
       const d=new Date(weekStart); d.setDate(weekStart.getDate()+i);
       const ds=dateStr(d.getFullYear(),d.getMonth(),d.getDate());
       const matches=dateMatchMap[ds]||[];
+      matches.forEach(m=>_visibleTypes.add(matchType(m)));
+      _weekTotal+=matches.length;
       const isToday=ds===todayStr;
+      const isPast=ds<todayStr;
+      const hasMatch=matches.length>0;
       const chips=calCellChips(ds,matches);
-      rows+=`<div class="cal-week-card${isToday?' today':''}" style="cursor:${matches.length?'pointer':'default'}"
+      rows+=`<div class="cal-week-card${isToday?' today':''}${isPast&&!isToday?' is-past':''}${hasMatch?' has-match':''}" style="cursor:${matches.length?'pointer':'default'}"
         ${matches.length?`onclick="calDayDate='${ds}';calView='day';render()"`:''}>
+        ${hasMatch?`<span class="cal-week-count">${matches.length}</span>`:''}
         <div class="cal-week-date">
           <div class="cal-week-day" style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'}">${weeks[i]}</div>
           <div class="cal-week-num" style="color:${isToday?'var(--blue)':'inherit'}">${d.getDate()}</div>
         </div>
-        <div style="flex:1">
+        <div style="flex:1;min-width:0">
           ${matches.length===0?`<span style="color:var(--gray-l);font-size:var(--fs-sm)">경기 없음</span>`:chips}
         </div>
       </div>`;
     }
-    calHTML=`<div class="cal-week-list">${rows}</div>`;
+    calHTML=`<div class="cal-week-summary">이번 주 총 ${_weekTotal}건</div><div class="cal-week-list${_calAnimCls}">${rows}</div>`;
 
   } else if(calView==='day'){
     const d=new Date(calDayDate);
@@ -368,13 +439,27 @@ function rCal(C,T){
     navHTML=`
       <button class="btn btn-w btn-sm" onclick="calView='month';render()">◀ 월간</button>
       <button class="btn btn-w btn-sm" onclick="calDayDate='${fmtDayStr(prevD)}';render()">◀ 전날</button>
-      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;min-width:130px;text-align:center">${calDayDate}</span>
+      <input type="date" class="cal-day-jump" value="${calDayDate}" onchange="if(this.value){calDayDate=this.value;render()}">
       <button class="btn btn-w btn-sm" onclick="calDayDate='${fmtDayStr(nextD)}';render()">다음날 ▶</button>
       <button class="btn btn-w btn-sm" onclick="calDayDate='${todayStr}';render()">오늘</button>`;
 
     const matches=dateMatchMap[calDayDate]||[];
+    matches.forEach(m=>_visibleTypes.add(matchType(m)));
+    const _dowKo=weeks[d.getDay()];
+    const _dayIsToday=calDayDate===todayStr;
+    const _dayWhen=_dayIsToday?'오늘':(calDayDate<todayStr?'지난 날짜':'예정된 날짜');
+    const _dayHeadHTML=`<div class="cal-day-summary${_calAnimCls}" style="margin-bottom:14px">
+      <div>
+        <div class="cal-day-summary-title">📅 ${_calEscHTML(calDayDate)} (${_dowKo})</div>
+        <div class="cal-day-summary-sub">${matches.length?`총 ${matches.length}경기`:'경기 없음'} · ${_dayWhen}</div>
+      </div>
+      ${_li?`<div class="cal-day-summary-actions"><button class="btn btn-b btn-sm no-export" onclick="openCalSchedModal()">+ 예정 추가</button></div>`:''}
+    </div>`;
     if(!matches.length){
-      calHTML=`<div class="cal-empty-state">이 날 경기가 없습니다.</div>`;
+      calHTML=_dayHeadHTML+`<div class="cal-empty-state">
+        <div style="font-size:40px;margin-bottom:8px">🗓️</div>
+        <div>이 날은 등록된 경기·예정이 없습니다.</div>
+      </div>`;
     } else {
       const schedList=[], recList=[], tourList=[];
       matches.forEach((m,mi)=>{
@@ -402,6 +487,7 @@ function rCal(C,T){
             <span class="cal-sched-title">📌 ${_calEscHTML(m.note||'예정')}</span>
             ${timeStr}
             <div style="margin-left:auto;display:flex;gap:6px" class="no-export">
+              <button class="btn btn-w btn-xs" onclick="calExportSchedIcs('${sid}')">📤 캘린더 추가</button>
               ${_li?`<button class="btn btn-r btn-xs" onclick="calDeleteSched('${sid}')">🗑️ 삭제</button>`:''}
             </div>
           </div>
@@ -449,7 +535,7 @@ function rCal(C,T){
         </div>`;
       }
 
-        calHTML = `<div class="cal-day-sections">` +
+        calHTML = _dayHeadHTML + `<div class="cal-day-sections${_calAnimCls}">` +
         sec('📌 예정', schedList.length ? schedList.map(x=>schedCard(x.m)).join('') : '') +
         sec('📜 기록', recList.length ? recList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
         sec('🏆 대회/리그', tourList.length ? tourList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
@@ -457,17 +543,19 @@ function rCal(C,T){
     }
   }
 
-  // 날짜 미정 (타입 필터 적용)
-  const undatedMatches=(calTypeFilter&&calTypeFilter!=='all'?rawAll.filter(m=>matchType(m)===calTypeFilter):rawAll).filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
+  // 날짜 미정 (타입 필터 + 검색어 적용, 펼치기/접기 지원)
+  const undatedMatches=allMatches.filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
+  const _undatedShowCount=window._calUndatedExpanded?undatedMatches.length:10;
   const undatedHTML=undatedMatches.length?`<div class="cal-undated">
   <div style="font-size:var(--fs-sm);font-weight:700;color:#92400e;margin-bottom:6px">📋 날짜 미정 경기 (${undatedMatches.length}건)</div>
   <div class="cal-undated-chips">
-  ${undatedMatches.slice(0,10).map(m=>`<span class="cal-undated-chip">${matchLabel(m)}</span>`).join('')}
-  ${undatedMatches.length>10?`<span style="font-size:10px;color:#92400e">... 외 ${undatedMatches.length-10}건</span>`:''}
+  ${undatedMatches.slice(0,_undatedShowCount).map(m=>`<span class="cal-undated-chip">${matchLabel(m)}</span>`).join('')}
+  ${undatedMatches.length>_undatedShowCount?`<button class="cal-undated-chip no-export" style="cursor:pointer;border:1px solid #f59e0b;background:#fde68a" onclick="window._calUndatedExpanded=true;render()">... 외 ${undatedMatches.length-_undatedShowCount}건 더보기</button>`:''}
+  ${window._calUndatedExpanded&&undatedMatches.length>10?`<button class="cal-undated-chip no-export" style="cursor:pointer" onclick="window._calUndatedExpanded=false;render()">접기 ▲</button>`:''}
   </div>
 </div>`:'';
 
-  // Feature 2: 타입 필터 버튼
+  // Feature 2: 타입 필터 버튼 (건수 뱃지 포함)
   const filterBtns=[
     {id:'all',  lbl:'전체'},
     {id:'mini', lbl:'⚡ 미니'},
@@ -487,8 +575,17 @@ function rCal(C,T){
       </div>`
     : '';
   const filterHTML = (_enableSubFilter ? window._calFilterOpen : true)
-    ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
-        ${_filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
+    ? `<div class="no-export" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <input id="cal-search-input" type="text" placeholder="🔍 팀/선수 이름 검색" value="${String(window._calSearchQ||'').replace(/"/g,'&quot;')}"
+          oninput="window._searchFocusId='cal-search-input';window._calSearchQ=this.value;render()"
+          onfocus="window._searchFocusId='cal-search-input'"
+          style="max-width:260px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${_filterBtns.map(f=>{
+          const cnt=f.id==='all'?rawAll.length:(_typeCounts[f.id]||0);
+          return `<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}${cnt?` <span style="opacity:.7">(${cnt})</span>`:''}</button>`;
+        }).join('')}
+        </div>
       </div>`
     : '';
 
@@ -529,7 +626,7 @@ function rCal(C,T){
     <!-- 범례 -->
     <div class="cal-legend">
       <span style="font-weight:700">범례:</span>
-      ${Object.entries(TYPE_INFO).filter(([k])=>k!=='sched').map(([k,v])=>`<span class="cal-legend-item" style="background:${v.bg}">${v.lbl}</span>`).join('')}
+      ${Object.entries(TYPE_INFO).map(([k,v])=>`<span class="cal-legend-item${_visibleTypes.size&&!_visibleTypes.has(k)?' is-dim':''}${calTypeFilter===k?' is-active':''}" style="background:${v.bg}" onclick="calTypeFilter=(calTypeFilter==='${k}'?'all':'${k}');render()" title="클릭하면 ${v.lbl} 일정만 보기">${v.lbl}</span>`).join('')}
     </div>
     <!-- 선택 날짜 경기 목록 (월간뷰용) -->
     <div id="calDayDetail" class="cal-detail-wrap"></div>
@@ -555,6 +652,53 @@ function calDeleteSched(id){
       });
     }
   });
+}
+
+// [개선] 예정 경기 → ICS 파일로 내보내기 (외부 캘린더 앱에 추가)
+function calExportSchedIcs(id){
+  const list=(typeof calScheduled!=='undefined' && Array.isArray(calScheduled)) ? calScheduled : (window._calScheduled||[]);
+  const m=list.find(x=>x._id===id);
+  if(!m){ alert('예정 경기를 찾을 수 없습니다.'); return; }
+  const d=(m.d||'').replace(/-/g,'');
+  if(!d){ alert('날짜 정보가 없습니다.'); return; }
+  let startStr, endStr, allDay=false;
+  if(m.time && /^\d{1,2}:\d{2}$/.test(m.time)){
+    const [hh,mm]=m.time.split(':').map(n=>String(n).padStart(2,'0'));
+    startStr=`${d}T${hh}${mm}00`;
+    const endDate=new Date(`${m.d}T${hh}:${mm}:00`);
+    endDate.setHours(endDate.getHours()+1);
+    const pad=n=>String(n).padStart(2,'0');
+    endStr=`${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
+  } else {
+    allDay=true;
+    const nd=new Date(m.d); nd.setDate(nd.getDate()+1);
+    const pad=n=>String(n).padStart(2,'0');
+    startStr=d;
+    endStr=`${nd.getFullYear()}${pad(nd.getMonth()+1)}${pad(nd.getDate())}`;
+  }
+  const escIcs=(s)=>String(s||'').replace(/[\\,;]/g,m2=>'\\'+m2).replace(/\n/g,'\\n');
+  const now=new Date();
+  const pad2=n=>String(n).padStart(2,'0');
+  const dtstamp=`${now.getUTCFullYear()}${pad2(now.getUTCMonth()+1)}${pad2(now.getUTCDate())}T${pad2(now.getUTCHours())}${pad2(now.getUTCMinutes())}${pad2(now.getUTCSeconds())}Z`;
+  const ics=[
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//STAR Datacenter//Calendar//KO',
+    'BEGIN:VEVENT',
+    `UID:${escIcs(id)}@star-datacenter`,
+    `DTSTAMP:${dtstamp}`,
+    allDay?`DTSTART;VALUE=DATE:${startStr}`:`DTSTART:${startStr}`,
+    allDay?`DTEND;VALUE=DATE:${endStr}`:`DTEND:${endStr}`,
+    `SUMMARY:${escIcs(m.note||'예정 경기')}`,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`${(m.note||'경기일정').replace(/[\\/:*?"<>|]/g,'_')}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 // Feature 1+3: 예정 경기 등록 모달
@@ -618,6 +762,9 @@ function calShowDay(ds){
   }
   _calActiveDay=ds;
   _calDetailState={};
+  document.querySelectorAll('.cal-board-month .cal-cell.active').forEach(td=>td.classList.remove('active'));
+  const _newActiveTd=document.querySelector('.cal-board-month .cal-cell[data-ds="'+ds+'"]');
+  if(_newActiveTd) _newActiveTd.classList.add('active');
   const matches=((window._calRawDateMatchMap&&window._calRawDateMatchMap[ds])?window._calRawDateMatchMap[ds]:[]).slice();
   const schedMatches=_scheduled.filter(m=>m.d===ds);
   if(!window._calDayCache) window._calDayCache={};
@@ -721,6 +868,7 @@ function calShowDay(ds){
       +'<div style="font-size:var(--fs-sm);font-weight:700;color:#92400e;margin-bottom:8px">📌 예정 경기</div>'
       +schedMatches.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fde68a20">'
         +'<span style="font-size:var(--fs-sm);flex:1">'+_calEscHTML(m.note||'예정')+(m.time?' 🕐'+_calEscHTML(m.time):'')+'</span>'
+        +'<button class="btn btn-w btn-xs" onclick="calExportSchedIcs(\''+_calEscJS(m._id||'')+'\')">📤</button>'
         +(_li?'<button class="btn btn-r btn-xs" onclick="calDeleteSched(\''+_calEscJS(m._id||'')+'\')">🗑️</button>':'')
         +'</div>'
       ).join('')
