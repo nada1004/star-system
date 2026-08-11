@@ -40,8 +40,10 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-cell.is-sun,.cal-cell.is-sat{background:rgba(148,163,184,.045)}',
     '.cal-cell.is-today{border-width:2px;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.16) inset;background:linear-gradient(180deg,#eff6ff,#f7fbff)}',
     '.cal-cell.is-past:not(.active){opacity:.6}',
-    '.cal-cell.active::after{content:"";position:absolute;bottom:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--text3);box-shadow:0 0 0 2px var(--white);transition:transform .15s}',
-    '.cal-cell.active:hover::after{transform:scale(1.4)}',
+    '.cal-cell.active{border-width:2px;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.16) inset;background:linear-gradient(180deg,#f5f3ff,#faf5ff)}',
+    '.cal-cell.active:hover{background:linear-gradient(180deg,#f5f3ff,#ede9fe);border-color:#7c3aed}',
+    '.cal-cell.active::after{content:"✓";position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4);transition:transform .15s}',
+    '.cal-cell.active:hover::after{transform:scale(1.15)}',
     '.cal-board-month.cal-anim-in{animation:calFadeIn .25s ease}',
     '.cal-board-month.cal-anim-in .cal-day-num.today{animation:calTodayPop .3s ease}',
     '.cal-week-list.cal-anim-in{animation:calFadeIn .25s ease}',
@@ -65,6 +67,9 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-week-card.today{background:linear-gradient(180deg,#eff6ff,#dbeafe);border-color:rgba(59,130,246,.35)}',
     '.cal-week-card.today:hover{background:linear-gradient(180deg,#e3efff,#c9e0ff)}',
     '.cal-week-card.is-past{opacity:.6}',
+    '.cal-week-card.active{border-width:2px;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.16) inset;background:linear-gradient(180deg,#f5f3ff,#faf5ff)}',
+    '.cal-week-card.active:hover{background:linear-gradient(180deg,#f5f3ff,#ede9fe);border-color:#7c3aed}',
+    '.cal-week-card.active::after{content:"✓";position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4)}',
     '.cal-week-card.has-match:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.08);border-color:rgba(59,130,246,.35);background:linear-gradient(180deg,#eff6ff,#e0edff)}',
     '.cal-week-count{position:absolute;top:10px;right:14px;font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,#2563eb,#3b82f6);padding:2px 8px;border-radius:999px;box-shadow:0 6px 14px rgba(37,99,235,.25)}',
     '.cal-week-date{min-width:54px;text-align:center}',
@@ -112,7 +117,9 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-cell.is-sun,body.dark .cal-cell.is-sat{background:linear-gradient(180deg,rgba(30,41,59,.98),rgba(15,23,42,.94))!important}',
     'body.dark .cal-cell.is-today{border-color:#60a5fa!important;border-width:2px;box-shadow:0 0 0 3px rgba(96,165,250,.2) inset;background:linear-gradient(180deg,#17263c,#132033)!important}',
     'body.dark .cal-cell.is-past:not(.active){opacity:.55}',
-    'body.dark .cal-cell.active::after{background:#cbd5e1;box-shadow:0 0 0 2px #0f172a}',
+    'body.dark .cal-cell.active{border-color:#a78bfa!important;box-shadow:0 0 0 3px rgba(167,139,250,.22) inset;background:linear-gradient(180deg,#2e1f47,#241a38)!important}',
+    'body.dark .cal-cell.active:hover{background:linear-gradient(180deg,#33224e,#291c3d)!important;border-color:#a78bfa!important}',
+    'body.dark .cal-cell.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.35)}',
     'body.dark .cal-cell:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
     'body.dark .cal-cell.has-match:hover{box-shadow:0 14px 26px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
     'body.dark .cal-cell-empty:hover{background:rgba(100,100,100,.2)}',
@@ -120,6 +127,9 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-week-card.today{background:linear-gradient(180deg,#17263c,#132033)!important;border-color:rgba(96,165,250,.45)!important}',
     'body.dark .cal-week-card.today:hover{background:linear-gradient(180deg,#1c3253,#152943)!important}',
     'body.dark .cal-week-card.has-match:hover{box-shadow:0 16px 28px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
+    'body.dark .cal-week-card.active{border-color:#a78bfa!important;box-shadow:0 0 0 3px rgba(167,139,250,.22) inset;background:linear-gradient(180deg,#2e1f47,#241a38)!important}',
+    'body.dark .cal-week-card.active:hover{background:linear-gradient(180deg,#33224e,#291c3d)!important;border-color:#a78bfa!important}',
+    'body.dark .cal-week-card.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.35)}',
     'body.dark .cal-month-jump select,body.dark .cal-day-jump{background:rgba(15,23,42,.7);border-color:#334155;color:#e2e8f0}',
     'body.dark .cal-week-num{color:#f8fafc}',
     'body.dark .cal-day-summary{background:linear-gradient(135deg,#132033,#17263c);border-color:#1d4ed8}',
@@ -416,8 +426,8 @@ function rCal(C,T){
       const isPast=ds<todayStr;
       const hasMatch=matches.length>0;
       const chips=calCellChips(ds,matches);
-      rows+=`<div class="cal-week-card${isToday?' today':''}${isPast&&!isToday?' is-past':''}${hasMatch?' has-match':''}" style="cursor:${matches.length?'pointer':'default'}"
-        ${matches.length?`onclick="calDayDate='${ds}';calView='day';render()"`:''}>
+      rows+=`<div data-ds="${ds}" class="cal-week-card${isToday?' today':''}${isPast&&!isToday?' is-past':''}${hasMatch?' has-match':''}${ds===_calActiveDay?' active':''}" style="cursor:${matches.length?'pointer':'default'}"
+        ${matches.length?`onclick="calShowDay('${ds}')"`:''}>
         ${hasMatch?`<span class="cal-week-count">${matches.length}</span>`:''}
         <div class="cal-week-date">
           <div class="cal-week-day" style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'}">${weeks[i]}</div>
@@ -762,8 +772,8 @@ function calShowDay(ds){
   }
   _calActiveDay=ds;
   _calDetailState={};
-  document.querySelectorAll('.cal-board-month .cal-cell.active').forEach(td=>td.classList.remove('active'));
-  const _newActiveTd=document.querySelector('.cal-board-month .cal-cell[data-ds="'+ds+'"]');
+  document.querySelectorAll('.cal-board-month .cal-cell.active, .cal-week-list .cal-week-card.active').forEach(td=>td.classList.remove('active'));
+  const _newActiveTd=document.querySelector('.cal-board-month .cal-cell[data-ds="'+ds+'"], .cal-week-list .cal-week-card[data-ds="'+ds+'"]');
   if(_newActiveTd) _newActiveTd.classList.add('active');
   const matches=((window._calRawDateMatchMap&&window._calRawDateMatchMap[ds])?window._calRawDateMatchMap[ds]:[]).slice();
   const schedMatches=_scheduled.filter(m=>m.d===ds);
