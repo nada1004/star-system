@@ -66,6 +66,7 @@ var _b2SaveUniv = '전체';
 var _b2LineupUniv = '';
 var _b2LineupCardMode = (()=>{try{const m=localStorage.getItem('su_b2_lineup_card_mode')||'default';return m==='list'?'default':m;}catch(e){return 'default';}})(); // 라인업 카드 스타일: 'default'(기본) | 'stat'(사진+통계그리드형) | 'table'(테이블형)
 function _b2SetLineupCardMode(mode){
+  if (typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
   _b2LineupCardMode = ['default','stat','table'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
   const el = document.getElementById('b2-content');
@@ -441,7 +442,7 @@ function rBoard2(C, T) {
     const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
-        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -460,6 +461,20 @@ function rBoard2(C, T) {
         const _curLc = _lcItems.find(it=>it.id===_b2LineupCardMode) || _lcItems[0];
         return `<button type="button" class="pill mode-select-trigger" style="flex-shrink:0" onclick="_toggleModePopover(this,'라인업 모드',window._b2LineupModeItems)">${_curLc.label} ▾</button>`;
       })()}
+      ${(function(){
+        // 🔊 음성듣기 대상 선택 — '라인업 전체' 또는 특정 스트리머 한 명
+        let _spMembers = [];
+        try { _spMembers = (typeof _b2LineupMembers==='function' ? _b2LineupMembers(_b2LineupUniv).members : []); } catch(e){ _spMembers = []; }
+        const _cur = (typeof _b2LineupSpeakTarget!=='undefined') ? _b2LineupSpeakTarget : '';
+        return `<div style="position:relative">
+          <select id="b2-lineup-speak-sel" class="b2-toolbar-select" title="음성으로 소개할 대상" onchange="_b2LineupSetSpeakTarget(this.value)" style="padding:4px 26px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer;max-width:150px">
+            <option value=""${!_cur?' selected':''}>🎙️ 라인업 전체</option>
+            ${_spMembers.map(p=>`<option value="${String(p.name||'').replace(/"/g,'&quot;')}"${_cur===p.name?' selected':''}>${p.name||''}</option>`).join('')}
+          </select>
+          <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        </div>`;
+      })()}
+      <button id="b2-lineup-speak-btn" class="b2-toolbar-btn" onclick="_b2LineupToggleSpeak()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">${(typeof _b2LineupSpeaking!=='undefined'&&_b2LineupSpeaking)?'⏹ 정지':'🔊 음성듣기'}</button>
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -767,6 +782,8 @@ function rBoard2(C, T) {
     if(!sub) return;
     const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','live','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
+    // 라인업 탭을 벗어나면 재생 중이던 음성 소개를 정지 (다른 탭에서 계속 읽어주면 혼란스러움)
+    if (_b2View !== 'lineup' && typeof _b2LineupSpeaking !== 'undefined' && _b2LineupSpeaking && typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
       injectUnivIcons(sub);

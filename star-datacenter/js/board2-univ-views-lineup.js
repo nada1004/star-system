@@ -34,7 +34,8 @@ function _b2LineupCard3(p, col) {
   const lc3SecondHtml = lc3SecondPhoto
     ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
-  return `<div class="b2-lc3" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>
+  const attrName = (p.name||'').replace(/"/g,'&quot;');
+  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>
     <div class="b2-lc3-photo">
       ${photo
         ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
@@ -108,7 +109,8 @@ function _b2LineupTableRow(p, col) {
   const tierCol = (p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : col;
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-  return `<tr onclick="openPlayerModal('${safeName}')" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
+  const attrName = (p.name||'').replace(/"/g,'&quot;');
+  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
@@ -117,6 +119,7 @@ function _b2LineupTableRow(p, col) {
         ${_2ndAvatar}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
+      <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="margin-left:6px;width:22px;height:22px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;line-height:1;cursor:pointer;padding:0">🔊</button>
     </div></td>
     <td>${p.role || '일반'}</td>
     <td>${p.tier?`<span class="b2-lc4-chip" style="background:${tierCol};color:${tierTxt}">${p.tier}</span>`:'미정'}</td>
@@ -184,11 +187,13 @@ function _b2LineupCard(p, col, big, iconUrl) {
       ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:var(--fs-base);padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
       <div style="color:#fff;font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
     </div>`;
+  const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `
-    <div style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
+    <div data-b2lc-player="${attrName}" style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
+        <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
         ${_fillBackdrop}
         ${photoHtml}
         ${lcSecondHtml}
@@ -198,21 +203,12 @@ function _b2LineupCard(p, col, big, iconUrl) {
     </div>`;
 }
 
-function _b2LineupPoster(univName, col, forExport=false) {
-  if (!univName) return `<div style="text-align:center;color:var(--text3);padding:40px">대학을 선택해주세요</div>`;
-  const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x=>x.name===univName) : null) || {};
-  const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
+// 라인업 화면(카드/테이블)과 라인업 소개(TTS)가 항상 같은 순서로 선수를 나열하도록
+// 멤버 필터링·정렬 로직을 한 곳으로 모았습니다.
+function _b2LineupMembers(univName) {
   const members = players.filter(p => String(p?.univ||'').trim() === String(univName||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
-
-  if (!members.length) {
-    return `<div style="border-radius:18px;border:2px dashed ${col}55;padding:30px;background:${col}10;text-align:center;color:var(--text3)">등록된 선수가 없습니다</div>`;
-  }
-
-  // 보직(임원) 그룹 — 큰 카드로 상단에 배치
   const roleMembers = members.filter(p => _b2HasRole(p));
   roleMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
-
-  // 일반 멤버 — 티어순
   const rosterMembers = members.filter(p => !_b2HasRole(p));
   rosterMembers.sort((a,b) => {
     const ta = TIERS.indexOf(a.tier||''), tb = TIERS.indexOf(b.tier||'');
@@ -220,6 +216,18 @@ function _b2LineupPoster(univName, col, forExport=false) {
     if (ra!==rb) return ra-rb;
     return (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'});
   });
+  return { members, roleMembers, rosterMembers };
+}
+
+function _b2LineupPoster(univName, col, forExport=false) {
+  if (!univName) return `<div style="text-align:center;color:var(--text3);padding:40px">대학을 선택해주세요</div>`;
+  const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x=>x.name===univName) : null) || {};
+  const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
+  const { members, roleMembers, rosterMembers } = _b2LineupMembers(univName);
+
+  if (!members.length) {
+    return `<div style="border-radius:18px;border:2px dashed ${col}55;padding:30px;background:${col}10;text-align:center;color:var(--text3)">등록된 선수가 없습니다</div>`;
+  }
 
   const _lcMode = (typeof _b2LineupCardMode !== 'undefined') ? _b2LineupCardMode : 'default';
   const _cardFn = _lcMode === 'stat' ? _b2LineupCard3 : null;
@@ -298,6 +306,157 @@ function _b2LineupView() {
   const col = gc(_b2LineupUniv);
   return `<div style="max-width:1360px;margin:0 auto">${_b2LineupPoster(_b2LineupUniv, col, false)}</div>`;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   🔊 라인업 음성 소개 (Web Speech API) — 카드 화면을 그대로 두고
+   대학 라인업을 순서대로 읽어주면서, 지금 소개 중인 선수 카드에
+   하이라이트 표시를 준다. 서버/외부 API 없이 브라우저 내장 TTS만 사용.
+══════════════════════════════════════════════════════════════ */
+;(function _injectLineupSpeakStyle(){
+  if(typeof document==='undefined') return;
+  const prev = document.getElementById('b2-lineup-speak-style');
+  if(prev) prev.remove();
+  const s=document.createElement('style');
+  s.id='b2-lineup-speak-style';
+  s.textContent=[
+    '.b2-lc-speaking{outline:3px solid #2563eb!important;outline-offset:3px;box-shadow:0 0 0 7px rgba(37,99,235,.22),0 10px 26px rgba(15,23,42,.28)!important;transition:outline .18s ease,box-shadow .18s ease}',
+    '.b2-lc4 tbody tr.b2-lc-speaking td{background:rgba(37,99,235,.20)!important}',
+    ':is(body.dark,html.dark) .b2-lc4 tbody tr.b2-lc-speaking td{background:rgba(96,165,250,.28)!important}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+var _b2LineupSpeaking = false;
+var _b2LineupSpeakTarget = '';   // '' = 라인업 전체, 그 외 = 특정 스트리머 이름
+
+// 화면 카드와 동일한 순서(임원 → 멤버)로 소개 문장을 만든다.
+// onlyName 이 주어지면 해당 스트리머 한 명만 읽는다.
+function _b2LineupBuildSpeakQueue(univName, onlyName) {
+  const { members, roleMembers, rosterMembers } = _b2LineupMembers(univName);
+  const raceLabel = (r) => ({ T:'테란', P:'프로토스', Z:'저그' }[r] || '');
+  const describe = (p) => {
+    const parts = [];
+    if (p.tier) parts.push(`${p.tier} 티어`);
+    parts.push(`${p.name || '이름 미상'}`);
+    const rl = raceLabel(p.race);
+    if (rl) parts.push(rl);
+    const win = Number(p.win||0), loss = Number(p.loss||0);
+    if (win + loss > 0) {
+      const wr = Math.round(win/(win+loss)*100);
+      parts.push(`${win}승 ${loss}패, 승률 ${wr}퍼센트`);
+    } else {
+      parts.push('아직 등록된 전적이 없습니다');
+    }
+    return parts.join(', ');
+  };
+
+  if (onlyName) {
+    const p = members.find(x => String(x.name||'') === String(onlyName));
+    if (!p) return [];
+    return [{ text: `${univName} ${p.role ? p.role + ', ' : ''}${describe(p)}`, player: p.name }];
+  }
+
+  const queue = [{ text: `${univName} 라인업 소개를 시작합니다. 총 ${members.length}명입니다.`, player: null }];
+  if (roleMembers.length) {
+    queue.push({ text: '먼저 임원진입니다.', player: null });
+    roleMembers.forEach(p => {
+      queue.push({ text: `${p.role ? p.role + ', ' : ''}${describe(p)}`, player: p.name });
+    });
+  }
+  if (rosterMembers.length) {
+    queue.push({ text: '다음은 멤버 라인업입니다.', player: null });
+    rosterMembers.forEach(p => queue.push({ text: describe(p), player: p.name }));
+  }
+  queue.push({ text: '이상으로 라인업 소개를 마칩니다.', player: null });
+  return queue;
+}
+
+function _b2PickKoVoice() {
+  try {
+    const voices = (window.speechSynthesis && window.speechSynthesis.getVoices()) || [];
+    return voices.find(v => /^ko[-_]KR$/i.test(v.lang)) || voices.find(v => /^ko/i.test(v.lang)) || null;
+  } catch(e) { return null; }
+}
+
+function _b2LineupClearHighlight() {
+  try { document.querySelectorAll('.b2-lc-speaking').forEach(el => el.classList.remove('b2-lc-speaking')); } catch(e){}
+}
+
+function _b2LineupHighlightPlayer(name) {
+  _b2LineupClearHighlight();
+  if (!name) return;
+  try {
+    const esc = (window.CSS && CSS.escape) ? CSS.escape(name) : String(name).replace(/["\\]/g, '\\$&');
+    const el = document.querySelector(`[data-b2lc-player="${esc}"]`);
+    if (el) {
+      el.classList.add('b2-lc-speaking');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } catch(e){}
+}
+
+function _b2LineupSpeakBtnLabel() {
+  const btn = document.getElementById('b2-lineup-speak-btn');
+  if (!btn) return;
+  btn.innerHTML = _b2LineupSpeaking ? '⏹ 정지' : '🔊 음성듣기';
+}
+
+function _b2LineupStopSpeak() {
+  _b2LineupSpeaking = false;
+  try { if (window.SUTTS) window.SUTTS.stop(); else window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+  _b2LineupClearHighlight();
+  _b2LineupSpeakBtnLabel();
+}
+
+// 툴바의 "스트리머 선택" 드롭다운 변경
+function _b2LineupSetSpeakTarget(name) {
+  _b2LineupStopSpeak();
+  _b2LineupSpeakTarget = String(name || '');
+}
+
+function _b2LineupToggleSpeak() {
+  if (!('speechSynthesis' in window)) { alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
+  if (_b2LineupSpeaking) { _b2LineupStopSpeak(); return; }
+
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
+  if (!_b2LineupUniv) { alert('소개할 대학이 없습니다.'); return; }
+
+  // 드롭다운에서 특정 스트리머가 선택되어 있으면 그 한 명만 읽는다.
+  let target = _b2LineupSpeakTarget;
+  try {
+    const sel = document.getElementById('b2-lineup-speak-sel');
+    if (sel) target = sel.value || '';
+  } catch(e){}
+  _b2LineupSpeakTarget = target;
+
+  const queue = _b2LineupBuildSpeakQueue(_b2LineupUniv, target);
+  if (!queue.length || (!target && queue.length <= 1)) { alert('소개할 스트리머가 없습니다.'); return; }
+
+  _b2LineupSpeaking = true;
+  _b2LineupSpeakBtnLabel();
+  const ok = window.SUTTS && window.SUTTS.speak(queue, {
+    onItem: (item) => _b2LineupHighlightPlayer(item && item.player),
+    onEnd: () => { _b2LineupSpeaking = false; _b2LineupClearHighlight(); _b2LineupSpeakBtnLabel(); }
+  });
+  if (!ok) { _b2LineupSpeaking = false; _b2LineupSpeakBtnLabel(); }
+}
+
+// 카드/표에서 개별 스트리머 한 명만 바로 듣기
+function _b2LineupSpeakPlayer(name) {
+  if (!name) return;
+  _b2LineupStopSpeak();
+  _b2LineupSpeakTarget = String(name);
+  try { const sel = document.getElementById('b2-lineup-speak-sel'); if (sel) sel.value = _b2LineupSpeakTarget; } catch(e){}
+  _b2LineupToggleSpeak();
+}
+
+try {
+  window._b2LineupToggleSpeak = _b2LineupToggleSpeak;
+  window._b2LineupStopSpeak = _b2LineupStopSpeak;
+  window._b2LineupSetSpeakTarget = _b2LineupSetSpeakTarget;
+  window._b2LineupSpeakPlayer = _b2LineupSpeakPlayer;
+} catch(e){}
 
 // [REFACTOR] saveB2LineupImg / saveB2FreeImg 공통 캡처 로직
 // 두 함수가 거의 동일한 "임시 div 생성 → 아이콘 주입 → 캡처 → 정리" 흐름을 중복 구현하고 있어

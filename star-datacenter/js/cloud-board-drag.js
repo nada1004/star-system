@@ -589,6 +589,10 @@ async function _dlCanvasBoard(canvas, filename) {
 async function _captureAndSave(tmpDiv, w, h, filename) {
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
+  // html2canvas가 못 읽는 color-mix()/color() 등의 CSS 색상 함수를 안전한 값으로 치환
+  // (라인업 테이블형처럼 style 태그에 color-mix()가 포함된 뷰를 저장할 때
+  //  "Attempting to parse an unsupported color function \"color\"" 오류가 나던 문제 수정)
+  try{ if(typeof _sanitizeUnsupportedCssFunctions==='function') _sanitizeUnsupportedCssFunctions(tmpDiv); }catch(e){}
   try{
     // 레이아웃 강제 flush: 고정 80ms×2 대신 rAF 2프레임으로 최소 대기
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -631,6 +635,7 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
             try{ clonedDoc.adoptedStyleSheets = []; }catch(e){}
           }
         }catch(e){}
+        try{ if(typeof _sanitizeUnsupportedColorsInDoc==='function') _sanitizeUnsupportedColorsInDoc(clonedDoc); }catch(e){}
         if(!aggressive) return;
         try{ clonedDoc.querySelectorAll('svg').forEach(el => el.remove()); }catch(e){}
         try{

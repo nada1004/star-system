@@ -4,7 +4,7 @@
   "workspaces": {
     "": {
       "dependencies": {
-        "acorn": "^8.17.0",
+        "acorn": "^8.18.0",
         "jsdom": "^29.1.1",
       },
       "devDependencies": {

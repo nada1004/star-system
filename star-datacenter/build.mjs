@@ -49,6 +49,7 @@ const CORE_FILES = [
   'js/constants-tab-colors.js',
   'js/constants-player-html.js',
   'js/unified-settings.js',
+  'js/tts-common.js',
   'js/modal-open.js',
   'js/modal-drag.js',
   'js/data.js',
