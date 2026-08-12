@@ -253,6 +253,13 @@ function openChatbot(mode) {
 function closeChatbot(e) {
   if (e && e.target !== document.getElementById('chatbotOverlay')) return;
   chatbotOpen = false;
+  // 챗봇 창을 닫으면 재생/일시정지 버튼도 함께 사라져 더 이상 멈출 수단이 없어지므로,
+  // 읽어주던 메시지 음성(TTS)도 함께 정지시킨다.
+  try{
+    if (window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+      window.SUTTS.stop();
+    }
+  }catch(e2){}
   const overlay = document.getElementById('chatbotOverlay');
   if (overlay) {
     overlay.classList.remove('open');

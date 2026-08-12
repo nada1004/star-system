@@ -455,6 +455,14 @@ if(!window.__tabLinkPopstateBound){
   window.addEventListener('popstate', ()=>{
     try{
       window._tabLinkApplying = true;
+      // 브라우저 뒤로가기/앞으로가기는 sw()를 거치지 않고 curTab을 직접 바꾸므로,
+      // sw()의 TTS 정지 로직이 적용되지 않는다. 여기서도 동일하게 재생/일시정지 중인
+      // TTS(라인업/브리핑/리포트 등)를 정지시킨다.
+      try{
+        if(window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))){
+          window.SUTTS.stop();
+        }
+      }catch(e){}
       const ok = (typeof window._applyTabLinkFromUrl==='function') ? window._applyTabLinkFromUrl() : false;
       if(ok && typeof render==='function') render();
       setTimeout(()=>{

@@ -782,8 +782,16 @@ function rBoard2(C, T) {
     if(!sub) return;
     const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','live','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
-    // 라인업 탭을 벗어나면 재생 중이던 음성 소개를 정지 (다른 탭에서 계속 읽어주면 혼란스러움)
-    if (_b2View !== 'lineup' && typeof _b2LineupSpeaking !== 'undefined' && _b2LineupSpeaking && typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
+    // board2 서브뷰(라인업/브리핑 등)가 바뀌면 재생 중이던 음성 소개를 정지
+    // (다른 서브뷰에서 계속 읽어주면 혼란스러움). 기존엔 라인업 전용 상태값만 검사해서
+    // 브리핑(_b2View==='weekly') 음성듣기 중 다른 서브뷰로 이동해도 멈추지 않는 누락이 있었음 —
+    // SUTTS는 싱글톤이라 stop()이 재생 중인 기능(라인업/브리핑 등)의 onEnd 정리 콜백을
+    // 그대로 실행해주므로, 서브뷰가 실제로 바뀔 때마다 범용으로 정지시키도록 수정.
+    if (window._b2LastRenderedView !== undefined && window._b2LastRenderedView !== _b2View &&
+        window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+      try{ window.SUTTS.stop(); }catch(e){}
+    }
+    window._b2LastRenderedView = _b2View;
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
       injectUnivIcons(sub);

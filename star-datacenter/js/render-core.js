@@ -4,6 +4,15 @@ function _renderImpl(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
+  // 최상위 탭이 바뀌면(버튼 클릭/뒤로가기·앞으로가기/로그인·로그아웃/기록에서 탭 점프 등
+  // 경로에 관계없이) 재생 중이던 TTS(라인업/브리핑/리포트 등)를 정지.
+  // SUTTS는 싱글톤이라 stop()이 speak() 때 등록해둔 onEnd 정리 콜백을 그대로 실행해주므로
+  // 여기 한 곳에서만 처리해도 모든 진입 경로가 커버된다.
+  if (window._lastRenderedTopTab !== undefined && window._lastRenderedTopTab !== curTab &&
+      window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+    try{ window.SUTTS.stop(); }catch(e){}
+  }
+  window._lastRenderedTopTab = curTab;
   const farea=document.getElementById('farea');if(farea)farea.innerHTML='';
   document.querySelectorAll('.tab').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';
