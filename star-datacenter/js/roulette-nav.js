@@ -56,6 +56,8 @@ function rRoulette(C, T) {
     else if (_gcTab === 'omok') { setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'janggi') { setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'othello') { setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'teamsplit') { setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'bracket') { setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60); }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -99,6 +101,10 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'othello') {
     setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'teamsplit') {
+    setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'bracket') {
+    setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }

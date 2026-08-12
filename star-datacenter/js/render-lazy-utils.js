@@ -93,11 +93,11 @@ async function _ensureRouletteLoaded(){
   const scripts=[
     'js/wheel.js?v=20260717-ds03',
     'js/duck-race.js?v=20260717-ds03',
-    'js/roulette-nav.js?v=20260812-grp1',
-    'js/roulette-utils.js?v=20260812-grp1',
+    'js/roulette-nav.js?v=20260812-grp2',
+    'js/roulette-utils.js?v=20260812-grp2',
     'js/roulette-ppg-game.js?v=20260730-split10',
-    'js/roulette-gc-panel.js?v=20260812-grp1',
-    'js/roulette-gc-spin.js?v=20260812-grp1',
+    'js/roulette-gc-panel.js?v=20260812-grp2',
+    'js/roulette-gc-spin.js?v=20260812-grp2',
     'js/roulette-ladder.js?v=20260730-split10',
     'js/roulette-marble.js?v=20260730-split10',
     'js/team-match-game.js?v=20260728-photofix1',
@@ -108,6 +108,8 @@ async function _ensureRouletteLoaded(){
     'js/omok-game.js?v=20260728-om-diff5',
     'js/janggi-game.js?v=20260812-jg1',
     'js/othello-game.js?v=20260812-ot1',
+    'js/roulette-teamsplit.js?v=20260812-grp2',
+    'js/roulette-bracket.js?v=20260812-grp2',
   ];
   // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
   // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.

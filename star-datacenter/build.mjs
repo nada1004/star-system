@@ -367,6 +367,8 @@ const LAZY_CHUNKS = {
     'js/omok-game.js',
     'js/janggi-game.js',
     'js/othello-game.js',
+    'js/roulette-teamsplit.js',
+    'js/roulette-bracket.js',
   ],
   'lazy-calendar.js': [
     'js/calendar.js',

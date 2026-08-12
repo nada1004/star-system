@@ -122,6 +122,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isDuck   = _gcTab === 'duck';
   const isWheel  = _gcTab === 'wheel';
   const isPpopgi = _gcTab === 'ppopgi';
+  const isTeamSplit = _gcTab === 'teamsplit';
+  const isBracket = _gcTab === 'bracket';
   const isTeamMatch = _gcTab === 'teammatch';
   const isTierMatch = _gcTab === 'tiermatch';
   const isQuiz = _gcTab === 'quiz';
@@ -153,6 +155,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     duck: { kicker:'LUCKY DRAW', icon:'🐥', accent:'linear-gradient(135deg,#fbbf24,#f97316)', title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
     wheel: { kicker:'LUCKY DRAW', icon:'🎡', accent:'linear-gradient(135deg,#f472b6,#ec4899)', title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
     ppopgi: { kicker:'LUCKY DRAW', icon:'🎁', accent:'linear-gradient(135deg,#fb7185,#f43f5e)', title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
+    teamsplit: { kicker:'LUCKY DRAW', icon:'👥', accent:'linear-gradient(135deg,#38bdf8,#6366f1)', title:'팀 나누기', desc:'참가자를 원하는 팀 수만큼 랜덤으로 균등하게 나눕니다.', badge1:'2~8팀 지원', badge2:'균등 분배' },
+    bracket: { kicker:'LUCKY DRAW', icon:'🏆', accent:'linear-gradient(135deg,#f59e0b,#ef4444)', title:'대진표 뽑기', desc:'참가자를 랜덤으로 섞어 1라운드 대진을 만들어줍니다.', badge1:'랜덤 매칭', badge2:'부전승 자동 처리' },
     teammatch: { kicker:'PUZZLE GAME', icon:'🧩', accent:'linear-gradient(135deg,#fb7185,#ec4899)', title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
@@ -299,6 +303,24 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div id="ot-root"></div>
+</div>`;
+  }
+
+  // 👥 팀 나누기 탭: 별도 레이아웃 (내용은 roulette-teamsplit.js가 #ts-root에 채움)
+  if (isTeamSplit) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="ts-root"></div>
+</div>`;
+  }
+
+  // 🏆 대진표 탭: 별도 레이아웃 (내용은 roulette-bracket.js가 #bk-root에 채움)
+  if (isBracket) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="bk-root"></div>
 </div>`;
   }
 

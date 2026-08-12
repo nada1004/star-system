@@ -49,12 +49,14 @@ let _gcSpinning = false;
 // (추가) 룰렛/게임 탭 그룹 분리 — "🎰 룰렛·추첨" / "🎮 미니게임"
 // ─────────────────────────────────────────────────────────────
 const _GC_ROULETTE_TABS = [
-  { id: 'player',  icon: '🎰',    label: '구슬뽑기' },
-  { id: 'map',     icon: '🗺️',   label: '맵뽑기' },
-  { id: 'ladder',  icon: '🪜',    label: '사다리' },
-  { id: 'duck',    icon: '🐥',    label: '경주' },
-  { id: 'wheel',   icon: '🎡',    label: '휠' },
-  { id: 'ppopgi',  icon: '🎁',    label: '뽑기' }
+  { id: 'player',    icon: '🎰',    label: '구슬뽑기' },
+  { id: 'map',       icon: '🗺️',   label: '맵뽑기' },
+  { id: 'ladder',    icon: '🪜',    label: '사다리' },
+  { id: 'duck',      icon: '🐥',    label: '경주' },
+  { id: 'wheel',     icon: '🎡',    label: '휠' },
+  { id: 'ppopgi',    icon: '🎁',    label: '뽑기' },
+  { id: 'teamsplit', icon: '👥',    label: '팀나누기' },
+  { id: 'bracket',   icon: '🏆',    label: '대진표' }
 ];
 const _GC_GAME_TABS = [
   { id: 'teammatch', icon: '🧩',   label: '소속매칭' },

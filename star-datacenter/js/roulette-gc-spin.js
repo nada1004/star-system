@@ -22,6 +22,8 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'omok' && tab !== 'omok' && typeof _omCleanup === 'function') _omCleanup();
   if (_gcTab === 'janggi' && tab !== 'janggi' && typeof _jgCleanup === 'function') _jgCleanup();
   if (_gcTab === 'othello' && tab !== 'othello' && typeof _otCleanup === 'function') _otCleanup();
+  if (_gcTab === 'teamsplit' && tab !== 'teamsplit' && typeof _tsCleanup === 'function') _tsCleanup();
+  if (_gcTab === 'bracket' && tab !== 'bracket' && typeof _bkCleanup === 'function') _bkCleanup();
   _gcTab = tab;
   if (_GC_TAB_GROUP[tab]) _gcLastTab[_GC_TAB_GROUP[tab]] = tab;
   render();
@@ -49,6 +51,10 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60);
   } else if (tab === 'othello') {
     setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60);
+  } else if (tab === 'teamsplit') {
+    setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
+  } else if (tab === 'bracket') {
+    setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
