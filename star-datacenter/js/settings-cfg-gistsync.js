@@ -104,7 +104,7 @@ window.cfgGistSyncPush = async function(){
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
 
-// rebuildIndexedDbStores → settings-data-ops.js 단일 소스로 통합 (WARNING fix: 중복 정의 제거)
+// rebuildIndexedDbStores → settings-data-gistsync.js 단일 소스로 통합 (WARNING fix: 중복 정의 제거)
 
 // ── 이미지탭 레이아웃 저장 함수 ──
 
@@ -130,8 +130,8 @@ try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotati
 // 현재 탭 추적
 try{ if(typeof window._settingsCurrentTab !== 'string') window._settingsCurrentTab = 'total'; }catch(e){}
 
-// [FIX-2] sw() 원숭이패치 중복 제거: settings-data-ops.js에서만 패치하므로 이 블록은 삭제.
-// _cfgSecDescMap은 settings-data-ops.js의 패치 블록 안에 이미 정의되어 있음.
+// [FIX-2] sw() 원숭이패치 중복 제거: settings-data-images.js에서만 패치하므로 이 블록은 삭제.
+// _cfgSecDescMap은 settings-data-images.js의 패치 블록 안에 이미 정의되어 있음.
 
 
 /* ══════════════════════════════════════

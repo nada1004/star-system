@@ -212,7 +212,8 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
 };
 async function _ensureCalendarLoaded(){
-  await _loadScriptOnce('js/calendar.js?v=20260811-calfx2');
+  await _loadScriptOnce('js/calendar.js?v=20260813-split2');
+  await _loadScriptOnce('js/calendar-sched.js?v=20260813-split2');
 }
 try{
   const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
