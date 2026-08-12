@@ -400,14 +400,16 @@ function sw(t,el){
     }
   }catch(e){}
 
-  // 라인업 음성듣기 중(재생/일시정지 불문) 다른 최상위 탭으로 이동하면 즉시 정지.
-  // (기존엔 board2 탭 내부에서 서브뷰가 재렌더될 때만 정지시켜서, board2 탭 자체를
-  //  완전히 벗어나는(다른 최상위 탭으로 이동) 경우엔 TTS가 멈추지 않고 계속 나오는 버그가 있었음)
+  // TTS(음성듣기: 라인업/브리핑/스트리머 리포트 등) 재생·일시정지 중 다른 최상위 탭으로
+  // 이동하면 즉시 정지. SUTTS는 한 번에 하나의 세션만 갖는 싱글톤이고, speak() 호출 시
+  // 등록한 onEnd 콜백이 stop()에서도 그대로 실행되므로 여기서 범용으로 stop()만 호출해도
+  // 어떤 기능(라인업/브리핑/리포트)이 재생 중이었든 해당 기능의 버튼 라벨·하이라이트 등
+  // 정리 로직이 알아서 실행된다. (기존엔 라인업탭에서만, 그것도 board2 탭 내부 서브뷰
+  //  재렌더 시에만 정지시키는 로직이라 board2를 완전히 벗어나거나 브리핑/리포트 TTS는
+  //  탭을 이동해도 계속 재생되는 버그가 있었음)
   try{
-    if(t !== curTab){
-      const _lineupTtsActive = typeof _b2LineupSpeaking !== 'undefined' && _b2LineupSpeaking;
-      const _lineupTtsPaused = !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
-      if((_lineupTtsActive || _lineupTtsPaused) && typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
+    if(t !== curTab && window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))){
+      window.SUTTS.stop();
     }
   }catch(e){}
 
