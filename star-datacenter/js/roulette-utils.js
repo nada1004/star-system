@@ -44,6 +44,33 @@ const _rEscAttr = (typeof window !== 'undefined' && typeof window.escAttr === 'f
 let _gcTab = 'player';
 let _gcInputOpen = true;
 let _gcSpinning = false;
+
+// ─────────────────────────────────────────────────────────────
+// (추가) 룰렛/게임 탭 그룹 분리 — "🎰 룰렛·추첨" / "🎮 미니게임"
+// ─────────────────────────────────────────────────────────────
+const _GC_ROULETTE_TABS = [
+  { id: 'player',  icon: '🎰',    label: '구슬뽑기' },
+  { id: 'map',     icon: '🗺️',   label: '맵뽑기' },
+  { id: 'ladder',  icon: '🪜',    label: '사다리' },
+  { id: 'duck',    icon: '🐥',    label: '경주' },
+  { id: 'wheel',   icon: '🎡',    label: '휠' },
+  { id: 'ppopgi',  icon: '🎁',    label: '뽑기' }
+];
+const _GC_GAME_TABS = [
+  { id: 'teammatch', icon: '🧩',   label: '소속매칭' },
+  { id: 'tiermatch', icon: '🎖️',  label: '티어매칭' },
+  { id: 'quiz',      icon: '🖼️',  label: '얼굴맞추기' },
+  { id: 'memory',    icon: '🃏',   label: '짝맞추기' },
+  { id: 'mole',      icon: '🐹',   label: '두더지' },
+  { id: 'omok',      icon: '⚫⚪', label: '오목' },
+  { id: 'janggi',    icon: '♟️',  label: '장기' },
+  { id: 'othello',   icon: '🟢',   label: '오델로' }
+];
+const _GC_TAB_GROUP = {};
+_GC_ROULETTE_TABS.forEach(t => { _GC_TAB_GROUP[t.id] = 'roulette'; });
+_GC_GAME_TABS.forEach(t => { _GC_TAB_GROUP[t.id] = 'game'; });
+// 그룹별로 마지막에 보고 있던 서브탭을 기억해뒀다가, 그룹 전환 시 그 탭으로 복귀
+let _gcLastTab = { roulette: 'player', game: 'teammatch' };
 let _gcHistory = {
   player: _rJsonGet('su_gc_hist_p', []),
   map:    _rJsonGet('su_gc_hist_m', []),

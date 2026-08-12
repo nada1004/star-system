@@ -365,6 +365,8 @@ const LAZY_CHUNKS = {
     'js/memory-match-game.js',
     'js/mole-whack-game.js',
     'js/omok-game.js',
+    'js/janggi-game.js',
+    'js/othello-game.js',
   ],
   'lazy-calendar.js': [
     'js/calendar.js',
