@@ -455,7 +455,10 @@ function _prBestStreak(hist){
   return {win:bestWin, lose:bestLose};
 }
 /* ─── 핵심 분석 결과 (하이라이트 콜아웃) ─── */
-function _prKeyInsightsHTML(stats, mapStats, histForStreak){
+/* 핵심 분석 결과의 원본 데이터(rows)를 만드는 공용 함수.
+   HTML 렌더링(_prKeyInsightsHTML)과 음성듣기(TTS) 양쪽에서 함께 사용한다.
+   각 row는 { icon, tone, html(강조표기 포함), plain(TTS용 평문) } 을 갖는다. */
+function _prKeyInsightsRows(stats, mapStats, histForStreak){
   const RACE_KO={T:'테란',Z:'저그',P:'프로토스'};
   const rows=[];
   const raceEntries=['T','Z','P'].map(r=>{
@@ -465,29 +468,45 @@ function _prKeyInsightsHTML(stats, mapStats, histForStreak){
   if(raceEntries.length){
     const best=raceEntries.slice().sort((a,b)=>b.wr-a.wr)[0];
     const worst=raceEntries.slice().sort((a,b)=>a.wr-b.wr)[0];
-    rows.push({icon:'🏆', tone:'good', html:`가장 강한 종족전: <b>${RACE_KO[best.r]}전</b> ${best.w}승 ${best.l}패 (승률 ${best.wr}%)`});
+    rows.push({icon:'🏆', tone:'good',
+      html:`가장 강한 종족전: <b>${RACE_KO[best.r]}전</b> ${best.w}승 ${best.l}패 (승률 ${best.wr}%)`,
+      plain:`가장 강한 종족전은 ${RACE_KO[best.r]}전으로, ${best.w}승 ${best.l}패, 승률 ${best.wr}%입니다.`});
     if(worst.r!==best.r){
-      rows.push({icon:'⚠️', tone:'bad', html:`가장 약한 종족전: <b>${RACE_KO[worst.r]}전</b> ${worst.w}승 ${worst.l}패 (승률 ${worst.wr}%)`});
+      rows.push({icon:'⚠️', tone:'bad',
+        html:`가장 약한 종족전: <b>${RACE_KO[worst.r]}전</b> ${worst.w}승 ${worst.l}패 (승률 ${worst.wr}%)`,
+        plain:`가장 약한 종족전은 ${RACE_KO[worst.r]}전으로, ${worst.w}승 ${worst.l}패, 승률 ${worst.wr}%입니다.`});
     }
   }
   const mapsEligible = mapStats.filter(m=>m.tot>=3);
   if(mapsEligible.length){
     const bestMap = mapsEligible.slice().sort((a,b)=>b.wr-a.wr)[0];
     const worstMap = mapsEligible.slice().sort((a,b)=>a.wr-b.wr)[0];
-    rows.push({icon:'🗺️', tone:'good', html:`가장 강한 맵: <b>${escHTML(bestMap.map)}</b> ${bestMap.w}승 ${bestMap.l}패 (승률 ${bestMap.wr}%)`});
+    rows.push({icon:'🗺️', tone:'good',
+      html:`가장 강한 맵: <b>${escHTML(bestMap.map)}</b> ${bestMap.w}승 ${bestMap.l}패 (승률 ${bestMap.wr}%)`,
+      plain:`가장 강한 맵은 ${bestMap.map}로, ${bestMap.w}승 ${bestMap.l}패, 승률 ${bestMap.wr}%입니다.`});
     if(worstMap.map!==bestMap.map){
-      rows.push({icon:'🚧', tone:'bad', html:`가장 어려운 맵: <b>${escHTML(worstMap.map)}</b> ${worstMap.w}승 ${worstMap.l}패 (승률 ${worstMap.wr}%)`});
+      rows.push({icon:'🚧', tone:'bad',
+        html:`가장 어려운 맵: <b>${escHTML(worstMap.map)}</b> ${worstMap.w}승 ${worstMap.l}패 (승률 ${worstMap.wr}%)`,
+        plain:`가장 어려운 맵은 ${worstMap.map}로, ${worstMap.w}승 ${worstMap.l}패, 승률 ${worstMap.wr}%입니다.`});
     }
   }
   if(histForStreak && histForStreak.length){
     const streaks = _prBestStreak(histForStreak);
     if(streaks.win.n>=2){
-      rows.push({icon:'🔥', tone:'good', html:`최고 연승: <b>${streaks.win.n}연승</b> (${escHTML(streaks.win.from)} ~ ${escHTML(streaks.win.to)})`});
+      rows.push({icon:'🔥', tone:'good',
+        html:`최고 연승: <b>${streaks.win.n}연승</b> (${escHTML(streaks.win.from)} ~ ${escHTML(streaks.win.to)})`,
+        plain:`최고 기록은 ${streaks.win.n}연승으로, ${streaks.win.from}부터 ${streaks.win.to}까지 이어졌습니다.`});
     }
     if(streaks.lose.n>=2){
-      rows.push({icon:'🥶', tone:'bad', html:`최고 연패: <b>${streaks.lose.n}연패</b> (${escHTML(streaks.lose.from)} ~ ${escHTML(streaks.lose.to)})`});
+      rows.push({icon:'🥶', tone:'bad',
+        html:`최고 연패: <b>${streaks.lose.n}연패</b> (${escHTML(streaks.lose.from)} ~ ${escHTML(streaks.lose.to)})`,
+        plain:`최다 연패는 ${streaks.lose.n}연패로, ${streaks.lose.from}부터 ${streaks.lose.to}까지 이어졌습니다.`});
     }
   }
+  return rows;
+}
+function _prKeyInsightsHTML(stats, mapStats, histForStreak){
+  const rows = _prKeyInsightsRows(stats, mapStats, histForStreak);
   if(!rows.length) return _prEmptyStateHTML('분석할 데이터가 부족합니다 (표본 부족)');
   const [featured, ...rest] = rows;
   let h = `<div class="pr-highlight-row pr-highlight-${featured.tone} pr-highlight-featured"><span class="pr-hi-icon">${featured.icon}</span><span>${featured.html}</span></div>`;
@@ -495,12 +514,13 @@ function _prKeyInsightsHTML(stats, mapStats, histForStreak){
   return h;
 }
 
-/* ─── AI 분석 코멘트 (규칙 기반) ─── */
-function _prAiCommentHTML(p, histPeriod, stats, periodLabel){
+/* AI 분석 코멘트의 문장 배열 + 톤을 만드는 공용 함수.
+   HTML 렌더링(_prAiCommentHTML)과 음성듣기(TTS) 양쪽에서 함께 사용한다. */
+function _prAiCommentSentences(p, histPeriod, stats, periodLabel){
   const sentences=[];
   let tone='';
   if(!stats.tot){
-    sentences.push(`${p.name} 선수는 ${periodLabel} 기간 동안 기록된 경기가 없습니다.`);
+    sentences.push(`${p.name}은 ${periodLabel} 기간 동안 기록된 경기가 없습니다.`);
   } else {
     if(stats.wr>=65) sentences.push(`${periodLabel} 승률 ${stats.wr}%(${stats.w}승 ${stats.l}패)로 컨디션이 매우 좋습니다.`);
     else if(stats.wr>=50) sentences.push(`${periodLabel} 승률 ${stats.wr}%(${stats.w}승 ${stats.l}패)로 평균 이상의 흐름을 보이고 있습니다.`);
@@ -535,6 +555,11 @@ function _prAiCommentHTML(p, histPeriod, stats, periodLabel){
     else if(stats.wr>=55) tone = 'pr-ai-good';
     else if(stats.wr<=35) tone = 'pr-ai-bad';
   }
+  return {sentences, tone};
+}
+/* ─── AI 분석 코멘트 (규칙 기반) ─── */
+function _prAiCommentHTML(p, histPeriod, stats, periodLabel){
+  const {sentences, tone} = _prAiCommentSentences(p, histPeriod, stats, periodLabel);
   return `<div class="pr-ai-box ${tone}"><div class="pr-ai-icon">🤖</div><div class="pr-ai-text">${sentences.map(s=>escHTML(s)).join(' ')}</div></div>`;
 }
 
