@@ -1141,11 +1141,13 @@ function _b2BriefingSpeakBtnLabel(){
   const btn = document.getElementById('b2w2-speak-btn');
   if (!btn) return;
   const speaking = !!(window.SUTTS && window.SUTTS.isSpeaking());
-  btn.innerHTML = speaking ? '⏹ 정지' : '🔊 음성듣기';
+  const paused = !speaking && !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
+  btn.innerHTML = speaking ? '⏸ 일시정지' : (paused ? '▶ 이어듣기' : '🔊 음성듣기');
 }
 function _b2BriefingToggleSpeak(){
   if (!window.SUTTS || !('speechSynthesis' in window)) { alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
-  if (window.SUTTS.isSpeaking()) { window.SUTTS.stop(); _b2BriefingSpeakBtnLabel(); return; }
+  if (window.SUTTS.isSpeaking()) { window.SUTTS.pause(); _b2BriefingSpeakBtnLabel(); return; }
+  if (window.SUTTS.isPaused && window.SUTTS.isPaused()) { window.SUTTS.resume(); _b2BriefingSpeakBtnLabel(); return; }
   const queue = _b2BriefingBuildSpeakQueue();
   if (!queue.length) { alert('음성으로 읽어줄 브리핑 내용이 없습니다.'); return; }
   window.SUTTS.speak(queue, { onEnd: _b2BriefingSpeakBtnLabel });

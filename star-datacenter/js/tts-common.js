@@ -6,7 +6,7 @@
 (function(){
   if (typeof window === 'undefined') return;
 
-  var _speaking = false, _queue = [], _idx = 0, _opts = {};
+  var _speaking = false, _paused = false, _queue = [], _idx = 0, _opts = {}, _watchdog = null;
 
   // ── 숫자 → 한글(한자어) 표기 (스코어 등 "N 대 M" 낭독용, 0~9999) ──
   var _KO_DIGIT = ['영','일','이','삼','사','오','육','칠','팔','구'];
@@ -29,10 +29,12 @@
     return s;
   }
 
-  // ── 날짜 표기: 2026.08.06 / 2026-08-06 / 2026/08/06 → 2026년 8월 6일 ──
+  // ── 날짜 표기: 2026.08.06 / 2026-08-06 / 2026/08/06 → "이천이십육년 팔월 육일" ──
+  // (숫자를 그대로 두면 브라우저 TTS가 "공육일"처럼 자릿수 그대로 읽는 경우가 많아,
+  //  년/월/일 각각을 한글 한자어 숫자로 직접 변환해서 넘긴다)
   function _convertDates(t){
     return t.replace(/\b(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})\b/g, function(_, y, mo, d){
-      return y + '년 ' + parseInt(mo, 10) + '월 ' + parseInt(d, 10) + '일';
+      return _koSino(y) + '년 ' + _koSino(mo) + '월 ' + _koSino(d) + '일';
     });
   }
 
@@ -43,9 +45,16 @@
     });
   }
 
-  // ── "%" 기호는 "퍼센트"로 풀어 읽어야 훨씬 자연스럽게 들린다 ──
+  // ── "%" 기호는 "퍼센트"로 풀어 읽어야 훨씬 자연스럽게 들린다 (먼저 "%p"부터 처리) ──
   function _convertPercent(t){
-    return t.replace(/(\d+(?:\.\d+)?)\s*%/g, '$1퍼센트');
+    return t
+      .replace(/(\d+(?:\.\d+)?)\s*%p\b/gi, '$1퍼센트포인트')
+      .replace(/(\d+(?:\.\d+)?)\s*%/g, '$1퍼센트');
+  }
+
+  // ── "vs" / "VS" → "대" (영문 그대로 두면 "브이에스"처럼 어색하게 읽힘) ──
+  function _convertVs(t){
+    return t.replace(/\s*\bvs\.?\b\s*/gi, ' 대 ');
   }
 
   function sanitize(t){
@@ -62,6 +71,7 @@
       .replace(/\u0001/g, '선수단')
       .replace(/\u0002/g, '선수권');
     s = _convertDates(s);
+    s = _convertVs(s);
     s = _convertScores(s);
     s = _convertPercent(s);
     return s.replace(/\s+/g, ' ').trim();
@@ -76,14 +86,15 @@
   }
 
   function finish(){
-    _speaking = false; _queue = []; _idx = 0;
+    _speaking = false; _paused = false; _queue = []; _idx = 0;
+    try{ clearTimeout(_watchdog); }catch(e){}
     try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
     try{ if (typeof _opts.onEnd === 'function') _opts.onEnd(); }catch(e){}
     _opts = {};
   }
 
   function speakNext(){
-    if (!_speaking || _idx >= _queue.length) { finish(); return; }
+    if (!_speaking || _idx >= _queue.length) { if (_speaking) finish(); return; }
     var item = _queue[_idx++];
     var text = sanitize(item && typeof item === 'object' ? item.text : item);
     try{ if (typeof _opts.onItem === 'function') _opts.onItem(item, _idx - 1); }catch(e){}
@@ -96,11 +107,13 @@
       // 조금 더 차분하고 부드러운 속도/톤 (기존보다 살짝 느리게)
       utter.rate = (_opts.rate || 0.96);
       utter.pitch = (_opts.pitch != null ? _opts.pitch : 1.0);
-      var advanced = false, watchdog = null;
+      var advanced = false;
       var advanceOnce = function(){
         if (advanced) return;
+        // 일시정지 상태에서는 워치독이 오작동으로 다음 문장으로 넘어가면 안 됨
+        if (_paused) return;
         advanced = true;
-        try{ clearTimeout(watchdog); }catch(e){}
+        try{ clearTimeout(_watchdog); }catch(e){}
         // 문장 사이에 짧은 숨 고르기 텀을 둬서 뚝뚝 끊기지 않고 자연스럽게 이어지도록 함
         var gap = (_opts.gapMs != null ? _opts.gapMs : 220);
         if (gap > 0) setTimeout(speakNext, gap); else speakNext();
@@ -108,13 +121,46 @@
       utter.onend = advanceOnce;
       utter.onerror = function(ev){ try{ console.warn('[TTS] utterance 오류', ev && ev.error); }catch(e){} advanceOnce(); };
       // 일부 브라우저(Chrome)는 onend가 오지 않고 멈추는 버그가 있어 워치독으로 강제 진행
-      watchdog = setTimeout(advanceOnce, Math.max(4000, text.length * 280));
+      _watchdog = setTimeout(advanceOnce, Math.max(4000, text.length * 280));
       try{ window.speechSynthesis.resume(); }catch(e){}
       window.speechSynthesis.speak(utter);
     }catch(e){
       try{ console.warn('[TTS] speak 실패', e); }catch(e2){}
       speakNext();
     }
+  }
+
+  // ── 일시정지: 현재 읽던 문장의 위치를 유지한 채 멈춘다 (큐/인덱스는 보존) ──
+  function pause(){
+    if (!_speaking) return false;
+    _speaking = false;
+    _paused = true;
+    try{ clearTimeout(_watchdog); }catch(e){}
+    try{ window.speechSynthesis && window.speechSynthesis.pause(); }catch(e){}
+    return true;
+  }
+
+  // ── 이어듣기: 멈췄던 지점부터 다시 재생 ──
+  function resume(){
+    if (!_paused) return false;
+    _paused = false;
+    _speaking = true;
+    try{
+      window.speechSynthesis.resume();
+      // 일부 브라우저(특히 모바일 Chrome/삼성인터넷)는 resume()이 씹히는 버그가 있어
+      // 짧게 확인해보고 실제로 재생이 안 붙었으면 현재 문장부터 다시 읽어 복구한다.
+      setTimeout(function(){
+        if (_speaking && window.speechSynthesis &&
+            !window.speechSynthesis.speaking && !window.speechSynthesis.pending){
+          _idx = Math.max(0, _idx - 1);
+          speakNext();
+        }
+      }, 350);
+    }catch(e){
+      _idx = Math.max(0, _idx - 1);
+      speakNext();
+    }
+    return true;
   }
 
   function start(items, opts){
@@ -146,24 +192,31 @@
     return true;
   }
 
+  // 완전 정지(하드 리셋): 일시정지 상태였더라도 큐를 모두 비운다.
+  // (다른 콘텐츠로 전환/모달 닫기 등에 사용 — 이 경우엔 이어듣기가 의미 없으므로 초기화한다)
   function stop(){
-    if (!_speaking) {
-      try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
-      _opts = {};
-      return;
-    }
-    _speaking = false;
+    var wasActive = _speaking || _paused;
+    _speaking = false; _paused = false;
+    try{ clearTimeout(_watchdog); }catch(e){}
     var end = _opts && _opts.onEnd;
     _queue = []; _idx = 0; _opts = {};
     try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
-    try{ if (typeof end === 'function') end(); }catch(e){}
+    if (wasActive) { try{ if (typeof end === 'function') end(); }catch(e){} }
   }
 
   window.SUTTS = {
     speak: start,
     stop: stop,
-    toggle: function(items, opts){ if (_speaking) { stop(); return false; } return start(items, opts); },
+    pause: pause,
+    resume: resume,
+    // 재생 중이면 일시정지, 일시정지 중이면 이어듣기, 그 외엔 새로 시작
+    toggle: function(items, opts){
+      if (_speaking) { pause(); return 'paused'; }
+      if (_paused) { resume(); return 'resumed'; }
+      return start(items, opts) ? 'started' : false;
+    },
     isSpeaking: function(){ return _speaking; },
+    isPaused: function(){ return _paused; },
     sanitize: sanitize
   };
 })();

@@ -193,9 +193,9 @@ function openHistDetailModal(key){
       const A = String(match.a || reg.lA || match.wName || 'A');
       const B = String(match.b || reg.lB || match.lName || 'B');
       const lines = [];
-      const dateTxt = String(match.d || '').trim();
+      const dateTxt = String(match.d || '').trim().slice(0, 10);
       const nameTxt = String(match.n || '').trim();
-      lines.push(`경기 상세 정보입니다.${dateTxt?` ${dateTxt.replace(/-/g,'년 ').replace(/년 (\d{2})년 /,'년 $1월 ')} 경기.`:''}${nameTxt?` ${nameTxt}.`:''}`);
+      lines.push(`경기 상세 정보입니다.${dateTxt?` ${dateTxt} 경기.`:''}${nameTxt?` ${nameTxt}.`:''}`);
       if(match.wName && match.lName && !match.sets){
         lines.push(`${match.wName} 승, ${match.lName} 패.${match.map?` 맵은 ${match.map} 입니다.`:''}`);
         return lines;
@@ -227,8 +227,9 @@ function openHistDetailModal(key){
         try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
         try{
           if(!window.SUTTS) return;
-          if(window.SUTTS.isSpeaking()){ window.SUTTS.stop(); ttsBtn.textContent='🔊'; return; }
-          ttsBtn.textContent='⏹';
+          if(window.SUTTS.isSpeaking()){ window.SUTTS.pause(); ttsBtn.textContent='▶'; return; }
+          if(window.SUTTS.isPaused && window.SUTTS.isPaused()){ window.SUTTS.resume(); ttsBtn.textContent='⏸'; return; }
+          ttsBtn.textContent='⏸';
           window.SUTTS.speak(_buildDetailSpeakText().map(t=>({text:t})), {
             onEnd: ()=>{ try{ ttsBtn.textContent='🔊'; }catch(_){} }
           });

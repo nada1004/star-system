@@ -190,16 +190,19 @@ function renderChatHistory() {
 function speakChatMessage(index) {
   const msg = chatHistory[index];
   if (!msg) return;
+  try {
+    if (window.SUTTS) {
+      if (window.SUTTS.isSpeaking()) { window.SUTTS.pause(); return; }
+      if (window.SUTTS.isPaused && window.SUTTS.isPaused()) { window.SUTTS.resume(); return; }
+    }
+  } catch(e) { console.warn('[chatbot TTS]', e); }
   const text = String(msg.content || '')
     .replace(/<br\s*\/?>/gi, '. ')
     .replace(/<\/(div|p|li|tr|h[1-6])>/gi, '. ')
     .replace(/<[^>]*>/g, ' ');
   if (!text.trim()) return;
   try {
-    if (window.SUTTS) {
-      if (window.SUTTS.isSpeaking()) { window.SUTTS.stop(); return; }
-      window.SUTTS.speak([{ text }]);
-    }
+    if (window.SUTTS) window.SUTTS.speak([{ text }]);
   } catch(e) { console.warn('[chatbot TTS]', e); }
 }
 

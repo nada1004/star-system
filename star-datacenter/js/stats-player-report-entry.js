@@ -166,11 +166,13 @@ function _prSpeakBtnLabel(){
   const btn = document.getElementById('pr-report-speak-btn');
   if(!btn) return;
   const speaking = !!(window.SUTTS && window.SUTTS.isSpeaking());
-  btn.innerHTML = speaking ? '⏹<span>정지</span>' : '🔊<span>음성듣기</span>';
+  const paused = !speaking && !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
+  btn.innerHTML = speaking ? '⏸<span>일시정지</span>' : (paused ? '▶<span>이어듣기</span>' : '🔊<span>음성듣기</span>');
 }
 function _prToggleSpeak(){
   if(!window.SUTTS || !('speechSynthesis' in window)){ alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
-  if(window.SUTTS.isSpeaking()){ window.SUTTS.stop(); _prSpeakBtnLabel(); return; }
+  if(window.SUTTS.isSpeaking()){ window.SUTTS.pause(); _prSpeakBtnLabel(); return; }
+  if(window.SUTTS.isPaused && window.SUTTS.isPaused()){ window.SUTTS.resume(); _prSpeakBtnLabel(); return; }
   const queue = _prBuildSpeakQueue();
   if(!queue.length){ alert('음성으로 읽어줄 리포트 내용이 없습니다.'); return; }
   window.SUTTS.speak(queue, { onEnd: _prSpeakBtnLabel });

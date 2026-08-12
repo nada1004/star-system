@@ -37,6 +37,7 @@ function _b2LineupCard3(p, col) {
   const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>
     <div class="b2-lc3-photo">
+      <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
       ${photo
         ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
            <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
@@ -328,6 +329,10 @@ function _b2LineupView() {
 
 var _b2LineupSpeaking = false;
 var _b2LineupSpeakTarget = '';   // '' = 라인업 전체, 그 외 = 특정 스트리머 이름
+// 지금 재생/일시정지 중인 세션이 "스트리머 프로필 이미지의 🔊 버튼(개별 듣기)"에서
+// 시작됐는지 여부. 툴바의 "음성듣기" 버튼(전체 듣기용)과는 서로 다른 방식으로 동작해야
+// 하므로, 이 값으로 두 진입점을 구분한다.
+var _b2LineupSpeakViaCard = false;
 
 // 화면 카드와 동일한 순서(임원 → 멤버)로 소개 문장을 만든다.
 // onlyName 이 주어지면 해당 스트리머 한 명만 읽는다.
@@ -398,11 +403,13 @@ function _b2LineupHighlightPlayer(name) {
 function _b2LineupSpeakBtnLabel() {
   const btn = document.getElementById('b2-lineup-speak-btn');
   if (!btn) return;
-  btn.innerHTML = _b2LineupSpeaking ? '⏹ 정지' : '🔊 음성듣기';
+  const paused = !_b2LineupSpeaking && window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused();
+  btn.innerHTML = _b2LineupSpeaking ? '⏸ 일시정지' : (paused ? '▶ 이어듣기' : '🔊 음성듣기');
 }
 
 function _b2LineupStopSpeak() {
   _b2LineupSpeaking = false;
+  _b2LineupSpeakViaCard = false;
   try { if (window.SUTTS) window.SUTTS.stop(); else window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
   _b2LineupClearHighlight();
   _b2LineupSpeakBtnLabel();
@@ -414,41 +421,85 @@ function _b2LineupSetSpeakTarget(name) {
   _b2LineupSpeakTarget = String(name || '');
 }
 
-function _b2LineupToggleSpeak() {
-  if (!('speechSynthesis' in window)) { alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
-  if (_b2LineupSpeaking) { _b2LineupStopSpeak(); return; }
-
+// 실제로 큐를 만들어 재생을 시작하는 공통 로직 (툴바 "음성듣기" / 카드 개별 듣기 둘 다 사용)
+function _b2LineupStartSpeak(target) {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
-  if (!_b2LineupUniv) { alert('소개할 대학이 없습니다.'); return; }
+  if (!_b2LineupUniv) { alert('소개할 대학이 없습니다.'); return false; }
 
-  // 드롭다운에서 특정 스트리머가 선택되어 있으면 그 한 명만 읽는다.
-  let target = _b2LineupSpeakTarget;
-  try {
-    const sel = document.getElementById('b2-lineup-speak-sel');
-    if (sel) target = sel.value || '';
-  } catch(e){}
   _b2LineupSpeakTarget = target;
 
   const queue = _b2LineupBuildSpeakQueue(_b2LineupUniv, target);
-  if (!queue.length || (!target && queue.length <= 1)) { alert('소개할 스트리머가 없습니다.'); return; }
+  if (!queue.length || (!target && queue.length <= 1)) { alert('소개할 스트리머가 없습니다.'); return false; }
 
   _b2LineupSpeaking = true;
   _b2LineupSpeakBtnLabel();
   const ok = window.SUTTS && window.SUTTS.speak(queue, {
     onItem: (item) => _b2LineupHighlightPlayer(item && item.player),
-    onEnd: () => { _b2LineupSpeaking = false; _b2LineupClearHighlight(); _b2LineupSpeakBtnLabel(); }
+    onEnd: () => { _b2LineupSpeaking = false; _b2LineupSpeakViaCard = false; _b2LineupClearHighlight(); _b2LineupSpeakBtnLabel(); }
   });
-  if (!ok) { _b2LineupSpeaking = false; _b2LineupSpeakBtnLabel(); }
+  if (!ok) { _b2LineupSpeaking = false; _b2LineupSpeakBtnLabel(); return false; }
+  return true;
 }
 
-// 카드/표에서 개별 스트리머 한 명만 바로 듣기
+// 툴바의 "🔊 음성듣기" 버튼 — 기본적으로 "라인업 전체"(또는 드롭다운에서 고른 대상)를 읽는
+// 버튼이다. 카드의 개별 듣기 버튼과는 별개의 진입점이므로:
+// - 카드에서 시작한 개별 듣기가 재생/일시정지 중이면, 그 세션은 그대로 두지 않고
+//   완전히 중단한 뒤 (드롭다운 기준으로) 새로 재생을 시작한다.
+// - 그 외에는 기존처럼 일시정지/이어듣기 토글로 동작한다.
+function _b2LineupToggleSpeak() {
+  if (!('speechSynthesis' in window)) { alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
+
+  // 지금 드롭다운에 선택돼 있는 대상(전체="" / 특정 스트리머명)을 항상 최신 기준으로 읽는다.
+  let selTarget = _b2LineupSpeakTarget;
+  try {
+    const sel = document.getElementById('b2-lineup-speak-sel');
+    if (sel) selTarget = sel.value || '';
+  } catch(e){}
+
+  const cardSessionActive = _b2LineupSpeakViaCard &&
+    (_b2LineupSpeaking || !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused()));
+
+  if (cardSessionActive) {
+    // 개별(카드) 듣기 → 툴바 버튼 클릭 시: 일시정지가 아니라 "전체 듣기"로 전환한다.
+    _b2LineupStopSpeak();
+    _b2LineupStartSpeak(selTarget);
+    return;
+  }
+
+  if (_b2LineupSpeaking) {
+    _b2LineupSpeaking = false;
+    try { window.SUTTS && window.SUTTS.pause(); } catch(e){}
+    _b2LineupSpeakBtnLabel();
+    return;
+  }
+
+  const isPaused = !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
+  // 일시정지했던 대상과 지금 선택된 대상이 같을 때만 이어듣기. 그 사이 "전체"↔"개별"로
+  // 대상을 바꿨다면 이전 일시정지 세션은 버리고 새 대상으로 처음부터 다시 시작한다.
+  if (isPaused && selTarget === _b2LineupSpeakTarget) {
+    _b2LineupSpeaking = true;
+    window.SUTTS.resume();
+    _b2LineupSpeakBtnLabel();
+    return;
+  }
+  if (isPaused) {
+    try { window.SUTTS.stop(); } catch(e){}
+    _b2LineupClearHighlight();
+  }
+
+  _b2LineupSpeakViaCard = false;
+  _b2LineupStartSpeak(selTarget);
+}
+
+// 카드/표의 프로필 이미지 🔊 버튼 — 항상 그 스트리머 한 명만 바로 듣는다.
+// 툴바의 "전체 듣기" 버튼/드롭다운과는 별개로 동작하므로 드롭다운 값은 건드리지 않고,
+// 다른 무엇을 듣고 있었든(전체든 다른 스트리머든) 즉시 멈추고 클릭한 스트리머로 전환한다.
 function _b2LineupSpeakPlayer(name) {
   if (!name) return;
   _b2LineupStopSpeak();
-  _b2LineupSpeakTarget = String(name);
-  try { const sel = document.getElementById('b2-lineup-speak-sel'); if (sel) sel.value = _b2LineupSpeakTarget; } catch(e){}
-  _b2LineupToggleSpeak();
+  _b2LineupSpeakViaCard = true;
+  _b2LineupStartSpeak(String(name));
 }
 
 try {

@@ -400,6 +400,17 @@ function sw(t,el){
     }
   }catch(e){}
 
+  // 라인업 음성듣기 중(재생/일시정지 불문) 다른 최상위 탭으로 이동하면 즉시 정지.
+  // (기존엔 board2 탭 내부에서 서브뷰가 재렌더될 때만 정지시켜서, board2 탭 자체를
+  //  완전히 벗어나는(다른 최상위 탭으로 이동) 경우엔 TTS가 멈추지 않고 계속 나오는 버그가 있었음)
+  try{
+    if(t !== curTab){
+      const _lineupTtsActive = typeof _b2LineupSpeaking !== 'undefined' && _b2LineupSpeaking;
+      const _lineupTtsPaused = !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
+      if((_lineupTtsActive || _lineupTtsPaused) && typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
+    }
+  }catch(e){}
+
   // [FIX-14] TAB_ENTER 맵 실행
   try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
   // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅

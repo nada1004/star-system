@@ -741,7 +741,7 @@ function rBoard2(C, T) {
         ${univList.map(u=>{
           const _uc = gc(u.name);
           const _on = u.name===_b2LineupUniv;
-          return `<button type="button" onclick="_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
+          return `<button type="button" onclick="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
         }).join('')}
       </div>
       ` : ''}
