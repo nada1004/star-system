@@ -28,21 +28,25 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-nav-group,.cal-view-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
     '.cal-filter-wrap{display:flex;flex-wrap:wrap;gap:6px}',
     '.cal-board-card{padding:14px 16px}',
-    '.cal-board-month{background:var(--white);border-radius:var(--r2)}',
-    '.cal-board-month table{border-collapse:separate;border-spacing:6px;table-layout:fixed;width:100%;background:var(--white)}',
-    '.cal-board-month th{padding:8px 6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3)}',
-    '.cal-cell-empty{background:rgba(148,148,148,.06);border-radius:var(--r2);min-height:100px;transition:none}',
-    '.cal-cell-empty:hover{background:rgba(148,148,148,.06)}',
-    '.cal-cell{position:relative;vertical-align:top;padding:8px;min-height:100px;border-radius:18px;background:#fff;border:1px solid rgba(148,148,148,.22);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s;cursor:default}',
+    '.cal-board-month{background:var(--white);border-radius:var(--r2);border:1px solid rgba(148,163,184,.22);overflow:hidden}',
+    '.cal-board-month table{border-collapse:collapse;border-spacing:0;table-layout:fixed;width:100%;background:var(--white)}',
+    '.cal-board-month th{padding:11px 6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);background:rgba(100,116,139,.04);border-bottom:1px solid rgba(148,163,184,.22)}',
+    '.cal-cell-empty{position:relative;background:rgba(148,148,148,.03);border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);min-height:100px;transition:none}',
+    '.cal-board-month td:last-child{border-right:none}',
+    '.cal-board-month tr:last-child td{border-bottom:none}',
+    '.cal-cell{position:relative;vertical-align:top;padding:9px;min-height:100px;background:#fff;border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);cursor:default}',
     '.cal-cell.has-match{cursor:pointer}',
-    '.cal-cell:hover{background:linear-gradient(180deg,#f8fafc,#eef2f7);border-color:rgba(148,163,184,.5);box-shadow:0 8px 16px rgba(15,23,42,.06)}',
-    '.cal-cell.has-match:hover{transform:translateY(-3px);box-shadow:0 14px 26px rgba(15,23,42,.12);border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,#eff6ff,#e0edff);z-index:2}',
-    '.cal-cell.is-sun,.cal-cell.is-sat{background:rgba(148,163,184,.045)}',
-    '.cal-cell.is-today{border-width:2px;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.16) inset;background:linear-gradient(180deg,#eff6ff,#f7fbff)}',
+    '.cal-cell>*{position:relative;z-index:1}',
+    '.cal-cell::before{content:"";position:absolute;inset:3px;border-radius:12px;background:transparent;box-shadow:none;pointer-events:none;transition:background .16s ease,box-shadow .16s ease;z-index:0}',
+    '.cal-cell.is-sun::before,.cal-cell.is-sat::before{background:rgba(148,163,184,.05)}',
+    '.cal-cell:hover::before{background:linear-gradient(180deg,#f8fafc,#eef2f7)}',
+    '.cal-cell.has-match:hover::before{background:linear-gradient(180deg,#eff6ff,#e0edff);box-shadow:0 8px 18px rgba(37,99,235,.16)}',
+    '.cal-cell.is-today::before{background:linear-gradient(180deg,#eff6ff,#f7fbff);box-shadow:inset 0 0 0 2px #2563eb}',
+    '.cal-cell.is-today:hover::before{box-shadow:inset 0 0 0 2px #2563eb;background:linear-gradient(180deg,#e6f0ff,#eef6ff)}',
     '.cal-cell.is-past:not(.active){opacity:.6}',
-    '.cal-cell.active{border-width:2px;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.16) inset;background:linear-gradient(180deg,#f5f3ff,#faf5ff)}',
-    '.cal-cell.active:hover{background:linear-gradient(180deg,#f5f3ff,#ede9fe);border-color:#7c3aed}',
-    '.cal-cell.active::after{content:"✓";position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4);transition:transform .15s}',
+    '.cal-cell.active::before{background:linear-gradient(180deg,#f5f3ff,#faf5ff);box-shadow:inset 0 0 0 2px #7c3aed}',
+    '.cal-cell.active:hover::before{background:linear-gradient(180deg,#f2eeff,#ede9fe);box-shadow:inset 0 0 0 2px #7c3aed}',
+    '.cal-cell.active::after{content:"✓";position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4);transition:transform .15s;z-index:1}',
     '.cal-cell.active:hover::after{transform:scale(1.15)}',
     '.cal-board-month.cal-anim-in{animation:calFadeIn .25s ease}',
     '.cal-board-month.cal-anim-in .cal-day-num.today{animation:calTodayPop .3s ease}',
@@ -113,16 +117,20 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-hero-title{color:#f8fafc}',
     'body.dark .cal-hero-desc{color:#94a3b8}',
     'body.dark .cal-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
-    'body.dark .cal-cell,body.dark .cal-week-card,body.dark .cal-day-sec{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
-    'body.dark .cal-cell.is-sun,body.dark .cal-cell.is-sat{background:linear-gradient(180deg,rgba(30,41,59,.98),rgba(15,23,42,.94))!important}',
-    'body.dark .cal-cell.is-today{border-color:#60a5fa!important;border-width:2px;box-shadow:0 0 0 3px rgba(96,165,250,.2) inset;background:linear-gradient(180deg,#17263c,#132033)!important}',
+    'body.dark .cal-board-month{border-color:#2d3f55}',
+    'body.dark .cal-board-month th{background:rgba(30,41,59,.6);border-color:#2d3f55}',
+    'body.dark .cal-cell,body.dark .cal-week-card,body.dark .cal-day-sec{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .cal-cell{box-shadow:none!important}',
+    'body.dark .cal-cell.is-sun::before,body.dark .cal-cell.is-sat::before{background:rgba(148,163,184,.05)}',
+    'body.dark .cal-cell:hover::before{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))}',
+    'body.dark .cal-cell.has-match:hover::before{background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65));box-shadow:0 8px 18px rgba(0,0,0,.35)}',
+    'body.dark .cal-cell.is-today::before{background:linear-gradient(180deg,#17263c,#132033);box-shadow:inset 0 0 0 2px #60a5fa}',
+    'body.dark .cal-cell.is-today:hover::before{background:linear-gradient(180deg,#1c3253,#152943);box-shadow:inset 0 0 0 2px #60a5fa}',
     'body.dark .cal-cell.is-past:not(.active){opacity:.55}',
-    'body.dark .cal-cell.active{border-color:#a78bfa!important;box-shadow:0 0 0 3px rgba(167,139,250,.22) inset;background:linear-gradient(180deg,#2e1f47,#241a38)!important}',
-    'body.dark .cal-cell.active:hover{background:linear-gradient(180deg,#33224e,#291c3d)!important;border-color:#a78bfa!important}',
+    'body.dark .cal-cell.active::before{background:linear-gradient(180deg,#2e1f47,#241a38);box-shadow:inset 0 0 0 2px #a78bfa}',
+    'body.dark .cal-cell.active:hover::before{background:linear-gradient(180deg,#33224e,#291c3d);box-shadow:inset 0 0 0 2px #a78bfa}',
     'body.dark .cal-cell.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.35)}',
-    'body.dark .cal-cell:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
-    'body.dark .cal-cell.has-match:hover{box-shadow:0 14px 26px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
-    'body.dark .cal-cell-empty:hover{background:rgba(100,100,100,.2)}',
+    'body.dark .cal-cell-empty{background:rgba(100,100,100,.12)}',
     'body.dark .cal-week-card:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
     'body.dark .cal-week-card.today{background:linear-gradient(180deg,#17263c,#132033)!important;border-color:rgba(96,165,250,.45)!important}',
     'body.dark .cal-week-card.today:hover{background:linear-gradient(180deg,#1c3253,#152943)!important}',
@@ -143,11 +151,10 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-match-result.is-pending{background:rgba(148,163,184,.16);color:#cbd5e1}',
     'body.dark .cal-match-card .rec-sum-score{background:rgba(148,163,184,.1)}',
     'body.dark .cal-match-card .rec-detail-area{background:linear-gradient(180deg,rgba(2,6,23,.22),rgba(15,23,42,.68));border-top-color:#334155}',
-    'body.dark .cal-cell-empty{background:rgba(100,100,100,.2)}',
     'body.dark .cal-day-num{color:#e2e8f0}',
     'body.dark .cal-undated{background:linear-gradient(180deg,rgba(120,53,15,.28),rgba(120,53,15,.18));border-color:#92400e}',
     'body.dark .cal-undated-chip{background:rgba(120,53,15,.18);border-color:#92400e;color:#fde68a}',
-    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-board-month table{border-spacing:4px}.cal-cell,.cal-cell-empty{min-height:96px}.cal-month-chip{font-size:9px;padding:1px 5px}}',
+    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-cell,.cal-cell-empty{min-height:96px}.cal-month-chip{font-size:9px;padding:1px 5px}}',
     '@media (max-width:768px){.cal-hero{display:none}}'
   ].join('');
   document.head.appendChild(s);
@@ -319,6 +326,8 @@ function rCal(C,T){
   window._calLastRenderSig=_calRenderSig;
   const _calAnimCls=_calShouldAnim?' cal-anim-in':'';
   const _viewLabel = calView==='month' ? '월간 보기' : calView==='week' ? '주간 보기' : '일간 보기';
+  const _monthPrefix = `${year}-${pad(month+1)}`;
+  const _monthCount = calView==='month' ? allMatches.filter(m=>(m.d||'').startsWith(_monthPrefix)).length : 0;
   const _activeFilterInfo = calTypeFilter==='all'
     ? '전체 일정'
     : ((TYPE_INFO[calTypeFilter]&&TYPE_INFO[calTypeFilter].lbl) || '필터 일정');
@@ -580,9 +589,7 @@ function rCal(C,T){
   ];
   const _filterBtns = (typeof applyTabLabels==='function') ? applyTabLabels('calendar', filterBtns) : filterBtns;
   const filterToggleHTML = _enableSubFilter
-    ? `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-        <button class="pill ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">🔍 필터 ${window._calFilterOpen?'▲':'▼'}</button>
-      </div>`
+    ? `<button class="pill no-export ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">🔍 필터 ${window._calFilterOpen?'▲':'▼'}</button>`
     : '';
   const filterHTML = (_enableSubFilter ? window._calFilterOpen : true)
     ? `<div class="no-export" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -610,12 +617,13 @@ function rCal(C,T){
       <div class="cal-hero-badges">
         <span class="cal-hero-badge">${_viewLabel}</span>
         <span class="cal-hero-badge">${_activeFilterInfo}</span>
-        <span class="cal-hero-badge">총 ${allMatches.length}건</span>
+        <span class="cal-hero-badge">${calView==='month'?`이번 달 ${_monthCount}건`:`총 ${allMatches.length}건`}</span>
       </div>
     </section>
     <div class="cal-toolbar-card">
     <div class="cal-toolbar-row">
       <div class="cal-nav-group">
+        ${filterToggleHTML}
         ${navHTML}
       </div>
       <div class="cal-view-group">
@@ -626,7 +634,6 @@ function rCal(C,T){
       </div>
     </div>
     </div>
-    ${filterToggleHTML}
     ${filterHTML}
     ${undatedHTML}
     <!-- 캘린더 본문 -->
