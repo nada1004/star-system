@@ -603,8 +603,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   </section>`;
 
   // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일 + 라벨/스크롤 힌트로 가독성 보강
-  const _tabBar = `<div class="gc-tabbar-label">🎮 게임 선택</div>
-  <div class="gc-tabbar-scroll">
+  const _tabBar = `<div class="gc-tabbar-scroll">
   <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill${_gcTab==='player'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
     <button class="pill${_gcTab==='map'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>

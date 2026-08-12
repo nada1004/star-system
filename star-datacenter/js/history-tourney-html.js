@@ -2,7 +2,18 @@
    대전기록 - 대회 탭 HTML (history-render-tabs.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
-function histTourneyHTML(context){
+/* (요청, 2026-08-12) 대회 탭 하위 구분: 일반(tour_normal/comps) / 조별리그(tour) / 토너먼트(tour_bracket/tour_manual)
+   stage: undefined 또는 'all'이면 전체, 'gen'|'league'|'bkt'로 필터링 */
+function _histTourneyStageFilter(m, stage){
+  if(!stage || stage==='all') return true;
+  const src=m&&m._src||'';
+  if(stage==='gen') return src==='tour_normal'||src==='comps';
+  if(stage==='league') return src==='tour';
+  if(stage==='bkt') return src==='tour_bracket'||src==='tour_manual';
+  return true;
+}
+
+function histTourneyHTML(context, stage){
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
   const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
@@ -12,15 +23,27 @@ function histTourneyHTML(context){
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    if(!_histTourneyStageFilter(m,stage)) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
   allItems.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const sortBar=``;
   if(!allItems.length){
-    return sortBar+`<div class="empty-state"><div class="empty-state-icon">🎖️</div><div class="empty-state-title">대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+    const _emptyMsg=stage==='gen'?'일반 기록이 없습니다':stage==='league'?'조별리그 기록이 없습니다':stage==='bkt'?'토너먼트 기록이 없습니다':'대회 기록이 없습니다';
+    const _emptyIco=stage==='gen'?'📝':stage==='league'?'📅':stage==='bkt'?'🏆':'🎖️';
+    return sortBar+`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
+  // (요청, 2026-08-12) 티어대회 탭(일반 20개 단위 페이지네이션)과 동일하게,
+  // 대회 탭도 하위탭별로 "더보기" 누적 로드형 페이지네이션을 적용
+  const _pageKey = (stage && stage!=='all') ? `tourney-${stage}` : 'tourney';
+  if(typeof histPage!=='undefined' && histPage[_pageKey]===undefined) histPage[_pageKey]=0;
+  const _page = (typeof histPage!=='undefined' && histPage[_pageKey]) || 0;
+  const _pageSize = (typeof getHistPageSize==='function') ? getHistPageSize() : 20;
+  const _cap = (_page+1)*_pageSize;
+  const _visibleItems = allItems.slice(0,_cap).map((m,idx)=>({m,idx}));
+  const _hasMore = allItems.length>_cap;
   const groups={};
-  allItems.forEach((m,idx)=>{
+  _visibleItems.forEach(({m,idx})=>{
     const compName=m.n||m.compName||'기타 대회';
     if(!groups[compName]) groups[compName]=[];
     groups[compName].push({m,idx});
@@ -90,7 +113,7 @@ function histTourneyHTML(context){
           isLoggedIn&&m._src==='tour_bracket'?{t:'✏️ 결과 입력',d:'대진표 경기 결과 입력',kind:'normal',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,_r,_bmi,m.a,m.b);}}:null,
           isLoggedIn&&m._src==='tour_manual'?{t:'✏️ 결과 입력',d:'수동 경기 결과 입력',kind:'normal',on:()=>{if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,-1,m._manualIdx,m.a,m.b);}}:null,
           isLoggedIn&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
-          {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
+          {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context,stage))},
           isLoggedIn&&m._src==='tour'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>typeof grpDelMatch==='function'&&grpDelMatch(m._tnId,m._gi,m._mi)}:null,
           isLoggedIn&&m._src==='tour_bracket'&&!isSubAdmin?{t:'🗑️ 결과 삭제',d:'대진표 결과 초기화',kind:'danger',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof bktClearMatchResult==='function')bktClearMatchResult(m._tnId,_r,_bmi);}}:null,
           isLoggedIn&&m._src==='tour_manual'&&!isSubAdmin?{t:'🗑️ 삭제',d:'수동 경기 삭제',kind:'danger',on:()=>{if(typeof bktDelManualMatch==='function')bktDelManualMatch(m._tnId,m._manualIdx);}}:null,
@@ -149,11 +172,19 @@ function histTourneyHTML(context){
       h+=`</div>`;
     });
   });
+  // (요청, 2026-08-12) 티어대회 탭과 동일한 "더보기" 누적 로드형 페이지네이션 푸터
+  if(allItems.length>_pageSize){
+    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_visibleItems.length} / ${allItems.length}건 표시 중</span>
+      ${_hasMore?`<button class="btn btn-sm" onclick="if(typeof histPage!=='undefined'){histPage['${_pageKey}']=${_page+1};}render()">더 보기 ↓</button>`:''}
+      ${_page>0?`<button class="btn btn-sm btn-w" onclick="if(typeof histPage!=='undefined'){histPage['${_pageKey}']=0;}render()">처음으로</button>`:''}
+    </div>`;
+  }
   return h;
 }
 
 // 대회 탭 공유카드용 헬퍼
-function _getHistTourneyMatchObj(idx, context){
+function _getHistTourneyMatchObj(idx, context, stage){
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function')?getNormalMatchesForHistory():[];
   const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
@@ -162,6 +193,7 @@ function _getHistTourneyMatchObj(idx, context){
   const all=[...tourItems,...nmItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sb==null) return false;
+    if(!_histTourneyStageFilter(m,stage)) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
   all.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
@@ -177,7 +209,7 @@ function _getHistTourneyMatchObj(idx, context){
 
 /* (요청, 2026-08-10) 대전기록 > 대회 탭 보기모드(그리드/컴팩트 테이블형)용
    경기 목록 — histTourneyHTML과 동일한 소스/필터/정렬을 사용한다. */
-function histTourneyAltMatches(){
+function histTourneyAltMatches(stage){
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
   const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
@@ -187,6 +219,7 @@ function histTourneyAltMatches(){
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    if(!_histTourneyStageFilter(m,stage)) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
   all.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));

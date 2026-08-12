@@ -41,8 +41,7 @@ window._GC_DOME=220,window._GC_CAP_R=17,typeof window._rrShowPopup!="function"&&
       <span class="gc-badge">\u{1F3AF} ${_tabMeta.badge2}</span>
       <span class="gc-badge">\u{1F4F1} \uBAA8\uBC14\uC77C \uCD5C\uC801\uD654</span>
     </div>
-  </section>`,_tabBar=`<div class="gc-tabbar-label">\u{1F3AE} \uAC8C\uC784 \uC120\uD0DD</div>
-  <div class="gc-tabbar-scroll">
+  </section>`,_tabBar=`<div class="gc-tabbar-scroll">
   <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill${_gcTab==="player"?" on":""}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">\u{1F3B0} \uAD6C\uC2AC\uBF51\uAE30</button>
     <button class="pill${_gcTab==="map"?" on":""}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">\u{1F5FA}\uFE0F \uB9F5\uBF51\uAE30</button>
