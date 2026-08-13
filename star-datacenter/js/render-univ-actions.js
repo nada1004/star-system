@@ -202,6 +202,20 @@ function toggleUnivEdit(){
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🎵 라인업 소개연출 BGM</div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">유튜브 링크</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <input type="text" id="ue-bgm-url" value="${(u.bgmUrl||'').replace(/\"/g,'&quot;')}" placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
+          <button type="button" class="btn btn-w btn-sm" title="새 창에서 링크 열기" onclick="const v=(document.getElementById('ue-bgm-url')?.value||'').trim();if(v)window.open(v,'_blank');else alert('먼저 링크를 입력하세요.');">🔗 열기</button>
+        </div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">BGM 볼륨</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="ue-bgm-vol" min="0" max="100" step="5" value="${Number.isFinite(parseInt(u.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(u.bgmVolume,10))):50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-bgm-vol-val').textContent=this.value">
+          <span id="ue-bgm-vol-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:24px;text-align:right;font-weight:700">${Number.isFinite(parseInt(u.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(u.bgmVolume,10))):50}</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:8px">저장하면 이 대학의 "🎬 소개연출" 재생 시 자동으로 배경음악이 함께 재생됩니다.</div>
+      </div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
         <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🎨 대학 상세 팝업 로고·이름 스타일</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -595,6 +609,8 @@ function saveUnivEdit(){
   const newName=(document.getElementById('ue-name')?.value||'').trim();
   const newColor=document.getElementById('ue-color')?.value||u.color;
   const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
+  const newBgmUrl=(document.getElementById('ue-bgm-url')?.value||'').trim();
+  const newBgmVol=parseInt(document.getElementById('ue-bgm-vol')?.value||'50',10);
   const newLogoFx=(document.getElementById('ue-logo-fx')?.value||'none').trim();
   const newLogoScale=parseInt(document.getElementById('ue-logo-scale')?.value||'100',10)||100;
   const newNameFx=(document.getElementById('ue-name-fx')?.value||'none').trim();
@@ -634,6 +650,9 @@ function saveUnivEdit(){
   u.name=newName;
   u.color=newColor;
   if(newIcon) u.icon=newIcon; else delete u.icon;
+  if(newBgmUrl) u.bgmUrl=newBgmUrl; else delete u.bgmUrl;
+  if(newBgmUrl) u.bgmVolume=Math.max(0,Math.min(100,isNaN(newBgmVol)?50:newBgmVol)); else delete u.bgmVolume;
+  try{ if(window._b2LineupBgmSettingsChanged) window._b2LineupBgmSettingsChanged(newName); }catch(e){}
   if(newLogoFx && newLogoFx!=='none') u.udLogoFx=newLogoFx; else delete u.udLogoFx;
   if(newLogoScale && newLogoScale!==100) u.udLogoScale=Math.max(50,Math.min(220,newLogoScale)); else delete u.udLogoScale;
   if(newNameFx && newNameFx!=='none') u.udNameFx=newNameFx; else delete u.udNameFx;

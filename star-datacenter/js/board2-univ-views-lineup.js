@@ -327,7 +327,7 @@ function _b2LineupView() {
        무대 조명이 현재 카드에만 떨어지는 느낌을 준다. (b2-lc-speaking과 별개로 토글) */
     '.b2-lc-intro-dim{opacity:.4!important;filter:blur(1.5px) saturate(.65)!important;transform:scale(.96)!important;transition:opacity .4s ease,filter .4s ease,transform .4s ease!important}',
     /* 무대 암전 배경 */
-    '#b2-lc-intro-backdrop{position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:0;transition:opacity .45s ease;background:radial-gradient(circle at 50% 45%,rgba(15,23,42,.28) 0%,rgba(15,23,42,.72) 62%,rgba(2,6,23,.88) 100%)}',
+    '#b2-lc-intro-backdrop{position:fixed;inset:0;z-index:9990;pointer-events:auto;opacity:0;transition:opacity .45s ease;background:radial-gradient(circle at 50% 45%,rgba(15,23,42,.28) 0%,rgba(15,23,42,.72) 62%,rgba(2,6,23,.88) 100%)}',
     '#b2-lc-intro-backdrop.on{opacity:1}',
     /* 중앙 스포트라이트 빔(살짝 흔들리는 조명) */
     '#b2-lc-intro-beam{position:fixed;left:50%;top:-12vh;width:52vw;height:120vh;margin-left:-26vw;z-index:9991;pointer-events:none;opacity:0;transition:opacity .5s ease;background:linear-gradient(to bottom,rgba(255,255,255,.20),rgba(255,255,255,.06) 45%,rgba(255,255,255,0) 78%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);filter:blur(6px);animation:b2LcBeamSway 4.5s ease-in-out infinite alternate}',
@@ -347,12 +347,32 @@ function _b2LineupView() {
     /* 착지 순간 사방으로 튀는 반짝이(스파클) 파티클 */
     '.b2-lc-intro-spark{position:fixed;z-index:9998;pointer-events:none;width:7px;height:7px;border-radius:50%;background:var(--intro-glow,#60a5fa);box-shadow:0 0 8px 1px var(--intro-glow,#60a5fa);animation:b2LcSpark .65s cubic-bezier(.16,.8,.3,1) forwards}',
     '@keyframes b2LcSpark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx,0),var(--sy,0)) scale(.3)}}',
+    /* 종족별 파티클 변형 — 저그(유기체 블롭)/테란(금속 파편, 각짐)/프로토스(작은 사이오닉 입자) */
+    '.b2-lc-intro-spark.race-z{width:9px;height:8px;border-radius:40% 60% 55% 45%/50% 40% 60% 50%;animation-duration:.85s}',
+    '.b2-lc-intro-spark.race-t{border-radius:2px;width:6px;height:6px;box-shadow:0 0 6px 1px var(--intro-glow,#60a5fa)}',
+    '.b2-lc-intro-spark.race-p{width:5px;height:5px;animation-duration:.75s}',
+    /* 프로토스 착지 시 확장되는 사이오닉 링 */
+    '.b2-lc-intro-psiring{position:fixed;z-index:9997;pointer-events:none;left:0;top:0;width:10px;height:10px;margin-left:-5px;margin-top:-5px;border-radius:50%;border:2px solid var(--intro-glow,#a78bfa);box-shadow:0 0 16px 2px var(--intro-glow,#a78bfa);animation:b2LcPsiRing .85s cubic-bezier(.16,.8,.3,1) forwards}',
+    '@keyframes b2LcPsiRing{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(9)}}',
+    /* ELO 배지 — 이름 자막 위쪽 */
+    '#b2-lc-intro-elobadge{position:fixed;left:50%;bottom:11.5vh;transform:translate(-50%,10px);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);padding:3px 14px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-weight:800;font-size:12px;letter-spacing:.3px;backdrop-filter:blur(6px)}',
+    '#b2-lc-intro-elobadge.on{opacity:1;transform:translate(-50%,0)}',
     /* 이름 자막 */
     '#b2-lc-intro-caption{position:fixed;left:50%;bottom:7vh;transform:translate(-50%,18px);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);padding:10px 22px;border-radius:999px;background:rgba(15,23,42,.82);color:#fff;font-weight:800;font-size:clamp(15px,2.4vw,22px);letter-spacing:.5px;box-shadow:0 12px 34px rgba(2,6,23,.5);backdrop-filter:blur(6px)}',
     '#b2-lc-intro-caption.on{opacity:1;transform:translate(-50%,0)}',
     /* 한줄평 자막(이름 자막 바로 아래, 살짝 더 작고 옅게) */
     '#b2-lc-intro-subcap{position:fixed;left:50%;bottom:3.4vh;transform:translate(-50%,14px);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s ease .05s,transform .35s cubic-bezier(.34,1.56,.64,1) .05s;padding:5px 16px;border-radius:999px;background:rgba(15,23,42,.6);color:rgba(255,255,255,.92);font-weight:700;font-size:clamp(12px,1.6vw,15px);letter-spacing:.2px;max-width:88vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(6px)}',
     '#b2-lc-intro-subcap.on{opacity:1;transform:translate(-50%,0)}',
+    /* 한줄평 자막 바로 아래 — 일시정지/종료 컨트롤 */
+    '#b2-lc-intro-controls{position:fixed;left:50%;bottom:1.1vh;transform:translate(-50%,10px);z-index:10000;display:flex;gap:8px;opacity:0;pointer-events:none;transition:opacity .3s ease .1s,transform .35s cubic-bezier(.34,1.56,.64,1) .1s}',
+    '#b2-lc-intro-controls.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}',
+    '#b2-lc-intro-controls button{cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(15,23,42,.62);color:rgba(255,255,255,.95);font-weight:700;font-size:12px;letter-spacing:.2px;padding:6px 14px;border-radius:999px;backdrop-filter:blur(6px);transition:background .15s ease,transform .15s ease}',
+    '#b2-lc-intro-controls button:hover{background:rgba(30,41,59,.82);transform:translateY(-1px)}',
+    '#b2-lc-intro-controls button:active{transform:translateY(0)}',
+    /* 진행도 표시(상단 얇은 바) */
+    '#b2-lc-intro-progress-track{position:fixed;left:0;top:0;width:100%;height:3px;z-index:10000;background:rgba(255,255,255,.12);opacity:0;transition:opacity .3s ease}',
+    '#b2-lc-intro-progress-track.on{opacity:1}',
+    '#b2-lc-intro-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#a78bfa);transition:width .35s ease}',
     '.b2-lc-landed{animation:b2LcLanded .55s cubic-bezier(.34,1.56,.64,1)}',
     '@keyframes b2LcLanded{0%{transform:scale(1.06)}60%{transform:scale(.985)}100%{transform:scale(1)}}'
   ].join('');
@@ -367,6 +387,26 @@ var _b2LineupSpeakTarget = '';   // '' = 라인업 전체, 그 외 = 특정 스�
 // 하므로, 이 값으로 두 진입점을 구분한다.
 var _b2LineupSpeakViaCard = false;
 
+// 닉네임 낭독용 정리 — 화면 표시(p.name)는 그대로 두고 "음성으로 읽을 때"만 사용한다.
+// 1) 선수 정보에 pronounceAs(발음 표기)가 입력돼 있으면 그걸 최우선으로 사용
+//    (영문/숫자 조합 닉네임이 TTS로 이상하게 읽히는 걸 관리자가 직접 교정할 수 있게 함)
+// 2) 없으면 원래 이름에서 언더바/대시("_", "-")를 공백으로 바꾸고("언더바"로 안 읽히게),
+//    이모지를 제거해서 최대한 자연스럽게 읽히도록 정리한다.
+function _b2LineupSpeakName(p) {
+  try {
+    const custom = String((p && p.pronounceAs) || '').trim();
+    if (custom) return custom;
+    let n = String((p && p.name) || '').trim();
+    if (!n) return '이름 미상';
+    n = n
+      .replace(/[_\-]+/g, ' ')
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return n || (p && p.name) || '이름 미상';
+  } catch(e) { return (p && p.name) || '이름 미상'; }
+}
+
 // 화면 카드와 동일한 순서(임원 → 멤버)로 소개 문장을 만든다.
 // onlyName 이 주어지면 해당 스트리머 한 명만 읽는다.
 function _b2LineupBuildSpeakQueue(univName, onlyName) {
@@ -380,7 +420,7 @@ function _b2LineupBuildSpeakQueue(univName, onlyName) {
       // "티어"가 붙어있는 경우) 뒤에 " 티어"를 또 붙이지 않는다 — "0티어 티어"처럼 중복 낭독되는 걸 방지.
       parts.push(/티어$/.test(_tierKo) ? _tierKo : `${_tierKo} 티어`);
     }
-    parts.push(`${p.name || '이름 미상'}`);
+    parts.push(_b2LineupSpeakName(p));
     const rl = raceLabel(p.race);
     if (rl) parts.push(rl);
     const win = Number(p.win||0), loss = Number(p.loss||0);
@@ -510,6 +550,299 @@ function _b2LineupRevealAllIntro() {
 var _b2LineupIntroPlaying = false;
 var _b2LineupIntroPaused = false;
 var _b2LineupIntroToken = 0;
+var _b2LineupIntroHoverPause = false; // true면 "수동 정지"가 아니라 마우스 호버로 인한 자동 일시정지
+
+// 지금 재생 중인 카드 이동 애니메이션들 (Web Animations API). 일시정지 버튼을 누르면
+// 여기 담긴 Animation 객체를 실제로 .pause()/.play() 시켜서 "음성만 멎고 카드는 계속
+// 날아가는" 어색한 상태 없이, 카드 이동 자체도 그 순간 그대로 멈추게 한다.
+var _b2LineupActiveAnims = new Set();
+
+// keyframes/options로 Web Animations API 애니메이션을 시작하고 추적 목록에 등록한다.
+// 시작 시점에 이미 일시정지 상태면 곧바로 pause 시켜서 재생 중 일시정지를 눌렀다가
+// 다음 카드로 넘어가는 경계에서도 자연스럽게 이어지도록 한다.
+function _b2StartAnim(el, keyframes, options) {
+  let anim = null;
+  try { anim = el.animate(keyframes, options); } catch(e) { return null; }
+  _b2LineupActiveAnims.add(anim);
+  const cleanup = () => { _b2LineupActiveAnims.delete(anim); };
+  try { anim.finished.then(cleanup, cleanup); } catch(e) { cleanup(); }
+  if (_b2LineupIntroPaused) { try { anim.pause(); } catch(e){} }
+  return anim;
+}
+
+// 애니메이션이 끝날 때까지 대기(취소돼도 조용히 통과). 일시정지 중이면 Animation 자체가
+// 멈춰있으므로 finished 프라미스도 자연스럽게 재생 재개될 때까지 기다리게 된다.
+async function _b2WaitAnim(anim) {
+  if (!anim) return;
+  try { await anim.finished; } catch(e) {}
+}
+
+/* ── 🎵 대학별 "소개연출" BGM — 대학 정보 수정 패널에서 등록한 유튜브 링크를
+   소개연출 재생 중 배경음악으로 재생한다. 헤더의 전역 BGM 플레이어와는 완전히
+   분리된 별도 인스턴스를 사용해 서로 간섭하지 않는다. ── */
+var _b2LineupBgmPlayer = null;
+var _b2LineupBgmReady = false;
+var _b2LineupBgmApiLoading = false;
+var _b2LineupBgmPendingVid = null;
+var _b2LineupBgmVolume = 50;
+var _b2LineupBgmActive = false;
+
+function _b2LineupBgmExtractId(urlOrId) {
+  const s = String(urlOrId || '').trim();
+  if (!s) return '';
+  if (/^[a-zA-Z0-9_-]{8,15}$/.test(s) && !s.includes('/')) return s;
+  const m1 = s.match(/[?&]v=([a-zA-Z0-9_-]{8,15})/); if (m1) return m1[1];
+  const m2 = s.match(/youtu\.be\/([a-zA-Z0-9_-]{8,15})/); if (m2) return m2[1];
+  const m3 = s.match(/\/shorts\/([a-zA-Z0-9_-]{8,15})/); if (m3) return m3[1];
+  const m4 = s.match(/\/embed\/([a-zA-Z0-9_-]{8,15})/); if (m4) return m4[1];
+  return '';
+}
+
+function _b2LineupBgmLoadApi() {
+  return new Promise((resolve) => {
+    if (window.YT && window.YT.Player) return resolve(true);
+    const check = () => { if (window.YT && window.YT.Player) resolve(true); else setTimeout(check, 150); };
+    if (!_b2LineupBgmApiLoading) {
+      _b2LineupBgmApiLoading = true;
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.async = true;
+        document.head.appendChild(tag);
+      }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { try { prev && prev(); } catch (e) {} resolve(true); };
+    }
+    check();
+  });
+}
+
+function _b2LineupBgmEnsurePlayer() {
+  return _b2LineupBgmLoadApi().then(() => {
+    if (_b2LineupBgmPlayer) return _b2LineupBgmPlayer;
+    let host = document.getElementById('b2LineupBgmHost');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'b2LineupBgmHost';
+      host.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1';
+      document.body.appendChild(host);
+    }
+    _b2LineupBgmPlayer = new YT.Player('b2LineupBgmHost', {
+      width: '1', height: '1', videoId: '',
+      playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => {
+          _b2LineupBgmReady = true;
+          _b2LineupBgmApplyVol();
+          if (_b2LineupBgmPendingVid) {
+            const vid = _b2LineupBgmPendingVid;
+            _b2LineupBgmPendingVid = null;
+            try { _b2LineupBgmPlayer.loadVideoById(vid); } catch (e) {}
+          }
+        },
+        onStateChange: (e) => {
+          // 곡이 끝나면 처음부터 반복 재생 (소개연출이 곡보다 길 수 있으므로)
+          if (e.data === 0) { try { _b2LineupBgmPlayer.seekTo(0); _b2LineupBgmPlayer.playVideo(); } catch (e2) {} }
+        }
+      }
+    });
+    return _b2LineupBgmPlayer;
+  });
+}
+
+function _b2LineupBgmApplyVol() {
+  if (!_b2LineupBgmPlayer) return;
+  try {
+    const v = Math.max(0, Math.min(100, parseInt(_b2LineupBgmVolume, 10) || 0));
+    if (v <= 0) { _b2LineupBgmPlayer.mute && _b2LineupBgmPlayer.mute(); }
+    else { _b2LineupBgmPlayer.unMute && _b2LineupBgmPlayer.unMute(); }
+    _b2LineupBgmPlayer.setVolume(v);
+  } catch (e) {}
+}
+
+// "소개연출" 재생 시작 시 호출 — 현재 대학에 등록된 BGM 링크가 있으면 함께 재생한다.
+function _b2LineupBgmStart(univName) {
+  try {
+    const list = (typeof univCfg !== 'undefined') ? univCfg : [];
+    const u = list.find(x => x.name === univName);
+    const vid = u ? _b2LineupBgmExtractId(u.bgmUrl) : '';
+    _b2LineupBgmActive = false;
+    if (!vid) { _b2LineupBgmSyncControls(); return; }
+    _b2LineupBgmVolume = Number.isFinite(parseInt(u.bgmVolume, 10)) ? Math.max(0, Math.min(100, parseInt(u.bgmVolume, 10))) : 50;
+    _b2LineupBgmActive = true;
+    _b2LineupBgmEnsurePlayer().then(() => {
+      if (!_b2LineupBgmActive) return; // 그 사이 정지된 경우 무시
+      if (_b2LineupBgmReady) { try { _b2LineupBgmPlayer.loadVideoById(vid); _b2LineupBgmApplyVol(); } catch (e) {} }
+      else { _b2LineupBgmPendingVid = vid; }
+    });
+    _b2LineupBgmSyncControls();
+  } catch (e) {}
+}
+
+function _b2LineupBgmSetPaused(paused) {
+  if (!_b2LineupBgmActive || !_b2LineupBgmPlayer) return;
+  try { if (paused) _b2LineupBgmPlayer.pauseVideo(); else _b2LineupBgmPlayer.playVideo(); } catch (e) {}
+}
+
+function _b2LineupBgmStop() {
+  _b2LineupBgmActive = false;
+  _b2LineupBgmPendingVid = null;
+  try { if (_b2LineupBgmPlayer) _b2LineupBgmPlayer.stopVideo(); } catch (e) {}
+  _b2LineupBgmSyncControls();
+}
+
+// 오버레이 컨트롤의 볼륨 슬라이더 조작 시 호출 — 즉시 반영하고, 다음 재생을 위해
+// 해당 대학 설정에도 저장해둔다.
+function _b2LineupBgmSetVolume(v) {
+  _b2LineupBgmVolume = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
+  _b2LineupBgmApplyVol();
+  try {
+    const univName = (typeof _b2LineupUniv !== 'undefined') ? _b2LineupUniv : '';
+    const list = (typeof univCfg !== 'undefined') ? univCfg : [];
+    const u = list.find(x => x.name === univName);
+    if (u && u.bgmUrl) { u.bgmVolume = _b2LineupBgmVolume; try { if (typeof save === 'function') save(); } catch (e) {} }
+  } catch (e) {}
+}
+
+function _b2LineupBgmSyncControls() {
+  const wrap = document.getElementById('b2-lc-intro-bgm-vol-wrap');
+  if (wrap) wrap.style.display = _b2LineupBgmActive ? 'flex' : 'none';
+  const sl = document.getElementById('b2-lc-intro-bgm-vol');
+  if (sl) sl.value = _b2LineupBgmVolume;
+}
+
+try {
+  window._b2LineupBgmSetVolume = _b2LineupBgmSetVolume;
+  // 대학 정보 수정에서 BGM 링크/볼륨을 저장했을 때 호출되는 훅. 현재 재생 중인 세션에는
+  // 영향을 주지 않고, 다음 소개연출 재생부터 새 설정이 적용된다.
+  window._b2LineupBgmSettingsChanged = function () {};
+} catch (e) {}
+
+/* ── 🔊 "소개연출" 효과음 — 별도 음원 파일 없이 Web Audio API로 짧은 톤을 그때그때
+   합성해서 재생한다. TTS 음성과는 별개의 채널이라 서로 방해하지 않는다. ── */
+var _b2IntroSFXCtx = null;
+// 지금 울리고 있는 오실레이터들을 추적한다. 일시정지를 누르면 여기 담긴 소리를 즉시
+// 끊어서, 화면은 멈췄는데 효과음만 계속 흘러나오는 이상한 상태를 막는다.
+var _b2IntroSFXActiveNodes = [];
+function _b2IntroSFXStopAll() {
+  const nodes = _b2IntroSFXActiveNodes.splice(0);
+  nodes.forEach(({ osc, gain, ctx }) => {
+    try {
+      const now = ctx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.03);
+      osc.stop(now + 0.04);
+    } catch (e) {}
+  });
+}
+function _b2IntroSFXGetCtx() {
+  try {
+    if (!_b2IntroSFXCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      _b2IntroSFXCtx = new AC();
+    }
+    if (_b2IntroSFXCtx.state === 'suspended') _b2IntroSFXCtx.resume();
+    return _b2IntroSFXCtx;
+  } catch(e) { return null; }
+}
+function _b2IntroSFXMuted() {
+  try { return localStorage.getItem('su_b2_intro_sfx_muted') === '1'; } catch(e) { return false; }
+}
+function _b2IntroSFXToggleMute() {
+  try { localStorage.setItem('su_b2_intro_sfx_muted', _b2IntroSFXMuted() ? '0' : '1'); } catch(e){}
+  const btn = document.getElementById('b2-lc-intro-mute-btn');
+  if (btn) btn.innerHTML = _b2IntroSFXMuted() ? '🔇' : '🔊';
+}
+// 간단한 tone 하나: freq(Hz), 시작 시각 offset(초), 길이(초), 파형, 최대 볼륨
+function _b2IntroSFXTone(ctx, freq, startAt, dur, type, peak) {
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, startAt);
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(peak != null ? peak : 0.12, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.02);
+    const entry = { osc, gain, ctx };
+    _b2IntroSFXActiveNodes.push(entry);
+    const drop = () => { const i = _b2IntroSFXActiveNodes.indexOf(entry); if (i >= 0) _b2IntroSFXActiveNodes.splice(i, 1); };
+    try { osc.onended = drop; } catch(e) { setTimeout(drop, (dur + 0.05) * 1000); }
+  } catch(e){}
+}
+// 카드가 중앙으로 날아오를 때 "슉" 스윕음 (주파수를 짧게 쓸어올림)
+function _b2IntroSFXWhoosh() {
+  if (_b2IntroSFXMuted()) return;
+  const ctx = _b2IntroSFXGetCtx();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(260, t0);
+    osc.frequency.exponentialRampToValueAtTime(720, t0 + 0.32);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(0.09, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.42);
+    const entry = { osc, gain, ctx };
+    _b2IntroSFXActiveNodes.push(entry);
+    const drop = () => { const i = _b2IntroSFXActiveNodes.indexOf(entry); if (i >= 0) _b2IntroSFXActiveNodes.splice(i, 1); };
+    try { osc.onended = drop; } catch(e) { setTimeout(drop, 470); }
+  } catch(e){}
+}
+// 착지 순간 짧은 chime — 티어 색상이 밝을수록(고티어) 화음을 더 풍성하게 쌓아준다.
+function _b2IntroSFXChime(glowColor) {
+  if (_b2IntroSFXMuted()) return;
+  const ctx = _b2IntroSFXGetCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  // 기본 2음(3도) + 임의로 5도까지 살짝 더해 화려함 차등 (색상별로 결정적이진 않지만
+  // 매번 똑같지 않게 살짝의 변주를 준다)
+  _b2IntroSFXTone(ctx, 880, t0, 0.5, 'triangle', 0.11);
+  _b2IntroSFXTone(ctx, 1108, t0 + 0.03, 0.5, 'triangle', 0.09);
+  _b2IntroSFXTone(ctx, 1320, t0 + 0.06, 0.55, 'sine', 0.07);
+}
+// 라인업 소개 시작할 때 한 번, 짧은 팡파레(오르는 아르페지오)
+function _b2IntroSFXFanfare() {
+  if (_b2IntroSFXMuted()) return;
+  const ctx = _b2IntroSFXGetCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+    _b2IntroSFXTone(ctx, f, t0 + i * 0.09, 0.35, 'triangle', 0.1);
+  });
+}
+try {
+  window._b2IntroSFXToggleMute = _b2IntroSFXToggleMute;
+} catch(e){}
+
+function _b2LineupIntroSetPaused(paused) {
+  _b2LineupIntroPaused = paused;
+  try {
+    if (paused) {
+      if (window.SUTTS && window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) window.SUTTS.pause();
+      // 지금 날아가는 중인 카드가 있으면 그 자리에서 진짜로 멈춘다 (기존엔 TTS만 멎고
+      // 카드 이동 CSS 트랜지션은 끝까지 재생돼버리는 문제가 있었음).
+      _b2LineupActiveAnims.forEach(a => { try { a.pause(); } catch(e){} });
+      // 이미 울리기 시작한 효과음(슉/챠임 등)도 즉시 끊는다 — 화면은 멈췄는데 소리만
+      // 계속 흘러나오던 문제 개선.
+      _b2IntroSFXStopAll();
+    } else {
+      if (window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused()) window.SUTTS.resume();
+      _b2LineupActiveAnims.forEach(a => { try { a.play(); } catch(e){} });
+    }
+    _b2LineupBgmSetPaused(paused);
+  } catch(e){}
+  _b2LineupIntroBtnLabel();
+}
 
 function _b2LineupIntroBtnLabel() {
   const btn = document.getElementById('b2-lineup-intro-btn');
@@ -517,6 +850,9 @@ function _b2LineupIntroBtnLabel() {
   // 재생 중일 때만 별도의 "정지" 버튼을 보여준다 (일시정지/이어보기와는 별개 동작).
   const stopBtn = document.getElementById('b2-lineup-intro-stop-btn');
   if (stopBtn) stopBtn.style.display = _b2LineupIntroPlaying ? 'flex' : 'none';
+  // 화면 중앙 오버레이(한줄평 자막 아래)의 일시정지/완전정지 버튼도 같이 갱신한다.
+  const pauseBtn = document.getElementById('b2-lc-intro-pause-btn');
+  if (pauseBtn) pauseBtn.innerHTML = _b2LineupIntroPaused ? '▶ 이어보기' : '⏸ 일시정지';
 }
 
 // ms만큼 대기하되, 중간에 일시정지 상태면 재생될 때까지 대기를 멈춰둔다.
@@ -547,25 +883,61 @@ function _b2IntroWaitIfPaused(token) {
 function _b2IntroStageOn() {
   try {
     let bd = document.getElementById('b2-lc-intro-backdrop');
-    if (!bd) { bd = document.createElement('div'); bd.id = 'b2-lc-intro-backdrop'; document.body.appendChild(bd); }
+    if (!bd) {
+      bd = document.createElement('div');
+      bd.id = 'b2-lc-intro-backdrop';
+      document.body.appendChild(bd);
+    }
     let beam = document.getElementById('b2-lc-intro-beam');
     if (!beam) { beam = document.createElement('div'); beam.id = 'b2-lc-intro-beam'; document.body.appendChild(beam); }
     let cap = document.getElementById('b2-lc-intro-caption');
     if (!cap) { cap = document.createElement('div'); cap.id = 'b2-lc-intro-caption'; document.body.appendChild(cap); }
     let subcap = document.getElementById('b2-lc-intro-subcap');
     if (!subcap) { subcap = document.createElement('div'); subcap.id = 'b2-lc-intro-subcap'; document.body.appendChild(subcap); }
-    requestAnimationFrame(() => { bd.classList.add('on'); beam.classList.add('on'); });
+    let ctrl = document.getElementById('b2-lc-intro-controls');
+    if (!ctrl) {
+      ctrl = document.createElement('div');
+      ctrl.id = 'b2-lc-intro-controls';
+      ctrl.innerHTML =
+        '<button type="button" id="b2-lc-intro-pause-btn" onclick="_b2LineupPlayIntroShow()">⏸ 일시정지</button>' +
+        '<button type="button" id="b2-lc-intro-stopstage-btn" onclick="_b2LineupStopIntroShow()">⏹ 완전정지</button>' +
+        `<button type="button" id="b2-lc-intro-mute-btn" title="효과음 켜기/끄기" onclick="_b2IntroSFXToggleMute()">${_b2IntroSFXMuted() ? '🔇' : '🔊'}</button>` +
+        `<span id="b2-lc-intro-bgm-vol-wrap" style="display:${_b2LineupBgmActive ? 'flex' : 'none'};align-items:center;gap:6px;padding:0 4px 0 2px">` +
+          `<span style="font-size:12px">🎵</span>` +
+          `<input type="range" id="b2-lc-intro-bgm-vol" min="0" max="100" step="5" value="${_b2LineupBgmVolume}" style="width:70px;accent-color:#60a5fa;cursor:pointer" oninput="_b2LineupBgmSetVolume(this.value)" title="BGM 볼륨">` +
+        '</span>';
+      document.body.appendChild(ctrl);
+    }
+    let ptrack = document.getElementById('b2-lc-intro-progress-track');
+    if (!ptrack) {
+      ptrack = document.createElement('div');
+      ptrack.id = 'b2-lc-intro-progress-track';
+      ptrack.innerHTML = '<div id="b2-lc-intro-progress-bar"></div>';
+      document.body.appendChild(ptrack);
+    }
+    requestAnimationFrame(() => { bd.classList.add('on'); beam.classList.add('on'); ctrl.classList.add('on'); ptrack.classList.add('on'); });
   } catch(e){}
 }
 
 function _b2IntroStageOff() {
   try {
-    ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap'].forEach(id => {
+    ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap','b2-lc-intro-controls','b2-lc-intro-progress-track','b2-lc-intro-elobadge'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.remove('on');
       setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
     });
+  } catch(e){}
+  _b2LineupBgmStop();
+}
+
+// 상단 진행도 바 갱신: current(1-based) / total
+function _b2IntroProgressUpdate(current, total) {
+  try {
+    const bar = document.getElementById('b2-lc-intro-progress-bar');
+    if (!bar) return;
+    const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+    bar.style.width = pct + '%';
   } catch(e){}
 }
 
@@ -596,18 +968,20 @@ function _b2LineupOneLiner(p) {
   try { return String((p && (p.oneLiner || p.oneline)) || '').trim(); } catch(e) { return ''; }
 }
 
-// 착지 순간 사방으로 튀는 반짝이 파티클 (color: 해당 선수 티어 색상)
-function _b2IntroSparkBurst(rect, color) {
+// 착지 순간 사방으로 튀는 반짝이 파티클 (color: 해당 선수 티어 색상, race: 종족별 파티클 모양/개수 차등)
+function _b2IntroSparkBurst(rect, color, race) {
   try {
     if (!rect) return;
     const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-    const n = 10;
+    // 종족별 연출 차등: 저그(유기체 느낌, 많고 작게) / 테란(금속 파편, 적고 각지게) / 프로토스(사이오닉, 파티클 대신 링 위주)
+    const n = race === 'Z' ? 16 : (race === 'T' ? 8 : 10);
+    const raceCls = race === 'Z' ? ' race-z' : (race === 'T' ? ' race-t' : (race === 'P' ? ' race-p' : ''));
     for (let i = 0; i < n; i++) {
       const ang = (Math.PI * 2 * i / n) + (Math.random() * 0.4 - 0.2);
-      const dist = 46 + Math.random() * 34;
+      const dist = (race === 'Z' ? 34 : 46) + Math.random() * 34;
       const sx = Math.cos(ang) * dist, sy = Math.sin(ang) * dist;
       const sp = document.createElement('div');
-      sp.className = 'b2-lc-intro-spark';
+      sp.className = 'b2-lc-intro-spark' + raceCls;
       sp.style.setProperty('--sx', `${sx}px`);
       sp.style.setProperty('--sy', `${sy}px`);
       sp.style.setProperty('--intro-glow', color || '#60a5fa');
@@ -616,6 +990,50 @@ function _b2IntroSparkBurst(rect, color) {
       document.body.appendChild(sp);
       setTimeout(() => { try { sp.remove(); } catch(e){} }, 700);
     }
+    // 프로토스: 파티클 대신(+함께) 확장되는 사이오닉 링을 하나 더 띄운다.
+    if (race === 'P') {
+      const ring = document.createElement('div');
+      ring.className = 'b2-lc-intro-psiring';
+      ring.style.setProperty('--intro-glow', color || '#a78bfa');
+      ring.style.left = `${cx}px`;
+      ring.style.top = `${cy}px`;
+      document.body.appendChild(ring);
+      setTimeout(() => { try { ring.remove(); } catch(e){} }, 900);
+    }
+  } catch(e){}
+}
+
+// 최근 ELO 변동(최근 30일 누적) — history[].eloDelta 합산. 데이터/함수가 없으면 조용히 스킵.
+function _b2IntroEloDelta(p) {
+  try {
+    if (!p || p.elo == null || typeof _statsAllHist !== 'function') return null;
+    const hist = _statsAllHist(p) || [];
+    const now = new Date();
+    const from = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+    const fromStr = from.toISOString().slice(0, 10);
+    const delta = hist.filter(h => h && h.date && h.date >= fromStr && h.eloDelta != null)
+      .reduce((s, h) => s + (Number(h.eloDelta) || 0), 0);
+    return { elo: Number(p.elo), delta };
+  } catch(e) { return null; }
+}
+
+// ELO 배지 표시 (이름 자막 위쪽에 짧게 붙는다). info: {elo, delta}
+function _b2IntroEloBadge(info) {
+  try {
+    let b = document.getElementById('b2-lc-intro-elobadge');
+    if (!info) { if (b) b.classList.remove('on'); return; }
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'b2-lc-intro-elobadge';
+      document.body.appendChild(b);
+    }
+    const d = info.delta || 0;
+    const sign = d > 0 ? '+' : '';
+    const dHtml = d !== 0
+      ? ` <span style="color:${d > 0 ? '#4ade80' : '#f87171'}">(${sign}${d})</span>`
+      : '';
+    b.innerHTML = `ELO ${info.elo}${dHtml}`;
+    b.classList.add('on');
   } catch(e){}
 }
 
@@ -634,7 +1052,7 @@ async function _b2IntroSpeak(text, token) {
 
 // 카드 하나: 중앙에 크게 등장(플립+광택) → 소개 음성 → 자기 자리로 이동 → 착지 파장
 // glowColor: 해당 선수의 티어 색상 — 발광 펄스/파장/스파클 색을 선수마다 다르게 보여준다.
-function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
+function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race) {
   return new Promise(async (resolve) => {
     try {
       if (!el || el.tagName === 'TR') {
@@ -653,12 +1071,22 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
       clone.classList.remove('b2-lc-intro-dim');
       clone.classList.add('b2-lc-intro-clone');
       clone.style.setProperty('--intro-glow', glowColor || '#60a5fa');
+      // "프로필 사진을 더 크게" — 통계형(stat) 카드는 사진 아래 승/패 그리드가 카드 높이의
+      // 상당 부분을 차지해서, 인트로에서만큼은 그 그리드를 숨기고 사진 영역을 카드 전체로
+      // 채워서 인물이 화면을 압도하도록 한다. (기본형 카드는 이미 사진이 카드 전체를 채움)
+      try {
+        const grid = clone.querySelector('.b2-lc3-grid');
+        const photoBox = clone.querySelector('.b2-lc3-photo');
+        if (grid) grid.style.display = 'none';
+        if (photoBox) { photoBox.style.aspectRatio = 'auto'; photoBox.style.height = '100%'; }
+      } catch(e){}
       const cx = (window.innerWidth / 2) - (r.left + r.width / 2);
       const cy = (window.innerHeight / 2) - (r.top + r.height / 2);
-      const scale = Math.max(1.3, Math.min(2.2,
-        Math.min((window.innerHeight * 0.62) / Math.max(1, r.height),
-                 (window.innerWidth * 0.8) / Math.max(1, r.width))));
-      clone.style.cssText += `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;z-index:9998;pointer-events:none;opacity:0;transition:none;transform-style:preserve-3d;perspective:900px;transform:translate(${cx}px,${cy}px) scale(${scale * 0.6}) rotateY(-70deg);filter:drop-shadow(0 24px 60px rgba(15,23,42,.45))`;
+      // 화면을 더 넉넉하게 채우도록 확대 비율/최대치 상향 (기존 1.3~2.2배 → 1.6~2.8배)
+      const scale = Math.max(1.6, Math.min(2.8,
+        Math.min((window.innerHeight * 0.74) / Math.max(1, r.height),
+                 (window.innerWidth * 0.92) / Math.max(1, r.width))));
+      clone.style.cssText += `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;z-index:9998;pointer-events:none;opacity:0;transform-style:preserve-3d;perspective:900px;filter:drop-shadow(0 24px 60px rgba(15,23,42,.45))`;
       document.body.appendChild(clone);
 
       // 광택 스윕 오버레이 (복제 카드 위치에 맞춰 얹는다)
@@ -667,16 +1095,25 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
       const sw = r.width * scale, sh = r.height * scale;
       shine.style.cssText = `left:${(window.innerWidth - sw) / 2}px;top:${(window.innerHeight - sh) / 2}px;width:${sw}px;height:${sh}px`;
 
-      requestAnimationFrame(() => {
-        clone.style.transition = 'opacity .3s ease, transform .55s cubic-bezier(.22,1.4,.36,1)';
-        clone.style.opacity = '1';
-        clone.style.transform = `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)`;
-      });
+      // 등장: Web Animations API로 재생해서 일시정지 버튼을 누르면 카드 이동도
+      // 그 순간 진짜로 멈추게 한다 (기존 CSS transition은 pause 불가능했음).
+      _b2IntroSFXWhoosh();
+      const flyInMove = _b2StartAnim(clone, [
+        { transform: `translate(${cx}px,${cy}px) scale(${scale * 0.6}) rotateY(-70deg)` },
+        { transform: `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)` }
+      ], { duration: 550, easing: 'cubic-bezier(.22,1.4,.36,1)', fill: 'forwards' });
+      _b2StartAnim(clone, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease', fill: 'forwards' });
       setTimeout(() => { try { document.body.appendChild(shine); } catch(e){} }, 260);
       setTimeout(() => { try { shine.remove(); } catch(e){} }, 1600);
 
-      await _b2IntroWait(620, token);
+      await _b2WaitAnim(flyInMove);
       if (token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
+
+      // 화면 중앙에 도착한 순간 한 번 더 스파클 (착지 때와 별개로, 등장 자체를 더 화려하게)
+      try {
+        const cr = clone.getBoundingClientRect();
+        _b2IntroSparkBurst(cr, glowColor, race);
+      } catch(e){}
 
       // 중앙에서 소개 음성 재생 (읽는 동안 은은한 발광 펄스)
       clone.classList.add('pulse');
@@ -688,15 +1125,17 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
       }
       clone.classList.remove('pulse');
 
-      // 자기 자리로 날아가 안착
-      clone.style.transition = 'transform .62s cubic-bezier(.5,.02,.2,1), filter .62s ease';
-      clone.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
-      clone.style.filter = 'drop-shadow(0 6px 14px rgba(15,23,42,.18))';
-      await _b2IntroWait(620, token);
+      // 자기 자리로 날아가 안착 (역시 WAAPI — pause 중엔 진짜로 멈춘 채 대기)
+      const flyBackMove = _b2StartAnim(clone, [
+        { transform: `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)`, filter: 'drop-shadow(0 22px 55px rgba(15,23,42,.5))' },
+        { transform: 'translate(0,0) scale(1) rotateY(0deg)', filter: 'drop-shadow(0 6px 14px rgba(15,23,42,.18))' }
+      ], { duration: 620, easing: 'cubic-bezier(.5,.02,.2,1)', fill: 'forwards' });
+      await _b2WaitAnim(flyBackMove);
+      if (token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
 
       _b2LineupRevealCard(el);
       try { clone.remove(); } catch(e){}
-      // 착지 파장 + 스파클 + 카드 바운스
+      // 착지 파장 + 스파클 + 카드 바운스 + 착지 효과음
       try {
         const rr = el.getBoundingClientRect();
         const ripple = document.createElement('div');
@@ -705,7 +1144,8 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
         ripple.style.cssText += `left:${rr.left}px;top:${rr.top}px;width:${rr.width}px;height:${rr.height}px`;
         document.body.appendChild(ripple);
         setTimeout(() => { try { ripple.remove(); } catch(e){} }, 720);
-        _b2IntroSparkBurst(rr, glowColor);
+        _b2IntroSparkBurst(rr, glowColor, race);
+        _b2IntroSFXChime(glowColor);
         el.classList.add('b2-lc-landed');
         setTimeout(() => { try { el.classList.remove('b2-lc-landed'); } catch(e){} }, 600);
       } catch(e){}
@@ -724,7 +1164,7 @@ function _b2LineupBindIntroClickStop() {
   _b2LineupIntroClickStop = function(ev) {
     try {
       const t = ev && ev.target;
-      if (t && t.closest && t.closest('#b2-lineup-intro-btn,#b2-lineup-intro-stop-btn')) return;
+      if (t && t.closest && t.closest('#b2-lineup-intro-btn,#b2-lineup-intro-stop-btn,#b2-lc-intro-controls')) return;
     } catch(e){}
     _b2LineupStopIntroShow();
   };
@@ -743,7 +1183,10 @@ function _b2LineupStopIntroShow() {
   _b2LineupIntroToken++;
   _b2LineupIntroPlaying = false;
   _b2LineupIntroPaused = false;
+  _b2LineupIntroHoverPause = false;
   try { if (window.SUTTS) window.SUTTS.stop(); else window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+  _b2LineupActiveAnims.forEach(a => { try { a.cancel(); } catch(e){} });
+  _b2LineupActiveAnims.clear();
   document.querySelectorAll('.b2-lc-intro-clone,.b2-lc-intro-shine,.b2-lc-intro-ripple,.b2-lc-intro-spark').forEach(el => el.remove());
   _b2IntroStageOff();
   _b2LineupRevealAllIntro();
@@ -754,14 +1197,9 @@ async function _b2LineupPlayIntroShow() {
   // 재생 중 다시 누르면: 일시정지 ↔ 이어보기 토글.
   // (완전 정지는 대학/탭 이동 시 _b2LineupStopIntroShow가 별도로 처리)
   if (_b2LineupIntroPlaying) {
-    if (_b2LineupIntroPaused) {
-      _b2LineupIntroPaused = false;
-      try { if (window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused()) window.SUTTS.resume(); } catch(e){}
-    } else {
-      _b2LineupIntroPaused = true;
-      try { if (window.SUTTS && window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) window.SUTTS.pause(); } catch(e){}
-    }
-    _b2LineupIntroBtnLabel();
+    // 버튼으로 수동 토글하면 호버-자동일시정지 상태는 해제하고, 수동 상태를 우선한다.
+    _b2LineupIntroHoverPause = false;
+    _b2LineupIntroSetPaused(!_b2LineupIntroPaused);
     return;
   }
   const els = Array.from(document.querySelectorAll('[data-b2lc-player]'));
@@ -769,7 +1207,7 @@ async function _b2LineupPlayIntroShow() {
 
   // 소개 멘트: 음성듣기와 같은 문장 생성기를 재사용해 이름별로 매칭한다.
   // 여기에 선수 데이터 기반 "한줄평"과 티어 색상(발광 효과용)도 함께 준비한다.
-  let intro = '', outro = '', lineMap = {}, oneLinerMap = {}, glowMap = {};
+  let intro = '', outro = '', lineMap = {}, oneLinerMap = {}, glowMap = {}, raceMap = {}, eloMap = {};
   try {
     const q = _b2LineupBuildSpeakQueue(_b2LineupUniv) || [];
     if (q.length) { intro = q[0].text || ''; outro = q[q.length - 1].text || ''; }
@@ -784,6 +1222,8 @@ async function _b2LineupPlayIntroShow() {
         oneLinerMap[name] = oneLiner;
         if (oneLiner) lineMap[name] = `${it.text}. ${oneLiner}`;
         glowMap[name] = (p.tier && typeof getTierBtnColor === 'function') ? (getTierBtnColor(p.tier) || '#60a5fa') : '#60a5fa';
+        raceMap[name] = p.race || '';
+        eloMap[name] = _b2IntroEloDelta(p);
       }
     });
   } catch(e){}
@@ -793,35 +1233,46 @@ async function _b2LineupPlayIntroShow() {
   _b2LineupIntroPaused = false;
   _b2LineupIntroBtnLabel();
   _b2LineupBindIntroClickStop();
+  _b2LineupBgmStart(_b2LineupUniv);
   _b2IntroStageOn();
   _b2LineupPrepareIntroHide();
+  _b2IntroSFXFanfare();
 
-  if (!(await _b2IntroWait(320, token))) { _b2IntroStageOff(); return; }
+  // 버튼을 누르면 곧바로 시작한다 (예전엔 320ms 고정 대기가 있어 살짝 밀리는 느낌이 있었음).
+  if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
   if (intro) {
     _b2IntroCaption(intro);
     if (!(await _b2IntroSpeak(intro, token))) { _b2IntroStageOff(); return; }
   }
 
+  let _introIdx = 0;
   for (const el of els) {
     if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
     const name = el.getAttribute('data-b2lc-player') || '';
+    _introIdx++;
+    _b2IntroProgressUpdate(_introIdx, els.length);
     _b2IntroCaption(name);
     _b2IntroSubCaption(oneLinerMap[name] || '');
-    await _b2LineupIntroFlyCard(el, token, lineMap[name] || '', glowMap[name]);
+    _b2IntroEloBadge(eloMap[name]);
+    await _b2LineupIntroFlyCard(el, token, lineMap[name] || '', glowMap[name], raceMap[name]);
     if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
     _b2LineupApplySpotlightDim(el);
     _b2IntroSubCaption('');
+    _b2IntroEloBadge(null);
     if (!(await _b2IntroWait(200, token))) { _b2IntroStageOff(); return; }
   }
 
   if (outro) {
     _b2IntroCaption(outro);
     _b2IntroSubCaption('');
+    _b2IntroEloBadge(null);
+    _b2IntroProgressUpdate(els.length, els.length);
     _b2LineupClearSpotlightDim();
     await _b2IntroSpeak(outro, token);
   }
   if (token !== _b2LineupIntroToken) return;
   _b2IntroCaption('');
+  _b2IntroEloBadge(null);
   _b2IntroSubCaption('');
   _b2IntroStageOff();
   _b2LineupClearSpotlightDim();
