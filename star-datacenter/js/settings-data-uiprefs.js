@@ -7,20 +7,35 @@
 window.cfgSetUiScalePct = function(device, val){
   try{
     const pct = Math.max(80, Math.min(140, parseInt(val,10) || 100));
-    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : 'su_ui_scale_mb_pct';
+    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : device==='mb' ? 'su_ui_scale_mb_pct' : 'su_ui_scale_pct';
     localStorage.setItem(key, String(pct));
+    if(key === 'su_ui_scale_pct'){
+      localStorage.setItem('su_ui_scale_pc_pct', String(pct));
+      localStorage.setItem('su_ui_scale_tb_pct', String(pct));
+      localStorage.setItem('su_ui_scale_mb_pct', String(pct));
+    }
     const lbl = document.getElementById('cfg-uiscale-'+device+'-v');
     if(lbl) lbl.textContent = pct+'%';
   }catch(e){}
-  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
   try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetUiScalePct = function(){
   try{
-    ['su_ui_scale_pc_pct','su_ui_scale_tb_pct','su_ui_scale_mb_pct','su_ui_scale_pct'].forEach(k=>localStorage.removeItem(k));
+    ['su_ui_scale_pct','su_ui_scale_pc_pct','su_ui_scale_tb_pct','su_ui_scale_mb_pct'].forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{
+    [['cfg-uiscale-pc','100'],['cfg-uiscale-tb','100'],['cfg-uiscale-mb','100']].forEach(([id,v])=>{ const r=document.getElementById(id); if(r) r.value=v; });
+  }catch(e){}
+  try{
+    [['cfg-uiscale-pc-v','100%'],['cfg-uiscale-tb-v','100%'],['cfg-uiscale-mb-v','100%']].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.textContent=v; });
+  }catch(e){}
+  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 window.cfgSetTopTabUiSettings = function(){
@@ -30,18 +45,30 @@ window.cfgSetTopTabUiSettings = function(){
     const align = (document.getElementById('cfg-top-tab-align-mb')?.value || 'start').trim();
     localStorage.setItem('su_top_tab_font_mb_px', String(Math.max(8,Math.min(16,font))));
     localStorage.setItem('su_top_tab_gap_mb_px', String(Math.max(0,Math.min(16,gap))));
-    localStorage.setItem('su_top_tab_align_mb', align);
+    localStorage.setItem('su_top_tab_align_mb', align === 'center' ? 'center' : 'start');
   }catch(e){}
-  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{ if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof window._centerActiveTopTab === 'function') window._centerActiveTopTab(false); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
   try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetTopTabUiSettings = function(){
   try{
     ['su_top_tab_font_mb_px','su_top_tab_gap_mb_px','su_top_tab_align_mb'].forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{
+    const f=document.getElementById('cfg-top-tab-font-mb'); if(f) f.value='10';
+    const fv=document.getElementById('cfg-top-tab-font-mb-v'); if(fv) fv.textContent='10px';
+    const g=document.getElementById('cfg-top-tab-gap-mb'); if(g) g.value='2';
+    const gv=document.getElementById('cfg-top-tab-gap-mb-v'); if(gv) gv.textContent='2px';
+    const a=document.getElementById('cfg-top-tab-align-mb'); if(a) a.value='start';
+  }catch(e){}
+  try{ if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof window._centerActiveTopTab === 'function') window._centerActiveTopTab(false); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 window.cfgSetUiBtnStyleSettings = function(){
@@ -54,39 +81,70 @@ window.cfgSetUiBtnStyleSettings = function(){
     localStorage.setItem('su_pill_r', String(Math.max(12,Math.min(28,pr))));
   }catch(e){}
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{
+    const a=document.getElementById('cfg-btnscale-v'); if(a) a.textContent=pct+'%';
+    const b=document.getElementById('cfg-btnr-v'); if(b) b.textContent=br+'px';
+    const c=document.getElementById('cfg-pillr-v'); if(c) c.textContent=pr+'px';
+  }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
   try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetUiBtnStyleSettings = function(){
   try{
     ['su_btn_scale_pct','su_btn_r','su_pill_r'].forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
+  try{
+    const s=document.getElementById('cfg-btnscale'); if(s) s.value='100';
+    const r=document.getElementById('cfg-btnr'); if(r) r.value='8';
+    const p=document.getElementById('cfg-pillr'); if(p) p.value='20';
+  }catch(e){}
+  window.cfgSetUiBtnStyleSettings();
 };
 
 window.cfgSetAppFontScalePct = function(device, val){
   try{
     const pct = Math.max(85, Math.min(130, parseInt(val,10) || 100));
-    const key = device==='pc' ? 'su_app_font_scale_pc_pct' : device==='tb' ? 'su_app_font_scale_tb_pct' : 'su_app_font_scale_mb_pct';
+    const key = device==='pc' ? 'su_app_font_scale_pc_pct' : device==='tb' ? 'su_app_font_scale_tb_pct' : device==='mb' ? 'su_app_font_scale_mb_pct' : 'su_app_font_scale_pct';
     localStorage.setItem(key, String(pct));
+    // 통합 키(su_app_font_scale_pct)로 설정된 경우 pc/tb/mb에도 동일하게 미러링
+    if(key === 'su_app_font_scale_pct'){
+      localStorage.setItem('su_app_font_scale_pc_pct', String(pct));
+      localStorage.setItem('su_app_font_scale_tb_pct', String(pct));
+      localStorage.setItem('su_app_font_scale_mb_pct', String(pct));
+    }
     const lbl = document.getElementById('cfg-appfont-scale-'+device+'-v');
     if(lbl) lbl.textContent = pct+'%';
   }catch(e){}
-  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
+  try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
   try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetAppFontScalePct = function(){
   try{
-    ['su_app_font_scale_pc_pct','su_app_font_scale_tb_pct','su_app_font_scale_mb_pct','su_app_font_scale_pct'].forEach(k=>localStorage.removeItem(k));
+    ['su_app_font_scale_pct','su_app_font_scale_pc_pct','su_app_font_scale_tb_pct','su_app_font_scale_mb_pct'].forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
+  try{
+    [['cfg-appfont-scale-pc','100'],['cfg-appfont-scale-tb','100'],['cfg-appfont-scale-mb','100']].forEach(([id,v])=>{ const r=document.getElementById(id); if(r) r.value=v; });
+  }catch(e){}
+  try{
+    [['cfg-appfont-scale-pc-v','100%'],['cfg-appfont-scale-tb-v','100%'],['cfg-appfont-scale-mb-v','100%']].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.textContent=v; });
+  }catch(e){}
+  try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 // font-family 선택 드롭다운 → font-family 입력칸에 반영 후 저장
 window.cfgApplyFontFamilyChoice = function(val){
   try{
     if(!val) return;
+    const presetSel = document.getElementById('cfg-appfont-preset');
+    if(presetSel) presetSel.value = 'custom';
+  }catch(e){}
+  try{
     const el = document.getElementById('cfg-appfont-family');
     if(el) el.value = val;
   }catch(e){}

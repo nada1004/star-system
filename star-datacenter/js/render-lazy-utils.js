@@ -271,7 +271,6 @@ async function _ensureCloudBoardLoaded(){
 }
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
-  await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
   await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
   await _loadScriptOnce('js/settings-base-core.js?v=20260730-split4');
@@ -287,14 +286,16 @@ async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings-cfg-univ-order.js?v=20260730-split18');
   await _loadScriptOnce('js/settings-cfg-qa-dryrun.js?v=20260730-split18');
   await _loadScriptOnce('js/settings-cfg-search.js?v=20260730-split18');
-  await _loadScriptOnce('js/settings-cfg-gistsync.js?v=20260730-split18');
-  await _loadScriptOnce('js/settings-cfg-legacy-openep.js?v=20260730-split18');
   await _loadScriptOnce('js/settings-cfg-misc.js?v=20260717-ds01');
   await _loadScriptOnce('js/settings-render-sec1.js?v=20260730-split1');
   await _loadScriptOnce('js/settings-render-sec2.js?v=20260730-split1');
   await _loadScriptOnce('js/settings-render-sec3.js?v=20260730-split1');
   await _loadScriptOnce('js/settings-render-sec4.js?v=20260730-split1');
-  await _loadScriptOnce('js/settings-render.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-render.js?v=20260730-split1');
+  await _loadScriptOnce('js/settings-data-gistsync.js?v=20260813-split1');
+  await _loadScriptOnce('js/settings-data-images.js?v=20260813-split1');
+  await _loadScriptOnce('js/settings-data-bulkops.js?v=20260813-split1');
+  await _loadScriptOnce('js/settings-data-uiprefs.js?v=20260813-split1');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{

@@ -76,7 +76,6 @@ const CORE_FILES = [
   'js/tier-tour-cfg-bulkops.js',
   'js/tier-tour-misc.js',
   'js/settings/font-controls.js',
-  'js/settings/ui-scale-controls.js',
   'js/settings-base-core.js',
   'js/settings-b2img.js',
   'js/settings-cfg-menu.js',
@@ -90,8 +89,6 @@ const CORE_FILES = [
   'js/settings-cfg-univ-order.js',
   'js/settings-cfg-qa-dryrun.js',
   'js/settings-cfg-search.js',
-  'js/settings-cfg-gistsync.js',
-  'js/settings-cfg-legacy-openep.js',
   'js/settings-cfg-misc.js',
   'js/settings-render-reccard.js',
   'js/settings-render-tourneycard.js',
@@ -422,7 +419,10 @@ const LAZY_CHUNKS = {
  * ⚠️ 캐스케이드(적용 순서)가 곧 우선순위이므로 반드시 index.html에 등장하는 순서를 그대로 유지한다.
  */
 const CSS_FILES = [
-  'css/style.css',
+  'css/style-core.css',
+  'css/style-popups.css',
+  'css/style-cards.css',
+  'css/style-modes.css',
   'css/ui-improvements.css',
   'css/design-improvements.css',
   'css/ui-fix-empty-classes.css',

@@ -57,10 +57,22 @@
 // ─────────────────────────────────────────────────────────────
 window.cfgSetAppFontSettings = function(){
   try{
-    const preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
+    let preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
     const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
-    const fam    = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-    const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '').trim();
+    let fam = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+    // CSS 직접 입력은 줄바꿈/앞뒤 공백이 의미 있을 수 있어 trim 하지 않음
+    const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '');
+    // 프리셋 드롭다운에서 "custom:폰트명" 형태(저장된 커스텀 폰트)를 선택한 경우
+    // → preset은 'custom'으로 정규화하고, 실제 font-family 값을 채워준다.
+    if(/^custom:/.test(preset)){
+      const name = preset.slice('custom:'.length).trim();
+      preset = 'custom';
+      if(name){
+        fam = `${name}, "Noto Sans KR", sans-serif`;
+        const inp = document.getElementById('cfg-appfont-family');
+        if(inp) inp.value = fam;
+      }
+    }
     localStorage.setItem('su_app_font_preset', preset);
     localStorage.setItem('su_app_font_css', cssUrl);
     localStorage.setItem('su_app_font_family', fam);
@@ -68,7 +80,10 @@ window.cfgSetAppFontSettings = function(){
   }catch(e){}
   try{ if(typeof save === 'function') save(); }catch(e){}
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
   try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 window._applyAppFont = function(){

@@ -3,34 +3,9 @@
 // - settings.js에서 분리
 // ─────────────────────────────────────────────────────────────
 
-window.cfgSetAppFontSettings = function(){
-  let preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
-  const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
-  let fam      = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-  // CSS 직접 입력은 줄바꿈/앞뒤 공백이 의미 있을 수 있어 trim 하지 않음
-  const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '');
-  // 프리셋 드롭다운에서 "커스텀:FontName" 형태로 선택한 경우
-  try{
-    if(/^custom:/.test(preset)){
-      const name = preset.slice('custom:'.length).trim();
-      preset = 'custom';
-      if(name){
-        fam = `${name}, "Noto Sans KR", sans-serif`;
-        const inp = document.getElementById('cfg-appfont-family');
-        if(inp) inp.value = fam;
-      }
-    }
-  }catch(e){}
-  try{ localStorage.setItem('su_app_font_preset', preset); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css', cssUrl); }catch(e){}
-  try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css_text', cssTxt); }catch(e){}
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
-};
+// cfgSetAppFontSettings 정의는 js/init-theme-apply.js로 이전됨
+// (index.html 로드 순서상 이 파일보다 나중에 로드되어 실제로는 그쪽 정의가 항상 적용되므로,
+//  두 곳에 중복 정의해 혼동을 만들지 않도록 여기서는 제거함. _applyAppFont와 함께 관리)
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 전역 폰트 크기 — 기기별 분리
