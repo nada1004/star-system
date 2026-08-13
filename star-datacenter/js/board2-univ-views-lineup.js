@@ -322,8 +322,41 @@ function _b2LineupView() {
   s.textContent=[
     '.b2-lc-speaking{outline:3px solid #2563eb!important;outline-offset:3px;box-shadow:0 0 0 7px rgba(37,99,235,.22),0 10px 26px rgba(15,23,42,.28)!important;transition:outline .18s ease,box-shadow .18s ease}',
     '.b2-lc4 tbody tr.b2-lc-speaking td{background:rgba(37,99,235,.20)!important}',
-    ':is(body.dark,html.dark) .b2-lc4 tbody tr.b2-lc-speaking td{background:rgba(96,165,250,.28)!important}'
+    ':is(body.dark,html.dark) .b2-lc4 tbody tr.b2-lc-speaking td{background:rgba(96,165,250,.28)!important}',
+    /* "소개 연출" 스포트라이트: 이미 등장한 카드 중 지금 소개 중이 아닌 카드는 어둡게+블러 처리해서
+       무대 조명이 현재 카드에만 떨어지는 느낌을 준다. (b2-lc-speaking과 별개로 토글) */
+    '.b2-lc-intro-dim{opacity:.4!important;filter:blur(1.5px) saturate(.65)!important;transform:scale(.96)!important;transition:opacity .4s ease,filter .4s ease,transform .4s ease!important}',
+    /* 무대 암전 배경 */
+    '#b2-lc-intro-backdrop{position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:0;transition:opacity .45s ease;background:radial-gradient(circle at 50% 45%,rgba(15,23,42,.28) 0%,rgba(15,23,42,.72) 62%,rgba(2,6,23,.88) 100%)}',
+    '#b2-lc-intro-backdrop.on{opacity:1}',
+    /* 중앙 스포트라이트 빔(살짝 흔들리는 조명) */
+    '#b2-lc-intro-beam{position:fixed;left:50%;top:-12vh;width:52vw;height:120vh;margin-left:-26vw;z-index:9991;pointer-events:none;opacity:0;transition:opacity .5s ease;background:linear-gradient(to bottom,rgba(255,255,255,.20),rgba(255,255,255,.06) 45%,rgba(255,255,255,0) 78%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);filter:blur(6px);animation:b2LcBeamSway 4.5s ease-in-out infinite alternate}',
+    '#b2-lc-intro-beam.on{opacity:1}',
+    '@keyframes b2LcBeamSway{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}',
+    /* 복제 카드 등장/발광 (색은 --intro-glow로 선수 티어 색상에 맞춰 동적으로 바뀜) */
+    '.b2-lc-intro-clone{border-radius:14px;will-change:transform,opacity,filter;--intro-glow:#60a5fa}',
+    '.b2-lc-intro-clone.pulse{animation:b2LcClonePulse 1.5s ease-in-out infinite}',
+    '@keyframes b2LcClonePulse{0%,100%{filter:drop-shadow(0 22px 55px rgba(15,23,42,.5)) drop-shadow(0 0 0 transparent)}50%{filter:drop-shadow(0 22px 55px rgba(15,23,42,.5)) drop-shadow(0 0 30px var(--intro-glow,#60a5fa))}}',
+    /* 카드 위를 스치는 광택 */
+    '.b2-lc-intro-shine{position:fixed;z-index:9999;pointer-events:none;overflow:hidden;border-radius:14px}',
+    '.b2-lc-intro-shine::after{content:"";position:absolute;top:-60%;left:-40%;width:40%;height:220%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:rotate(12deg);animation:b2LcShine 1.05s cubic-bezier(.45,.05,.3,1) .12s 1 both}',
+    '@keyframes b2LcShine{from{left:-45%}to{left:115%}}',
+    /* 착지 파장 (선수 티어 색상 테두리) */
+    '.b2-lc-intro-ripple{position:fixed;z-index:9997;pointer-events:none;border-radius:16px;border:2px solid var(--intro-glow,rgba(96,165,250,.85));animation:b2LcRipple .7s ease-out forwards}',
+    '@keyframes b2LcRipple{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}',
+    /* 착지 순간 사방으로 튀는 반짝이(스파클) 파티클 */
+    '.b2-lc-intro-spark{position:fixed;z-index:9998;pointer-events:none;width:7px;height:7px;border-radius:50%;background:var(--intro-glow,#60a5fa);box-shadow:0 0 8px 1px var(--intro-glow,#60a5fa);animation:b2LcSpark .65s cubic-bezier(.16,.8,.3,1) forwards}',
+    '@keyframes b2LcSpark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx,0),var(--sy,0)) scale(.3)}}',
+    /* 이름 자막 */
+    '#b2-lc-intro-caption{position:fixed;left:50%;bottom:7vh;transform:translate(-50%,18px);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);padding:10px 22px;border-radius:999px;background:rgba(15,23,42,.82);color:#fff;font-weight:800;font-size:clamp(15px,2.4vw,22px);letter-spacing:.5px;box-shadow:0 12px 34px rgba(2,6,23,.5);backdrop-filter:blur(6px)}',
+    '#b2-lc-intro-caption.on{opacity:1;transform:translate(-50%,0)}',
+    /* 한줄평 자막(이름 자막 바로 아래, 살짝 더 작고 옅게) */
+    '#b2-lc-intro-subcap{position:fixed;left:50%;bottom:3.4vh;transform:translate(-50%,14px);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s ease .05s,transform .35s cubic-bezier(.34,1.56,.64,1) .05s;padding:5px 16px;border-radius:999px;background:rgba(15,23,42,.6);color:rgba(255,255,255,.92);font-weight:700;font-size:clamp(12px,1.6vw,15px);letter-spacing:.2px;max-width:88vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(6px)}',
+    '#b2-lc-intro-subcap.on{opacity:1;transform:translate(-50%,0)}',
+    '.b2-lc-landed{animation:b2LcLanded .55s cubic-bezier(.34,1.56,.64,1)}',
+    '@keyframes b2LcLanded{0%{transform:scale(1.06)}60%{transform:scale(.985)}100%{transform:scale(1)}}'
   ].join('');
+
   document.head.appendChild(s);
 })();
 
@@ -341,7 +374,12 @@ function _b2LineupBuildSpeakQueue(univName, onlyName) {
   const raceLabel = (r) => ({ T:'테란', P:'프로토스', Z:'저그' }[r] || '');
   const describe = (p) => {
     const parts = [];
-    if (p.tier) parts.push(`${p.tier} 티어`);
+    if (p.tier) {
+      const _tierKo = (window.SUTTS && window.SUTTS.tierLabel) ? window.SUTTS.tierLabel(p.tier) : p.tier;
+      // _tierKo가 이미 "…티어"로 끝나면(매핑된 G/K/JA/J/S 결과이거나, '0티어'처럼 원래 값 자체에
+      // "티어"가 붙어있는 경우) 뒤에 " 티어"를 또 붙이지 않는다 — "0티어 티어"처럼 중복 낭독되는 걸 방지.
+      parts.push(/티어$/.test(_tierKo) ? _tierKo : `${_tierKo} 티어`);
+    }
     parts.push(`${p.name || '이름 미상'}`);
     const rl = raceLabel(p.race);
     if (rl) parts.push(rl);
@@ -394,11 +432,410 @@ function _b2LineupHighlightPlayer(name) {
     const esc = (window.CSS && CSS.escape) ? CSS.escape(name) : String(name).replace(/["\\]/g, '\\$&');
     const el = document.querySelector(`[data-b2lc-player="${esc}"]`);
     if (el) {
+      const introActive = typeof _b2LineupIntroAnim !== 'undefined' && _b2LineupIntroAnim;
+      if (introActive) _b2LineupRevealCard(el);
       el.classList.add('b2-lc-speaking');
+      if (introActive) _b2LineupApplySpotlightDim(el);
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   } catch(e){}
 }
+
+// 지금 소개 중인 카드(activeEl)만 밝게 두고, 이미 등장 완료된 나머지 카드는 어둡게 죽인다.
+// 아직 등장 전(opacity 0 상태)인 카드는 건드리지 않는다 — 어차피 안 보이고,
+// 나중에 _b2LineupRevealCard로 처음 나타날 때 자연스럽게 밝은 상태로 시작해야 하므로.
+function _b2LineupApplySpotlightDim(activeEl) {
+  try {
+    document.querySelectorAll('[data-b2lc-player]').forEach(el => {
+      if (el.style.opacity === '0') return;
+      if (el === activeEl) el.classList.remove('b2-lc-intro-dim');
+      else el.classList.add('b2-lc-intro-dim');
+    });
+  } catch(e){}
+}
+
+function _b2LineupClearSpotlightDim() {
+  try { document.querySelectorAll('.b2-lc-intro-dim').forEach(el => el.classList.remove('b2-lc-intro-dim')); } catch(e){}
+}
+
+/* ── "소개 연출" — 전체 음성듣기 재생 시 카드를 순서대로 fade+slide-in 시킨다.
+   기존 인라인 transition을 el.dataset에 잠깐 백업했다가, 등장 애니메이션이 끝나면
+   원래대로 복구해서 카드 hover 효과 등은 그대로 유지되게 한다. ── */
+function _b2LineupPrepareIntroHide() {
+  try {
+    document.querySelectorAll('[data-b2lc-player]').forEach(el => {
+      if (el.dataset.introOrigTransition === undefined) el.dataset.introOrigTransition = el.style.transition || '';
+      el.classList.remove('b2-lc-intro-dim');
+      const isRow = el.tagName === 'TR';
+      // 오버슈트(back-out) 이징으로 팝! 하고 튀어나오는 느낌 — 표(tr)는 스케일/회전이
+      // 어색해 보여서 기존처럼 슬라이드만, 카드형은 스케일+살짝 회전을 더해 임팩트를 준다.
+      el.style.transition = 'opacity .5s cubic-bezier(.34,1.56,.64,1), transform .5s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease';
+      el.style.opacity = '0';
+      el.style.transform = isRow ? 'translateX(-16px)' : 'translateY(18px) scale(.82) rotate(-3deg)';
+    });
+  } catch(e){}
+}
+
+function _b2LineupRevealCard(el) {
+  if (!el) return;
+  try {
+    el.style.opacity = '1';
+    el.style.transform = '';
+    const orig = el.dataset.introOrigTransition;
+    setTimeout(() => {
+      try {
+        if (typeof orig === 'string') el.style.transition = orig;
+        delete el.dataset.introOrigTransition;
+      } catch(e){}
+    }, 520);
+  } catch(e){}
+}
+
+function _b2LineupRevealAllIntro() {
+  try {
+    document.querySelectorAll('[data-b2lc-player]').forEach(el => {
+      if (el.style.opacity === '0') _b2LineupRevealCard(el);
+    });
+    _b2LineupClearSpotlightDim();
+  } catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   🎬 "소개 연출" 단독 재생 — 음성듣기와 완전히 분리.
+   카드를 모두 숨긴 뒤, 순서대로 (1) 화면 중앙에 크게 팝업 → (2) 자기 자리로
+   날아가 안착 하는 스타팅 라인업 발표 연출을 재생한다.
+   실제 카드는 자리만 유지한 채 숨겨두고, 복제본(clone)을 fixed로 띄워
+   FLIP 방식으로 이동시키므로 레이아웃이 흔들리지 않는다.
+══════════════════════════════════════════════════════════════ */
+var _b2LineupIntroPlaying = false;
+var _b2LineupIntroPaused = false;
+var _b2LineupIntroToken = 0;
+
+function _b2LineupIntroBtnLabel() {
+  const btn = document.getElementById('b2-lineup-intro-btn');
+  if (btn) btn.innerHTML = !_b2LineupIntroPlaying ? '🎬 소개연출' : (_b2LineupIntroPaused ? '▶ 이어보기' : '⏸ 일시정지');
+  // 재생 중일 때만 별도의 "정지" 버튼을 보여준다 (일시정지/이어보기와는 별개 동작).
+  const stopBtn = document.getElementById('b2-lineup-intro-stop-btn');
+  if (stopBtn) stopBtn.style.display = _b2LineupIntroPlaying ? 'flex' : 'none';
+}
+
+// ms만큼 대기하되, 중간에 일시정지 상태면 재생될 때까지 대기를 멈춰둔다.
+// (80ms 단위로 잘게 쪼개서 진행하므로 일시정지 시점에서 거의 그대로 이어짐)
+function _b2IntroWait(ms, token) {
+  return new Promise(async (res) => {
+    let remaining = ms;
+    while (remaining > 0) {
+      if (token !== _b2LineupIntroToken) return res(false);
+      if (_b2LineupIntroPaused) { await new Promise(r => setTimeout(r, 120)); continue; }
+      const step = Math.min(80, remaining);
+      await new Promise(r => setTimeout(r, step));
+      remaining -= step;
+    }
+    res(token === _b2LineupIntroToken);
+  });
+}
+
+// 일시정지 상태면 재생 재개될 때까지 대기 (토큰이 바뀌면 = 완전 정지된 것이므로 즉시 빠져나옴)
+function _b2IntroWaitIfPaused(token) {
+  return new Promise(async (res) => {
+    while (_b2LineupIntroPaused && token === _b2LineupIntroToken) { await new Promise(r => setTimeout(r, 120)); }
+    res(token === _b2LineupIntroToken);
+  });
+}
+
+/* ── 무대 장치(암전 배경 / 스포트라이트 빔 / 이름 자막) ── */
+function _b2IntroStageOn() {
+  try {
+    let bd = document.getElementById('b2-lc-intro-backdrop');
+    if (!bd) { bd = document.createElement('div'); bd.id = 'b2-lc-intro-backdrop'; document.body.appendChild(bd); }
+    let beam = document.getElementById('b2-lc-intro-beam');
+    if (!beam) { beam = document.createElement('div'); beam.id = 'b2-lc-intro-beam'; document.body.appendChild(beam); }
+    let cap = document.getElementById('b2-lc-intro-caption');
+    if (!cap) { cap = document.createElement('div'); cap.id = 'b2-lc-intro-caption'; document.body.appendChild(cap); }
+    let subcap = document.getElementById('b2-lc-intro-subcap');
+    if (!subcap) { subcap = document.createElement('div'); subcap.id = 'b2-lc-intro-subcap'; document.body.appendChild(subcap); }
+    requestAnimationFrame(() => { bd.classList.add('on'); beam.classList.add('on'); });
+  } catch(e){}
+}
+
+function _b2IntroStageOff() {
+  try {
+    ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('on');
+      setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
+    });
+  } catch(e){}
+}
+
+function _b2IntroCaption(text) {
+  try {
+    const cap = document.getElementById('b2-lc-intro-caption');
+    if (!cap) return;
+    if (!text) { cap.classList.remove('on'); return; }
+    cap.textContent = text;
+    cap.classList.add('on');
+  } catch(e){}
+}
+
+// 이름 자막 아래에 표시되는 짧은 "한줄평" 자막
+function _b2IntroSubCaption(text) {
+  try {
+    const sc = document.getElementById('b2-lc-intro-subcap');
+    if (!sc) return;
+    if (!text) { sc.classList.remove('on'); return; }
+    sc.textContent = text;
+    sc.classList.add('on');
+  } catch(e){}
+}
+
+// "한줄평" — 스트리머 정보수정에서 직접 입력한 값만 사용한다.
+// (자동 생성 문구는 쓰지 않으며, 입력이 없으면 자막/음성 모두 생략)
+function _b2LineupOneLiner(p) {
+  try { return String((p && (p.oneLiner || p.oneline)) || '').trim(); } catch(e) { return ''; }
+}
+
+// 착지 순간 사방으로 튀는 반짝이 파티클 (color: 해당 선수 티어 색상)
+function _b2IntroSparkBurst(rect, color) {
+  try {
+    if (!rect) return;
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    const n = 10;
+    for (let i = 0; i < n; i++) {
+      const ang = (Math.PI * 2 * i / n) + (Math.random() * 0.4 - 0.2);
+      const dist = 46 + Math.random() * 34;
+      const sx = Math.cos(ang) * dist, sy = Math.sin(ang) * dist;
+      const sp = document.createElement('div');
+      sp.className = 'b2-lc-intro-spark';
+      sp.style.setProperty('--sx', `${sx}px`);
+      sp.style.setProperty('--sy', `${sy}px`);
+      sp.style.setProperty('--intro-glow', color || '#60a5fa');
+      sp.style.left = `${cx}px`;
+      sp.style.top = `${cy}px`;
+      document.body.appendChild(sp);
+      setTimeout(() => { try { sp.remove(); } catch(e){} }, 700);
+    }
+  } catch(e){}
+}
+
+// 한 문장을 읽고, 다 읽으면 resolve. (연출이 중단되면 false)
+async function _b2IntroSpeak(text, token) {
+  if (!(await _b2IntroWaitIfPaused(token))) return false;
+  return new Promise(res => {
+    if (!text || !window.SUTTS || !('speechSynthesis' in window)) return res(token === _b2LineupIntroToken);
+    let done = false;
+    const fin = () => { if (done) return; done = true; res(token === _b2LineupIntroToken); };
+    let ok = false;
+    try { ok = window.SUTTS.speak([{ text: text }], { onEnd: fin }); } catch(e) { ok = false; }
+    if (!ok) fin();
+  });
+}
+
+// 카드 하나: 중앙에 크게 등장(플립+광택) → 소개 음성 → 자기 자리로 이동 → 착지 파장
+// glowColor: 해당 선수의 티어 색상 — 발광 펄스/파장/스파클 색을 선수마다 다르게 보여준다.
+function _b2LineupIntroFlyCard(el, token, speakText, glowColor) {
+  return new Promise(async (resolve) => {
+    try {
+      if (!el || el.tagName === 'TR') {
+        _b2LineupRevealCard(el);
+        if (speakText) await _b2IntroSpeak(speakText, token);
+        return resolve();
+      }
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await _b2IntroWait(280, token);
+      if (token !== _b2LineupIntroToken) return resolve();
+
+      const r = el.getBoundingClientRect();
+      const clone = el.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+      clone.classList.remove('b2-lc-intro-dim');
+      clone.classList.add('b2-lc-intro-clone');
+      clone.style.setProperty('--intro-glow', glowColor || '#60a5fa');
+      const cx = (window.innerWidth / 2) - (r.left + r.width / 2);
+      const cy = (window.innerHeight / 2) - (r.top + r.height / 2);
+      const scale = Math.max(1.3, Math.min(2.2,
+        Math.min((window.innerHeight * 0.62) / Math.max(1, r.height),
+                 (window.innerWidth * 0.8) / Math.max(1, r.width))));
+      clone.style.cssText += `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;z-index:9998;pointer-events:none;opacity:0;transition:none;transform-style:preserve-3d;perspective:900px;transform:translate(${cx}px,${cy}px) scale(${scale * 0.6}) rotateY(-70deg);filter:drop-shadow(0 24px 60px rgba(15,23,42,.45))`;
+      document.body.appendChild(clone);
+
+      // 광택 스윕 오버레이 (복제 카드 위치에 맞춰 얹는다)
+      const shine = document.createElement('div');
+      shine.className = 'b2-lc-intro-shine';
+      const sw = r.width * scale, sh = r.height * scale;
+      shine.style.cssText = `left:${(window.innerWidth - sw) / 2}px;top:${(window.innerHeight - sh) / 2}px;width:${sw}px;height:${sh}px`;
+
+      requestAnimationFrame(() => {
+        clone.style.transition = 'opacity .3s ease, transform .55s cubic-bezier(.22,1.4,.36,1)';
+        clone.style.opacity = '1';
+        clone.style.transform = `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)`;
+      });
+      setTimeout(() => { try { document.body.appendChild(shine); } catch(e){} }, 260);
+      setTimeout(() => { try { shine.remove(); } catch(e){} }, 1600);
+
+      await _b2IntroWait(620, token);
+      if (token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
+
+      // 중앙에서 소개 음성 재생 (읽는 동안 은은한 발광 펄스)
+      clone.classList.add('pulse');
+      if (speakText) {
+        const alive = await _b2IntroSpeak(speakText, token);
+        if (!alive || token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
+      } else {
+        if (!(await _b2IntroWait(600, token))) { try { clone.remove(); } catch(e){} return resolve(); }
+      }
+      clone.classList.remove('pulse');
+
+      // 자기 자리로 날아가 안착
+      clone.style.transition = 'transform .62s cubic-bezier(.5,.02,.2,1), filter .62s ease';
+      clone.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
+      clone.style.filter = 'drop-shadow(0 6px 14px rgba(15,23,42,.18))';
+      await _b2IntroWait(620, token);
+
+      _b2LineupRevealCard(el);
+      try { clone.remove(); } catch(e){}
+      // 착지 파장 + 스파클 + 카드 바운스
+      try {
+        const rr = el.getBoundingClientRect();
+        const ripple = document.createElement('div');
+        ripple.className = 'b2-lc-intro-ripple';
+        ripple.style.setProperty('--intro-glow', glowColor || '#60a5fa');
+        ripple.style.cssText += `left:${rr.left}px;top:${rr.top}px;width:${rr.width}px;height:${rr.height}px`;
+        document.body.appendChild(ripple);
+        setTimeout(() => { try { ripple.remove(); } catch(e){} }, 720);
+        _b2IntroSparkBurst(rr, glowColor);
+        el.classList.add('b2-lc-landed');
+        setTimeout(() => { try { el.classList.remove('b2-lc-landed'); } catch(e){} }, 600);
+      } catch(e){}
+      resolve();
+    } catch(e) { _b2LineupRevealCard(el); resolve(); }
+  });
+}
+
+// 완전 정지(하드 리셋) — 대학 변경/다른 서브뷰·탭 이동 등 재생을 이어갈 수 없는
+// 상황에서 호출한다. 일시정지와 달리 진행 상태를 버리고 처음부터 다시 시작해야 한다.
+// 소개 연출 중에는 화면 아무 곳이나 클릭하면 즉시 종료된다.
+// (툴바의 소개연출/종료 버튼 클릭은 각자의 동작이 있으므로 제외)
+var _b2LineupIntroClickStop = null;
+function _b2LineupBindIntroClickStop() {
+  _b2LineupUnbindIntroClickStop();
+  _b2LineupIntroClickStop = function(ev) {
+    try {
+      const t = ev && ev.target;
+      if (t && t.closest && t.closest('#b2-lineup-intro-btn,#b2-lineup-intro-stop-btn')) return;
+    } catch(e){}
+    _b2LineupStopIntroShow();
+  };
+  setTimeout(() => {
+    try { if (_b2LineupIntroClickStop) document.addEventListener('click', _b2LineupIntroClickStop, true); } catch(e){}
+  }, 0);
+}
+function _b2LineupUnbindIntroClickStop() {
+  try { if (_b2LineupIntroClickStop) document.removeEventListener('click', _b2LineupIntroClickStop, true); } catch(e){}
+  _b2LineupIntroClickStop = null;
+}
+
+function _b2LineupStopIntroShow() {
+  if (!_b2LineupIntroPlaying) return;
+  _b2LineupUnbindIntroClickStop();
+  _b2LineupIntroToken++;
+  _b2LineupIntroPlaying = false;
+  _b2LineupIntroPaused = false;
+  try { if (window.SUTTS) window.SUTTS.stop(); else window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+  document.querySelectorAll('.b2-lc-intro-clone,.b2-lc-intro-shine,.b2-lc-intro-ripple,.b2-lc-intro-spark').forEach(el => el.remove());
+  _b2IntroStageOff();
+  _b2LineupRevealAllIntro();
+  _b2LineupIntroBtnLabel();
+}
+
+async function _b2LineupPlayIntroShow() {
+  // 재생 중 다시 누르면: 일시정지 ↔ 이어보기 토글.
+  // (완전 정지는 대학/탭 이동 시 _b2LineupStopIntroShow가 별도로 처리)
+  if (_b2LineupIntroPlaying) {
+    if (_b2LineupIntroPaused) {
+      _b2LineupIntroPaused = false;
+      try { if (window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused()) window.SUTTS.resume(); } catch(e){}
+    } else {
+      _b2LineupIntroPaused = true;
+      try { if (window.SUTTS && window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) window.SUTTS.pause(); } catch(e){}
+    }
+    _b2LineupIntroBtnLabel();
+    return;
+  }
+  const els = Array.from(document.querySelectorAll('[data-b2lc-player]'));
+  if (!els.length) { alert('소개할 스트리머가 없습니다.'); return; }
+
+  // 소개 멘트: 음성듣기와 같은 문장 생성기를 재사용해 이름별로 매칭한다.
+  // 여기에 선수 데이터 기반 "한줄평"과 티어 색상(발광 효과용)도 함께 준비한다.
+  let intro = '', outro = '', lineMap = {}, oneLinerMap = {}, glowMap = {};
+  try {
+    const q = _b2LineupBuildSpeakQueue(_b2LineupUniv) || [];
+    if (q.length) { intro = q[0].text || ''; outro = q[q.length - 1].text || ''; }
+    const { members } = _b2LineupMembers(_b2LineupUniv);
+    q.forEach(it => {
+      if (!it || !it.player) return;
+      const name = String(it.player);
+      lineMap[name] = it.text;
+      const p = members.find(x => String(x.name || '') === name);
+      if (p) {
+        const oneLiner = _b2LineupOneLiner(p);
+        oneLinerMap[name] = oneLiner;
+        if (oneLiner) lineMap[name] = `${it.text}. ${oneLiner}`;
+        glowMap[name] = (p.tier && typeof getTierBtnColor === 'function') ? (getTierBtnColor(p.tier) || '#60a5fa') : '#60a5fa';
+      }
+    });
+  } catch(e){}
+
+  const token = ++_b2LineupIntroToken;
+  _b2LineupIntroPlaying = true;
+  _b2LineupIntroPaused = false;
+  _b2LineupIntroBtnLabel();
+  _b2LineupBindIntroClickStop();
+  _b2IntroStageOn();
+  _b2LineupPrepareIntroHide();
+
+  if (!(await _b2IntroWait(320, token))) { _b2IntroStageOff(); return; }
+  if (intro) {
+    _b2IntroCaption(intro);
+    if (!(await _b2IntroSpeak(intro, token))) { _b2IntroStageOff(); return; }
+  }
+
+  for (const el of els) {
+    if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
+    const name = el.getAttribute('data-b2lc-player') || '';
+    _b2IntroCaption(name);
+    _b2IntroSubCaption(oneLinerMap[name] || '');
+    await _b2LineupIntroFlyCard(el, token, lineMap[name] || '', glowMap[name]);
+    if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
+    _b2LineupApplySpotlightDim(el);
+    _b2IntroSubCaption('');
+    if (!(await _b2IntroWait(200, token))) { _b2IntroStageOff(); return; }
+  }
+
+  if (outro) {
+    _b2IntroCaption(outro);
+    _b2IntroSubCaption('');
+    _b2LineupClearSpotlightDim();
+    await _b2IntroSpeak(outro, token);
+  }
+  if (token !== _b2LineupIntroToken) return;
+  _b2IntroCaption('');
+  _b2IntroSubCaption('');
+  _b2IntroStageOff();
+  _b2LineupClearSpotlightDim();
+  _b2LineupIntroPlaying = false;
+  _b2LineupIntroPaused = false;
+  _b2LineupUnbindIntroClickStop();
+  _b2LineupIntroBtnLabel();
+}
+
+
+try {
+  window._b2LineupPlayIntroShow = _b2LineupPlayIntroShow;
+  window._b2LineupStopIntroShow = _b2LineupStopIntroShow;
+} catch(e){}
 
 function _b2LineupSpeakBtnLabel() {
   const btn = document.getElementById('b2-lineup-speak-btn');
@@ -412,6 +849,7 @@ function _b2LineupStopSpeak() {
   _b2LineupSpeakViaCard = false;
   try { if (window.SUTTS) window.SUTTS.stop(); else window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
   _b2LineupClearHighlight();
+  _b2LineupRevealAllIntro();
   _b2LineupSpeakBtnLabel();
 }
 
@@ -432,13 +870,19 @@ function _b2LineupStartSpeak(target) {
   const queue = _b2LineupBuildSpeakQueue(_b2LineupUniv, target);
   if (!queue.length || (!target && queue.length <= 1)) { alert('소개할 스트리머가 없습니다.'); return false; }
 
+  // "소개 연출": 라인업 전체 소개(특정 인원 지정 안 함)일 때만 카드를 숨긴 채 시작해서
+  // 호명되는 순서대로 하나씩 등장시킨다. 개별 스트리머 듣기는 대상 외 카드를 감출 이유가
+  // 없으므로 대상(target)이 있을 땐 적용하지 않는다.
+  const introAnimActive = !target && typeof _b2LineupIntroAnim !== 'undefined' && _b2LineupIntroAnim;
+  if (introAnimActive) _b2LineupPrepareIntroHide();
+
   _b2LineupSpeaking = true;
   _b2LineupSpeakBtnLabel();
   const ok = window.SUTTS && window.SUTTS.speak(queue, {
     onItem: (item) => _b2LineupHighlightPlayer(item && item.player),
-    onEnd: () => { _b2LineupSpeaking = false; _b2LineupSpeakViaCard = false; _b2LineupClearHighlight(); _b2LineupSpeakBtnLabel(); }
+    onEnd: () => { _b2LineupSpeaking = false; _b2LineupSpeakViaCard = false; _b2LineupClearHighlight(); _b2LineupRevealAllIntro(); _b2LineupSpeakBtnLabel(); }
   });
-  if (!ok) { _b2LineupSpeaking = false; _b2LineupSpeakBtnLabel(); return false; }
+  if (!ok) { _b2LineupSpeaking = false; if (introAnimActive) _b2LineupRevealAllIntro(); _b2LineupSpeakBtnLabel(); return false; }
   return true;
 }
 

@@ -103,7 +103,8 @@ function _prBuildSpeakQueue(){
   // 기본 정보
   const univTxt = p.univ ? `${p.univ} 소속, ` : '';
   const raceTxt = RACE_KO[p.race] ? `종족은 ${RACE_KO[p.race]}, ` : '';
-  const tierTxt = p.tier ? `티어는 ${p.tier}입니다.` : '기본 정보가 등록되어 있지 않습니다.';
+  const _tierSpeakKo = p.tier ? ((window.SUTTS && window.SUTTS.tierLabel) ? window.SUTTS.tierLabel(p.tier) : p.tier) : '';
+  const tierTxt = p.tier ? `티어는 ${_tierSpeakKo}입니다.` : '기본 정보가 등록되어 있지 않습니다.';
   queue.push({text: `${univTxt}${raceTxt}${tierTxt}`});
   try{
     const rankInfo = (typeof _prTierRank==='function') ? _prTierRank(p) : null;

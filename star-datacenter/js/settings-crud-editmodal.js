@@ -138,6 +138,11 @@ window.openEP=function(name){
         <div style="font-size:10px;color:var(--gray-l);margin-top:3px">체크하지 않으면 위 직책 텍스트로 자동 정렬됩니다. 같은 순서 번호끼리는 티어 순으로 정렬됩니다.</div>
       </div>
       <div style="grid-column:1 / -1;min-width:0">
+        <label>💬 한줄평 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(라인업 소개연출 자막/음성에 사용)</span></label>
+        <input type="text" id="ed-oneliner" value="${(p.oneLiner||'').replace(/"/g,'&quot;')}" placeholder="예: 한 방이 무서운 저그 라인의 에이스" style="width:100%" maxlength="60">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">입력하지 않으면 소개연출에서 한줄평이 표시되지 않습니다.</div>
+      </div>
+      <div style="grid-column:1 / -1;min-width:0">
         <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1;min-width:0">

@@ -57,6 +57,16 @@
     return t.replace(/\s*\bvs\.?\b\s*/gi, ' 대 ');
   }
 
+  // ── 티어 코드(G/K/JA/J/S) → 낭독용 한글 표기 ──
+  // 화면에는 'G'/'K'/'JA'/'J'/'S' 알파벳 그대로 표시하지만, 음성으로는 알파벳을
+  // 그대로 읽으면 어색하므로("지", "케이" 등) 실제 티어 명칭으로 바꿔 읽어준다.
+  // 이 매핑에 없는 값('0티어'처럼 이미 "티어"가 붙어있거나, '유스'/'미정' 등)은 그대로 둔다.
+  var _TIER_SPEAK_KO = { G:'갓티어', K:'킹티어', JA:'잭티어', J:'조커티어', S:'스페이드티어' };
+  function tierSpeakLabel(tier){
+    var t = String(tier == null ? '' : tier).trim();
+    return _TIER_SPEAK_KO.hasOwnProperty(t) ? _TIER_SPEAK_KO[t] : t;
+  }
+
   function sanitize(t){
     var s = String(t == null ? '' : t)
       .replace(/<[^>]*>/g, ' ')
@@ -217,6 +227,7 @@
     },
     isSpeaking: function(){ return _speaking; },
     isPaused: function(){ return _paused; },
-    sanitize: sanitize
+    sanitize: sanitize,
+    tierLabel: tierSpeakLabel
   };
 })();

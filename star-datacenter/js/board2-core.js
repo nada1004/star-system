@@ -67,12 +67,21 @@ var _b2LineupUniv = '';
 var _b2LineupCardMode = (()=>{try{const m=localStorage.getItem('su_b2_lineup_card_mode')||'default';return m==='list'?'default':m;}catch(e){return 'default';}})(); // 라인업 카드 스타일: 'default'(기본) | 'stat'(사진+통계그리드형) | 'table'(테이블형)
 function _b2SetLineupCardMode(mode){
   if (typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
+  if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow();
   _b2LineupCardMode = ['default','stat','table'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LineupView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
   if (typeof render === 'function') render();
 }
+// 라인업 "소개 연출" — 음성듣기와 완전히 분리된 독립 연출.
+// 버튼을 누르면 카드가 모두 숨겨진 뒤, 순서대로 화면 중앙에 크게 등장했다가
+// 자기 자리로 날아가 배치되는 스타팅 라인업 발표 연출이 재생된다.
+var _b2LineupIntroAnim = false; // (레거시 호환용 플래그 — 음성듣기와 연동하지 않음)
+function _b2ToggleLineupIntroAnim(){
+  if (typeof _b2LineupPlayIntroShow === 'function') _b2LineupPlayIntroShow();
+}
+try { window._b2ToggleLineupIntroAnim = _b2ToggleLineupIntroAnim; } catch(e){}
 var _b2Collapsed = new Set();
 // 프로필 탭 필터 변수
 var _b2PlayersUnivFilter = '전체';
@@ -442,7 +451,7 @@ function rBoard2(C, T) {
     const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
-        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -475,6 +484,8 @@ function rBoard2(C, T) {
         </div>`;
       })()}
       <button id="b2-lineup-speak-btn" class="b2-toolbar-btn" onclick="_b2LineupToggleSpeak()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">${(typeof _b2LineupSpeaking!=='undefined'&&_b2LineupSpeaking)?'⏹ 정지':'🔊 음성듣기'}</button>
+      <button id="b2-lineup-intro-btn" class="b2-toolbar-btn" onclick="_b2LineupPlayIntroShow()" title="카드가 화면 중앙에 크게 등장했다가 자기 자리로 이동하는 라인업 발표 연출을 재생합니다 (음성듣기와 별개). 재생 중 다시 누르면 일시정지/이어보기가 토글됩니다." style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">🎬 소개연출</button>
+      <button id="b2-lineup-intro-stop-btn" class="b2-toolbar-btn" onclick="if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow()" title="소개 연출을 완전히 종료합니다" style="display:none;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;align-items:center;gap:4px;margin-bottom:0">⏹ 종료</button>
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -741,7 +752,7 @@ function rBoard2(C, T) {
         ${univList.map(u=>{
           const _uc = gc(u.name);
           const _on = u.name===_b2LineupUniv;
-          return `<button type="button" onclick="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
+          return `<button type="button" onclick="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
         }).join('')}
       </div>
       ` : ''}
@@ -787,9 +798,13 @@ function rBoard2(C, T) {
     // 브리핑(_b2View==='weekly') 음성듣기 중 다른 서브뷰로 이동해도 멈추지 않는 누락이 있었음 —
     // SUTTS는 싱글톤이라 stop()이 재생 중인 기능(라인업/브리핑 등)의 onEnd 정리 콜백을
     // 그대로 실행해주므로, 서브뷰가 실제로 바뀔 때마다 범용으로 정지시키도록 수정.
-    if (window._b2LastRenderedView !== undefined && window._b2LastRenderedView !== _b2View &&
-        window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
-      try{ window.SUTTS.stop(); }catch(e){}
+    if (window._b2LastRenderedView !== undefined && window._b2LastRenderedView !== _b2View) {
+      if (window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+        try{ window.SUTTS.stop(); }catch(e){}
+      }
+      // 라인업 "소개 연출"(_b2LineupPlayIntroShow)은 SUTTS와 별개의 상태값으로 돌아가므로
+      // 위 SUTTS 정지만으로는 멈추지 않음 — 서브뷰가 바뀌면 별도로 확실히 정지시켜준다.
+      try{ if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow(); }catch(e){}
     }
     window._b2LastRenderedView = _b2View;
     if (_b2View === 'univ') {

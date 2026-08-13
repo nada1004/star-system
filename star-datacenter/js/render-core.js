@@ -8,9 +8,13 @@ function _renderImpl(){
   // 경로에 관계없이) 재생 중이던 TTS(라인업/브리핑/리포트 등)를 정지.
   // SUTTS는 싱글톤이라 stop()이 speak() 때 등록해둔 onEnd 정리 콜백을 그대로 실행해주므로
   // 여기 한 곳에서만 처리해도 모든 진입 경로가 커버된다.
-  if (window._lastRenderedTopTab !== undefined && window._lastRenderedTopTab !== curTab &&
-      window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
-    try{ window.SUTTS.stop(); }catch(e){}
+  if (window._lastRenderedTopTab !== undefined && window._lastRenderedTopTab !== curTab) {
+    if (window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+      try{ window.SUTTS.stop(); }catch(e){}
+    }
+    // 라인업 "소개 연출"은 SUTTS 상태와 별개로 자체 재생 플래그로 돌아가므로 최상위 탭이
+    // 바뀔 때 별도로 정지시켜준다 (그대로 두면 다른 탭 화면 위로 연출이 계속 남는다).
+    try{ if (typeof window._b2LineupStopIntroShow === 'function') window._b2LineupStopIntroShow(); }catch(e){}
   }
   window._lastRenderedTopTab = curTab;
   const farea=document.getElementById('farea');if(farea)farea.innerHTML='';
