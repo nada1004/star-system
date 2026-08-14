@@ -22,21 +22,27 @@ function _histTabAltSupported(tabId){
 // 탭별 허용되는 보기모드 (기본값: 4종 전부)
 // (요청, 2026-08-10) 대학CK/시빌워는 팀원이 많아 나열형이라 그리드·컴팩트 테이블형이
 // 어울리지 않는다는 피드백에 따라 기본/미니 기본 2종만 노출
+// (신규기능, 2026-08-14) 시빌워/미니대전/대학대전/대학CK에 "📺 방송형" 스코어보드
+// 보기모드 추가 (histbroadcastview)
 const _HIST_TAB_ALT_ALLOWED_MODES = {
-  ck: ['basic', 'mini'],
-  civil: ['basic', 'mini'],
+  ck: ['basic', 'mini', 'broadcast'],
+  civil: ['basic', 'mini', 'broadcast'],
+  mini: ['basic', 'mini', 'grid', 'compact', 'broadcast'],
+  univm: ['basic', 'mini', 'grid', 'compact', 'broadcast'],
   // (요청, 2026-08-10) 대전기록 > 대회 / 티어대회 : 기본·그리드·컴팩트 테이블형 3종
-  histtourney: ['basic', 'mini', 'grid', 'compact'],
-  histtt: ['basic', 'mini', 'grid', 'compact'],
+  // (요청, 2026-08-14) 대회 / 티어대회 기록탭에도 방송형 추가
+  histtourney: ['basic', 'mini', 'grid', 'compact', 'broadcast'],
+  histtt: ['basic', 'mini', 'grid', 'compact', 'broadcast'],
   // (요청, 2026-08-10) 일반대회 조별리그 : 기본(기존 화면) + 미니 기본 / 그리드 토글
-  cpleague: ['basic', 'mini', 'grid'],
+  cpleague: ['basic', 'mini', 'grid', 'broadcast'],
   // (요청, 2026-08-10) 프로리그 대회 > 팀전 : 대학CK처럼 팀원이 많이 나열돼 컴팩트 테이블형은
   // 어울리지 않는다는 피드백에 따라 기본/미니 기본/그리드 3종만 노출 (컴팩트 테이블형 제외)
-  pcteam: ['basic', 'mini', 'grid'],
+  pcteam: ['basic', 'mini', 'grid', 'broadcast'],
 };
 
 function _histTabAltAllowedModes(tabId){
-  return _HIST_TAB_ALT_ALLOWED_MODES[tabId] || ['basic', 'mini', 'grid', 'compact'];
+  // (요청, 2026-08-14) 개인전/끝장전/프로리그 끝장전/프로리그/대학대전 등 기본 목록 탭에도 방송형 추가
+  return _HIST_TAB_ALT_ALLOWED_MODES[tabId] || ['basic', 'mini', 'grid', 'compact', 'broadcast'];
 }
 
 // 탭별 보기모드 상태 (localStorage 키: su_hist_tab_view_mode_<tabId>)
@@ -70,6 +76,7 @@ function histTabViewModeBarHTML(tabId, bare){
     { id: 'mini', lbl: '🗂 미니 기본' },
     { id: 'grid', lbl: '🖼 그리드' },
     { id: 'compact', lbl: '📊 컴팩트 테이블형' },
+    { id: 'broadcast', lbl: '📺 방송형' },
   ];
   const _allowed = _histTabAltAllowedModes(tabId);
   const _modes = _allModes.filter(mo => _allowed.includes(mo.id));
@@ -179,6 +186,7 @@ function histTabAltRecordsHTML(tabId){
   let h = '';
   if(mode === 'grid') h += histAllGridModeHTML(paged, _HIST_TAB_ALT_TYPE_INFO);
   else if(mode === 'compact') h += histAllCompactTableModeHTML(paged, _HIST_TAB_ALT_TYPE_INFO);
+  else if(mode === 'broadcast') h += (typeof histBroadcastModeHTML==='function') ? histBroadcastModeHTML(paged, _HIST_TAB_ALT_TYPE_INFO) : '';
   else h += _histCardGridWithDayHeaders(paged, _HIST_TAB_ALT_TYPE_INFO); // '미니 기본'
 
   if(items.length > pageSize){

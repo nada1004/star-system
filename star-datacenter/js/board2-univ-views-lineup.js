@@ -586,6 +586,7 @@ var _b2LineupBgmApiLoading = false;
 var _b2LineupBgmPendingVid = null;
 var _b2LineupBgmVolume = 50;
 var _b2LineupBgmActive = false;
+var _b2LineupBgmKickTimer = null;
 
 function _b2LineupBgmExtractId(urlOrId) {
   const s = String(urlOrId || '').trim();
@@ -637,7 +638,7 @@ function _b2LineupBgmEnsurePlayer() {
           if (_b2LineupBgmPendingVid) {
             const vid = _b2LineupBgmPendingVid;
             _b2LineupBgmPendingVid = null;
-            try { _b2LineupBgmPlayer.loadVideoById(vid); } catch (e) {}
+            _b2LineupBgmPlayNow(vid);
           }
         },
         onStateChange: (e) => {
@@ -660,6 +661,36 @@ function _b2LineupBgmApplyVol() {
   } catch (e) {}
 }
 
+// (버그픽스, 2026-08-14) 저장한 BGM이 재생되지 않던 문제.
+// 유튜브 플레이어가 클릭 직후가 아니라 API 로드 이후에 비동기로 만들어지기 때문에
+// 브라우저 자동재생 정책에 막혀 loadVideoById만으로는 소리가 나지 않는 경우가 있었다.
+// → 음소거 상태로 먼저 재생을 시작하고, 실제로 재생이 시작되면 음소거를 풀고
+//   저장된 볼륨을 적용한다. 재생이 안 잡히면 몇 번 더 playVideo를 시도한다.
+function _b2LineupBgmPlayNow(vid) {
+  const p = _b2LineupBgmPlayer;
+  if (!p || !vid) return;
+  try {
+    if (p.mute) p.mute();
+    p.loadVideoById(vid);
+    if (p.playVideo) p.playVideo();
+  } catch (e) {}
+  if (_b2LineupBgmKickTimer) { clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; }
+  let tries = 0;
+  _b2LineupBgmKickTimer = setInterval(() => {
+    if (!_b2LineupBgmActive || !_b2LineupBgmPlayer) {
+      clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; return;
+    }
+    let st = -1;
+    try { st = _b2LineupBgmPlayer.getPlayerState(); } catch (e) {}
+    if (st === 1) {
+      _b2LineupBgmApplyVol();
+      clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; return;
+    }
+    if (++tries > 20) { clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; return; }
+    try { _b2LineupBgmPlayer.playVideo(); } catch (e) {}
+  }, 300);
+}
+
 // "소개연출" 재생 시작 시 호출 — 현재 대학에 등록된 BGM 링크가 있으면 함께 재생한다.
 function _b2LineupBgmStart(univName) {
   try {
@@ -672,7 +703,7 @@ function _b2LineupBgmStart(univName) {
     _b2LineupBgmActive = true;
     _b2LineupBgmEnsurePlayer().then(() => {
       if (!_b2LineupBgmActive) return; // 그 사이 정지된 경우 무시
-      if (_b2LineupBgmReady) { try { _b2LineupBgmPlayer.loadVideoById(vid); _b2LineupBgmApplyVol(); } catch (e) {} }
+      if (_b2LineupBgmReady) { _b2LineupBgmPlayNow(vid); }
       else { _b2LineupBgmPendingVid = vid; }
     });
     _b2LineupBgmSyncControls();
@@ -681,12 +712,14 @@ function _b2LineupBgmStart(univName) {
 
 function _b2LineupBgmSetPaused(paused) {
   if (!_b2LineupBgmActive || !_b2LineupBgmPlayer) return;
+  if (paused && _b2LineupBgmKickTimer) { clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; }
   try { if (paused) _b2LineupBgmPlayer.pauseVideo(); else _b2LineupBgmPlayer.playVideo(); } catch (e) {}
 }
 
 function _b2LineupBgmStop() {
   _b2LineupBgmActive = false;
   _b2LineupBgmPendingVid = null;
+  if (_b2LineupBgmKickTimer) { clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; }
   try { if (_b2LineupBgmPlayer) _b2LineupBgmPlayer.stopVideo(); } catch (e) {}
   _b2LineupBgmSyncControls();
 }

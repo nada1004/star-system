@@ -123,6 +123,7 @@ function pcAltRecordsHTML(tabId, tn){
   if(!items.length){
     return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
+  if(mode === 'broadcast' && typeof histBroadcastModeHTML === 'function') return histBroadcastModeHTML(items, _PC_ALT_TYPE_INFO);
   if(mode === 'grid' && typeof histAllGridModeHTML === 'function') return histAllGridModeHTML(items, _PC_ALT_TYPE_INFO);
   if(mode === 'compact' && typeof histAllCompactTableModeHTML === 'function') return histAllCompactTableModeHTML(items, _PC_ALT_TYPE_INFO);
   if(typeof _histCardGridWithDayHeaders === 'function') return _histCardGridWithDayHeaders(items, _PC_ALT_TYPE_INFO);

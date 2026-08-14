@@ -8,7 +8,7 @@
    에도 동일하게 제공한다. 기존 화면은 '기본' 모드로 그대로 유지된다.
    ══════════════════════════════════════════════════════════════ */
 
-const COMP_ALT_TAB_IDS = ['cpleague', 'cpbkt', 'ttrecords', 'ttgrprecords', 'ttbktrecords'];
+const COMP_ALT_TAB_IDS = ['cpnormal', 'cpleague', 'cpbkt', 'ttrecords', 'ttgrprecords', 'ttbktrecords'];
 
 const _COMP_ALT_TYPE_INFO = {
   complg:   { lbl: '조별리그',      col: '#2563eb' },
@@ -17,6 +17,7 @@ const _COMP_ALT_TYPE_INFO = {
   ttleague: { lbl: '조별리그 기록', col: '#16a34a' },
   ttbkt:    { lbl: '토너먼트 기록', col: '#7c3aed' },
   histcomp: { lbl: '대회',          col: '#2563eb' },
+  compnormal:{ lbl: '일반경기',      col: '#0ea5e9' },
 };
 
 function compAltViewMode(tabId){
@@ -44,6 +45,7 @@ const _COMP_ALT_MODE_LABEL = {
   mini: '🗂 미니 기본',
   grid: '🖼 그리드',
   compact: '📊 컴팩트 테이블형',
+  broadcast: '📺 방송형',
 };
 // modes: 표시할 보기모드 id 배열 (예: ['mini','grid'])
 function compAltToggleBarHTML(tabId, modes){
@@ -63,7 +65,7 @@ function compAltTitleModeBarHTML(tabId, titleHTML, opts){
   if(!showControls){
     return titleHTML ? `<span class="no-export" style="display:inline-block;font-size:var(--fs-sm);color:${o.col || 'var(--text3)'};font-weight:700;background:${o.bg || 'var(--surface)'};border:1px solid ${o.bd || 'var(--border2)'};border-radius:8px;padding:6px 12px;margin-bottom:10px">${titleHTML}</span>` : '';
   }
-  const modes = o.modes || ['basic', 'mini', 'grid', 'compact'];
+  const modes = o.modes || ['basic', 'mini', 'grid', 'compact', 'broadcast'];
   const cur = compAltViewMode(tabId);
   const btns = modes.map(id =>
     `<button class="pill ${cur === id ? 'on' : ''}" style="flex-shrink:0;white-space:nowrap" onclick="setHistTabViewMode('${tabId}','${id}')">${_COMP_ALT_MODE_LABEL[id] || id}</button>`
@@ -99,7 +101,7 @@ function compAltLeagueItems(matches){
   (matches || []).forEach((m, i) => {
     if(!m || !m.a || !m.b) return;
     if(m.sa == null || m.sb == null) return;
-    items.push({ type: 'complg', d: m.d || '', idx: i, m: { a: m.a, b: m.b, sa: m.sa, sb: m.sb, d: m.d || '', map: m.map || '' } });
+    items.push({ type: 'complg', d: m.d || '', idx: i, m: { a: m.a, b: m.b, sa: m.sa, sb: m.sb, d: m.d || '', map: m.map || '', sets: m.sets || [], wName: m.wName || '', lName: m.lName || '' } });
   });
   return _compAltSort(items);
 }
@@ -114,7 +116,7 @@ function compAltBktItems(matches){
     const b = mc.teamB || det.b || '';
     if(!a || !b) return;
     if(det.sa == null || det.sb == null) return;
-    items.push({ type: 'compbkt', d: det.d || '', idx: i, m: { a, b, sa: det.sa, sb: det.sb, d: det.d || '', map: det.map || '' } });
+    items.push({ type: 'compbkt', d: det.d || '', idx: i, m: { a, b, sa: det.sa, sb: det.sb, d: det.d || '', map: det.map || '', sets: det.sets || mc.sets || [], wName: det.wName || '', lName: det.lName || '' } });
   });
   return _compAltSort(items);
 }
@@ -195,6 +197,7 @@ function compAltRenderHTML(tabId, items){
   if(!items || !items.length){
     return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
+  if(mode === 'broadcast' && typeof histBroadcastModeHTML === 'function') return histBroadcastModeHTML(items, _COMP_ALT_TYPE_INFO);
   if(mode === 'grid' && typeof histAllGridModeHTML === 'function') return histAllGridModeHTML(items, _COMP_ALT_TYPE_INFO);
   if(mode === 'compact' && typeof histAllCompactTableModeHTML === 'function') return histAllCompactTableModeHTML(items, _COMP_ALT_TYPE_INFO);
   if(typeof _histCardGridWithDayHeaders === 'function') return _histCardGridWithDayHeaders(items, _COMP_ALT_TYPE_INFO);

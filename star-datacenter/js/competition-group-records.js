@@ -76,7 +76,7 @@ function rCompLeague(tn){
         <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
         ${(()=>{const _alt=(typeof compAltViewMode==='function')?compAltViewMode('cpleague'):'basic';const _on=(v)=>(_alt==='basic'&&leagueViewMode===v)?'on':'';const _go=(v)=>`leagueViewMode='${v}';(typeof compAltClearMode==='function')?compAltClearMode('cpleague'):render()`;return `
         <button class="pill ${_on('card')}" onclick="${_go('card')}">🗂️ 카드형</button>
-        ${(typeof compAltToggleBarHTML==='function')?compAltToggleBarHTML('cpleague',['mini','grid']):''}
+        ${(typeof compAltToggleBarHTML==='function')?compAltToggleBarHTML('cpleague',['mini','grid','broadcast']):''}
         <button class="pill ${_on('compact')}" onclick="${_go('compact')}">📃 컴팩트</button>
         <button class="pill ${_on('group')}" onclick="${_go('group')}">🗃️ 조별뷰</button>
         <button class="pill ${_on('matrix')}" onclick="${_go('matrix')}">🔲 매트릭스</button>`;})()}
