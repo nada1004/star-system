@@ -96,7 +96,7 @@ function rCompNormalMatches(tn) {
       <button class="pill ${window._nmResultFilter==='all'?'on':''}" onclick="window._nmResultFilter='all';render()">전체</button>
       <button class="pill ${window._nmResultFilter==='done'?'on':''}" onclick="window._nmResultFilter='done';render()">✅ 완료</button>
       <button class="pill ${window._nmResultFilter==='pending'?'on':''}" onclick="window._nmResultFilter='pending';render()">⏳ 미정</button>
-      <button class="pill" onclick="window._nmSortAsc=!window._nmSortAsc;render()">${window._nmSortAsc?'🔼 오래된순':'🔽 최신순'}</button>
+      <button class="pill" onclick="window._nmSortAsc=!window._nmSortAsc;recSortDir=window._nmSortAsc?'asc':'desc';render()">${window._nmSortAsc?'🔼 오래된순':'🔽 최신순'}</button>
       ${(typeof compAltViewModeBarHTML==='function')?`<span class="hist-inline-sep"></span><span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>${compAltViewModeBarHTML('cpnormal',true)}`:''}
     </div>
   </div>`;

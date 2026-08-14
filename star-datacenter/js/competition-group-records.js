@@ -70,8 +70,8 @@ function rCompLeague(tn){
             ${grpOpts.map(o=>`<option value="${o.name}"${leagueFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
           </select>
         </div>`:''}
-        <button class="pill ${leagueSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='desc';render()">최신순</button>
-        <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';render()">오래된순</button>
+        <button class="pill ${leagueSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='desc';recSortDir='desc';render()">최신순</button>
+        <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';recSortDir='asc';render()">오래된순</button>
         <span class="hist-inline-sep"></span>
         <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
         ${(()=>{const _alt=(typeof compAltViewMode==='function')?compAltViewMode('cpleague'):'basic';const _on=(v)=>(_alt==='basic'&&leagueViewMode===v)?'on':'';const _go=(v)=>`leagueViewMode='${v}';(typeof compAltClearMode==='function')?compAltClearMode('cpleague'):render()`;return `

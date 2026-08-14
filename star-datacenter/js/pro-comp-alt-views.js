@@ -111,7 +111,8 @@ function _pcAltItems(tabId, tn){
     });
   }
 
-  items.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const _asc = (typeof recSortDir !== 'undefined') && recSortDir === 'asc';
+  items.sort((a,b)=>_asc?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   return items;
 }
 

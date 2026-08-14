@@ -310,8 +310,8 @@ function proCompLeague(tn) {
         </select>
       </div>`:''}
       <div style="display:flex;gap:6px;flex-wrap:nowrap">
-        <button class="pill ${proCompSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='desc';render()">최신순</button>
-        <button class="pill ${proCompSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='asc';render()">오래된순</button>
+        <button class="pill ${proCompSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='desc';recSortDir='desc';render()">최신순</button>
+        <button class="pill ${proCompSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='asc';recSortDir='asc';render()">오래된순</button>
       </div>
       ${(typeof pcAltViewModeBarHTML==='function')?pcAltViewModeBarHTML('pcleague'):''}
     </div>`;

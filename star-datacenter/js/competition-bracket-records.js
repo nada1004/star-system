@@ -153,8 +153,8 @@ function rBracketSchedule(tn){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">⚔️ 토너먼트</span>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <button class="pill ${bktSchedSortDir==='desc'?'on':''}" onclick="bktSchedSortDir='desc';render()">최신순</button>
-        <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';render()">오래된순</button>
+        <button class="pill ${bktSchedSortDir==='desc'?'on':''}" onclick="bktSchedSortDir='desc';recSortDir='desc';render()">최신순</button>
+        <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';recSortDir='asc';render()">오래된순</button>
         <span class="hist-inline-sep"></span>
         <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
         ${(()=>{const _alt=(typeof compAltViewMode==='function')?compAltViewMode('cpbkt'):'basic';const _on=(v)=>(_alt==='basic'&&bktViewMode===v)?'on':'';const _go=(v)=>`bktViewMode='${v}';(typeof compAltClearMode==='function')?compAltClearMode('cpbkt'):render()`;return `
