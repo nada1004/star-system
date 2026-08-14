@@ -67,6 +67,41 @@
     return _TIER_SPEAK_KO.hasOwnProperty(t) ? _TIER_SPEAK_KO[t] : t;
   }
 
+  // ── 발음 교정 사전 ──────────────────────────────────────────
+  // 브라우저 TTS(Web Speech API)가 특정 닉네임/단어를 실제와 다르게 읽는 경우가 있어,
+  // 실제로 읽어줄 문자열 자체를 "정확히 들리는" 표기로 바꿔치기 해서 우회한다.
+  // (SSML 발음 태그를 못 쓰는 Web Speech API의 한계 때문에 쓰는 일반적인 방식)
+  //  - "파찌" → 그냥 읽으면 된소리(ㅉ)가 예사소리(ㅈ)로 풀려 "파지"로 들림.
+  //    앞 음절에 받침 ㅅ을 붙이면(사이시옷과 같은 원리, 예: 냇가[내까]) 뒷 음절이
+  //    저절로 된소리로 발음되므로 "팟지"로 표기해 실제로는 "파찌"에 가깝게 읽힌다.
+  //  - "봄덕이" → 받침 뒤 "이"가 이어지며 자연스럽게 연음되어야("봄더기") 하는데
+  //    TTS가 이를 못 살리고 전혀 다르게("보띠") 읽는 경우가 있어, 연음된 표기를
+  //    직접 넘겨 정확한 발음을 유도한다.
+  // 여기 없는 다른 닉네임은 라인업 소개 화면에서 선수별 "발음 표기(pronounceAs)"를
+  // 등록해 개별로 교정할 수 있고, 그 값이 우선 적용된다. 이 사전은 그와 별개로
+  // 앱 전체(챗봇/브리핑/경기 상세 등)에서 공통으로 쓰이는 최후 안전망이다.
+  var _PRONOUNCE_FIX = {
+    '파찌': '팟지',
+    '봄덕이': '봄더기'
+  };
+  // 필요하면 런타임에 교정 항목을 더 등록할 수 있게 열어둔다.
+  function addPronunciationFix(map){
+    try{
+      Object.keys(map || {}).forEach(function(k){ if (k) _PRONOUNCE_FIX[k] = map[k]; });
+    }catch(e){}
+  }
+  function applyPronunciationFix(t){
+    var s = String(t == null ? '' : t);
+    Object.keys(_PRONOUNCE_FIX).forEach(function(key){
+      if (!key) return;
+      // 뒤에 다른 한글 음절이 곧바로 이어지지 않을 때만 치환한다(다른 단어 안에 우연히
+      // 포함된 경우까지 잘못 건드리지 않도록, 조사/구두점/공백/문자열 끝 앞에서만 매칭).
+      var re = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![가-힣])', 'g');
+      s = s.replace(re, _PRONOUNCE_FIX[key]);
+    });
+    return s;
+  }
+
   function sanitize(t){
     var s = String(t == null ? '' : t)
       .replace(/<[^>]*>/g, ' ')
@@ -84,6 +119,7 @@
     s = _convertVs(s);
     s = _convertScores(s);
     s = _convertPercent(s);
+    s = applyPronunciationFix(s);
     return s.replace(/\s+/g, ' ').trim();
   }
 
@@ -117,6 +153,9 @@
       // 조금 더 차분하고 부드러운 속도/톤 (기존보다 살짝 느리게)
       utter.rate = (_opts.rate || 0.96);
       utter.pitch = (_opts.pitch != null ? _opts.pitch : 1.0);
+      // 브라우저 TTS 볼륨은 기본값이 이미 최대(1.0)라 코드로 더 키울 순 없다.
+      // (라인업 소개연출에서 목소리가 묻히는 문제는 배경음악 쪽을 줄이는 방식으로 해결함 — board2-univ-views-lineup.js의 BGM 더킹 참고)
+      utter.volume = (_opts.volume != null ? Math.max(0, Math.min(1, _opts.volume)) : 1);
       var advanced = false;
       var advanceOnce = function(){
         if (advanced) return;
@@ -228,6 +267,8 @@
     isSpeaking: function(){ return _speaking; },
     isPaused: function(){ return _paused; },
     sanitize: sanitize,
-    tierLabel: tierSpeakLabel
+    tierLabel: tierSpeakLabel,
+    // 발음 교정 사전에 항목 추가/덮어쓰기 (예: window.SUTTS.addPronunciationFix({'닉네임':'교정표기'}))
+    addPronunciationFix: addPronunciationFix
   };
 })();

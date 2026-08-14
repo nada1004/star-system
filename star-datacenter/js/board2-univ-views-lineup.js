@@ -374,7 +374,9 @@ function _b2LineupView() {
     '#b2-lc-intro-progress-track.on{opacity:1}',
     '#b2-lc-intro-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#a78bfa);transition:width .35s ease}',
     '.b2-lc-landed{animation:b2LcLanded .55s cubic-bezier(.34,1.56,.64,1)}',
-    '@keyframes b2LcLanded{0%{transform:scale(1.06)}60%{transform:scale(.985)}100%{transform:scale(1)}}'
+    '@keyframes b2LcLanded{0%{transform:scale(1.06)}60%{transform:scale(.985)}100%{transform:scale(1)}}',
+    /* 소개연출 재생 중에는 카드/표의 스트리머별 개별 🔊 듣기 버튼을 숨긴다 */
+    'body.b2-lc-intro-active .b2-lineup-tts-btn{display:none!important}'
   ].join('');
 
   document.head.appendChild(s);
@@ -587,6 +589,10 @@ var _b2LineupBgmPendingVid = null;
 var _b2LineupBgmVolume = 50;
 var _b2LineupBgmActive = false;
 var _b2LineupBgmKickTimer = null;
+// (기능추가, 2026-08-14) 소개연출 중 TTS 음성이 BGM에 묻히는 문제 — TTS가 말하는 동안은
+// BGM 볼륨을 일시적으로 낮춰(더킹) 음성이 더 잘 들리게 하고, 끝나면 원래 볼륨으로 복원한다.
+var _b2LineupBgmDucked = false;
+var _b2LineupBgmDuckRatio = 0.32; // 더킹 시 원래 볼륨의 32%까지만 재생
 
 function _b2LineupBgmExtractId(urlOrId) {
   const s = String(urlOrId || '').trim();
@@ -654,11 +660,21 @@ function _b2LineupBgmEnsurePlayer() {
 function _b2LineupBgmApplyVol() {
   if (!_b2LineupBgmPlayer) return;
   try {
-    const v = Math.max(0, Math.min(100, parseInt(_b2LineupBgmVolume, 10) || 0));
+    let v = Math.max(0, Math.min(100, parseInt(_b2LineupBgmVolume, 10) || 0));
+    if (_b2LineupBgmDucked) v = Math.round(v * _b2LineupBgmDuckRatio);
     if (v <= 0) { _b2LineupBgmPlayer.mute && _b2LineupBgmPlayer.mute(); }
     else { _b2LineupBgmPlayer.unMute && _b2LineupBgmPlayer.unMute(); }
     _b2LineupBgmPlayer.setVolume(v);
   } catch (e) {}
+}
+
+// 더킹 on/off — 소개연출 재생 시작~종료 동안 켜둔다. 저장된 볼륨값(_b2LineupBgmVolume) 자체는
+// 건드리지 않고, 실제 재생 볼륨에만 일시적으로 비율을 곱해 적용한다.
+function _b2LineupBgmSetDucked(on) {
+  on = !!on;
+  if (_b2LineupBgmDucked === on) return;
+  _b2LineupBgmDucked = on;
+  _b2LineupBgmApplyVol();
 }
 
 // (버그픽스, 2026-08-14) 저장한 BGM이 재생되지 않던 문제.
@@ -719,6 +735,7 @@ function _b2LineupBgmSetPaused(paused) {
 function _b2LineupBgmStop() {
   _b2LineupBgmActive = false;
   _b2LineupBgmPendingVid = null;
+  _b2LineupBgmDucked = false;
   if (_b2LineupBgmKickTimer) { clearInterval(_b2LineupBgmKickTimer); _b2LineupBgmKickTimer = null; }
   try { if (_b2LineupBgmPlayer) _b2LineupBgmPlayer.stopVideo(); } catch (e) {}
   _b2LineupBgmSyncControls();
@@ -915,6 +932,9 @@ function _b2IntroWaitIfPaused(token) {
 /* ── 무대 장치(암전 배경 / 스포트라이트 빔 / 이름 자막) ── */
 function _b2IntroStageOn() {
   try {
+    // 소개연출 재생 중에는 카드별 "개별 듣기(🔊)" 버튼을 숨긴다 — 전체 연출 진행 중에
+    // 개별 버튼을 눌러 다른 오디오 흐름이 겹치면 혼란스러우므로.
+    document.body.classList.add('b2-lc-intro-active');
     let bd = document.getElementById('b2-lc-intro-backdrop');
     if (!bd) {
       bd = document.createElement('div');
@@ -953,6 +973,7 @@ function _b2IntroStageOn() {
 }
 
 function _b2IntroStageOff() {
+  try { document.body.classList.remove('b2-lc-intro-active'); } catch(e){}
   try {
     ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap','b2-lc-intro-controls','b2-lc-intro-progress-track','b2-lc-intro-elobadge'].forEach(id => {
       const el = document.getElementById(id);
@@ -961,6 +982,7 @@ function _b2IntroStageOff() {
       setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
     });
   } catch(e){}
+  _b2LineupBgmSetDucked(false);
   _b2LineupBgmStop();
 }
 
@@ -1267,6 +1289,8 @@ async function _b2LineupPlayIntroShow() {
   _b2LineupIntroBtnLabel();
   _b2LineupBindIntroClickStop();
   _b2LineupBgmStart(_b2LineupUniv);
+  // 소개연출 재생 중에는 TTS 음성이 배경음악에 묻히지 않도록 BGM을 더킹(감쇠)한다.
+  _b2LineupBgmSetDucked(true);
   _b2IntroStageOn();
   _b2LineupPrepareIntroHide();
   _b2IntroSFXFanfare();

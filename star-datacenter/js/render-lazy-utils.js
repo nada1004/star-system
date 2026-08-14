@@ -164,52 +164,14 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
 }
+// (버그픽스, 2026-08-14) 이 함수가 _ensureStatsLoaded와 완전히 동일한 파일 목록을
+// 별도로 하드코딩하고 있어서, 번들 빌드(build.mjs의 patchLazyUtils)가 _ensureStatsLoaded만
+// dist/js/lazy-stats.js 로 치환하고 이 함수는 놓쳐 원본 소스 경로(js/stats-core-utils.js 등)를
+// 그대로 불러오려다 dist 전용 배포에서 404("load fail: js/stats-core-utils.js")가 났었다.
+// 목록을 중복 관리하지 않고 _ensureStatsLoaded를 그대로 재사용하도록 하여, 빌드 시 자동으로
+// 같은 번들 청크를 타게 만든다.
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
-  await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
-  await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260724-fix1');
-  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
-  await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
-  await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260724-fix1');
-  await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260802-mapfix4');
-  await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260724-fix2');
-  await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-theme.js?v=20260804-darkfix23');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
-  await _loadScriptOnce('js/sharecard-runtime.js?v=20260811-univfx3');
-  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260811-univfx3');
-  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260804-darkfix23');
-  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260804-darkfix23');
-  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260804-darkfix23');
-  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
-  await _loadScriptOnce('js/stats-core-cache-utils.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-core-render.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-tier-rank-mini.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-star-system-calc.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-star-system-html.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-overview.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-growth.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-award-records.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-radar.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-univ-compare.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report-data.js?v=20260802-mapfix3');
-  await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
-  await _loadScriptOnce('js/stats-level-rank.js?v=20260802-lvlrank1');
-  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
-  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
-  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
+  await _ensureStatsLoaded();
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260813-split2');
