@@ -11,8 +11,8 @@
   --bc-col-mid:76px;
   --bc-col-gap:14px;
   border:1px solid var(--border);
-  border-left:4px solid var(--bc-ca);
-  border-right:4px solid var(--bc-cb);
+  border-left:5px solid var(--bc-ca);
+  border-right:5px solid var(--bc-cb);
   border-radius:var(--r2);
   background:var(--card);
   box-shadow:var(--sh);
@@ -22,10 +22,10 @@
 
 .bc-card-top{
   background:linear-gradient(90deg,
-    rgba(var(--bc-ca-rgb),.22) 0%,
-    rgba(var(--bc-ca-rgb),.06) 38%,
-    rgba(var(--bc-cb-rgb),.06) 62%,
-    rgba(var(--bc-cb-rgb),.22) 100%);
+    rgba(var(--bc-ca-rgb),.34) 0%,
+    rgba(var(--bc-ca-rgb),.09) 38%,
+    rgba(var(--bc-cb-rgb),.09) 62%,
+    rgba(var(--bc-cb-rgb),.34) 100%);
   border-bottom:1px solid var(--border);
 }
 
@@ -91,7 +91,7 @@
   text-overflow:ellipsis;
   white-space:nowrap;
   cursor:pointer;
-  opacity:.72;
+  opacity:.88;
 }
 .bc-team.is-win .bc-team-badge{
   opacity:1;
@@ -230,10 +230,10 @@ body.dark .bc-game-row:nth-child(odd){
 }
 body.dark .bc-card-top{
   background:linear-gradient(90deg,
-    rgba(var(--bc-ca-rgb),.30) 0%,
-    rgba(var(--bc-ca-rgb),.08) 38%,
-    rgba(var(--bc-cb-rgb),.08) 62%,
-    rgba(var(--bc-cb-rgb),.30) 100%);
+    rgba(var(--bc-ca-rgb),.42) 0%,
+    rgba(var(--bc-ca-rgb),.12) 38%,
+    rgba(var(--bc-cb-rgb),.12) 62%,
+    rgba(var(--bc-cb-rgb),.42) 100%);
 }
 
 @media (max-width:560px){

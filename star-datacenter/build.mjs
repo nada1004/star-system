@@ -475,12 +475,16 @@ async function minifyFile(filePath) {
   }
 }
 
-async function buildChunk(outName, files) {
+async function buildChunk(outName, files, overrides) {
   const outPath = path.join(DIST, 'js', outName);
   const parts = [];
   let missing = 0;
 
   for (const f of files) {
+    if (overrides && Object.prototype.hasOwnProperty.call(overrides, f)) {
+      parts.push(`/* ${path.basename(f)} (patched) */\n${overrides[f]}`);
+      continue;
+    }
     const full = path.join(SRC, f);
     if (!fs.existsSync(full)) {
       console.warn(`  ⚠️  파일 없음: ${f}`);
@@ -702,6 +706,7 @@ async function patchLazyUtils() {
     .then(r => r.code)
     .catch(() => patched);
   fs.writeFileSync(outPath, minified, 'utf8');
+  return minified;
 }
 
 // ──────────────────────────────────────────
@@ -804,9 +809,16 @@ async function main() {
   console.log('');
 
   console.log('📦 코어/기능 청크 빌드:');
+  // (버그픽스, 2026-08-14) patchLazyUtils()가 정의만 되어있고 실제로는 호출되지 않아서,
+  // chunk-core.js에 render-lazy-utils.js의 "원본"(개별 js/*.js 경로를 직접 fetch하는 버전)이
+  // 그대로 들어가고 있었다. dist만 배포하는 환경(원본 js/ 폴더 없이)에서는 stats/공유카드/
+  // 룰렛/캘린더/챗봇/엘보드/투표 등 지연 로딩 기능을 열 때마다 "load fail: js/xxx.js" 오류가
+  // 날 수 있는 구조였음 — 이번에 실제로 패치된 버전을 chunk-core.js에 넣도록 연결한다.
+  const patchedLazyUtils = await patchLazyUtils();
+  const coreOverrides = { 'js/render-lazy-utils.js': patchedLazyUtils };
   const results = [];
   for (const [name, files] of chunks) {
-    results.push(await buildChunk(name, files));
+    results.push(await buildChunk(name, files, name === 'chunk-core.js' ? coreOverrides : null));
   }
 
   console.log('\n⏳ 지연 로딩 청크 빌드:');
