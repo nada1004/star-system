@@ -634,9 +634,10 @@ function _b2LineupShowHoverTip(card, name, col) {
     const gaugeGrad = t30
       ? `conic-gradient(#f87171 ${wr30 * 3.6}deg, ${_gaugeTrack} 0)`
       : _gaugeTrack;
+    const _gaugeInnerBg = (typeof _b2PastelBg === 'function') ? _b2PastelBg(_tipCol, _tipIsLight ? 0.23 : 0.29) : '';
     const thirtyDayHtml = `<div class="b2-lc-hovertip-30d">
       <div class="b2-lc-hovertip-30d-gauge" style="background:${gaugeGrad}">
-        <div class="b2-lc-hovertip-30d-gauge-inner">${t30 ? wr30 + '%' : '-'}</div>
+        <div class="b2-lc-hovertip-30d-gauge-inner"${_gaugeInnerBg ? ` style="background:${_gaugeInnerBg}"` : ''}>${t30 ? wr30 + '%' : '-'}</div>
       </div>
       <div class="b2-lc-hovertip-30d-text">최근 30일<br><span class="w">${w30}승</span> <span class="l">${l30}패</span></div>
     </div>`;
