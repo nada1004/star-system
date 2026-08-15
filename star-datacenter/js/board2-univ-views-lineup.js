@@ -35,7 +35,7 @@ function _b2LineupCard3(p, col) {
     ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>
+  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
       ${photo
@@ -111,7 +111,7 @@ function _b2LineupTableRow(p, col) {
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
+  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}')" onmouseleave="_b2LineupCardHoverLeave()" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
@@ -191,8 +191,8 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `
     <div data-b2lc-player="${attrName}" style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
+      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)';_b2LineupCardHoverEnter(event,this,'${safeName}')"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""};_b2LineupCardHoverLeave()"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
         <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
         ${_fillBackdrop}
@@ -376,11 +376,271 @@ function _b2LineupView() {
     '.b2-lc-landed{animation:b2LcLanded .55s cubic-bezier(.34,1.56,.64,1)}',
     '@keyframes b2LcLanded{0%{transform:scale(1.06)}60%{transform:scale(.985)}100%{transform:scale(1)}}',
     /* 소개연출 재생 중에는 카드/표의 스트리머별 개별 🔊 듣기 버튼을 숨긴다 */
-    'body.b2-lc-intro-active .b2-lineup-tts-btn{display:none!important}'
+    'body.b2-lc-intro-active .b2-lineup-tts-btn{display:none!important}',
+    /* 최상위 티어/에이스 등장 시 화면 흔들림 */
+    '@keyframes b2LcShake{0%,100%{transform:translate3d(0,0,0)}20%{transform:translate3d(-6px,3px,0)}40%{transform:translate3d(5px,-4px,0)}60%{transform:translate3d(-4px,4px,0)}80%{transform:translate3d(6px,-2px,0)}}',
+    '.b2-lc-intro-shake{animation:b2LcShake .5s ease-in-out}',
+    /* 마지막(에이스) 카드 등장 시 화이트 플래시 */
+    '#b2-lc-intro-flash{position:fixed;inset:0;z-index:9996;pointer-events:none;background:#fff;opacity:0}',
+    '#b2-lc-intro-flash.hit{animation:b2LcFlash .55s ease-out}',
+    '@keyframes b2LcFlash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}',
+    /* 배경에 떠다니는 앰비언트 파티클(먼지/별) */
+    '#b2-lc-intro-particles{position:fixed;inset:0;z-index:9989;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .6s ease}',
+    '#b2-lc-intro-particles.on{opacity:1}',
+    '.b2-lc-ambient-p{position:absolute;bottom:-10px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 6px 1px rgba(255,255,255,.35);animation:b2LcAmbientFloat linear infinite}',
+    '@keyframes b2LcAmbientFloat{0%{transform:translateY(0) translateX(0);opacity:0}8%{opacity:.8}92%{opacity:.6}100%{transform:translateY(-110vh) translateX(var(--drift,20px));opacity:0}}',
+    /* 시작 전 3-2-1 카운트다운 */
+    '#b2-lc-intro-countdown{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(1);z-index:10001;pointer-events:none;opacity:0;font-weight:900;font-size:min(22vw,220px);color:#fff;text-shadow:0 0 40px rgba(96,165,250,.8),0 8px 30px rgba(2,6,23,.6)}',
+    '#b2-lc-intro-countdown.go{animation:b2LcCountdownPop .78s cubic-bezier(.2,1.4,.4,1)}',
+    '@keyframes b2LcCountdownPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}',
+    /* 한줄평 타이핑 효과용 커서 */
+    '#b2-lc-intro-subcap.typing::after{content:"";display:inline-block;width:2px;height:1em;margin-left:2px;background:currentColor;vertical-align:-2px;animation:b2LcCaret .8s steps(1) infinite}',
+    '@keyframes b2LcCaret{0%,49%{opacity:1}50%,100%{opacity:0}}',
+    /* 라인업 카드 호버 시 뜨는 선수 정보 미니 팝업 (PC 마우스 전용) */
+    '#b2-lc-hovertip{position:fixed;z-index:10050;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s ease,transform .15s ease;background:rgba(15,23,42,.96);color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 16px 38px rgba(2,6,23,.45);min-width:300px;max-width:340px;backdrop-filter:blur(6px)}',
+    '#b2-lc-hovertip.on{opacity:1;transform:translateY(0)}',
+    '#b2-lc-hovertip.below{transform:translateY(-4px)}',
+    '#b2-lc-hovertip.below.on{transform:translateY(0)}',
+    '.b2-lc-hovertip-body{display:flex;flex-direction:column}',
+    '.b2-lc-hovertip-top{display:flex;align-items:flex-start;gap:12px}',
+    '.b2-lc-hovertip-photowrap{position:relative;width:92px;height:122px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.1)}',
+    '.b2-lc-hovertip-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
+    '.b2-lc-hovertip-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;color:rgba(255,255,255,.65)}',
+    '.b2-lc-hovertip-content{flex:1;min-width:0}',
+    '.b2-lc-hovertip-title{font-size:10px;font-weight:900;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}',
+    '.b2-lc-hovertip-name{font-size:14px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}',
+    '.b2-lc-hovertip-tier{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:900;color:rgba(255,255,255,.65);margin-bottom:10px}',
+    '.b2-lc-hovertip-tier-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}',
+    '.b2-lc-hovertip-30d{display:flex;align-items:center;gap:9px}',
+    '.b2-lc-hovertip-30d-gauge{position:relative;width:48px;height:48px;border-radius:50%;flex-shrink:0}',
+    '.b2-lc-hovertip-30d-gauge-inner{position:absolute;inset:4px;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff}',
+    '.b2-lc-hovertip-30d-text{font-size:10px;color:rgba(255,255,255,.8);font-weight:800;line-height:1.55}',
+    '.b2-lc-hovertip-30d-text b{color:#fff;font-weight:900}',
+    '.b2-lc-hovertip-30d-text .w{color:#f87171}',
+    '.b2-lc-hovertip-30d-text .l{color:#60a5fa}',
+    '.b2-lc-hovertip-section{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.14)}',
+    '.b2-lc-hovertip-race-row{display:flex;align-items:center;gap:7px;font-size:10px;padding:2.5px 0;color:rgba(255,255,255,.88)}',
+    '.b2-lc-hovertip-race-label{width:38px;flex-shrink:0;font-weight:900}',
+    '.b2-lc-hovertip-race-bar{flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}',
+    '.b2-lc-hovertip-race-bar>span{display:block;height:100%;border-radius:999px}',
+    '.b2-lc-hovertip-race-wr{width:34px;flex-shrink:0;text-align:right;font-weight:900;color:#fff}',
+    '.b2-lc-hovertip-race-games{width:38px;flex-shrink:0;text-align:right;font-size:9px;color:rgba(255,255,255,.5);font-weight:700}',
+    '.b2-lc-hovertip-trend-svg{display:block;width:100%;height:42px;margin-top:2px}',
+    '.b2-lc-hovertip-dots{display:flex;gap:3px;margin-bottom:7px}',
+    '.b2-lc-hovertip-dot{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff}',
+    '.b2-lc-hovertip-dot.w{background:var(--win-col,#dc2626)}',
+    '.b2-lc-hovertip-dot.l{background:var(--lose-col,#2563eb)}',
+    '.b2-lc-hovertip-row{display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0;color:rgba(255,255,255,.92)}',
+    '.b2-lc-hovertip-res{font-weight:900;flex-shrink:0;width:16px}',
+    '.b2-lc-hovertip-res.w{color:var(--win-col,#f87171)}',
+    '.b2-lc-hovertip-res.l{color:var(--lose-col,#60a5fa)}',
+    '.b2-lc-hovertip-opp{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.b2-lc-hovertip-date{flex-shrink:0;color:rgba(255,255,255,.5);font-size:10px}',
+    '.b2-lc-hovertip-empty{font-size:11px;color:rgba(255,255,255,.7)}'
   ].join('');
 
   document.head.appendChild(s);
 })();
+
+/* ── 라인업 카드 호버 시 "최근 전적" 미니 툴팁 (PC 마우스 전용, 모바일 터치는 무시) ──
+   카드에 잠깐(약 0.26초)만 머물러야 뜨도록 살짝 지연을 줘서, 카드 사이를 훑고 지나갈 때
+   툴팁이 깜빡깜빡 뜨는 걸 방지한다. */
+var _b2LcHoverTimer = null;
+var _b2LcHoverCurName = '';
+
+function _b2LineupCardHoverEnter(e, card, name) {
+  try {
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (_b2LcHoverTimer) clearTimeout(_b2LcHoverTimer);
+    _b2LcHoverCurName = name;
+    _b2LcHoverTimer = setTimeout(() => {
+      if (_b2LcHoverCurName !== name) return;
+      _b2LineupShowHoverTip(card, name);
+    }, 260);
+  } catch(e){}
+}
+
+function _b2LineupCardHoverLeave() {
+  _b2LcHoverCurName = '';
+  try { if (_b2LcHoverTimer) { clearTimeout(_b2LcHoverTimer); _b2LcHoverTimer = null; } } catch(e){}
+  try { const tip = document.getElementById('b2-lc-hovertip'); if (tip) tip.classList.remove('on'); } catch(e){}
+}
+
+// 종족 코드(Z/T/P) → 표시용 라벨/색상 (선수 상세 "상대 종족별 전적" 카드와 동일한 배색 사용)
+var _B2LC_RACE_META = [
+  ['P', '프로토스', '#f59e0b'],
+  ['T', '테란', '#3b82f6'],
+  ['Z', '저그', '#a855f7']
+];
+
+function _b2LcRaceRowHtml(label, color, w, l) {
+  const t = w + l;
+  const wr = t ? Math.round(w / t * 100) : 0;
+  return `<div class="b2-lc-hovertip-race-row">
+    <span class="b2-lc-hovertip-race-label" style="color:${color}">${label}</span>
+    <span class="b2-lc-hovertip-race-bar"><span style="width:${t ? wr : 0}%;background:${color}"></span></span>
+    <span class="b2-lc-hovertip-race-wr">${t ? wr + '%' : '-'}</span>
+    <span class="b2-lc-hovertip-race-games">${t}전</span>
+  </div>`;
+}
+
+// 최근 경기 결과(오래된 → 최신) 배열로부터 "경기력 추세" 미니 스파크라인(SVG) 생성
+// 승=1 / 패=-1로 두고 직전 최대 5경기의 이동평균을 선으로 표시 (선수 상세 리포트의 경기력 추세 그래프와 같은 개념)
+function _b2LcTrendSparkSvg(histAsc) {
+  const seq = (histAsc || []).filter(h => h && (h.result === '승' || h.result === '패')).slice(-20);
+  if (seq.length < 2) return '';
+  const vals = seq.map((h, i) => {
+    const start = Math.max(0, i - 4);
+    const win = seq.slice(start, i + 1).filter(x => x.result === '승').length;
+    const tot = i - start + 1;
+    return (win / tot) * 2 - 1; // 0~1 승률 -> -1~1
+  });
+  const W = 280, H = 46, PAD = 4;
+  const stepX = vals.length > 1 ? (W - PAD * 2) / (vals.length - 1) : 0;
+  const yOf = v => PAD + (1 - (v + 1) / 2) * (H - PAD * 2);
+  const pts = vals.map((v, i) => [PAD + i * stepX, yOf(v)]);
+  const line = pts.map((pt, i) => (i === 0 ? 'M' : 'L') + pt[0].toFixed(1) + ',' + pt[1].toFixed(1)).join(' ');
+  const areaClose = ` L${pts[pts.length - 1][0].toFixed(1)},${(H - PAD).toFixed(1)} L${pts[0][0].toFixed(1)},${(H - PAD).toFixed(1)} Z`;
+  const midY = yOf(0).toFixed(1);
+  return `<div class="b2-lc-hovertip-title" style="margin-bottom:4px">경기력 추세 (최근 ${seq.length}경기)</div>
+    <svg class="b2-lc-hovertip-trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line x1="${PAD}" y1="${midY}" x2="${W - PAD}" y2="${midY}" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-dasharray="3,3"/>
+      <path d="${line}${areaClose}" fill="rgba(96,165,250,.28)" stroke="none"/>
+      <path d="${line}" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+// 라인업 카드 호버 팝업에 쓰는 통계(30일 성적/종족별 전적/경기력 추세)는
+// _tpHistAllForPlayer() 등 계산 비용이 있는 함수를 거치므로, 같은 선수를 다시 호버할 때
+// 매번 재계산하지 않도록 렌더 1회당 선수 이름 기준으로 캐시한다.
+// 캐시는 render()가 새로 호출될 때(render-core.js의 _renderImpl)마다 window._b2LcHoverStatCache = {}
+// 로 통째로 비워지므로, 데이터가 바뀌어 화면이 다시 그려지면 자연히 최신 값으로 갱신된다.
+function _b2LcComputeHoverStats(p) {
+  const histAll = (typeof _tpHistAllForPlayer === 'function') ? (_tpHistAllForPlayer(p) || []) : (p.history || []);
+  const decided = histAll.filter(h => h && (h.result === '승' || h.result === '패'));
+  const histDesc = [...decided].sort((a, b) => (typeof _tpDateNum === 'function' ? _tpDateNum(b && b.date) - _tpDateNum(a && a.date) : 0));
+  const histAsc = [...decided].sort((a, b) => (typeof _tpDateNum === 'function' ? _tpDateNum(a && a.date) - _tpDateNum(b && b.date) : 0));
+  const recent = histDesc.slice(0, 5);
+
+  // 최근 30일 성적
+  const cutoff30 = (typeof _tpDaysAgoNum === 'function') ? _tpDaysAgoNum(30) : 0;
+  const last30 = cutoff30 ? decided.filter(h => (typeof _tpDateNum === 'function' ? _tpDateNum(h.date) : 0) >= cutoff30) : [];
+  const w30 = last30.filter(h => h.result === '승').length;
+  const l30 = last30.filter(h => h.result === '패').length;
+
+  // 종족별 전적 (전체 기간)
+  const raceAgg = { Z: { w: 0, l: 0 }, T: { w: 0, l: 0 }, P: { w: 0, l: 0 } };
+  decided.forEach(h => {
+    const oppP = (typeof players !== 'undefined' ? players : []).find(x => x.name === h.opp);
+    const r = String(h.oppRace || (oppP && oppP.race) || '').toUpperCase();
+    if (raceAgg[r]) {
+      if (h.result === '승') raceAgg[r].w++; else raceAgg[r].l++;
+    }
+  });
+
+  // 경기력 추세 스파크라인 (svg는 이 시점에 미리 문자열로 만들어 캐시해둔다)
+  const trendSvg = _b2LcTrendSparkSvg(histAsc);
+
+  return { recent, w30, l30, raceAgg, trendSvg };
+}
+
+function _b2LcGetHoverStats(p) {
+  const cache = (window._b2LcHoverStatCache || (window._b2LcHoverStatCache = {}));
+  const key = String((p && p.name) || '');
+  if (cache[key]) return cache[key];
+  const stats = _b2LcComputeHoverStats(p);
+  cache[key] = stats;
+  return stats;
+}
+
+function _b2LineupShowHoverTip(card, name) {
+  try {
+    const p = (typeof players !== 'undefined' ? players : []).find(x => String((x && x.name) || '') === String(name || ''));
+    if (!p) return;
+    const { recent, w30, l30, raceAgg, trendSvg } = _b2LcGetHoverStats(p);
+
+    let tip = document.getElementById('b2-lc-hovertip');
+    if (!tip) { tip = document.createElement('div'); tip.id = 'b2-lc-hovertip'; document.body.appendChild(tip); }
+
+    const raceLetter = (p.race && p.race !== 'N') ? p.race : '?';
+    const photoUrl = p.photo ? (typeof toThumbUrl === 'function' ? toThumbUrl(p.photo, 184) : p.photo) : '';
+    const photoHtml = photoUrl
+      ? `<img class="b2-lc-hovertip-photo" src="${photoUrl}" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
+      : `<div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">${raceLetter}</div>`;
+
+    // ── 이름 / 티어 ──
+    const tierCol = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : '#64748b';
+    const tierHtml = p.tier
+      ? `<div class="b2-lc-hovertip-tier"><span class="b2-lc-hovertip-tier-dot" style="background:${tierCol}"></span>${_b2TierLabel(p.tier)}</div>`
+      : `<div class="b2-lc-hovertip-tier">&nbsp;</div>`;
+
+    // ── 최근 30일 성적 (도넛 게이지) ──
+    const t30 = w30 + l30;
+    const wr30 = t30 ? Math.round(w30 / t30 * 100) : 0;
+    const gaugeGrad = t30
+      ? `conic-gradient(#f87171 ${wr30 * 3.6}deg, rgba(255,255,255,.16) 0)`
+      : `rgba(255,255,255,.16)`;
+    const thirtyDayHtml = `<div class="b2-lc-hovertip-30d">
+      <div class="b2-lc-hovertip-30d-gauge" style="background:${gaugeGrad}">
+        <div class="b2-lc-hovertip-30d-gauge-inner">${t30 ? wr30 + '%' : '-'}</div>
+      </div>
+      <div class="b2-lc-hovertip-30d-text">최근 30일<br><span class="w">${w30}승</span> <span class="l">${l30}패</span></div>
+    </div>`;
+
+    // ── 종족별 전적 (전체 기간) ──
+    const raceHasAny = Object.values(raceAgg).some(a => (a.w + a.l) > 0);
+    const raceSectionHtml = raceHasAny
+      ? `<div class="b2-lc-hovertip-section">
+          <div class="b2-lc-hovertip-title" style="margin-bottom:5px">종족별 전적</div>
+          ${_B2LC_RACE_META.map(([code, label, color]) => _b2LcRaceRowHtml(label, color, raceAgg[code].w, raceAgg[code].l)).join('')}
+        </div>`
+      : '';
+
+    // ── 경기력 추세 ──
+    const trendSectionHtml = trendSvg ? `<div class="b2-lc-hovertip-section">${trendSvg}</div>` : '';
+
+    // ── 최근 5경기 ──
+    let recentSectionHtml;
+    if (!recent.length) {
+      recentSectionHtml = `<div class="b2-lc-hovertip-section"><div class="b2-lc-hovertip-title">최근 전적</div><div class="b2-lc-hovertip-empty">아직 등록된 전적이 없습니다</div></div>`;
+    } else {
+      const dots = recent.map(h => `<span class="b2-lc-hovertip-dot ${h.result === '승' ? 'w' : 'l'}">${h.result === '승' ? 'W' : 'L'}</span>`).join('');
+      const rows = recent.map(h => `
+        <div class="b2-lc-hovertip-row">
+          <span class="b2-lc-hovertip-res ${h.result === '승' ? 'w' : 'l'}">${h.result === '승' ? '승' : '패'}</span>
+          <span class="b2-lc-hovertip-opp">vs ${h.opp || '-'}</span>
+          <span class="b2-lc-hovertip-date">${h.date || ''}</span>
+        </div>`).join('');
+      recentSectionHtml = `<div class="b2-lc-hovertip-section"><div class="b2-lc-hovertip-title">최근 전적</div><div class="b2-lc-hovertip-dots">${dots}</div>${rows}</div>`;
+    }
+
+    tip.innerHTML = `<div class="b2-lc-hovertip-body">
+      <div class="b2-lc-hovertip-top">
+        <div class="b2-lc-hovertip-photowrap">${photoHtml}</div>
+        <div class="b2-lc-hovertip-content">
+          <div class="b2-lc-hovertip-name">${p.name || ''}</div>
+          ${tierHtml}
+          ${thirtyDayHtml}
+        </div>
+      </div>
+      ${raceSectionHtml}
+      ${trendSectionHtml}
+      ${recentSectionHtml}
+    </div>`;
+
+    const rect = card.getBoundingClientRect();
+    tip.classList.add('on');
+    const th = tip.offsetHeight, tw = tip.offsetWidth;
+    let top = rect.top - th - 10;
+    let below = false;
+    if (top < 8) { top = rect.bottom + 10; below = true; }
+    let left = rect.left + rect.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.classList.toggle('below', below);
+  } catch(e){}
+}
 
 var _b2LineupSpeaking = false;
 var _b2LineupSpeakTarget = '';   // '' = 라인업 전체, 그 외 = 특정 스트리머 이름
@@ -407,6 +667,20 @@ function _b2LineupSpeakName(p) {
       .trim();
     return n || (p && p.name) || '이름 미상';
   } catch(e) { return (p && p.name) || '이름 미상'; }
+}
+
+// 개별(카드 🔊 버튼) 듣기에서만 덧붙이는 "종족별 전적" 낭독 문구.
+// 팝업(_b2LineupShowHoverTip)과 같은 캐시(_b2LcGetHoverStats)를 그대로 재사용해서
+// 계산을 중복하지 않고, 화면에 보이는 종족별 전적과 항상 같은 수치를 읽도록 한다.
+// 기록이 있는 종족만 언급한다.
+function _b2LineupRaceSpeakText(p) {
+  try {
+    const { raceAgg } = _b2LcGetHoverStats(p);
+    const parts = _B2LC_RACE_META
+      .filter(([code]) => (raceAgg[code].w + raceAgg[code].l) > 0)
+      .map(([code, label]) => `${label}전 ${raceAgg[code].w}승 ${raceAgg[code].l}패`);
+    return parts.length ? `종족별 전적은 ${parts.join(', ')}입니다.` : '';
+  } catch(e) { return ''; }
 }
 
 // 화면 카드와 동일한 순서(임원 → 멤버)로 소개 문장을 만든다.
@@ -438,7 +712,12 @@ function _b2LineupBuildSpeakQueue(univName, onlyName) {
   if (onlyName) {
     const p = members.find(x => String(x.name||'') === String(onlyName));
     if (!p) return [];
-    return [{ text: `${univName} ${p.role ? p.role + ', ' : ''}${describe(p)}`, player: p.name }];
+    // 프로필 이미지 🔊 버튼으로 개별 듣기를 할 때만 종족별 전적 + 한줄평(설정에 입력돼 있으면)을
+    // 이어서 읽어준다 (라인업 전체 소개는 인원이 많아 장황해지므로 기존처럼 기본 소개만 유지).
+    const raceText = _b2LineupRaceSpeakText(p);
+    const oneLiner = _b2LineupOneLiner(p);
+    const text = `${univName} ${p.role ? p.role + ', ' : ''}${describe(p)}${raceText ? ' ' + raceText : ''}${oneLiner ? ' ' + oneLiner : ''}`;
+    return [{ text, player: p.name }];
   }
 
   const queue = [{ text: `${univName} 라인업 소개를 시작합니다. 총 ${members.length}명입니다.`, player: null }];
@@ -870,9 +1149,66 @@ function _b2IntroSFXFanfare() {
     _b2IntroSFXTone(ctx, f, t0 + i * 0.09, 0.35, 'triangle', 0.1);
   });
 }
+// 카운트다운 숫자가 뜰 때마다 짧은 비프음 (마지막 "시작!"만 더 높고 길게)
+function _b2IntroSFXCountdownBeep(isFinal) {
+  if (_b2IntroSFXMuted()) return;
+  const ctx = _b2IntroSFXGetCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  _b2IntroSFXTone(ctx, isFinal ? 1046.5 : 660, t0, isFinal ? 0.32 : 0.16, 'triangle', isFinal ? 0.16 : 0.11);
+}
 try {
   window._b2IntroSFXToggleMute = _b2IntroSFXToggleMute;
 } catch(e){}
+
+// 소개 시작 직전 "3・2・1・시작!" 카운트다운. 정지/일시정지 토큰을 그대로 존중한다.
+async function _b2IntroCountdown(token) {
+  try {
+    let cd = document.getElementById('b2-lc-intro-countdown');
+    if (!cd) { cd = document.createElement('div'); cd.id = 'b2-lc-intro-countdown'; document.body.appendChild(cd); }
+    const steps = ['3', '2', '1', '시작!'];
+    for (const s of steps) {
+      if (token !== _b2LineupIntroToken) return false;
+      if (!(await _b2IntroWaitIfPaused(token))) return false;
+      cd.textContent = s;
+      cd.classList.remove('go');
+      void cd.offsetWidth;
+      cd.classList.add('go');
+      _b2IntroSFXCountdownBeep(s === '시작!');
+      if (!(await _b2IntroWait(560, token))) return false;
+    }
+    return token === _b2LineupIntroToken;
+  } catch(e) { return true; }
+  finally { try { const cd = document.getElementById('b2-lc-intro-countdown'); if (cd) cd.remove(); } catch(e){} }
+}
+
+// 최상위 티어/에이스 등장 시 화면을 짧게 흔든다
+function _b2IntroScreenShake() {
+  try {
+    const bd = document.getElementById('b2-lc-intro-backdrop');
+    if (!bd) return;
+    bd.classList.remove('b2-lc-intro-shake');
+    void bd.offsetWidth;
+    bd.classList.add('b2-lc-intro-shake');
+    setTimeout(() => { try { bd.classList.remove('b2-lc-intro-shake'); } catch(e){} }, 520);
+  } catch(e){}
+}
+
+// 라인업의 마지막(에이스) 카드가 등장할 때 화면 전체 화이트 플래시 + 추가 팡파레
+function _b2IntroAceFlash() {
+  try {
+    const el = document.getElementById('b2-lc-intro-flash');
+    if (el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  } catch(e){}
+  _b2IntroSFXFanfare();
+}
+
+// TIERS 배열에서의 순번(0=최상위)을 반환. 몰라도 조용히 -1.
+function _b2IntroTierRank(tier) {
+  try {
+    return (typeof TIERS !== 'undefined' && Array.isArray(TIERS)) ? TIERS.indexOf(tier) : -1;
+  } catch(e) { return -1; }
+}
 
 function _b2LineupIntroSetPaused(paused) {
   _b2LineupIntroPaused = paused;
@@ -896,7 +1232,7 @@ function _b2LineupIntroSetPaused(paused) {
 
 function _b2LineupIntroBtnLabel() {
   const btn = document.getElementById('b2-lineup-intro-btn');
-  if (btn) btn.innerHTML = !_b2LineupIntroPlaying ? '🎬 소개연출' : (_b2LineupIntroPaused ? '▶ 이어보기' : '⏸ 일시정지');
+  if (btn) btn.innerHTML = !_b2LineupIntroPlaying ? '▶ 재생' : (_b2LineupIntroPaused ? '▶ 이어보기' : '⏸ 일시정지');
   // 재생 중일 때만 별도의 "정지" 버튼을 보여준다 (일시정지/이어보기와는 별개 동작).
   const stopBtn = document.getElementById('b2-lineup-intro-stop-btn');
   if (stopBtn) stopBtn.style.display = _b2LineupIntroPlaying ? 'flex' : 'none';
@@ -968,7 +1304,48 @@ function _b2IntroStageOn() {
       ptrack.innerHTML = '<div id="b2-lc-intro-progress-bar"></div>';
       document.body.appendChild(ptrack);
     }
+    if (!document.getElementById('b2-lc-intro-flash')) {
+      const flash = document.createElement('div');
+      flash.id = 'b2-lc-intro-flash';
+      document.body.appendChild(flash);
+    }
     requestAnimationFrame(() => { bd.classList.add('on'); beam.classList.add('on'); ctrl.classList.add('on'); ptrack.classList.add('on'); });
+    _b2IntroParticlesStart();
+  } catch(e){}
+}
+
+// 배경에 은은하게 떠다니는 먼지/별 파티클 — 무대 켜져 있는 동안 계속 생성된다.
+var _b2IntroParticleTimer = null;
+function _b2IntroParticlesStart() {
+  try {
+    let layer = document.getElementById('b2-lc-intro-particles');
+    if (!layer) { layer = document.createElement('div'); layer.id = 'b2-lc-intro-particles'; document.body.appendChild(layer); }
+    requestAnimationFrame(() => layer.classList.add('on'));
+    const spawn = () => {
+      const l = document.getElementById('b2-lc-intro-particles');
+      if (!l) return;
+      const p = document.createElement('div');
+      p.className = 'b2-lc-ambient-p';
+      const size = 2 + Math.random() * 3;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = (Math.random() * 100) + 'vw';
+      const dur = 6 + Math.random() * 6;
+      p.style.animationDuration = dur + 's';
+      p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+      l.appendChild(p);
+      setTimeout(() => { try { p.remove(); } catch(e){} }, dur * 1000 + 200);
+    };
+    for (let i = 0; i < 10; i++) setTimeout(spawn, i * 150);
+    if (_b2IntroParticleTimer) clearInterval(_b2IntroParticleTimer);
+    _b2IntroParticleTimer = setInterval(spawn, 450);
+  } catch(e){}
+}
+function _b2IntroParticlesStop() {
+  try {
+    if (_b2IntroParticleTimer) { clearInterval(_b2IntroParticleTimer); _b2IntroParticleTimer = null; }
+    const layer = document.getElementById('b2-lc-intro-particles');
+    if (layer) { layer.classList.remove('on'); setTimeout(() => { try { layer.remove(); } catch(e){} }, 650); }
   } catch(e){}
 }
 
@@ -982,6 +1359,9 @@ function _b2IntroStageOff() {
       setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
     });
   } catch(e){}
+  try { const fl = document.getElementById('b2-lc-intro-flash'); if (fl) fl.remove(); } catch(e){}
+  try { const cd = document.getElementById('b2-lc-intro-countdown'); if (cd) cd.remove(); } catch(e){}
+  _b2IntroParticlesStop();
   _b2LineupBgmSetDucked(false);
   _b2LineupBgmStop();
 }
@@ -1017,6 +1397,30 @@ function _b2IntroSubCaption(text) {
   } catch(e){}
 }
 
+// 한줄평 자막을 타자기처럼 한 글자씩 채워 보여준다 (음성 재생과 동시에 진행되도록 await하지 않고 호출).
+// 새로 호출될 때마다 세대(gen)를 증가시켜, 이전 카드의 타이핑 타이머가 새 카드 자막을 덮어쓰지 않게 한다.
+var _b2IntroSubCapGen = 0;
+function _b2IntroSubCaptionType(text, token) {
+  const gen = ++_b2IntroSubCapGen;
+  try {
+    const sc = document.getElementById('b2-lc-intro-subcap');
+    if (!sc) return;
+    if (!text) { sc.classList.remove('on', 'typing'); sc.textContent = ''; return; }
+    sc.textContent = '';
+    sc.classList.add('on', 'typing');
+    let i = 0;
+    const step = () => {
+      if (gen !== _b2IntroSubCapGen || token !== _b2LineupIntroToken) return;
+      if (_b2LineupIntroPaused) { setTimeout(step, 120); return; }
+      i++;
+      sc.textContent = text.slice(0, i);
+      if (i < text.length) setTimeout(step, 32);
+      else sc.classList.remove('typing');
+    };
+    step();
+  } catch(e){}
+}
+
 // "한줄평" — 스트리머 정보수정에서 직접 입력한 값만 사용한다.
 // (자동 생성 문구는 쓰지 않으며, 입력이 없으면 자막/음성 모두 생략)
 function _b2LineupOneLiner(p) {
@@ -1024,12 +1428,13 @@ function _b2LineupOneLiner(p) {
 }
 
 // 착지 순간 사방으로 튀는 반짝이 파티클 (color: 해당 선수 티어 색상, race: 종족별 파티클 모양/개수 차등)
-function _b2IntroSparkBurst(rect, color, race) {
+function _b2IntroSparkBurst(rect, color, race, boost) {
   try {
     if (!rect) return;
     const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
     // 종족별 연출 차등: 저그(유기체 느낌, 많고 작게) / 테란(금속 파편, 적고 각지게) / 프로토스(사이오닉, 파티클 대신 링 위주)
-    const n = race === 'Z' ? 16 : (race === 'T' ? 8 : 10);
+    // boost: 최상위 티어/에이스 카드일 때 파티클 수를 더 늘려서 화려하게(기본 1, 클라이맥스 1.8)
+    const n = Math.round((race === 'Z' ? 16 : (race === 'T' ? 8 : 10)) * (boost || 1));
     const raceCls = race === 'Z' ? ' race-z' : (race === 'T' ? ' race-t' : (race === 'P' ? ' race-p' : ''));
     for (let i = 0; i < n; i++) {
       const ang = (Math.PI * 2 * i / n) + (Math.random() * 0.4 - 0.2);
@@ -1107,7 +1512,8 @@ async function _b2IntroSpeak(text, token) {
 
 // 카드 하나: 중앙에 크게 등장(플립+광택) → 소개 음성 → 자기 자리로 이동 → 착지 파장
 // glowColor: 해당 선수의 티어 색상 — 발광 펄스/파장/스파클 색을 선수마다 다르게 보여준다.
-function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race) {
+// opts: { climax: 최상위 티어라 화면 흔들림+확대 스파클을 넣을지, isAce: 라인업 마지막 카드(에이스)라 화이트 플래시+추가 팡파레를 넣을지 }
+function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race, opts) {
   return new Promise(async (resolve) => {
     try {
       if (!el || el.tagName === 'TR') {
@@ -1165,9 +1571,13 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race) {
       if (token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
 
       // 화면 중앙에 도착한 순간 한 번 더 스파클 (착지 때와 별개로, 등장 자체를 더 화려하게)
+      const _climax = !!(opts && opts.climax);
+      const _isAce = !!(opts && opts.isAce);
       try {
         const cr = clone.getBoundingClientRect();
-        _b2IntroSparkBurst(cr, glowColor, race);
+        _b2IntroSparkBurst(cr, glowColor, race, (_climax || _isAce) ? 1.8 : 1);
+        if (_climax) _b2IntroScreenShake();
+        if (_isAce) _b2IntroAceFlash();
       } catch(e){}
 
       // 중앙에서 소개 음성 재생 (읽는 동안 은은한 발광 펄스)
@@ -1199,7 +1609,7 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race) {
         ripple.style.cssText += `left:${rr.left}px;top:${rr.top}px;width:${rr.width}px;height:${rr.height}px`;
         document.body.appendChild(ripple);
         setTimeout(() => { try { ripple.remove(); } catch(e){} }, 720);
-        _b2IntroSparkBurst(rr, glowColor, race);
+        _b2IntroSparkBurst(rr, glowColor, race, (_climax || _isAce) ? 1.8 : 1);
         _b2IntroSFXChime(glowColor);
         el.classList.add('b2-lc-landed');
         setTimeout(() => { try { el.classList.remove('b2-lc-landed'); } catch(e){} }, 600);
@@ -1262,7 +1672,7 @@ async function _b2LineupPlayIntroShow() {
 
   // 소개 멘트: 음성듣기와 같은 문장 생성기를 재사용해 이름별로 매칭한다.
   // 여기에 선수 데이터 기반 "한줄평"과 티어 색상(발광 효과용)도 함께 준비한다.
-  let intro = '', outro = '', lineMap = {}, oneLinerMap = {}, glowMap = {}, raceMap = {}, eloMap = {};
+  let intro = '', outro = '', lineMap = {}, oneLinerMap = {}, glowMap = {}, raceMap = {}, eloMap = {}, tierIdxMap = {};
   try {
     const q = _b2LineupBuildSpeakQueue(_b2LineupUniv) || [];
     if (q.length) { intro = q[0].text || ''; outro = q[q.length - 1].text || ''; }
@@ -1279,6 +1689,7 @@ async function _b2LineupPlayIntroShow() {
         glowMap[name] = (p.tier && typeof getTierBtnColor === 'function') ? (getTierBtnColor(p.tier) || '#60a5fa') : '#60a5fa';
         raceMap[name] = p.race || '';
         eloMap[name] = _b2IntroEloDelta(p);
+        tierIdxMap[name] = _b2IntroTierRank(p.tier);
       }
     });
   } catch(e){}
@@ -1293,10 +1704,12 @@ async function _b2LineupPlayIntroShow() {
   _b2LineupBgmSetDucked(true);
   _b2IntroStageOn();
   _b2LineupPrepareIntroHide();
+
+  if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
+  if (!(await _b2IntroCountdown(token))) { _b2IntroStageOff(); return; }
+  if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
   _b2IntroSFXFanfare();
 
-  // 버튼을 누르면 곧바로 시작한다 (예전엔 320ms 고정 대기가 있어 살짝 밀리는 느낌이 있었음).
-  if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
   if (intro) {
     _b2IntroCaption(intro);
     if (!(await _b2IntroSpeak(intro, token))) { _b2IntroStageOff(); return; }
@@ -1309,12 +1722,15 @@ async function _b2LineupPlayIntroShow() {
     _introIdx++;
     _b2IntroProgressUpdate(_introIdx, els.length);
     _b2IntroCaption(name);
-    _b2IntroSubCaption(oneLinerMap[name] || '');
+    _b2IntroSubCaptionType(oneLinerMap[name] || '', token);
     _b2IntroEloBadge(eloMap[name]);
-    await _b2LineupIntroFlyCard(el, token, lineMap[name] || '', glowMap[name], raceMap[name]);
+    const _tIdx = tierIdxMap[name];
+    const _isClimaxTier = (_tIdx != null && _tIdx >= 0 && _tIdx <= 1); // TIERS 최상위 2단계(G/K)
+    const _isAceCard = (_introIdx === els.length);
+    await _b2LineupIntroFlyCard(el, token, lineMap[name] || '', glowMap[name], raceMap[name], { climax: _isClimaxTier, isAce: _isAceCard });
     if (token !== _b2LineupIntroToken) { _b2IntroStageOff(); return; }
     _b2LineupApplySpotlightDim(el);
-    _b2IntroSubCaption('');
+    _b2IntroSubCaptionType('', token);
     _b2IntroEloBadge(null);
     if (!(await _b2IntroWait(200, token))) { _b2IntroStageOff(); return; }
   }

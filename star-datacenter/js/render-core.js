@@ -26,6 +26,7 @@ function _renderImpl(){
   C.innerHTML='';
   window._compListCache={};
   window._histTourneyCache={};
+  window._b2LcHoverStatCache={};
   switch(curTab){
     case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   else C.innerHTML='<div class="empty-state">전체 순위를 불러올 수 없습니다.</div>'; break;
     case 'tier':    if(typeof rTier==='function')    rTier(C,T);    else C.innerHTML='<div class="empty-state">티어 순위표를 불러올 수 없습니다.</div>'; break;
