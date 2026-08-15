@@ -35,7 +35,7 @@ function _b2LineupCard3(p, col) {
     ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
+  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
       ${photo
@@ -111,7 +111,7 @@ function _b2LineupTableRow(p, col) {
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}')" onmouseleave="_b2LineupCardHoverLeave()" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
+  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
@@ -191,7 +191,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `
     <div data-b2lc-player="${attrName}" style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)';_b2LineupCardHoverEnter(event,this,'${safeName}')"
+      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)';_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""};_b2LineupCardHoverLeave()"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
         <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
@@ -397,7 +397,7 @@ function _b2LineupView() {
     '#b2-lc-intro-subcap.typing::after{content:"";display:inline-block;width:2px;height:1em;margin-left:2px;background:currentColor;vertical-align:-2px;animation:b2LcCaret .8s steps(1) infinite}',
     '@keyframes b2LcCaret{0%,49%{opacity:1}50%,100%{opacity:0}}',
     /* 라인업 카드 호버 시 뜨는 선수 정보 미니 팝업 (PC 마우스 전용) */
-    '#b2-lc-hovertip{position:fixed;z-index:10050;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s ease,transform .15s ease;background:rgba(15,23,42,.96);color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 16px 38px rgba(2,6,23,.45);min-width:300px;max-width:340px;backdrop-filter:blur(6px)}',
+    '#b2-lc-hovertip{position:fixed;z-index:10050;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s ease,transform .15s ease;background:rgba(15,23,42,.96);color:#fff;border:1px solid transparent;border-radius:14px;padding:12px 14px;box-shadow:0 16px 38px rgba(2,6,23,.45);min-width:300px;max-width:340px;backdrop-filter:blur(6px)}',
     '#b2-lc-hovertip.on{opacity:1;transform:translateY(0)}',
     '#b2-lc-hovertip.below{transform:translateY(-4px)}',
     '#b2-lc-hovertip.below.on{transform:translateY(0)}',
@@ -436,7 +436,25 @@ function _b2LineupView() {
     '.b2-lc-hovertip-res.l{color:var(--lose-col,#60a5fa)}',
     '.b2-lc-hovertip-opp{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.b2-lc-hovertip-date{flex-shrink:0;color:rgba(255,255,255,.5);font-size:10px}',
-    '.b2-lc-hovertip-empty{font-size:11px;color:rgba(255,255,255,.7)}'
+    '.b2-lc-hovertip-empty{font-size:11px;color:rgba(255,255,255,.7)}',
+    /* 라이트모드: 배경이 대학색상의 연한색이라 흰색 글자 대신 진한 색 계열로 전환 */
+    '#b2-lc-hovertip.light{color:#0f172a;box-shadow:0 16px 38px rgba(15,23,42,.18)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-photowrap{background:rgba(15,23,42,.06)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-fallback{color:rgba(15,23,42,.32)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-title{color:rgba(15,23,42,.55)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-name{color:#0f172a}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-tier{color:rgba(15,23,42,.6)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-30d-gauge-inner{background:rgba(255,255,255,.92);color:#0f172a;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-30d-text{color:rgba(15,23,42,.72)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-30d-text b{color:#0f172a}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-section{border-top-color:rgba(15,23,42,.12)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-race-row{color:rgba(15,23,42,.85)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-race-bar{background:rgba(15,23,42,.1)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-race-wr{color:#0f172a}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-race-games{color:rgba(15,23,42,.45)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-row{color:rgba(15,23,42,.88)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-date{color:rgba(15,23,42,.45)}',
+    '#b2-lc-hovertip.light .b2-lc-hovertip-empty{color:rgba(15,23,42,.6)}'
   ].join('');
 
   document.head.appendChild(s);
@@ -448,14 +466,14 @@ function _b2LineupView() {
 var _b2LcHoverTimer = null;
 var _b2LcHoverCurName = '';
 
-function _b2LineupCardHoverEnter(e, card, name) {
+function _b2LineupCardHoverEnter(e, card, name, col) {
   try {
     if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (_b2LcHoverTimer) clearTimeout(_b2LcHoverTimer);
     _b2LcHoverCurName = name;
     _b2LcHoverTimer = setTimeout(() => {
       if (_b2LcHoverCurName !== name) return;
-      _b2LineupShowHoverTip(card, name);
+      _b2LineupShowHoverTip(card, name, col);
     }, 260);
   } catch(e){}
 }
@@ -486,7 +504,7 @@ function _b2LcRaceRowHtml(label, color, w, l) {
 
 // 최근 경기 결과(오래된 → 최신) 배열로부터 "경기력 추세" 미니 스파크라인(SVG) 생성
 // 승=1 / 패=-1로 두고 직전 최대 5경기의 이동평균을 선으로 표시 (선수 상세 리포트의 경기력 추세 그래프와 같은 개념)
-function _b2LcTrendSparkSvg(histAsc) {
+function _b2LcTrendSparkSvg(histAsc, isLight) {
   const seq = (histAsc || []).filter(h => h && (h.result === '승' || h.result === '패')).slice(-20);
   if (seq.length < 2) return '';
   const vals = seq.map((h, i) => {
@@ -502,9 +520,10 @@ function _b2LcTrendSparkSvg(histAsc) {
   const line = pts.map((pt, i) => (i === 0 ? 'M' : 'L') + pt[0].toFixed(1) + ',' + pt[1].toFixed(1)).join(' ');
   const areaClose = ` L${pts[pts.length - 1][0].toFixed(1)},${(H - PAD).toFixed(1)} L${pts[0][0].toFixed(1)},${(H - PAD).toFixed(1)} Z`;
   const midY = yOf(0).toFixed(1);
+  const refLineCol = isLight ? 'rgba(15,23,42,.22)' : 'rgba(255,255,255,.28)';
   return `<div class="b2-lc-hovertip-title" style="margin-bottom:4px">경기력 추세 (최근 ${seq.length}경기)</div>
     <svg class="b2-lc-hovertip-trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-      <line x1="${PAD}" y1="${midY}" x2="${W - PAD}" y2="${midY}" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="${PAD}" y1="${midY}" x2="${W - PAD}" y2="${midY}" stroke="${refLineCol}" stroke-width="1" stroke-dasharray="3,3"/>
       <path d="${line}${areaClose}" fill="rgba(96,165,250,.28)" stroke="none"/>
       <path d="${line}" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
@@ -539,7 +558,7 @@ function _b2LcComputeHoverStats(p) {
   });
 
   // 경기력 추세 스파크라인 (svg는 이 시점에 미리 문자열로 만들어 캐시해둔다)
-  const trendSvg = _b2LcTrendSparkSvg(histAsc);
+  const trendSvg = _b2LcTrendSparkSvg(histAsc, _b2LcHoverTipIsLight());
 
   return { recent, w30, l30, raceAgg, trendSvg };
 }
@@ -553,7 +572,17 @@ function _b2LcGetHoverStats(p) {
   return stats;
 }
 
-function _b2LineupShowHoverTip(card, name) {
+// 팝업이 밝은(연한) 배경인지 여부 — 다크모드가 아니면 대학색상의 연한 배경을 쓰므로 true
+function _b2LcHoverTipIsLight() {
+  try {
+    return !(
+      (document.body && document.body.classList && document.body.classList.contains('dark')) ||
+      (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('dark'))
+    );
+  } catch(e) { return true; }
+}
+
+function _b2LineupShowHoverTip(card, name, col) {
   try {
     const p = (typeof players !== 'undefined' ? players : []).find(x => String((x && x.name) || '') === String(name || ''));
     if (!p) return;
@@ -561,6 +590,15 @@ function _b2LineupShowHoverTip(card, name) {
 
     let tip = document.getElementById('b2-lc-hovertip');
     if (!tip) { tip = document.createElement('div'); tip.id = 'b2-lc-hovertip'; document.body.appendChild(tip); }
+
+    // 카드/대학 고유 색상(col)의 연한 버전을 팝업 배경으로 사용 — 라이트모드는 흰색에 가깝게,
+    // 다크모드는 기존 남색 톤에 살짝 색을 섞는 정도로만 (가독성 유지)
+    const _tipCol = col || '#64748b';
+    const _tipIsLight = _b2LcHoverTipIsLight();
+    const _tipBg = (typeof _b2PastelBg === 'function') ? _b2PastelBg(_tipCol, _tipIsLight ? 0.16 : 0.22) : (_tipIsLight ? '#fff' : 'rgba(15,23,42,.96)');
+    tip.style.background = _tipBg;
+    tip.style.borderColor = _tipIsLight ? `${_tipCol}3d` : 'transparent';
+    tip.classList.toggle('light', _tipIsLight);
 
     const raceLetter = (p.race && p.race !== 'N') ? p.race : '?';
     const photoUrl = p.photo ? (typeof toThumbUrl === 'function' ? toThumbUrl(p.photo, 184) : p.photo) : '';
@@ -577,9 +615,10 @@ function _b2LineupShowHoverTip(card, name) {
     // ── 최근 30일 성적 (도넛 게이지) ──
     const t30 = w30 + l30;
     const wr30 = t30 ? Math.round(w30 / t30 * 100) : 0;
+    const _gaugeTrack = _tipIsLight ? 'rgba(15,23,42,.12)' : 'rgba(255,255,255,.16)';
     const gaugeGrad = t30
-      ? `conic-gradient(#f87171 ${wr30 * 3.6}deg, rgba(255,255,255,.16) 0)`
-      : `rgba(255,255,255,.16)`;
+      ? `conic-gradient(#f87171 ${wr30 * 3.6}deg, ${_gaugeTrack} 0)`
+      : _gaugeTrack;
     const thirtyDayHtml = `<div class="b2-lc-hovertip-30d">
       <div class="b2-lc-hovertip-30d-gauge" style="background:${gaugeGrad}">
         <div class="b2-lc-hovertip-30d-gauge-inner">${t30 ? wr30 + '%' : '-'}</div>
