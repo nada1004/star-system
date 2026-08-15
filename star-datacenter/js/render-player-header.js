@@ -9,7 +9,7 @@ function _bindPlayerHeaderDelegatedEvents(){
       e.preventDefault();
       try{ cm('playerModal'); }catch(_){}
       const univ = el.getAttribute('data-pph-univ') || '';
-      setTimeout(()=>{ if(typeof openUnivModal === 'function') openUnivModal(univ); }, 100);
+      if(typeof openUnivModal === 'function') openUnivModal(univ);
     }
   });
 }

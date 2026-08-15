@@ -35,7 +35,7 @@ function _b2LineupCard3(p, col) {
     ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
+  return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
       ${photo
@@ -111,7 +111,7 @@ function _b2LineupTableRow(p, col) {
   const tierTxt = (p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   const _2ndAvatar = (photo && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
-  return `<tr data-b2lc-player="${attrName}" onclick="openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
+  return `<tr data-b2lc-player="${attrName}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()" style="--tier-c:${p.tier ? tierCol : 'transparent'}">
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
@@ -190,7 +190,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
     </div>`;
   const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `
-    <div data-b2lc-player="${attrName}" style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
+    <div data-b2lc-player="${attrName}" style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)';_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""};_b2LineupCardHoverLeave()"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
@@ -405,6 +405,10 @@ function _b2LineupView() {
     '.b2-lc-hovertip-top{display:flex;align-items:flex-start;gap:12px}',
     '.b2-lc-hovertip-photowrap{position:relative;width:92px;height:122px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.1)}',
     '.b2-lc-hovertip-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
+    '.b2-lc-hovertip-photo.has2{animation:b2LcHovertipFade1 4.4s ease-in-out infinite}',
+    '.b2-lc-hovertip-photo2{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;opacity:0;animation:b2LcHovertipFade2 4.4s ease-in-out infinite}',
+    '@keyframes b2LcHovertipFade1{0%,42%{opacity:1}52%,92%{opacity:0}100%{opacity:1}}',
+    '@keyframes b2LcHovertipFade2{0%,42%{opacity:0}52%,92%{opacity:1}100%{opacity:0}}',
     '.b2-lc-hovertip-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;color:rgba(255,255,255,.65)}',
     '.b2-lc-hovertip-content{flex:1;min-width:0}',
     '.b2-lc-hovertip-title{font-size:10px;font-weight:900;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}',
@@ -601,10 +605,21 @@ function _b2LineupShowHoverTip(card, name, col) {
     tip.classList.toggle('light', _tipIsLight);
 
     const raceLetter = (p.race && p.race !== 'N') ? p.race : '?';
-    const photoUrl = p.photo ? (typeof toThumbUrl === 'function' ? toThumbUrl(p.photo, 184) : p.photo) : '';
+    const photoRaw = String(p.photo || '').trim();
+    const photoIsGif = /\.gif(\?|$)/i.test(photoRaw);
+    const photoUrl = photoRaw ? (photoIsGif ? toHttpsUrl(photoRaw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : photoRaw)) : '';
+    const photo2Raw = String(p.secondProfileFile || '').trim();
+    const photo2IsGif = /\.gif(\?|$)/i.test(photo2Raw);
+    const photo2Url = photo2Raw ? (photo2IsGif ? toHttpsUrl(photo2Raw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : photo2Raw)) : '';
+    const hasPhoto2 = !!photo2Url;
     const photoHtml = photoUrl
-      ? `<img class="b2-lc-hovertip-photo" src="${photoUrl}" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
+      ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
       : `<div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">${raceLetter}</div>`;
+    // 프로필 이미지2가 있으면 살짝 겹쳐서 자동 크로스페이드(라인업 카드 자체는 좌우 스크럽 방식이지만,
+    // 팝업은 pointer-events:none이라 마우스 위치를 못 받으므로 자동 전환 애니메이션으로 대체)
+    const photo2Html = hasPhoto2
+      ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" loading="lazy" decoding="async" onerror="this.remove()">`
+      : '';
 
     // ── 이름 / 티어 ──
     const tierCol = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : '#64748b';
@@ -655,7 +670,7 @@ function _b2LineupShowHoverTip(card, name, col) {
 
     tip.innerHTML = `<div class="b2-lc-hovertip-body">
       <div class="b2-lc-hovertip-top">
-        <div class="b2-lc-hovertip-photowrap">${photoHtml}</div>
+        <div class="b2-lc-hovertip-photowrap">${photoHtml}${photo2Html}</div>
         <div class="b2-lc-hovertip-content">
           <div class="b2-lc-hovertip-name">${p.name || ''}</div>
           ${tierHtml}

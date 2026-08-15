@@ -282,12 +282,10 @@ function openPlayerModal(name){
     return;
   }
 
-  // 이미지를 미리 로드한 뒤 모달 오픈 (최대 400ms 대기, 캐시 히트 시 즉시)
-  _prewarmPlayerModalImages(p).then(()=>{
-    _doOpenPlayerModal(String(p.name||nm), p);
-  }).catch(()=>{
-    _doOpenPlayerModal(String(p.name||nm), p);
-  });
+  // 모달은 즉시 열고, 이미지 프리로드는 백그라운드에서 병행 (더 이상 대기하지 않음 —
+  // 예전엔 최대 400ms까지 프리로드를 기다린 뒤에야 모달을 열어서 상세 팝업이 느리게 뜨는 원인이었음)
+  _doOpenPlayerModal(String(p.name||nm), p);
+  try{ _prewarmPlayerModalImages(p); }catch(e){}
 }
 
 if(typeof window.openEPFromModal !== 'function'){

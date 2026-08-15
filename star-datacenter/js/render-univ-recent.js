@@ -9,14 +9,14 @@ function _bindUnivRecentDelegatedEvents(){
       e.preventDefault();
       try{ cm('univModal'); }catch(_){}
       const univ = el.getAttribute('data-ur-univ') || '';
-      setTimeout(()=>{ if(typeof openUnivModal === 'function') openUnivModal(univ); }, 100);
+      if(typeof openUnivModal === 'function') openUnivModal(univ);
       return;
     }
     if(action === 'open-player'){
       e.preventDefault();
       try{ cm('univModal'); }catch(_){}
       const name = el.getAttribute('data-ur-player') || '';
-      setTimeout(()=>{ if(typeof openPlayerModal === 'function') openPlayerModal(name); }, 100);
+      if(typeof openPlayerModal === 'function') openPlayerModal(name);
     }
   });
 }

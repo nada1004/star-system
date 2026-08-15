@@ -9,14 +9,14 @@ function _bindUnivSectionsDelegatedEvents(){
       e.preventDefault();
       try{ cm('univModal'); }catch(_){}
       const name = el.getAttribute('data-uds-player') || '';
-      setTimeout(()=>{ if(typeof openPlayerModal === 'function') openPlayerModal(name); }, 100);
+      if(typeof openPlayerModal === 'function') openPlayerModal(name);
       return;
     }
     if(action === 'open-univ'){
       e.preventDefault();
       try{ cm('univModal'); }catch(_){}
       const univ = el.getAttribute('data-uds-univ') || '';
-      setTimeout(()=>{ if(typeof openUnivModal === 'function') openUnivModal(univ); }, 100);
+      if(typeof openUnivModal === 'function') openUnivModal(univ);
     }
   });
   document.addEventListener('mouseover', (e)=>{

@@ -53,9 +53,9 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `
     <div class="b2-univ-rank-row" style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:var(--r2);border:1px solid ${accentCol}22;background:linear-gradient(120deg,${accentCol}14 0%,${accentCol}05 100%);box-shadow:0 6px 16px rgba(15,23,42,.06);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease"
-      onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateX(3px)';this.style.boxShadow='0 10px 22px rgba(15,23,42,.14)';this.style.borderColor='${accentCol}55'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.06)';this.style.borderColor='${accentCol}22'">
+      onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateX(3px)';this.style.boxShadow='0 10px 22px rgba(15,23,42,.14)';this.style.borderColor='${accentCol}55';_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.06)';this.style.borderColor='${accentCol}22';_b2LineupCardHoverLeave()">
       <div style="flex-shrink:0;width:20px;text-align:center;font-size:var(--fs-caption);font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
       <div style="width:42px;height:42px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}22;box-shadow:0 4px 10px ${accentCol}26">
         ${photo
@@ -99,9 +99,9 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
   const _glass2ndHtml = (_glassHasSecond && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center'}) : '';
   return `
     <div class="b2-univ-glass-card" style="width:150px;max-width:100%;border-radius:22px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.6);box-shadow:0 10px 22px rgba(15,23,42,.12);border:1px solid ${accentCol}2e;transition:transform .18s,box-shadow .18s"
-      onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 28px rgba(15,23,42,.2)'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 22px rgba(15,23,42,.12)'">
+      onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 28px rgba(15,23,42,.2)';_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 22px rgba(15,23,42,.12)';_b2LineupCardHoverLeave()">
       <div class="${_glassHasSecond?'ph-swap':''}" style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}40,${accentCol}12)">
         ${photo
           ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
@@ -134,9 +134,9 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
   const wr = games ? Math.round(win/games*100) : null;
   return `
     <div class="b2-univ-frame-card" style="width:150px;max-width:100%;border-radius:20px;overflow:hidden;cursor:pointer;border:3px solid ${accentCol};box-shadow:0 10px 20px rgba(15,23,42,.14);transition:transform .16s,box-shadow .16s"
-      onclick="openPlayerModal('${safeName}')"
-      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 14px 26px rgba(15,23,42,.22)'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.14)'">
+      onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 14px 26px rgba(15,23,42,.22)';_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.14)';_b2LineupCardHoverLeave()">
       <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}45,${accentCol}14)"
         ${photo
           ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
@@ -171,7 +171,7 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
   return `
-    <div class="b2-univ-poster-card" style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer" onclick="openPlayerModal('${safeName}')">
+    <div class="b2-univ-poster-card" style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')" onmouseleave="_b2LineupCardHoverLeave()">
       ${backdrop}
       ${photoHtml}
       ${p.race&&p.race!=='N'?`<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.26)">${p.race}</div>`:''}
@@ -189,7 +189,7 @@ function _b2UnivDefaultTag(p, accentCol, showTier) {
     <div class="b2-def-tag-item" style="display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:24px;cursor:pointer;transition:background .12s;white-space:nowrap;flex-shrink:0"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
-      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+      <div onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')" onmouseleave="_b2LineupCardHoverLeave()" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
       ${_b2Avatar(p, crewCol||accentCol, 58)}
       <span style="font-weight:800;font-size:20px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:var(--fs-caption);flex-shrink:0">${p.race}</span>`:''}
@@ -205,7 +205,7 @@ function _b2UnivHeatCard(p, accentCol) {
   const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
-  return `<button type="button" class="b2-univ-heat-card" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="openPlayerModal('${safeName}')" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
+  return `<button type="button" class="b2-univ-heat-card" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')" onmouseleave="_b2LineupCardHoverLeave()" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
     ${photo ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
   </button>`;
 }
