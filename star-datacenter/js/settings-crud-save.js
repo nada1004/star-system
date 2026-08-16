@@ -336,6 +336,7 @@ function savePlayer(){
 
   p.memo            = _strVal('ed-memo');
   p.channelUrl      = _strVal('ed-channel');
+  p.bgmUrl          = _strVal('ed-bgm-url');
   p.oneLiner        = _strVal('ed-oneliner');
 
   // 이미지 URL (비어 있으면 undefined)
