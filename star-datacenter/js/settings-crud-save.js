@@ -191,6 +191,27 @@ function savePlayer(){
   if(!newName){alert('이름을 입력하세요.');return;}
   const oldName=editName;
 
+  // [FIX-NO-REFRESH-ON-SAVE] 저장 후 실제로 화면에 보이는 미디어(사진/영상 슬롯·위치·효과)가
+  // 바뀌었을 때만 좌측 메인 이미지 DOM을 다시 그린다. 사진과 무관한 필드(승패/메모/티어 등)만
+  // 바꿔 저장한 경우엔 이미지가 깜빡이며 새로고침(슬라이드쇼도 1번으로 리셋)되는 게 불필요한
+  // 현상이었음 — 아래 스냅샷으로 저장 전/후를 비교해 필요할 때만 전체 재그리기를 한다.
+  const _b2MediaSnapshot = (pl) => JSON.stringify([
+    pl.photo, pl.secondProfileFile, pl.profileFile3, pl.profileFile4, pl.profileFile5,
+    pl.profileFile6, pl.profileFile7, pl.profileFile8, pl.profileFile9, pl.profileFile10,
+    pl.photoPosX, pl.photoPosY, pl.photoPosUse,
+    pl.photo2PosX, pl.photo2PosY, pl.photo2PosUse,
+    pl.photo3PosX, pl.photo3PosY, pl.photo3PosUse,
+    pl.photo4PosX, pl.photo4PosY, pl.photo4PosUse,
+    pl.photo5PosX, pl.photo5PosY, pl.photo5PosUse,
+    pl.photo6PosX, pl.photo6PosY, pl.photo6PosUse,
+    pl.photo7PosX, pl.photo7PosY, pl.photo7PosUse,
+    pl.photo8PosX, pl.photo8PosY, pl.photo8PosUse,
+    pl.photo9PosX, pl.photo9PosY, pl.photo9PosUse,
+    pl.photo10PosX, pl.photo10PosY, pl.photo10PosUse,
+    pl.pdPhotoFx, pl.name, pl.tier, pl.race, pl.univ
+  ]);
+  const _b2MediaBefore = _b2MediaSnapshot(p);
+
   // 이름 변경 시 모든 기록 자동 갱신
   if(newName !== oldName){
     if(players.some(x=>x.name===newName)&&!confirm(`"${newName}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 변경하시겠습니까?`))return;
@@ -422,12 +443,17 @@ function savePlayer(){
   render();
   try{
     const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
-    // [FIX] 프로필 링크(이미지2~5)를 지운 경우, 스케줄만 다시 잡으면 삭제된 슬롯의 DOM이
-    // 그대로 남아 빈 화면(공백)으로 보일 수 있었음. 슬롯 HTML을 통째로 다시 그려주는
-    // _b2UpdateMainDisplay를 우선 사용하고, 없으면 기존 방식으로 폴백한다.
+    // [FIX-NO-REFRESH-ON-SAVE] 화면에 실제 영향을 주는 미디어 필드가 하나도 안 바뀌었으면
+    // 좌측 메인 이미지 DOM은 그대로 두고(슬라이드쇼 유지), 이름/티어/종족/대학 같은 텍스트만
+    // 가볍게 갱신한다. 사진/영상이 바뀐 경우에만 기존처럼 전체를 다시 그린다.
     if(cur === p.name){
-      if(typeof window._b2UpdateMainDisplay === 'function') window._b2UpdateMainDisplay(p.name);
-      else if(typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+      const _mediaChanged = _b2MediaBefore !== _b2MediaSnapshot(p);
+      if(_mediaChanged){
+        if(typeof window._b2UpdateMainDisplay === 'function') window._b2UpdateMainDisplay(p.name);
+        else if(typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+      } else if(typeof window._b2UpdateMainDisplayInfoOnly === 'function'){
+        window._b2UpdateMainDisplayInfoOnly(p.name);
+      }
     }
   }catch(e){}
   if(typeof openPlayerModal==='function'){

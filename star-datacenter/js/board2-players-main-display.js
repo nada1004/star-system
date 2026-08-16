@@ -221,3 +221,49 @@ function _b2UpdateMainDisplay(playerName) {
   });
 }
 
+// [FIX-NO-REFRESH-ON-SAVE] 사진/영상 등 미디어는 그대로인데 이름·티어·종족·대학 같은
+// 텍스트 정보만 바뀐 경우, 이미지 DOM(슬라이드쇼 진행 상태 포함)은 건드리지 않고
+// 이름/뱃지 영역만 다시 그려서 "저장하면 이미지가 새로고침되는" 현상을 없앤다.
+function _b2UpdateMainDisplayInfoOnly(playerName) {
+  try {
+    const player = players.find(p => p.name === playerName);
+    if (!player) return;
+    const mainBox = document.getElementById('b2-players-main-box');
+    if (!mainBox) return;
+    const infoEl = mainBox.querySelector('.b2-players-info');
+    if (!infoEl) { _b2UpdateMainDisplay(playerName); return; }
+
+    const univColor = gc(player.univ) || '#6366f1';
+    const _updUnivIcon = (() => {
+      const uCfg = univCfg.find(x => x.name === player.univ) || {};
+      return uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
+    })();
+
+    const nameEl = infoEl.querySelector('.b2-players-name');
+    if (nameEl) nameEl.textContent = player.name || '이름 없음';
+
+    const tierEl = infoEl.querySelector('.b2-players-tier');
+    if (tierEl) {
+      tierEl.textContent = _b2TierLabel(player.tier);
+      tierEl.style.background = univColor;
+    }
+
+    const detailsEl = infoEl.querySelector('.b2-players-details');
+    if (detailsEl) {
+      const raceHTML = (player.race==='P'||player.race==='T'||player.race==='Z')
+        ? `<span class="rbadge r${player.race}" style="font-size:14px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)">${player.race}</span>`
+        : `<span class="b2-players-chip b2-players-race">종족미정</span>`;
+      const univHTML = player.univ
+        ? (_updUnivIcon
+            ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_updUnivIcon)}" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+            : `<span class="b2-players-chip">🏫 ${player.univ}</span>`)
+        : '<span class="b2-players-chip">🏫 무소속</span>';
+      const tierHTML = tierEl ? tierEl.outerHTML : `<span class="b2-players-tier" style="background:${univColor}">${_b2TierLabel(player.tier)}</span>`;
+      detailsEl.innerHTML = tierHTML + raceHTML + univHTML;
+    }
+  } catch (e) {
+    // 안전하게 실패하면 기존처럼 전체 재그리기로 폴백
+    try { _b2UpdateMainDisplay(playerName); } catch (e2) {}
+  }
+}
+

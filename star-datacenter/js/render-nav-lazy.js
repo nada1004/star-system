@@ -378,12 +378,11 @@ const _TAB_ENTER = {
   hist:     () => { histSub = histSub || 'race'; }, // [FIX-5]
   stats:    () => { window._statsTabEntered = true; }, // [FIX-12]
   total:    () => { totalSearch = ''; },
-  // [FIX-RANDOM-ENTRY] 프로필(이미지)탭에 "새로 들어올 때"마다 좌측 메인에 뜨는 대학 소속
-  // 스트리머와 우측 그리드 순서를 새로 랜덤 추첨한다. 예전엔 _b2SelectedPlayer/셔플 캐시가
-  // 세션 내내 유지돼서 탭을 나갔다 다시 들어와도 항상 같은 스트리머만 고정으로 보였음.
-  // (탭 안에서 대학/종족/티어 필터만 바꾸는 것은 sw()를 타지 않으므로 여기서 초기화되지 않고,
-  //  그 경우엔 기존처럼 화면이 계속 유지된다.)
-  board2:   () => { window._b2SelectedPlayer = null; window._b2ShuffleKey = null; window._b2ShuffledNames = null; },
+  // [FIX-NO-REFRESH-ON-REENTRY] 예전엔 보드2 탭에 "새로 들어올 때"마다 _b2SelectedPlayer를
+  // null로 초기화해서 좌측 메인 스트리머를 새로 랜덤 추첨하고 이미지 박스를 통째로 다시 그렸음.
+  // 이 때문에 다른 탭에 갔다가 프로필탭으로 돌아올 때마다 이미지가 "새로고침"되는 것처럼
+  // 보이는 문제가 있어, 재진입 시 선택된 스트리머/셔플 캐시를 그대로 유지하도록 변경.
+  board2:   () => {},
 };
 // comp/tiertour는 _mergedCompSub도 초기화
 _TAB_ENTER._compFallback = () => { _mergedCompSub = _mergedCompSub || 'comp'; };
