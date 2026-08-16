@@ -606,10 +606,7 @@ function _b2LineupShowHoverTip(card, name, col) {
     tip.classList.toggle('light', _tipIsLight);
 
     const raceLetter = (p.race && p.race !== 'N') ? p.race : '?';
-    // p.photo가 비어있어도 window.playerPhotos(레거시/클라우드 동기화 맵)에 사진이 있을 수 있음.
-    // 다른 화면(현황판 카드, 랭킹, 미니게임 등)은 전부 이 폴백을 쓰는데 호버팝업만 빠져 있어서
-    // "카드엔 사진이 보이는데 호버팝업엔 안 보이는" 현상이 발생했다.
-    const photoRaw = String(p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '').trim();
+    const photoRaw = String(p.photo || '').trim();
     const photoIsGif = /\.gif(\?|$)/i.test(photoRaw);
     const photoUrl = photoRaw ? (photoIsGif ? toHttpsUrl(photoRaw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : photoRaw)) : '';
     const photo2Raw = String(p.secondProfileFile || '').trim();
@@ -617,12 +614,12 @@ function _b2LineupShowHoverTip(card, name, col) {
     const photo2Url = photo2Raw ? (photo2IsGif ? toHttpsUrl(photo2Raw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : photo2Raw)) : '';
     const hasPhoto2 = !!photo2Url;
     const photoHtml = photoUrl
-      ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
+      ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
       : `<div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">${raceLetter}</div>`;
     // 프로필 이미지2가 있으면 살짝 겹쳐서 자동 크로스페이드(라인업 카드 자체는 좌우 스크럽 방식이지만,
     // 팝업은 pointer-events:none이라 마우스 위치를 못 받으므로 자동 전환 애니메이션으로 대체)
     const photo2Html = hasPhoto2
-      ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" loading="eager" decoding="async" onerror="this.remove()">`
+      ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" loading="lazy" decoding="async" onerror="this.remove()">`
       : '';
 
     // ── 이름 / 티어 ──
