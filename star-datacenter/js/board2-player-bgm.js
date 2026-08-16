@@ -90,6 +90,9 @@ function _b2PlayerBgmApplyVol() {
 
 // 유튜브 자동재생 정책 우회: 음소거 상태로 먼저 재생을 시작하고, 실제로 재생이
 // 잡히면 음소거를 풀고 저장된 볼륨을 적용한다. 안 잡히면 몇 번 더 시도한다.
+// [FIX-AUTOPLAY] 위 정책과 별개로, _b2PlayerBgmStart가 스트리머 카드 onclick에서
+// 동기/마이크로태스크로 호출되는 경로를 이용해 가능한 한 빨리 unMute()를 시도한다.
+// 300ms setInterval에서 풀면 user gesture 컨텍스트가 이미 사라져 브라우저가 막는다.
 function _b2PlayerBgmPlayNow(vid) {
   const p = _b2PlayerBgmPlayer;
   if (!p || !vid) return;
@@ -97,6 +100,15 @@ function _b2PlayerBgmPlayNow(vid) {
     if (p.mute) p.mute();
     p.loadVideoById(vid);
     if (p.playVideo) p.playVideo();
+  } catch (e) {}
+  // [FIX-AUTOPLAY] 사용자 제스처(스트리머 카드 클릭) 안에서 가능한 한 빨리 볼륨을
+  // 적용한다. 유튜브는 비디오가 아직 PLAYING 상태가 아니어도 unMute() 자체는
+  // 거부하지 않으므로, kick 타이머가 state===1을 기다리는 동안에도 일단 음소거
+  // 해제와 setVolume을 먼저 시도한다. 정책에 의해 막혀도 아래 kick 타이머가
+  // 재시도하므로 사용자가 별도 볼륨 버튼을 누를 필요가 줄어든다.
+  try {
+    const v = Math.max(0, Math.min(100, parseInt(_b2PlayerBgmVolume, 10) || 0));
+    if (v > 0) { if (p.unMute) p.unMute(); if (p.setVolume) p.setVolume(v); }
   } catch (e) {}
   if (_b2PlayerBgmKickTimer) { clearInterval(_b2PlayerBgmKickTimer); _b2PlayerBgmKickTimer = null; }
   let tries = 0;
@@ -174,6 +186,24 @@ function _b2PlayerBgmSyncControls() {
     btn.style.display = _b2PlayerBgmActive ? 'inline-flex' : 'none';
     btn.textContent = (_b2PlayerBgmVolume > 0) ? '🔊' : '🔇';
   }
+}
+
+// [FIX-AUTOPLAY] 유튜브 자동재생 정책은 user gesture(클릭/키 입력) 안에서
+// 만들어진 플레이어만 unMute()가 허용된다. 사용자가 페이지에서 가장 먼저 하는
+// 동작이 "스트리머 카드 클릭"이 되도록, 문서 전체에 캡처 단계로 1회성 리스너를
+// 걸어 페이지 로드 후 첫 클릭에서 플레이어 생성을 미리 시작한다. 이후 스트리머
+// 카드를 클릭하면 _b2PlayerBgmStart가 플레이어 생성 완료된 상태에서 호출되어
+// unMute()가 같은 user gesture 컨텍스트에서 처리되도록 한다.
+function _b2PlayerBgmPrime() {
+  try {
+    if (_b2PlayerBgmPlayer) return;
+    _b2PlayerBgmEnsurePlayer().catch(() => {});
+  } catch (e) {}
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', _b2PlayerBgmPrime, { once: true, capture: true });
+  // 키보드(엔터/스페이스)도 user gesture이므로 함께 처리
+  document.addEventListener('keydown', _b2PlayerBgmPrime, { once: true, capture: true });
 }
 
 try {
