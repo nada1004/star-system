@@ -88,6 +88,36 @@ var _b2PlayersUnivFilter = '전체';
 var _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
 var _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
 var _b2SelectedPlayer = null;
+
+// [FIX-IMG-RESET] 프로필탭(이미지탭) 재렌더 시 시그니처가 그대로면 다시 그리지 않기 위한 헬퍼.
+// 배경 자동동기화(30초/8초 폴링 등)로 인해 이 화면과 무관한 데이터가 갱신될 때마다
+// render()가 호출되면서 board2 'players' 서브뷰 전체가 매번 새로 그려졌다.
+// 그 결과 (1) 이미 떠 있던 사진이 새 <img> 엘리먼트로 교체되며 잠깐 빈 화면(회색)이
+// 보였다가 나타나는 현상과 (2) 진행 중이던 이미지 슬라이드쇼가 항상 1번 이미지부터
+// 다시 시작하는 현상(정상적으로는 순서대로 넘어가야 함)이 발생했다.
+// → 실제로 화면에 영향을 주는 값(필터/선택된 선수/선수 목록의 사진·티어·종족·대학)이
+//   바뀌지 않았다면 재렌더를 건너뛰어 기존 DOM(및 진행 중이던 슬라이드쇼)을 그대로 둔다.
+function _b2ComputePlayersSig(){
+  try{
+    const list = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+    const parts = list.map(p => [
+      p && p.name, p && p.tier, p && p.race, p && p.univ,
+      p && p.photo, p && p.secondProfileFile, p && p.profileFile3, p && p.profileFile4,
+      p && p.profileFile5, p && p.profileFile6, p && p.profileFile7, p && p.profileFile8,
+      p && p.profileFile9, p && p.profileFile10
+    ].join('~')).join('|');
+    const shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1');
+    return [
+      _b2PlayersUnivFilter, _b2PlayersFilter, _b2PlayersTierFilter, shuffle,
+      _b2SelectedPlayer && _b2SelectedPlayer.name,
+      String(window._b2PlayersRenderLimit || ''),
+      parts
+    ].join('###');
+  }catch(e){
+    // 시그니처 계산에 실패하면 항상 다시 그리도록(안전 폴백) 빈 값이 아닌 매번 다른 값을 준다.
+    return 'ERR' + Date.now();
+  }
+}
 var _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 const _b2BgImageMeta = {};
 let _b2AutoFitResizeBound = false;
@@ -843,20 +873,31 @@ function rBoard2(C, T) {
       injectUnivIcons(sub);
       setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 60); }catch(e){} }, 120);
     } else if (_b2View === 'players') {
-      sub.innerHTML = _b2PlayersView();
-      _b2BindAutoFitResize();
-      setTimeout(() => {
-        try{
-          if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+      // [FIX-IMG-RESET] 화면에 실제 영향을 주는 값이 이전과 동일하면(=배경 동기화 등
+      // 무관한 이유로 render()가 호출된 경우) 다시 그리지 않는다. 이미 떠 있는 메인
+      // 이미지/슬라이드쇼를 그대로 유지해 "빈 화면 깜빡임"과 "슬라이드쇼가 1번으로
+      // 되돌아가는" 현상을 막는다.
+      const _sig = _b2ComputePlayersSig();
+      const _alreadyBuilt = !!document.getElementById('b2-players-main-box');
+      if (_alreadyBuilt && window._b2PlayersLastSig === _sig) {
+        // 아무것도 바뀌지 않음 — 기존 DOM(및 진행 중인 슬라이드쇼 타이머) 유지
+      } else {
+        window._b2PlayersLastSig = _sig;
+        sub.innerHTML = _b2PlayersView();
+        _b2BindAutoFitResize();
+        setTimeout(() => {
+          try{
+            if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+              _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+              _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+            }
+            _b2ApplyBgAutoSizing(sub);
+          }catch(e){
+            console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
           }
-          _b2ApplyBgAutoSizing(sub);
-        }catch(e){
-          console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
-        }
-      }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
+        }, 0);
+        setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
+      }
     } else if (_b2View === 'lineup') {
       sub.innerHTML = _b2LineupView();
       injectUnivIcons && injectUnivIcons(sub);

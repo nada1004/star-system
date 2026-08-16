@@ -652,13 +652,35 @@ function _b2PlayersView() {
   const _p9pos = _b2PosPct(_b2SelectedPlayer.photo9PosUse, _b2SelectedPlayer.photo9PosX, _b2SelectedPlayer.photo9PosY);
   const _p10pos = _b2PosPct(_b2SelectedPlayer.photo10PosUse, _b2SelectedPlayer.photo10PosX, _b2SelectedPlayer.photo10PosY);
   try{
+    // [FIX-IMG-SWAP-PREWARM] 우측 그리드 썸네일은 기존처럼 썸네일 프록시로 미리 받고,
+    // 좌측 메인 슬라이드쇼(선수 탭 최초 진입 시 표시되는 선수)의 이미지는 실제 표시에
+    // 쓰이는 원본 URL(toHttpsUrl) 그대로 미리 받아야 전환 시 콜드 로딩으로 인한
+    // "화면이 비었다가 뚝 끊기듯 나타나는" 현상이 없다 (board2-players-main-display.js의
+    // _b2UpdateMainDisplay와 동일한 수정).
     if(typeof prewarmImageUrls==='function'){
-      prewarmImageUrls([
-        _b2SelectedPlayer.photo,
-        _b2SelectedPlayer.secondProfileFile,
-        ...tierFilteredPlayers.map(p=>p.photo).filter(Boolean)
-      ], 24);
+      prewarmImageUrls(tierFilteredPlayers.map(p=>p.photo).filter(Boolean), 24);
     }
+    const _b2InitPrewarmIsVideo = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+    };
+    [
+      _b2SelectedPlayer.photo, _b2SelectedPlayer.secondProfileFile, _b2SelectedPlayer.profileFile3,
+      _b2SelectedPlayer.profileFile4, _b2SelectedPlayer.profileFile5, _b2SelectedPlayer.profileFile6,
+      _b2SelectedPlayer.profileFile7, _b2SelectedPlayer.profileFile8, _b2SelectedPlayer.profileFile9,
+      _b2SelectedPlayer.profileFile10
+    ].forEach(rawUrl=>{
+      const u = _normMediaUrl(rawUrl);
+      if(!u || _b2InitPrewarmIsVideo(u)) return;
+      const src = toHttpsUrl(u);
+      if(!src) return;
+      window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
+      if(window._b2PrewarmedFullUrls.has(src)) return;
+      window._b2PrewarmedFullUrls.add(src);
+      const _img = new Image();
+      try{ _img.decoding = 'async'; }catch(e){}
+      _img.src = src;
+    });
   }catch(e){}
 
   const _b2IsVideoUrl = (u)=>{
@@ -693,7 +715,7 @@ function _b2PlayersView() {
     ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
       z: 1,
       opacity: 1,
-      onLoadJs: `_b2ScheduleImageSwap('${_b2NameEsc}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
+      onLoadJs: `if(typeof _b2SwapStartOnce==='function'){ _b2SwapStartOnce('${_b2NameEsc}', this); }else if(typeof _b2ScheduleImageSwap==='function'){ _b2ScheduleImageSwap('${_b2NameEsc}'); } if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
       style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;

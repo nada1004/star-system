@@ -384,10 +384,14 @@ function _b2ScheduleImageSwap(playerName) {
     if(el.style.visibility === 'hidden') return true;
     return false;
   };
-  const getLiveImgList = ()=>{
-    const live = imgList.filter(item => !isBrokenEl(getEl(item.slot)));
-    return live.length ? live : imgList;
-  };
+  // [FIX-IMG-BLANK] 예전에는 "살아있는(안 깨진) 이미지"가 하나도 없을 때
+  // 안전장치로 깨진 이미지 목록(imgList) 전체를 그대로 돌려줬다. 그런데 깨진
+  // <img>/<video>는 onerror 처리에서 opacity:0 + visibility:hidden 으로 이미
+  // 숨겨진 상태라, 이 "안전장치"가 고른 슬롯을 다시 opacity:1로 되돌려도
+  // visibility:hidden 때문에 실제로는 아무것도 안 보이는 완전한 빈 화면(회색 박스)
+  // 이 나오는 원인이었다. 이제는 깨지지 않은 이미지만 정직하게 돌려주고
+  // (없으면 빈 배열), 호출부에서 빈 배열일 때 이니셜 플레이스홀더를 보여주도록 한다.
+  const getLiveImgList = ()=>imgList.filter(item => !isBrokenEl(getEl(item.slot)));
   const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
   // 비디오 슬롯이 화면에 보일 때 재생 시작(음소거 자동재생) — 전환 타이밍 자체는
   // 항상 아래 delayMs()로 설정한 "전환 시간(초)"을 따르며, 영상 길이와는 무관함.
@@ -439,6 +443,14 @@ function _b2ScheduleImageSwap(playerName) {
       if (el) el.style.zIndex = (s === slot) ? '50' : String(s);
     }
   };
+  // [FIX-IMG-RESET] 현재 재생 중인 슬롯을 선수별로 기억해뒀다가, 스케줄이 다시 시작될 때
+  // (예: 설정 슬라이더 조작·저장 등으로 _b2UpdateMainDisplay가 재호출되는 경우) 항상
+  // 1번 이미지로 되돌아가지 않고 마지막으로 보고 있던 이미지부터 이어서 재생한다.
+  // "순서대로 넘어가야 하는데 갑자기 처음으로 돌아간다"는 문제의 핵심 원인.
+  try{ window._b2SwapResumeState = window._b2SwapResumeState || {}; }catch(e){}
+  const _rememberResumeSlot = (slot)=>{
+    try{ window._b2SwapResumeState[playerName] = { slot, ts: Date.now() }; }catch(e){}
+  };
   const showOnlySlot = (slot)=>{
     bringToFront(slot);
     for (let s = 1; s <= 10; s++) {
@@ -447,17 +459,69 @@ function _b2ScheduleImageSwap(playerName) {
       el.style.opacity = (s === slot) ? '1' : '0';
     }
     mainBox._swapCurSlot = slot;
+    _rememberResumeSlot(slot);
     applyMediaForSlot(slot);
+    if (typeof window._b2HideFallbackLetter === 'function') window._b2HideFallbackLetter(mainBox);
   };
-  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
+  // [FIX-IMG-BLANK] 등록된 이미지가 전부 깨진(로딩 실패) 상태라면 더는 숨겨진(visibility:hidden)
+  // 이미지를 억지로 보여주지 않는다 — 대신 이니셜 플레이스홀더를 띄우고, 잠시 후
+  // 깨진 슬롯들을 한 번 더 재시도해서 복구되면 자동으로 순환을 재개한다.
   const initialLiveList = getLiveImgList();
-  if (initialLiveList.length < 2) {
-    const showSlot = (initialLiveList[0] && initialLiveList[0].slot) ? initialLiveList[0].slot : ((imgList[0] && imgList[0].slot) ? imgList[0].slot : 1);
-    showOnlySlot(showSlot);
+  if (initialLiveList.length === 0) {
+    if (typeof window._b2ShowFallbackLetter === 'function') window._b2ShowFallbackLetter(mainBox, playerName);
+    if (typeof window._b2RetryBrokenSlots === 'function') window._b2RetryBrokenSlots(mainBox);
+    // [FIX-IMG-RETRY-LIMIT] 더 재시도할(포기하지 않은) 슬롯이 없으면 재시도 타이머를
+    // 잡지 않고 여기서 멈춘다 — 영구히 죽은 이미지에 계속 요청을 보내지 않기 위함.
+    if (typeof window._b2HasRetryableBrokenSlots === 'function' && window._b2HasRetryableBrokenSlots(imgList)) {
+      mainBox._swapTimer = setTimeout(()=>{
+        if (mainBox._swapGen !== _myGen) return;
+        _b2ScheduleImageSwap(playerName);
+      }, 5000);
+    }
     return;
   }
-  // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
-  const firstSlot = initialLiveList[0].slot;
+  if (typeof window._b2HideFallbackLetter === 'function') window._b2HideFallbackLetter(mainBox);
+  // 이미지 1장뿐이면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
+  if (initialLiveList.length < 2) {
+    showOnlySlot(initialLiveList[0].slot);
+    // [FIX-IMG-STUCK] 등록된 이미지가 원래 2장 이상인데 지금 1장만 살아있는
+    // 상황이면(나머지는 일시적으로 깨진 상태), 그 상태로 영원히 멈추지 않도록
+    // 주기적으로 재시도해서 복구되면 다시 여러 장 순환으로 돌아가게 한다.
+    // (포기한 슬롯만 남았으면 더 재시도하지 않는다.)
+    if (imgList.length >= 2 && typeof window._b2HasRetryableBrokenSlots === 'function' && window._b2HasRetryableBrokenSlots(imgList)) {
+      mainBox._swapTimer = setTimeout(()=>{
+        if (mainBox._swapGen !== _myGen) return;
+        if (typeof window._b2RetryBrokenSlots === 'function') window._b2RetryBrokenSlots(mainBox);
+        _b2ScheduleImageSwap(playerName);
+      }, 8000);
+    }
+    return;
+  }
+  // 이어서 재생: 최근(10분 이내)에 이 선수를 보던 중이었고, 그때 보던 슬롯이 지금도
+  // 유효한(살아있는) 이미지 목록에 있다면 그 슬롯부터 시작. 아니면 1번부터(신규 진입).
+  const _resumeSlotCandidate = (()=>{
+    try{
+      const st = window._b2SwapResumeState && window._b2SwapResumeState[playerName];
+      if(!st) return null;
+      if(Date.now() - (st.ts||0) > 10*60*1000) return null; // 너무 오래됐으면 무시
+      const found = initialLiveList.find(item=>item.slot === st.slot);
+      return found ? found.slot : null;
+    }catch(e){ return null; }
+  })();
+  // [FIX-IMG-ORDER] 순환 순서의 "기준"은 여기서 딱 한 번만 고정한다(baseOrder).
+  // 예전에는 매 전환마다 getLiveImgList()로 "그 순간 안 깨진 이미지들"을 새로 걸러서
+  // 그 배열 안에서의 인덱스(prevIdx)를 기준으로 "다음"을 계산했다. 그런데 이미지 중
+  // 하나라도(예: 외부 호스팅 이미지가 반복 요청으로 일시적으로 로드 실패) 나중에
+  // "깨짐" 처리되면 그 뒤 슬롯들의 배열 인덱스가 전부 한 칸씩 당겨지면서, 다음 전환이
+  // 원래 순서와 다른 슬롯으로 튀는 문제가 있었다(한 바퀴 잘 돌다가 이후부터 순서가
+  // 뒤죽박죽되는 원인). 이제는 처음 스케줄을 시작할 때 정해진 "고정 순서(baseOrder)"
+  // 안에서만 인덱스를 앞으로 옮기고, 그 슬롯이 깨져 있으면 고정 순서 안에서 다음
+  // 후보로 건너뛰는 방식으로 바꿔 순서 자체가 흔들리지 않도록 한다.
+  const baseOrder = imgList.map(item => item.slot);
+  const _findBaseIdx = (slot)=>{ const i = baseOrder.indexOf(slot); return i >= 0 ? i : 0; };
+
+  // 모든 이미지 초기화: 이어서 볼 슬롯(없으면 첫 번째 이미지)만 보이게
+  const firstSlot = _resumeSlotCandidate || initialLiveList[0].slot;
   showOnlySlot(firstSlot);
   try{
     const badge = document.getElementById('b2-cur-img-slot');
@@ -471,17 +535,49 @@ function _b2ScheduleImageSwap(playerName) {
   function doSwap() {
     if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
     const liveImgList = getLiveImgList();
-    if (liveImgList.length < 2) {
-      const fallbackSlot = (liveImgList[0] && liveImgList[0].slot) ? liveImgList[0].slot : firstSlot;
-      showOnlySlot(fallbackSlot);
+    // [FIX-IMG-BLANK] 순환 도중 남은 이미지가 전부 깨졌으면(예: 여러 장이 동시에
+    // 로딩 실패) 숨겨진 이미지를 억지로 보여주지 않고 이니셜 플레이스홀더로 전환한
+    // 뒤, 잠시 후 재시도하여 복구되면 자동으로 순환을 재개한다.
+    if (liveImgList.length === 0) {
+      if (typeof window._b2ShowFallbackLetter === 'function') window._b2ShowFallbackLetter(mainBox, playerName);
+      if (typeof window._b2RetryBrokenSlots === 'function') window._b2RetryBrokenSlots(mainBox);
+      if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+      // [FIX-IMG-RETRY-LIMIT] 더 재시도할 슬롯이 없으면(전부 포기) 타이머를 잡지 않고 멈춘다.
+      if (typeof window._b2HasRetryableBrokenSlots === 'function' && window._b2HasRetryableBrokenSlots(imgList)) {
+        mainBox._swapTimer = setTimeout(doSwap, 5000);
+      }
       return;
     }
+    if (typeof window._b2HideFallbackLetter === 'function') window._b2HideFallbackLetter(mainBox);
+    if (liveImgList.length < 2) {
+      showOnlySlot(liveImgList[0].slot);
+      // [FIX-IMG-STUCK] 순환 도중 이미지가 1장으로 줄어든 경우도 마찬가지로
+      // 그대로 멈추지 않고 주기적으로 재시도한다. (포기한 슬롯만 남았으면 멈춤)
+      if (imgList.length >= 2 && typeof window._b2HasRetryableBrokenSlots === 'function' && window._b2HasRetryableBrokenSlots(imgList)) {
+        if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+        mainBox._swapTimer = setTimeout(()=>{
+          if (mainBox._swapGen !== _myGen) return;
+          if (typeof window._b2RetryBrokenSlots === 'function') window._b2RetryBrokenSlots(mainBox);
+          doSwap();
+        }, 8000);
+      }
+      return;
+    }
+    // [FIX-IMG-ORDER] 고정 순서(baseOrder) 안에서만 한 칸씩 전진하고, 그 자리가
+    // 깨져 있으면(isBrokenEl) baseOrder 안에서 다음 후보로만 건너뛴다. liveImgList의
+    // 배열 인덱스를 기준으로 삼지 않으므로, 일부 이미지가 깨졌다 살아났다 해도
+    // 나머지 이미지들의 상대적 순서(1→2→3→...)는 절대 바뀌지 않는다.
     const prevSlot = mainBox._swapCurSlot || firstSlot;
-    const prevIdx = liveImgList.findIndex(item => item.slot === prevSlot);
-    const cur = ((prevIdx >= 0 ? prevIdx : 0) + 1) % liveImgList.length;
-    mainBox._swapIdx = cur;
-    const curSlot = liveImgList[cur] ? liveImgList[cur].slot : firstSlot;
+    const prevBaseIdx = _findBaseIdx(prevSlot);
+    let curSlot = null;
+    for (let step = 1; step <= baseOrder.length; step++) {
+      const candSlot = baseOrder[(prevBaseIdx + step) % baseOrder.length];
+      const candEl = getEl(candSlot);
+      if (!isBrokenEl(candEl)) { curSlot = candSlot; break; }
+    }
+    if (curSlot == null) curSlot = liveImgList[0].slot; // 전부 깨졌으면 안전 폴백
     mainBox._swapCurSlot = curSlot;
+    _rememberResumeSlot(curSlot);
     // 들어오는 이미지를 맨 위로 올리고 페이드인. 나머지(나가는 이미지 포함)는
     // 그 아래에 그대로 두어(opacity 유지) 자연스럽게 가려지도록 한다.
     bringToFront(curSlot);
@@ -508,9 +604,12 @@ function _b2ScheduleImageSwap(playerName) {
     // 크로스페이드가 끝난 뒤(들어오는 이미지가 이미 완전히 덮은 뒤), 가려진 나머지
     // 슬롯들을 트랜지션 없이 즉시 opacity:0으로 되돌려 다음 전환을 준비한다.
     // 이미 새 이미지 아래로 완전히 가려진 상태라 시각적으로 아무 변화도 없다.
-    const _mySwapIdx = mainBox._swapIdx;
+    // (baseOrder 기반 전환으로 바뀌면서 더는 _swapIdx를 쓰지 않으므로, 대신 이번
+    // doSwap 호출을 식별하는 1회용 티켓으로 "더 최신 전환이 이미 시작됐는지" 판단한다.)
+    mainBox._swapTick = (mainBox._swapTick || 0) + 1;
+    const _myTick = mainBox._swapTick;
     setTimeout(()=>{
-      if (mainBox._swapGen !== _myGen || mainBox._swapIdx !== _mySwapIdx) return;
+      if (mainBox._swapGen !== _myGen || mainBox._swapTick !== _myTick) return;
       for (let slot = 1; slot <= 10; slot++) {
         if (slot === curSlot) continue;
         const el = document.getElementById('b2-main-img-' + slot);
@@ -523,17 +622,129 @@ function _b2ScheduleImageSwap(playerName) {
       }
     }, CROSSFADE_MS + 40);
 
-    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름
+    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름.
+    // "다음"도 baseOrder 기준 고정 순서에서 그대로 한 칸 더 (지연 시간 계산용일 뿐,
+    // 실제 다음 전환 대상은 다음 doSwap() 호출 시점에 다시 동일한 방식으로 정해짐).
     if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-    const next = (cur + 1) % liveImgList.length;
+    const curBaseIdx = _findBaseIdx(curSlot);
+    const toSlot = baseOrder[(curBaseIdx + 1) % baseOrder.length];
     const fromSlot = curSlot;
-    const toSlot = liveImgList[next] ? liveImgList[next].slot : firstSlot;
     mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
-  const firstDelay = (initialLiveList[0] && initialLiveList[1]) ? delayMs(initialLiveList[0].slot, initialLiveList[1].slot) : 1000;
+  // [FIX-IMG-RESUME-DELAY] 이어서 재생(resume)할 때 첫 전환까지의 대기시간을
+  // 예전에는 무조건 "1번→2번" 전환 시간(photoDelay12)으로 계산했다. 그런데
+  // 실제로 이어서 보여주는 슬롯(firstSlot)은 마지막으로 보던 슬롯일 수 있어서,
+  // 예를 들어 4번 이미지부터 이어보는데 1번→2번 전환 시간(예: 2초)이 적용되며
+  // 원래 4번 이미지에 설정된 전환 시간(예: 6초)보다 훨씬 빨리 넘어가 버리는
+  // 등 설정과 다른 타이밍으로 넘어가는 원인이었다. 이제 firstSlot 기준으로
+  // baseOrder 안에서 실제 "다음 슬롯"을 찾아 그 구간에 맞는 시간을 사용한다.
+  const _firstBaseIdx = _findBaseIdx(firstSlot);
+  const _firstToSlot = baseOrder[(_firstBaseIdx + 1) % baseOrder.length];
+  const firstDelay = (baseOrder.length >= 2) ? delayMs(firstSlot, _firstToSlot) : 1000;
   mainBox._swapCurSlot = firstSlot;
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
+// [FIX-IMG-BLANK] 등록된 이미지가 전부 깨졌을 때 완전히 텅 빈(회색) 화면 대신
+// 이름 이니셜 플레이스홀더를 보여준다. photo가 아예 없는 선수의 기본 슬롯1과
+// 동일한 스타일을 별도 오버레이 레이어로 그려서, 기존 img/video 슬롯들은
+// 건드리지 않고 그 위에만 덮어씌운다.
+window._b2ShowFallbackLetter = function(mainBox, playerName) {
+  try {
+    if (!mainBox) return;
+    let fb = mainBox.querySelector('#b2-main-fallback-letter');
+    if (!fb) {
+      fb = document.createElement('div');
+      fb.id = 'b2-main-fallback-letter';
+      fb.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2);z-index:45;pointer-events:none;';
+      mainBox.appendChild(fb);
+    }
+    fb.textContent = (String(playerName || '').trim()[0]) || '?';
+    fb.style.display = 'flex';
+  } catch (e) {}
+};
+window._b2HideFallbackLetter = function(mainBox) {
+  try {
+    const fb = mainBox ? mainBox.querySelector('#b2-main-fallback-letter') : document.getElementById('b2-main-fallback-letter');
+    if (fb) fb.style.display = 'none';
+  } catch (e) {}
+};
+// [FIX-IMG-BLANK] "깨짐" 처리된 슬롯은 이전까지 영구적으로 순환에서 제외됐다
+// (재시도 로직이 없었음). 여기서 깨진 슬롯들을 주기적으로 한 번 더 시도해서,
+// 일시적인 네트워크 문제(레이트리밋 등)로 실패했던 이미지가 나중에 다시 열리면
+// 자동으로 순환에 복귀하도록 한다.
+// [FIX-IMG-RETRY-LIMIT] 무한정 재시도하면 URL이 아예 삭제된 것처럼 영구적으로
+// 죽은 이미지도 5~8초마다 계속 네트워크 요청을 보내게 된다. 슬롯마다 재시도
+// 횟수를 세어 일정 횟수(MAX)를 넘기면 "포기(b2GiveUp)" 표시를 하고 더 이상
+// 재시도하지 않는다. 새로 선수를 선택하면(=엘리먼트가 새로 생성되면) 카운트도
+// 초기화되므로, 다음에 다시 볼 때는 또 정상적으로 재시도된다.
+window._B2_RETRY_MAX = 5;
+window._b2RetryBrokenSlots = function(mainBox) {
+  try {
+    if (!mainBox) return;
+    for (let s = 1; s <= 10; s++) {
+      const el = document.getElementById('b2-main-img-' + s);
+      if (!el || el.tagName === 'VIDEO') continue;
+      if (String(el.dataset.b2Broken || '') !== '1') continue;
+      if (String(el.dataset.b2GiveUp || '') === '1') continue; // 이미 포기한 슬롯은 건너뜀
+      const attempts = parseInt(el.dataset.b2RetryAttempts || '0', 10) + 1;
+      el.dataset.b2RetryAttempts = String(attempts);
+      if (attempts > window._B2_RETRY_MAX) {
+        el.dataset.b2GiveUp = '1';
+        continue;
+      }
+      const src = el.getAttribute('src');
+      if (!src) continue;
+      const _re = new Image();
+      _re.onload = function () {
+        el.dataset.b2Broken = '';
+        el.dataset.b2GiveUp = '';
+        el.dataset.b2RetryAttempts = '0';
+        el.style.visibility = '';
+        el.src = src;
+      };
+      _re.onerror = function () {
+        el.dataset.b2Broken = '1';
+        el.style.visibility = 'hidden';
+      };
+      _re.src = src;
+    }
+  } catch (e) {}
+};
+// [FIX-IMG-RETRY-LIMIT] 살아있는 슬롯이 하나도 없을 때 재시도를 계속할지 판단.
+// 남은 깨진 슬롯이 전부 "포기" 상태면 더 재시도할 게 없으므로 재시도 타이머
+// 자체를 잡지 않는다(백그라운드에서 의미 없이 계속 도는 것 방지).
+window._b2HasRetryableBrokenSlots = function(imgList) {
+  try {
+    for (let i = 0; i < imgList.length; i++) {
+      const el = document.getElementById('b2-main-img-' + imgList[i].slot);
+      if (!el) continue;
+      if (String(el.dataset.b2Broken || '') === '1' && String(el.dataset.b2GiveUp || '') !== '1') return true;
+    }
+  } catch (e) {}
+  return false;
+};
+// [FIX-IMG-RESTART] 슬롯1 <img>의 onload는 원래 "최초 로딩 완료 시 순환 시작"
+// 용도였다. 그런데 이 onload 속성은 엘리먼트가 살아있는 한 계속 붙어 있어서,
+// (1) 이미지가 캐시에서 즉시 로드돼 _b2UpdateMainDisplay가 img.complete를 보고
+// 이미 한 번 _b2ScheduleImageSwap을 호출한 뒤에 브라우저가 load 이벤트를 뒤늦게
+// 한 번 더 발생시키거나, (2) 일시적 로딩 실패 후 재시도(onerror 핸들러)가 같은
+// src를 다시 대입해 로딩에 성공하는 경우, onload가 두 번 이상 발화해서 그때마다
+// _b2ScheduleImageSwap이 재호출됐다. 매번 재호출될 때마다 순환 스케줄이 처음부터
+// 다시 시작되며(이어보기로 같은 슬롯을 보여주긴 하지만) 다음 전환까지의 대기시간이
+// 엉뚱하게 재계산되고 타이머가 계속 리셋되어, "처음엔 잘 순환되다가 이후부터
+// 순서/타이밍이 이상해진다"는 문제의 원인이었다. 엘리먼트당 한 번만 실행되도록
+// 가드를 둔다.
+window._b2SwapStartOnce = function(playerName, el) {
+  try {
+    if (el) {
+      if (el.dataset.b2SwapStarted === '1') return;
+      el.dataset.b2SwapStarted = '1';
+    }
+    _b2ScheduleImageSwap(playerName);
+  } catch (e) {
+    try { _b2ScheduleImageSwap(playerName); } catch (_e) {}
+  }
+};
 window._b2HandleMediaFailure = function(mediaEl) {
   try{
     if(!mediaEl) return;

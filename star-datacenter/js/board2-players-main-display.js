@@ -12,10 +12,37 @@ function _b2UpdateMainDisplay(playerName) {
     if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
     return s;
   };
+  // [FIX-IMG-SWAP-PREWARM] 기존에는 prewarmImageUrls()가 썸네일 프록시 URL
+  // (images.weserv.nl, 96px webp)만 미리 받아뒀는데, 실제 크로스페이드 슬라이드쇼의
+  // <img src>는 toHttpsUrl()로 만든 "원본 그대로의" URL이라 서로 다른 리소스였음.
+  // 즉 미리 받아둔 캐시가 실제 화면에 쓰이는 이미지와 전혀 무관해서 전환 시점에
+  // 원본이 처음부터 새로 다운로드되며 "화면이 잠깐 비었다가 뚝 끊기듯 나타나는"
+  // 현상의 원인이었다. 또한 photo/secondProfileFile(슬롯1~2)만 미리 받고 3~10번
+  // (예: 새로 추가한 스트리머용 3번째 이미지)은 아예 미리 받지 않아서 그 슬롯이
+  // 처음 순환될 때 항상 콜드 로딩이었다. 이제 실제로 표시되는 원본 URL 그대로,
+  // 등록된 모든 이미지 슬롯(1~10, 동영상 제외)을 미리 받아둔다.
   try{
-    if(typeof prewarmImageUrls==='function'){
-      prewarmImageUrls([player.photo, player.secondProfileFile], 4);
-    }
+    const _b2PrewarmIsVideo = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+    };
+    const _b2PrewarmSlots = [
+      player.photo, player.secondProfileFile, player.profileFile3, player.profileFile4,
+      player.profileFile5, player.profileFile6, player.profileFile7, player.profileFile8,
+      player.profileFile9, player.profileFile10
+    ];
+    _b2PrewarmSlots.forEach(rawUrl=>{
+      const u = _normMediaUrl(rawUrl);
+      if(!u || _b2PrewarmIsVideo(u)) return;
+      const src = toHttpsUrl(u);
+      if(!src) return;
+      window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
+      if(window._b2PrewarmedFullUrls.has(src)) return;
+      window._b2PrewarmedFullUrls.add(src);
+      const _img = new Image();
+      try{ _img.decoding = 'async'; }catch(e){}
+      _img.src = src;
+    });
   }catch(e){}
   
   _b2SelectedPlayer = player;
@@ -79,7 +106,7 @@ function _b2UpdateMainDisplay(playerName) {
   const _nameEsc = player.name.replace(/'/g,"\\'");
   const _hasMediaUrl2 = (v)=>!!_normMediaUrl(v);
   const _slot1 = _hasMediaUrl2(player.photo)
-    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'transition:opacity 0.4s ease;' })
+    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:'transition:opacity 0.4s ease;' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
   const _slot2 = _hasMediaUrl2(player.secondProfileFile)
     ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
@@ -172,8 +199,9 @@ function _b2UpdateMainDisplay(playerName) {
     if (!_hasMediaUrl2(player.photo)) {
       _b2ScheduleImageSwap(player.name);
     } else if (_slot1El && !_isSlot1Video && _slot1El.complete) {
-      // 캐시에서 즉시 로드된 경우 onload가 발화 안 함 → 직접 호출
-      _b2ScheduleImageSwap(player.name);
+      // 캐시에서 즉시 로드된 경우 onload가 늦게(또는 다시) 발화할 수 있으므로
+      // 동일 엘리먼트에서 중복 호출되지 않도록 _b2SwapStartOnce로 가드한다.
+      _b2SwapStartOnce(player.name, _slot1El);
     }
     // 비디오인 경우 onloadedmetadata 이벤트에서 자동 호출됨
   }
