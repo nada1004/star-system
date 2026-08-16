@@ -404,6 +404,10 @@
     }
 
     // 슬라이드쇼: 여러 명 — data-rsp-slot으로 전역 동기화
+    // [FIX-SLIDESHOW-HARD-CUT] display:none/flex로 즉시 전환하던 걸 opacity 크로스페이드로
+    // 바꿔서, 다음 사진으로 넘어갈 때 "뚝" 끊기며 깜빡이지 않고 부드럽게 겹쳐 바뀌도록 한다.
+    // 모든 슬라이드를 같은 grid 셀에 겹쳐 쌓아두면(display:none을 쓰지 않으므로) 레이아웃
+    // 밀림 없이 opacity만으로 전환할 수 있다.
     var slides = '';
     for(var si=0; si<validPlayers.length; si++){
       var vp2 = validPlayers[si];
@@ -412,11 +416,12 @@
       var sh2 = (isWinTeam&&pw2)
         ?(showBox?'0 4px 18px '+_rgba(col,0.38):'0 4px 16px '+_rgba(col,0.32))
         :(showBox?'0 2px 8px rgba(0,0,0,0.10)':'0 2px 8px rgba(0,0,0,0.12)');
-      // 초기 표시: slot=0이면 0번, slot>0이면 모두 none (전역틱 applyTick이 교정)
-      var initDisplay = (si === 0) ? 'flex' : 'none';
+      // 초기 표시: slot=0이면 0번, slot>0이면 모두 투명(전역틱 applyTick이 교정)
+      var initOpacity = (si === 0) ? '1' : '0';
       var _sBox = _buildImgBox(vp2.raw, sizePx, radius, sh2, fs2, isWinTeam, pw2, col, vp2.name, isLeft);
       slides += '<div class="rsp-slide" style="'
-        +'display:'+initDisplay+';align-items:'+jc+';justify-content:center;width:100%;">'
+        +'grid-area:1/1;align-items:'+jc+';justify-content:center;width:100%;display:flex;'
+        +'opacity:'+initOpacity+';transition:opacity .6s ease;pointer-events:none;">'
         +_sBox+'</div>';
     }
 
@@ -425,7 +430,7 @@
       +'background:'+panelBg+';outline:1px solid '+panelBrd+';'
       +'min-width:'+widthPx+'px;max-width:'+widthPx+'px;overflow:visible;'
       +'align-items:center;justify-content:'+jc+';">'
-      +'<div class="rsp-inner" style="display:flex;flex-direction:column;width:100%;overflow:visible;'+translateStyle+'">'
+      +'<div class="rsp-inner" style="display:grid;width:100%;overflow:visible;'+translateStyle+'">'
       +slides
       +'</div></div>';
   }
@@ -694,7 +699,9 @@
     var slot  = parseInt(el.getAttribute('data-rsp-slot')||'0', 10) || 0;
     var cur   = (tick + slot) % slides.length;
     for(var i=0; i<slides.length; i++){
-      slides[i].style.display = (i === cur) ? 'flex' : 'none';
+      var on = (i === cur);
+      slides[i].style.opacity = on ? '1' : '0';
+      slides[i].style.pointerEvents = on ? 'auto' : 'none';
     }
   }
 
