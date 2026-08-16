@@ -1,6 +1,25 @@
 /* ══════════════════════════════════════
    Board2 Card Utilities
 ══════════════════════════════════════ */
+/* (성능) 프로필 이미지 로딩 우선순위
+   첫 화면에 그려지는 앞쪽 아바타들은 eager + fetchpriority=high 로 즉시 받고,
+   그 뒤(스크롤 아래) 아바타들만 lazy + low 로 남긴다.
+   카운터는 프레임마다 초기화되므로 탭 전환/재렌더 때도 새 화면 기준으로 동작한다. */
+var _b2ImgSeq = 0;
+var _b2ImgSeqPending = false;
+var _B2_EAGER_LIMIT = 40;
+function _b2ImgPriorityAttrs() {
+  if (!_b2ImgSeqPending) {
+    _b2ImgSeqPending = true;
+    var reset = function () { _b2ImgSeq = 0; _b2ImgSeqPending = false; };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(reset);
+    else setTimeout(reset, 0);
+  }
+  return (_b2ImgSeq++ < _B2_EAGER_LIMIT)
+    ? 'loading="eager" decoding="async" fetchpriority="high"'
+    : 'loading="lazy" decoding="async" fetchpriority="low"';
+}
+try { if (typeof window !== 'undefined') window._b2ImgPriorityAttrs = _b2ImgPriorityAttrs; } catch (e) {}
 function _b2NameTag(p, accentCol, showTier) {
   const crewCol = p.crewName && typeof _gcCrew === 'function' ? (_gcCrew(p.crewName) || '') : '';
   const safeName = (p.name||'').replace(/'/g,"\\'");
@@ -84,7 +103,7 @@ function _b2Avatar(p, col, size) {
     const _avatarShapeStyle = `border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none)`;
     const _2nd = (typeof _phSwap2ndHTML === 'function') ? _phSwap2ndHTML(p.secondProfileFile, { style: `width:${s}px;height:${s}px;${_avatarShapeStyle};object-fit:cover` }) : '';
     return `<span class="${_2nd ? 'ph-swap ' : ''}" style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${_escAttr(toThumbUrl(p.photo,s))}" data-orig="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;${_avatarShapeStyle};object-fit:cover;flex-shrink:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})}">
+      <img src="${_escAttr(toThumbUrl(p.photo,s))}" data-orig="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" ${_b2ImgPriorityAttrs()} data-b2-photo="1" style="width:${s}px;height:${s}px;${_avatarShapeStyle};object-fit:cover;flex-shrink:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})}">
       ${_2nd}
       ${badge}
     </span>`;

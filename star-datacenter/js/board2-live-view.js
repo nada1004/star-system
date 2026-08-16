@@ -513,7 +513,7 @@ function _b2LiveResultsHTML() {
     const coverUrl = photoUrl;
     const titleHtml = '';
     const avatarHtml = photoUrl
-      ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      ? `<img src="${photoUrl}" alt="${safeNameHtml}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`
       : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:18px;font-weight:1000">${safeNameHtml.slice(0,1) || '?'}</span>`;
 
@@ -717,7 +717,7 @@ function _b2LiveTheaterItemHtml(p, univLabel) {
   const active = !!(_b2LiveTheaterSelected && _b2LiveTheaterSelected.id === p._soopId);
   const univColor = typeof gc === 'function' ? gc(univLabel === '무소속' ? '' : univLabel) : '#6b7280';
   const avatarHtml = photoUrl
-    ? `<img src="${photoUrl}" alt="${safeNameHtml}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`
+    ? `<img src="${photoUrl}" alt="${safeNameHtml}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`
     : `<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${univColor}18;color:${univColor};font-size:14px;font-weight:1000">${safeNameHtml.slice(0, 1) || '?'}</span>`;
   // 정렬 기준(직급→티어)을 목록에서도 바로 알아볼 수 있게 직급 아이콘 + 티어 색상 점 표시
   const roleIcon = (p.role && typeof _roleMatchedMain === 'function' && _roleMatchedMain(p.role) && typeof ROLE_ICONS !== 'undefined')

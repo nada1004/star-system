@@ -23,6 +23,7 @@ function openB2ProfileEditModal(playerName) {
   const _media8 = _trimMedia(player.profileFile8);
   const _media9 = _trimMedia(player.profileFile9);
   const _media10 = _trimMedia(player.profileFile10);
+  const _mediaBgm = _trimMedia(player.bgmUrl);
   const _slotOrder = [
     { slot:1, url:_media1 },
     { slot:2, url:_media2 },
@@ -80,6 +81,11 @@ function openB2ProfileEditModal(playerName) {
       <div style="margin-bottom:16px">
         <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">선수 이름</label>
         <div style="font-size:14px;color:var(--text3);padding:8px 12px;background:var(--surface);border-radius:8px">${player.name}</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎵 주제곡 BGM <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(유튜브 링크 — 프로필탭에서 이 선수를 선택하면 재생됩니다)</span></label>
+        <input type="text" id="b2-ed-bgm-url" value="${_mediaBgm}" placeholder="https://www.youtube.com/watch?v=... 또는 https://youtu.be/..." style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">다른 선수를 선택하면 자동으로 정지되고 새 곡으로 바뀝니다. 비워두면 BGM 없이 조용히 표시됩니다.</div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
