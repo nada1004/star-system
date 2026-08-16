@@ -832,45 +832,57 @@ function _b2PlayersView() {
   const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
   // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지 표시를 복원한다.
   const _b2HeroShowMedia = true;
+  // [FIX-IMG-FIRST-SLOT-EMPTY] 슬롯1(대표 사진)이 비어있고 2~10번에만 사진이
+  // 등록된 경우에도, 실제로 등록된 첫 번째 슬롯이 opacity:1 + 순환 시작
+  // 트리거를 갖도록 한다 (board2-players-main-display.js와 동일한 수정).
+  const _b2MediaSlots = [
+    { slot:1, url:_b2SelectedPlayer.photo }, { slot:2, url:_b2SelectedPlayer.secondProfileFile },
+    { slot:3, url:_b2SelectedPlayer.profileFile3 }, { slot:4, url:_b2SelectedPlayer.profileFile4 },
+    { slot:5, url:_b2SelectedPlayer.profileFile5 }, { slot:6, url:_b2SelectedPlayer.profileFile6 },
+    { slot:7, url:_b2SelectedPlayer.profileFile7 }, { slot:8, url:_b2SelectedPlayer.profileFile8 },
+    { slot:9, url:_b2SelectedPlayer.profileFile9 }, { slot:10, url:_b2SelectedPlayer.profileFile10 }
+  ];
+  const _b2FirstMediaSlot = (_b2MediaSlots.find(x => _hasMediaUrl(x.url)) || {}).slot;
+  const _b2SwapTriggerJs = `if(typeof _b2SwapStartOnce==='function'){ _b2SwapStartOnce('${_b2NameEsc}', this); }else if(typeof _b2ScheduleImageSwap==='function'){ _b2ScheduleImageSwap('${_b2NameEsc}'); } `;
   const _slot1 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.photo))
     ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
       z: 1,
-      opacity: 1,
-      onLoadJs: `if(typeof _b2SwapStartOnce==='function'){ _b2SwapStartOnce('${_b2NameEsc}', this); }else if(typeof _b2ScheduleImageSwap==='function'){ _b2ScheduleImageSwap('${_b2NameEsc}'); } if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
+      opacity: (1 === _b2FirstMediaSlot) ? 1 : 0,
+      onLoadJs: `${_b2SwapTriggerJs}if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
       style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : '';
   const _slot2 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.secondProfileFile))
     ? _b2MainMediaHTML(2, _b2SelectedPlayer.secondProfileFile, {
       z: 2,
-      opacity: 0,
-      onLoadJs: `if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'secondary'); }`,
+      opacity: (2 === _b2FirstMediaSlot) ? 1 : 0,
+      onLoadJs: `${(2 === _b2FirstMediaSlot) ? _b2SwapTriggerJs : ''}if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'secondary'); }`,
       style: `object-fit:${secondarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : '';
   const _slot3 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile3))
-    ? _b2MainMediaHTML(3, _b2SelectedPlayer.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(3, _b2SelectedPlayer.profileFile3, { z:3, opacity:(3===_b2FirstMediaSlot)?1:0, onLoadJs:(3===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot4 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile4))
-    ? _b2MainMediaHTML(4, _b2SelectedPlayer.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(4, _b2SelectedPlayer.profileFile4, { z:4, opacity:(4===_b2FirstMediaSlot)?1:0, onLoadJs:(4===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot5 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile5))
-    ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:(5===_b2FirstMediaSlot)?1:0, onLoadJs:(5===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot6 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile6))
-    ? _b2MainMediaHTML(6, _b2SelectedPlayer.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(6, _b2SelectedPlayer.profileFile6, { z:6, opacity:(6===_b2FirstMediaSlot)?1:0, onLoadJs:(6===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot7 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile7))
-    ? _b2MainMediaHTML(7, _b2SelectedPlayer.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(7, _b2SelectedPlayer.profileFile7, { z:7, opacity:(7===_b2FirstMediaSlot)?1:0, onLoadJs:(7===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot8 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile8))
-    ? _b2MainMediaHTML(8, _b2SelectedPlayer.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(8, _b2SelectedPlayer.profileFile8, { z:8, opacity:(8===_b2FirstMediaSlot)?1:0, onLoadJs:(8===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot9 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile9))
-    ? _b2MainMediaHTML(9, _b2SelectedPlayer.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(9, _b2SelectedPlayer.profileFile9, { z:9, opacity:(9===_b2FirstMediaSlot)?1:0, onLoadJs:(9===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
     : '';
   const _slot10 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile10))
-    ? _b2MainMediaHTML(10, _b2SelectedPlayer.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(10, _b2SelectedPlayer.profileFile10, { z:10, opacity:(10===_b2FirstMediaSlot)?1:0, onLoadJs:(10===_b2FirstMediaSlot)?_b2SwapTriggerJs:'', style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
     : '';
   const _selUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};

@@ -785,7 +785,7 @@ window._b2RetryBrokenSlots = function(mainBox) {
     if (!mainBox) return;
     for (let s = 1; s <= 10; s++) {
       const el = document.getElementById('b2-main-img-' + s);
-      if (!el || el.tagName === 'VIDEO') continue;
+      if (!el) continue;
       if (String(el.dataset.b2Broken || '') !== '1') continue;
       if (String(el.dataset.b2GiveUp || '') === '1') continue; // 이미 포기한 슬롯은 건너뜀
       const attempts = parseInt(el.dataset.b2RetryAttempts || '0', 10) + 1;
@@ -796,6 +796,29 @@ window._b2RetryBrokenSlots = function(mainBox) {
       }
       const src = el.getAttribute('src');
       if (!src) continue;
+      // [FIX-IMG-RETRY-VIDEO] video 슬롯은 이전까지 이 재시도 대상에서 제외돼 있어서,
+      // 한 번 로드 실패하면(순간적 네트워크 오류 등) 선수를 다시 선택하기 전까지
+      // 영구히 복구되지 않았다. img와 동일하게 숨겨진 <video>로 먼저 시험 로드해보고
+      // 성공하면 실제 슬롯을 복구한다.
+      if (el.tagName === 'VIDEO') {
+        const _rv = document.createElement('video');
+        _rv.muted = true;
+        _rv.preload = 'metadata';
+        _rv.onloadedmetadata = function () {
+          el.dataset.b2Broken = '';
+          el.dataset.b2GiveUp = '';
+          el.dataset.b2RetryAttempts = '0';
+          el.style.visibility = '';
+          el.src = src;
+          try { el.load(); } catch (e) {}
+        };
+        _rv.onerror = function () {
+          el.dataset.b2Broken = '1';
+          el.style.visibility = 'hidden';
+        };
+        _rv.src = src;
+        continue;
+      }
       const _re = new Image();
       _re.onload = function () {
         el.dataset.b2Broken = '';

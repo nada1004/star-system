@@ -115,11 +115,19 @@ window._cfgB2SaveSwapDelay = function(playerName){
       // [FIX] 값이 1이면 무조건 삭제하던 로직 제거 — 사용자가 입력한 값을 항상 그대로 저장한다.
       p[key] = clamp(input.value);
     });
-    if(typeof window.save === 'function') window.save();
-    try{
-      const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
-      if(cur === name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(name);
-    }catch(e){}
+    // [FIX-DELAY-INPUT-DEBOUNCE] 예전에는 키 입력마다(oninput) 곧바로 save()와 슬라이드쇼
+    // 재시작(_b2ScheduleImageSwap)을 호출해서, 숫자 여러 자리를 입력하는 동안 슬라이드쇼가
+    // 키 입력마다 계속 처음부터 재시작됐다. 값 반영 자체는 즉시 하되, 저장/재시작은 입력이
+    // 잠시 멈춘 뒤(400ms) 한 번만 실행되도록 디바운스한다.
+    window._b2DelaySaveDebounce = window._b2DelaySaveDebounce || {};
+    if (window._b2DelaySaveDebounce[name]) clearTimeout(window._b2DelaySaveDebounce[name]);
+    window._b2DelaySaveDebounce[name] = setTimeout(()=>{
+      try{
+        if(typeof window.save === 'function') window.save();
+        const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
+        if(cur === name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(name);
+      }catch(e){}
+    }, 400);
   }catch(e){}
 };
 function _ensureB2ImgSettingsWrap(retry){

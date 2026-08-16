@@ -161,35 +161,54 @@ function _b2UpdateMainDisplay(playerName) {
   // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지를 항상 숨기던 처리를
   // 되돌려, 실제 등록된 사진/영상이 있으면 다시 표시하도록 복원한다.
   const _hasMediaUrl2 = _normMediaUrl;
+  // [FIX-IMG-FIRST-SLOT-EMPTY] 예전에는 슬롯1(player.photo)에만 opacity:1과
+  // 순환 시작 트리거(onLoadJs)를 하드코딩해뒀다. 그래서 슬롯1(대표 사진)이
+  // 비어있고 2~10번에만 사진이 등록된 선수는 아무 슬롯도 opacity:1이 아니라서
+  // 히어로 영역에 아무것도 안 보이고, 순환 시작 트리거도 없어 슬라이드쇼 자체가
+  // 켜지지 않는 문제가 있었다. 이제는 "실제로 등록된 첫 번째 슬롯"을 찾아 그
+  // 슬롯이 opacity:1과 순환 시작 트리거를 갖도록 한다(슬롯1이 있으면 기존과 동일).
+  const _mediaSlots = [
+    { slot:1, url:player.photo }, { slot:2, url:player.secondProfileFile },
+    { slot:3, url:player.profileFile3 }, { slot:4, url:player.profileFile4 },
+    { slot:5, url:player.profileFile5 }, { slot:6, url:player.profileFile6 },
+    { slot:7, url:player.profileFile7 }, { slot:8, url:player.profileFile8 },
+    { slot:9, url:player.profileFile9 }, { slot:10, url:player.profileFile10 }
+  ];
+  const _firstMediaSlot = (_mediaSlots.find(x => _hasMediaUrl2(x.url)) || {}).slot;
+  // 슬롯1/2는 _b2ApplyImgSettingsToElement가 object-fit을 별도 관리하므로 제외하고,
+  // 3~10번이 "첫 표시 슬롯"이 될 때만 object-fit:cover를 명시해 찌그러짐을 막는다.
+  const _slotOpt = (slot, extraStyle) => (slot === _firstMediaSlot)
+    ? { z:slot, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:`${slot>=3?'object-fit:cover;':''}transition:opacity 0.4s ease;${extraStyle||''}` }
+    : { z:slot, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;${extraStyle||''}` };
   const _slot1 = _hasMediaUrl2(player.photo)
-    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:'transition:opacity 0.4s ease;' })
+    ? _b2MainMediaHTML(1, player.photo, _slotOpt(1))
     : '';
   const _slot2 = _hasMediaUrl2(player.secondProfileFile)
-    ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(2, player.secondProfileFile, _slotOpt(2))
     : '';
   const _slot3 = _hasMediaUrl2(player.profileFile3)
-    ? _b2MainMediaHTML(3, player.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(3, player.profileFile3, _slotOpt(3, `object-position:${_p3pos};`))
     : '';
   const _slot4 = _hasMediaUrl2(player.profileFile4)
-    ? _b2MainMediaHTML(4, player.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(4, player.profileFile4, _slotOpt(4, `object-position:${_p4pos};`))
     : '';
   const _slot5 = _hasMediaUrl2(player.profileFile5)
-    ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(5, player.profileFile5, _slotOpt(5, `object-position:${_p5pos};`))
     : '';
   const _slot6 = _hasMediaUrl2(player.profileFile6)
-    ? _b2MainMediaHTML(6, player.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(6, player.profileFile6, _slotOpt(6, `object-position:${_p6pos};`))
     : '';
   const _slot7 = _hasMediaUrl2(player.profileFile7)
-    ? _b2MainMediaHTML(7, player.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(7, player.profileFile7, _slotOpt(7, `object-position:${_p7pos};`))
     : '';
   const _slot8 = _hasMediaUrl2(player.profileFile8)
-    ? _b2MainMediaHTML(8, player.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(8, player.profileFile8, _slotOpt(8, `object-position:${_p8pos};`))
     : '';
   const _slot9 = _hasMediaUrl2(player.profileFile9)
-    ? _b2MainMediaHTML(9, player.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(9, player.profileFile9, _slotOpt(9, `object-position:${_p9pos};`))
     : '';
   const _slot10 = _hasMediaUrl2(player.profileFile10)
-    ? _b2MainMediaHTML(10, player.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
+    ? _b2MainMediaHTML(10, player.profileFile10, _slotOpt(10, `object-position:${_p10pos};`))
     : '';
   const _updUnivIcon = (() => {
     const uCfg = univCfg.find(x => x.name === player.univ) || {};
