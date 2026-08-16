@@ -288,6 +288,7 @@ const BOARD_FILES = [
   'js/board2-image-utils.js',
   'js/board2-card-utils.js',
   'js/board2-core.js',
+  'js/player-bgm.js',
   'js/board2-univ-views-core.js',
   'js/board2-univ-views-femco.js',
   'js/board2-univ-views-freeboard.js',
