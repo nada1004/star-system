@@ -897,6 +897,26 @@ function rBoard2(C, T) {
           }catch(e){
             console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
           }
+          // [FIX-IMG-HERO-BLANK-STUCK] 최초 진입 시에도 프록시 요청이 무한정 멈춰서
+          // onerror조차 안 뜨는 경우를 대비해, 슬롯1이 일정 시간 안에 로드 안 되면
+          // 원본 URL로 강제 전환한다 (board2-players-main-display.js의 동일 로직).
+          try{
+            const _watchEl = document.getElementById('b2-main-img-1');
+            if(_watchEl && _watchEl.tagName === 'IMG'){
+              const _origUrl = _watchEl.dataset.orig || '';
+              setTimeout(()=>{
+                try{
+                  if(!_watchEl.isConnected) return;
+                  if(_watchEl.dataset.b2Broken === '1') return;
+                  if(_watchEl.complete && _watchEl.naturalWidth > 0) return;
+                  if(_origUrl && _watchEl.src !== _origUrl){
+                    _watchEl.dataset.b2ErrCount = '1';
+                    _watchEl.src = _origUrl;
+                  }
+                }catch(e){}
+              }, 5000);
+            }
+          }catch(e){}
         }, 0);
         setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
       }

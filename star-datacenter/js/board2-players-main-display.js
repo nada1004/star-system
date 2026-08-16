@@ -122,20 +122,23 @@ function _b2UpdateMainDisplay(playerName) {
     const isGif = !isVid && _b2IsGifUrl(url);
     // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
     // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
-    const src = (isVid || isGif) ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
+    const _rawHttps = toHttpsUrl(url);
+    const src = (isVid || isGif) ? _rawHttps : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : _rawHttps);
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
     const onLoadJs = opt && opt.onLoadJs ? String(opt.onLoadJs) : '';
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
-    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
-    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
-    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
-    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
-    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
-    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
-    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
+    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" data-orig="${_rawHttps}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-HERO-BLANK-PROXY] 예전에는 로딩 실패 시 "같은(리사이즈 프록시) URL"을 그대로
+    // 한 번 더 재시도했다. 그런데 원본 사진이 커서(수백KB~수MB) 리사이즈 프록시가 처리 중
+    // 타임아웃/일시 오류를 내는 경우, 같은 URL을 다시 시도해도 똑같이 실패해서 결국
+    // 화면이 완전히 비어버렸다(그리드 썸네일처럼 작은 크기 요청은 잘 되는데 히어로처럼
+    // 큰 크기 요청만 유독 실패하는 경우가 이 패턴과 정확히 일치). 이제는 실패하면 먼저
+    // 리사이즈 프록시를 거치지 않은 원본 URL(data-orig)로 바로 전환해서 시도하고,
+    // 그것도 실패해야 완전히 숨긴다 — 그리드 카드에서 이미 쓰고 있는 것과 동일한 폴백.
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;var _o=_t.dataset.orig||'';if(_n===1&&_o&&_t.src!==_o){_t.src=_o;}else{_fail();}`;
     if(isVid){
       // [FIX-VIDEO-NOT-PLAYING] preload="metadata"만 쓰면 실제 프레임 데이터를 전혀
       // 미리 받아두지 않아서, 이 슬롯이 활성화되어 play()가 호출되는 순간부터에서야
@@ -234,6 +237,27 @@ function _b2UpdateMainDisplay(playerName) {
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
+    // [FIX-IMG-HERO-BLANK-STUCK] 프록시 요청이 에러 이벤트도 안 뜨고 그냥 무한정
+    // 멈춰있는(hang) 경우 위 onerror 폴백 자체가 발동하지 않아 화면이 계속 비어있을
+    // 수 있다. 지금 보이는 슬롯1이 일정 시간 안에 로드되지 않으면 프록시를 거치지
+    // 않은 원본 URL로 강제 전환한다.
+    try{
+      const _watchEl = document.getElementById('b2-main-img-1');
+      if(_watchEl && _watchEl.tagName === 'IMG'){
+        const _origUrl = _watchEl.dataset.orig || '';
+        setTimeout(()=>{
+          try{
+            if(!_watchEl.isConnected) return;
+            if(_watchEl.dataset.b2Broken === '1') return;
+            if(_watchEl.complete && _watchEl.naturalWidth > 0) return; // 이미 정상 로드됨
+            if(_origUrl && _watchEl.src !== _origUrl){
+              _watchEl.dataset.b2ErrCount = '1';
+              _watchEl.src = _origUrl;
+            }
+          }catch(e){}
+        }, 5000);
+      }
+    }catch(e){}
     // [FIX] 슬롯1의 onload가 캐시 이미지의 경우 발화 안 할 수 있으므로
     // - photo 없음: 즉시 _b2ScheduleImageSwap 호출
     // - photo 있고 이미 로드 완료(캐시): 즉시 호출

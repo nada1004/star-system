@@ -807,20 +807,20 @@ function _b2PlayersView() {
     const isGif = !isVid && _b2IsGifUrl(url);
     // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
     // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
-    const src = (isVid || isGif) ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
+    const _rawHttps = toHttpsUrl(url);
+    const src = (isVid || isGif) ? _rawHttps : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : _rawHttps);
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
     const onLoadJs = opt && opt.onLoadJs ? String(opt.onLoadJs) : '';
     const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
     const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
-    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
-    // [FIX-IMG-BROKEN] 로딩 실패(만료/차단된 링크 등) 시 브라우저 기본 "깨진 이미지" 아이콘이
-    // 그대로 노출되던 문제 수정: 화면에 보이는 img의 src는 건드리지 않고 별도의 오프스크린
-    // Image로 1회 재시도만 해본 뒤, 성공했을 때만 화면 img의 src를 갱신한다(기존처럼 src를
-    // 지웠다가 다시 넣는 방식은 그 사이 화면이 잠깐 공백으로 보이는 원인이었음). 재시도도
-    // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
-    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
+    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" data-orig="${_rawHttps}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    // [FIX-IMG-HERO-BLANK-PROXY] 리사이즈 프록시가 큰 이미지 처리 중 실패하는 경우
+    // 같은 URL을 재시도해봐야 또 실패해 화면이 완전히 비어버렸다. 이제는 실패 시
+    // 프록시를 거치지 않은 원본 URL(data-orig)로 바로 전환해서 시도하고, 그것도
+    // 실패해야 완전히 숨긴다 — 그리드 카드와 동일한 폴백 방식.
+    const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;var _o=_t.dataset.orig||'';if(_n===1&&_o&&_t.src!==_o){_t.src=_o;}else{_fail();}`;
     if(isVid){
       // [FIX-VIDEO-NOT-PLAYING] 지금 바로 보이는 슬롯(opacity 1)은 preload="auto"로
       // 미리 버퍼링해서 즉시 재생되게 하고, 아직 안 보이는 슬롯은 metadata만 받는다.
