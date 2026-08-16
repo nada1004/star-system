@@ -79,7 +79,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🎭 상태 아이콘 (목록/추가)', paste:'🤖 자동인식',
-    b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지',
+    b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', b2trans:'🎞️ 이미지탭 슬라이드쇼 효과', imgmodalsettings:'🖼️ 스트리머 상세 이미지',
     profileshape:'🖼️ 프로필 이미지 모양',
     pdModeBadge:'🎨 최근 경기 종목 배지 색상',
     pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)', ud:'🏫 대학 상세(팝업) 디자인',
@@ -155,6 +155,7 @@ function rCfg(C,T){
     paste:'붙여넣기 인식 규칙과 출력 형식 설정',
     b2layout:'이미지탭 좌우 비율과 높이 조정',
     imgsettings:'이미지탭 이미지 표시 방식 설정',
+    b2trans:'슬라이드쇼 전환 효과 on/off와 시네마틱 모드',
     imgmodalsettings:'스트리머 상세 이미지 표시 방식 설정',
     profileshape:'프로필 썸네일 모양과 효과 설정',
     pd:'스트리머 상세 카드 색감과 배치 조정',

@@ -54,6 +54,12 @@ function _cfgSecGroup4(ctx){
     </div>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px;padding:0 2px">※ 스트리머 상세 모달 이미지 설정은 아래 별도 항목에서 설정</div>
   </details>
+  ${_scfgD('b2trans','🎞️ 이미지탭 슬라이드쇼 효과')}
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">현황판 프로필탭(이미지탭) 좌측 히어로 슬라이드쇼의 전환 효과와 시네마틱 모드를 설정합니다.</div>
+    <div id="cfg-b2trans-body" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);color:var(--gray-l)">로딩 중...</div>
+    </div>
+  </details>
   ${_scfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">모바일/태블릿/PC 크기를 따로 저장합니다.</div>

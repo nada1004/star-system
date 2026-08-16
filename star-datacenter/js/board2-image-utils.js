@@ -390,7 +390,17 @@ function _renderCfgImgSettings(playerName) {
 // transform을 통째로 덮어써 수동 설정이 애니메이션 동안 무시되는 부작용이 있다.
 // rAF로 "기존 transform 문자열 + 켄번즈 변형"을 매 프레임 직접 합성하면 수동 설정을
 // 보존하면서 자연스럽게 얹을 수 있다.
-const _B2_KB_VARIANTS = [
+// [FEATURE-CINEMATIC] 시네마틱 모드에서는 줌 폭을 크게 줄여(1.14~1.18 → 1.05~1.07)
+// "줌"보다는 "느린 팬"에 가깝게 만든다. 일반 모드는 기존 값을 그대로 쓴다.
+const _B2_KB_VARIANTS_CINEMA = [
+  { fromS: 1.00, toS: 1.06, fromX: 0, toX: -2, fromY: 0, toY: -1.2 },
+  { fromS: 1.00, toS: 1.06, fromX: 0, toX:  2, fromY: 0, toY: -1.2 },
+  { fromS: 1.00, toS: 1.06, fromX: 0, toX: -2, fromY: 0, toY:  1.2 },
+  { fromS: 1.00, toS: 1.06, fromX: 0, toX:  2, fromY: 0, toY:  1.2 },
+  { fromS: 1.00, toS: 1.07, fromX: 0, toX:  0, fromY: 0, toY:  0 },
+  { fromS: 1.07, toS: 1.00, fromX: 0, toX:  0, fromY: 0, toY:  0 }
+];
+const _B2_KB_VARIANTS_NORMAL = [
   { fromS: 1.00, toS: 1.14, fromX: 0, toX: -3, fromY: 0, toY: -2 },
   { fromS: 1.00, toS: 1.14, fromX: 0, toX:  3, fromY: 0, toY: -2 },
   { fromS: 1.00, toS: 1.14, fromX: 0, toX: -3, fromY: 0, toY:  2 },
@@ -410,11 +420,13 @@ window._b2StartKenBurns = function(el, durationMs, entry, loop){
       el.dataset.b2BaseTransform = el.style.transform || '';
     }
     const base = el.dataset.b2BaseTransform;
+    const _kbCine = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+    const _kbVariants = _kbCine ? _B2_KB_VARIANTS_CINEMA : _B2_KB_VARIANTS_NORMAL;
     let idx;
-    do { idx = Math.floor(Math.random() * _B2_KB_VARIANTS.length); }
-    while (_B2_KB_VARIANTS.length > 1 && idx === el._b2KbLastIdx);
+    do { idx = Math.floor(Math.random() * _kbVariants.length); }
+    while (_kbVariants.length > 1 && idx === el._b2KbLastIdx);
     el._b2KbLastIdx = idx;
-    const v = _B2_KB_VARIANTS[idx];
+    const v = _kbVariants[idx];
     const dur = Math.max(1000, durationMs || 4400);
     const enterMs = entry ? Math.min(520, Math.max(280, dur * 0.22)) : 0;
     const eX = entry ? (entry.x || 0) : v.fromX;
@@ -460,30 +472,49 @@ window._b2ResetKenBurns = function(el){
 // [FEATURE-TRANSITION-VARIETY] 매 전환마다 다른 진입 방향(디졸브/좌우·상하 슬라이드/
 // 줌+디졸브)을 골라 슬라이드쇼가 항상 똑같은 크로스페이드로만 반복되지 않게 한다.
 // 직전과 같은 방향이 연달아 나오지 않도록 한 번 더 뽑는다(mainBox당 상태 보관).
+// [FEATURE-CINEMATIC] 줌인/줌아웃 위주였던 전환 목록을 정리 — 줌 계열은 은은한 디졸브형
+// 1종만 남기고, 나머지는 상하좌우/대각선 슬라이드와 슬라이드+페이드 조합으로 채워
+// "영화 예고편"처럼 차분하게 흘러가는 느낌을 준다. label은 설정탭 토글 UI에서 쓴다.
 const _B2_TRANS_TYPES = [
-  { type:'fade',            fade:true,  x:0,    y:0            },
-  { type:'slide-left',      fade:false, x:100,  y:0            },
-  { type:'slide-right',     fade:false, x:-100, y:0            },
-  { type:'slide-up',        fade:false, x:0,    y:70           },
-  { type:'slide-down',      fade:false, x:0,    y:-70          },
-  { type:'zoom-in-fade',    fade:true,  x:0,    y:0,   s:0.90  },
-  { type:'zoom-out-fade',   fade:true,  x:0,    y:0,   s:1.16  },
-  { type:'slide-topleft',   fade:false, x:70,   y:50           },
-  { type:'slide-topright',  fade:false, x:-70,  y:50           },
-  { type:'slide-botleft',   fade:false, x:70,   y:-50          },
-  { type:'slide-botright',  fade:false, x:-70,  y:-50          },
-  { type:'slide-left-fade', fade:true,  x:55,   y:0            },
-  { type:'slide-right-fade',fade:true,  x:-55,  y:0            },
-  { type:'slide-up-fade',   fade:true,  x:0,    y:40           },
-  { type:'slide-down-fade', fade:true,  x:0,    y:-40          }
+  { key:'fade',            type:'fade',            label:'디졸브(페이드)',        fade:true,  x:0,    y:0    },
+  { key:'zoom',             type:'zoom-fade',       label:'은은한 줌 디졸브',       fade:true,  x:0,    y:0,   s:0.96 },
+  { key:'slide-left',      type:'slide-left',      label:'좌측에서 슬라이드',      fade:false, x:100,  y:0    },
+  { key:'slide-right',     type:'slide-right',     label:'우측에서 슬라이드',      fade:false, x:-100, y:0    },
+  { key:'slide-up',        type:'slide-up',        label:'아래에서 슬라이드',      fade:false, x:0,    y:70   },
+  { key:'slide-down',      type:'slide-down',      label:'위에서 슬라이드',        fade:false, x:0,    y:-70  },
+  { key:'slide-topleft',   type:'slide-topleft',   label:'대각선(좌상단)',         fade:false, x:70,   y:50   },
+  { key:'slide-topright',  type:'slide-topright',  label:'대각선(우상단)',         fade:false, x:-70,  y:50   },
+  { key:'slide-botleft',   type:'slide-botleft',   label:'대각선(좌하단)',         fade:false, x:70,   y:-50  },
+  { key:'slide-botright',  type:'slide-botright',  label:'대각선(우하단)',         fade:false, x:-70,  y:-50  },
+  { key:'slide-left-fade', type:'slide-left-fade', label:'좌측 슬라이드+페이드',   fade:true,  x:55,   y:0    },
+  { key:'slide-right-fade',type:'slide-right-fade',label:'우측 슬라이드+페이드',   fade:true,  x:-55,  y:0    },
+  { key:'slide-up-fade',   type:'slide-up-fade',   label:'하단 슬라이드+페이드',   fade:true,  x:0,    y:40   },
+  { key:'slide-down-fade', type:'slide-down-fade', label:'상단 슬라이드+페이드',   fade:true,  x:0,    y:-40  }
 ];
+try{ window._B2_TRANS_TYPES = _B2_TRANS_TYPES; }catch(e){}
+// 설정탭에서 각 효과를 켜고 끌 수 있게 저장되는 목록을 읽는다. 저장된 값이 없거나
+// 전부 꺼져 있으면(실수 방지) 전체를 켠 것으로 취급한다.
+window._b2GetEnabledTransKeys = function(){
+  try{
+    const raw = JSON.parse(localStorage.getItem('su_b2_trans_enabled') || 'null');
+    if(!raw || typeof raw !== 'object') return null; // null = 전체 사용(기본값)
+    const on = _B2_TRANS_TYPES.filter(t => raw[t.key] !== false);
+    return on.length ? on : null;
+  }catch(e){ return null; }
+};
+// 시네마틱 모드: 켜져 있으면 전환 속도를 느긋하게, 줌 폭을 줄이고, 라인업 소개연출에
+// 레터박스/비네트를 씌운다. 기본값은 켜짐.
+window._b2CinemaModeOn = function(){
+  try{ return (localStorage.getItem('su_b2_cinema_mode') ?? '1') !== '0'; }catch(e){ return true; }
+};
 window._b2PickTransition = function(mainBox){
   try{
+    const pool = window._b2GetEnabledTransKeys() || _B2_TRANS_TYPES;
     let idx;
-    do { idx = Math.floor(Math.random() * _B2_TRANS_TYPES.length); }
-    while (_B2_TRANS_TYPES.length > 1 && mainBox && idx === mainBox._lastTransIdx);
-    if (mainBox) mainBox._lastTransIdx = idx;
-    return _B2_TRANS_TYPES[idx];
+    do { idx = Math.floor(Math.random() * pool.length); }
+    while (pool.length > 1 && mainBox && pool[idx] === mainBox._lastTrans);
+    if (mainBox) mainBox._lastTrans = pool[idx];
+    return pool[idx];
   }catch(e){ return _B2_TRANS_TYPES[0]; }
 };
 function _b2ClearSwapTimer(mainBox) {
@@ -592,7 +623,12 @@ function _b2ScheduleImageSwap(playerName) {
   // 이제는 들어오는 이미지만 항상 맨 위에서 0→1로 페이드인하고, 나가는 이미지는
   // 그 아래에서 opacity:1을 그대로 유지(=자연스럽게 가려짐)한 뒤, 트랜지션이
   // 끝난 다음에야 트랜지션 없이 즉시 opacity:0으로 되돌려 다음 전환을 준비한다.
-  const CROSSFADE_MS = 400;
+  // [FEATURE-CINEMATIC] 시네마틱 모드에서는 전환을 더 느긋하고 부드러운 곡선으로
+  // 늘려서(400ms 급전환 → 900ms 완만한 곡선) 영화 예고편 같은 흐름을 낸다.
+  const _cineOn = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+  const CROSSFADE_MS = _cineOn ? 900 : 400;
+  const _b2CrossfadeCss = `opacity ${CROSSFADE_MS}ms ${_cineOn ? 'cubic-bezier(.4,0,.2,1)' : 'ease'}`;
+  try{ window._b2CrossfadeCss = _b2CrossfadeCss; }catch(e){}
   const bringToFront = (slot)=>{
     for (let s = 1; s <= 10; s++) {
       const el = document.getElementById('b2-main-img-' + s);
@@ -819,7 +855,7 @@ function _b2ScheduleImageSwap(playerName) {
         curEl.style.transition = 'none';
         curEl.style.opacity = '1';
         void curEl.offsetWidth;
-        curEl.style.transition = _prevTr || 'opacity 0.4s ease';
+        curEl.style.transition = _prevTr || _b2CrossfadeCss;
       } else {
         curEl.style.opacity = '1';
       }
@@ -864,7 +900,7 @@ function _b2ScheduleImageSwap(playerName) {
         el.style.transition = 'none';
         el.style.opacity = '0';
         void el.offsetWidth;
-        el.style.transition = prevTransition || 'opacity 0.4s ease';
+        el.style.transition = prevTransition || _b2CrossfadeCss;
       }
     }, CROSSFADE_MS + 40);
 

@@ -268,6 +268,7 @@ if(!window.__swWrappedForSettings){
     paste:'붙여넣기 자동 인식 규칙',
     b2layout:'이미지 탭 레이아웃 조절',
     imgsettings:'이미지 탭 이미지 표시 설정',
+    b2trans:'슬라이드쇼 전환 효과 on/off, 시네마틱 모드',
     imgmodalsettings:'스트리머 상세 이미지 설정',
     profileshape:'프로필 모양/반경/표시 방식',
     pdModeBadge:'최근 경기 종목 배지 색상',

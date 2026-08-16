@@ -332,6 +332,16 @@ function _b2LineupView() {
     /* 중앙 스포트라이트 빔(살짝 흔들리는 조명) */
     '#b2-lc-intro-beam{position:fixed;left:50%;top:-12vh;width:52vw;height:120vh;margin-left:-26vw;z-index:9991;pointer-events:none;opacity:0;transition:opacity .5s ease;background:linear-gradient(to bottom,rgba(255,255,255,.20),rgba(255,255,255,.06) 45%,rgba(255,255,255,0) 78%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);filter:blur(6px);animation:b2LcBeamSway 4.5s ease-in-out infinite alternate}',
     '#b2-lc-intro-beam.on{opacity:1}',
+    /* [FEATURE-CINEMATIC] 영화관 느낌의 레터박스(상/하 검은 띠) — 재생 시작과 함께
+       위아래에서 슬라이드되어 들어와 화면비를 좁혀 보이게 하고, 종료 시 다시 걷힌다. */
+    '#b2-lc-intro-letterbox-top,#b2-lc-intro-letterbox-bottom{position:fixed;left:0;width:100%;height:9vh;min-height:44px;max-height:96px;z-index:9993;pointer-events:none;background:linear-gradient(180deg,#000,rgba(0,0,0,.94));transition:transform .6s cubic-bezier(.16,1,.3,1)}',
+    '#b2-lc-intro-letterbox-top{top:0;transform:translateY(-100%)}',
+    '#b2-lc-intro-letterbox-bottom{bottom:0;transform:translateY(100%)}',
+    '#b2-lc-intro-letterbox-top.on{transform:translateY(0)}',
+    '#b2-lc-intro-letterbox-bottom.on{transform:translateY(0)}',
+    /* 화면 가장자리를 살짝 어둡게 눌러주는 비네트 — 카메라 렌즈 느낌 */
+    '#b2-lc-intro-vignette{position:fixed;inset:0;z-index:9992;pointer-events:none;opacity:0;transition:opacity .6s ease;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)}',
+    '#b2-lc-intro-vignette.on{opacity:1}',
     '@keyframes b2LcBeamSway{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}',
     /* 복제 카드 등장/발광 (색은 --intro-glow로 선수 티어 색상에 맞춰 동적으로 바뀜) */
     '.b2-lc-intro-clone{border-radius:14px;will-change:transform,opacity,filter;--intro-glow:#60a5fa}',
@@ -1338,6 +1348,17 @@ function _b2IntroStageOn() {
     }
     let beam = document.getElementById('b2-lc-intro-beam');
     if (!beam) { beam = document.createElement('div'); beam.id = 'b2-lc-intro-beam'; document.body.appendChild(beam); }
+    // [FEATURE-CINEMATIC] 레터박스/비네트 — 설정에서 꺼둔 경우 생성하지 않는다.
+    const _cineOn = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+    let lbTop = null, lbBot = null, vig = null;
+    if (_cineOn) {
+      lbTop = document.getElementById('b2-lc-intro-letterbox-top');
+      if (!lbTop) { lbTop = document.createElement('div'); lbTop.id = 'b2-lc-intro-letterbox-top'; document.body.appendChild(lbTop); }
+      lbBot = document.getElementById('b2-lc-intro-letterbox-bottom');
+      if (!lbBot) { lbBot = document.createElement('div'); lbBot.id = 'b2-lc-intro-letterbox-bottom'; document.body.appendChild(lbBot); }
+      vig = document.getElementById('b2-lc-intro-vignette');
+      if (!vig) { vig = document.createElement('div'); vig.id = 'b2-lc-intro-vignette'; document.body.appendChild(vig); }
+    }
     let cap = document.getElementById('b2-lc-intro-caption');
     if (!cap) { cap = document.createElement('div'); cap.id = 'b2-lc-intro-caption'; document.body.appendChild(cap); }
     let subcap = document.getElementById('b2-lc-intro-subcap');
@@ -1368,7 +1389,12 @@ function _b2IntroStageOn() {
       flash.id = 'b2-lc-intro-flash';
       document.body.appendChild(flash);
     }
-    requestAnimationFrame(() => { bd.classList.add('on'); beam.classList.add('on'); ctrl.classList.add('on'); ptrack.classList.add('on'); });
+    requestAnimationFrame(() => {
+      bd.classList.add('on'); beam.classList.add('on'); ctrl.classList.add('on'); ptrack.classList.add('on');
+      if (lbTop) lbTop.classList.add('on');
+      if (lbBot) lbBot.classList.add('on');
+      if (vig) vig.classList.add('on');
+    });
     _b2IntroParticlesStart();
   } catch(e){}
 }
@@ -1411,7 +1437,7 @@ function _b2IntroParticlesStop() {
 function _b2IntroStageOff() {
   try { document.body.classList.remove('b2-lc-intro-active'); } catch(e){}
   try {
-    ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap','b2-lc-intro-controls','b2-lc-intro-progress-track','b2-lc-intro-elobadge'].forEach(id => {
+    ['b2-lc-intro-backdrop','b2-lc-intro-beam','b2-lc-intro-caption','b2-lc-intro-subcap','b2-lc-intro-controls','b2-lc-intro-progress-track','b2-lc-intro-elobadge','b2-lc-intro-letterbox-top','b2-lc-intro-letterbox-bottom','b2-lc-intro-vignette'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.remove('on');
@@ -1618,11 +1644,16 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race, opts) {
       // 등장: Web Animations API로 재생해서 일시정지 버튼을 누르면 카드 이동도
       // 그 순간 진짜로 멈추게 한다 (기존 CSS transition은 pause 불가능했음).
       _b2IntroSFXWhoosh();
+      // [FEATURE-CINEMATIC] 시네마틱 모드일 땐 통통 튀는 오버슈트 없이, 영화 예고편처럼
+      // 부드럽게 감속하며 안착하는 궤적/속도로 등장한다.
+      const _cine = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+      const _flyInDur = _cine ? 750 : 550;
+      const _flyInEase = _cine ? 'cubic-bezier(.16,1,.3,1)' : 'cubic-bezier(.22,1.4,.36,1)';
       const flyInMove = _b2StartAnim(clone, [
         { transform: `translate(${cx}px,${cy}px) scale(${scale * 0.6}) rotateY(-70deg)` },
         { transform: `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)` }
-      ], { duration: 550, easing: 'cubic-bezier(.22,1.4,.36,1)', fill: 'forwards' });
-      _b2StartAnim(clone, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease', fill: 'forwards' });
+      ], { duration: _flyInDur, easing: _flyInEase, fill: 'forwards' });
+      _b2StartAnim(clone, [{ opacity: 0 }, { opacity: 1 }], { duration: _cine ? 420 : 300, easing: 'ease', fill: 'forwards' });
       setTimeout(() => { try { document.body.appendChild(shine); } catch(e){} }, 260);
       setTimeout(() => { try { shine.remove(); } catch(e){} }, 1600);
 
@@ -1653,7 +1684,7 @@ function _b2LineupIntroFlyCard(el, token, speakText, glowColor, race, opts) {
       const flyBackMove = _b2StartAnim(clone, [
         { transform: `translate(${cx}px,${cy}px) scale(${scale}) rotateY(0deg)`, filter: 'drop-shadow(0 22px 55px rgba(15,23,42,.5))' },
         { transform: 'translate(0,0) scale(1) rotateY(0deg)', filter: 'drop-shadow(0 6px 14px rgba(15,23,42,.18))' }
-      ], { duration: 620, easing: 'cubic-bezier(.5,.02,.2,1)', fill: 'forwards' });
+      ], { duration: _cine ? 760 : 620, easing: 'cubic-bezier(.5,.02,.2,1)', fill: 'forwards' });
       await _b2WaitAnim(flyBackMove);
       if (token !== _b2LineupIntroToken) { try { clone.remove(); shine.remove(); } catch(e){} return resolve(); }
 

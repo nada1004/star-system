@@ -99,6 +99,52 @@ window._cfgB2RenderSwapDelay = function(playerName){
     `;
   }catch(e){}
 };
+// [FEATURE-CINEMATIC] 이미지탭(히어로) 슬라이드쇼 전환 효과 on/off + 시네마틱 모드 설정 UI.
+// _B2_TRANS_TYPES는 board2-image-utils.js에 정의되어 있고 이 파일보다 늦게 로드되므로,
+// 렌더 시점(설정탭을 열 때)에는 이미 준비돼 있다. 혹시 몰라 폴백 라벨도 최소한으로 둔다.
+function _renderCfgB2TransSection(){
+  const body = document.getElementById('cfg-b2trans-body');
+  if(!body) return;
+  const types = (Array.isArray(window._B2_TRANS_TYPES) && window._B2_TRANS_TYPES.length)
+    ? window._B2_TRANS_TYPES
+    : [{key:'fade',label:'디졸브(페이드)'}];
+  const enabledMap = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_trans_enabled')||'null') || {}; }catch(e){ return {}; } })();
+  const cinemaOn = (localStorage.getItem('su_b2_cinema_mode') ?? '1') !== '0';
+  const rows = types.map(t=>{
+    const on = enabledMap[t.key] !== false;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <input type="checkbox" data-trans-key="${t.key}" ${on?'checked':''} style="width:15px;height:15px" onchange="_cfgB2ToggleTransEffect('${t.key}',this.checked)">
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">${t.label || t.key}</span>
+    </label>`;
+  }).join('');
+  body.innerHTML = `
+    <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2);margin-bottom:6px">
+      <input type="checkbox" id="cfg-b2-cinema-mode" style="width:15px;height:15px" ${cinemaOn?'checked':''} onchange="localStorage.setItem('su_b2_cinema_mode',this.checked?'1':'0');if(typeof render==='function')render();">
+      🎬 시네마틱 모드
+    </label>
+    <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:12px">전환을 느긋한 속도로 늘리고, 줌 폭을 줄여 영화처럼 차분하게 흘러가게 합니다. (라인업탭 소개연출의 레터박스/비네트에도 함께 적용)</div>
+    <hr style="border:none;border-top:1px dashed var(--border2);margin:0 0 10px">
+    <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:4px">전환 효과 켜기/끄기</div>
+    <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">체크된 효과 중에서만 매번 랜덤으로 골라 사용합니다. (전부 끄면 자동으로 전체 사용)</div>
+    <div style="max-height:320px;overflow-y:auto">${rows}</div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-xs btn-w" onclick="_cfgB2ResetTransEffects()">🔄 전체 켜기</button>
+    </div>
+  `;
+}
+window._cfgB2ToggleTransEffect = function(key, checked){
+  try{
+    const map = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_trans_enabled')||'null') || {}; }catch(e){ return {}; } })();
+    map[key] = !!checked;
+    localStorage.setItem('su_b2_trans_enabled', JSON.stringify(map));
+  }catch(e){}
+};
+window._cfgB2ResetTransEffects = function(){
+  try{ localStorage.removeItem('su_b2_trans_enabled'); }catch(e){}
+  _renderCfgB2TransSection();
+};
+try{ window._renderCfgB2TransSection = _renderCfgB2TransSection; }catch(e){}
+
 window._cfgB2SaveSwapDelay = function(playerName){
   try{
     const area = document.getElementById('cfg-b2-delay-area');
@@ -179,6 +225,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='imgsettings'){
       _ensureB2ImgSettingsWrap();
     }
+    if(el && el.open && id==='b2trans' && typeof window._renderCfgB2TransSection==='function'){
+      window._renderCfgB2TransSection();
+    }
   }catch(e){}
 }
 // ─────────────────────────────────────────────────────────────
@@ -192,7 +241,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - UI(탭/버튼/폰트/모바일크기)와 자동화(멀티뷰/BGM/붙여넣기)를 분리
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','ud','streamerheader','streamerchannel','streamer-view','streamer-tab-style'],
+  '🖼️ 스트리머/프로필':['b2layout','imgsettings','b2trans','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','ud','streamerheader','streamerchannel','streamer-view','streamer-tab-style'],
   '🧾 카드/기록':[
     'reccard','minicard','univckcard','univmcard',
     'tourneycard','tiertourcard','tiertourleaguecard','tiertourbrackcard',

@@ -182,9 +182,13 @@ function _b2UpdateMainDisplay(playerName) {
   const _firstMediaSlot = (_mediaSlots.find(x => _hasMediaUrl2(x.url)) || {}).slot;
   // 슬롯1/2는 _b2ApplyImgSettingsToElement가 object-fit을 별도 관리하므로 제외하고,
   // 3~10번이 "첫 표시 슬롯"이 될 때만 object-fit:cover를 명시해 찌그러짐을 막는다.
+  // [FEATURE-CINEMATIC] 최초 렌더 시 인라인으로 심어두는 트랜지션도, 이후 순환
+  // 중(_b2ScheduleImageSwap)에 쓰이는 것과 동일한 시네마틱 속도/곡선을 쓰도록 맞춘다.
+  const _b2CineOnInit = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+  const _b2InitCrossfadeCss = _b2CineOnInit ? 'opacity 900ms cubic-bezier(.4,0,.2,1)' : 'opacity 0.4s ease';
   const _slotOpt = (slot, extraStyle) => (slot === _firstMediaSlot)
-    ? { z:slot, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:`${slot>=3?'object-fit:cover;':''}transition:opacity 0.4s ease;${extraStyle||''}` }
-    : { z:slot, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;${extraStyle||''}` };
+    ? { z:slot, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:`${slot>=3?'object-fit:cover;':''}transition:${_b2InitCrossfadeCss};${extraStyle||''}` }
+    : { z:slot, opacity:0, style:`object-fit:cover;transition:${_b2InitCrossfadeCss};${extraStyle||''}` };
   const _slot1 = _hasMediaUrl2(player.photo)
     ? _b2MainMediaHTML(1, player.photo, _slotOpt(1))
     : '';
