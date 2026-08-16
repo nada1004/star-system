@@ -413,6 +413,17 @@ function sw(t,el){
     }
   }catch(e){}
 
+  // 🎵 스트리머 전용 BGM — 현황판(board2) 프로필탭을 벗어나면 재생 중인 스트리머 BGM 정지.
+  // 단, 스트리머 상세 팝업(#playerModal)이 열려 있는 상태로 다른 탭으로 이동한 경우는
+  // 그 팝업 자체의 BGM이므로 정지하지 않는다.
+  try{
+    if(t !== curTab && curTab === 'board2'){
+      const pm = document.getElementById('playerModal');
+      const pmOpen = !!(pm && getComputedStyle(pm).display !== 'none');
+      if(!pmOpen && typeof _plyrBgmStop === 'function') _plyrBgmStop();
+    }
+  }catch(e){}
+
   // [FIX-14] TAB_ENTER 맵 실행
   try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
   // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
