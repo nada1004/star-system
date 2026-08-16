@@ -31,6 +31,10 @@ function _b2UpdateMainDisplay(playerName) {
       const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
       return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
     };
+    const _b2PrewarmIsGif = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.gif');
+    };
     const _b2PrewarmSlots = [
       player.photo, player.secondProfileFile, player.profileFile3, player.profileFile4,
       player.profileFile5, player.profileFile6, player.profileFile7, player.profileFile8,
@@ -39,28 +43,30 @@ function _b2UpdateMainDisplay(playerName) {
     // [FIX-IMG-SLOW] 슬롯1(player.photo)은 지금 바로 화면에 그려지는 <img id="b2-main-img-1">이
     // 이미 fetchpriority="high"로 직접 요청하므로 여기서 또 한 번 new Image()로 같은 URL을
     // 동시에 요청하면 같은 순간에 요청이 두 배로 몰려 정작 화면에 보이는 이미지가 늦게 뜨는
-    // 원인이 됐다. 슬롯1은 건너뛰고, 나머지(아직 화면에 안 보이는 슬라이드쇼용) 슬롯들은
-    // 브라우저가 한가할 때(requestIdleCallback) 미뤄서 프리웜하도록 해 지금 보이는 이미지의
-    // 네트워크 우선순위를 지켜준다.
-    const _b2SchedulePrewarm = (typeof window.requestIdleCallback === 'function')
-      ? (fn)=>window.requestIdleCallback(fn, { timeout: 1500 })
-      : (fn)=>setTimeout(fn, 250);
+    // 원인이 됐다. 슬롯1은 건너뛰고 나머지 슬롯부터 프리웜한다.
+    // [FIX-IMG-SLOT-LATE] requestIdleCallback으로 미루면(최대 1.5초 + 브라우저가 바쁠 때는
+    // 더 늦게) 슬라이드쇼가 다음 슬롯(보통 4초 뒤)으로 넘어갈 때까지도 프리웜이 안 끝나서
+    // "2~10번 이미지가 전환될 때마다 늦게 뜬다"는 원인이 됐다. 이제는 슬롯 순서대로 아주
+    // 짧은 간격(80ms)만 두고 곧바로 요청을 시작해서, 슬롯1과 완전히 동시에 몰리는 것만
+    // 피하면서도 다음 전환 시점 전에 충분히 미리 받아두게 한다.
     _b2PrewarmSlots.forEach((rawUrl, _slotIdx)=>{
       if(_slotIdx === 0) return; // 슬롯1은 위에서 이미 high-priority로 로딩됨
       const u = _normMediaUrl(rawUrl);
       if(!u || _b2PrewarmIsVideo(u)) return;
-      const src = (typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u);
+      // [FIX-GIF-STATIC] gif는 리사이즈 프록시를 거치면 애니메이션이 사라지므로,
+      // 실제 표시(_b2MainMediaHTML)와 동일하게 원본 URL 그대로 프리웜해야 한다.
+      const src = _b2PrewarmIsGif(u) ? toHttpsUrl(u) : ((typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u));
       if(!src) return;
       window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
       if(window._b2PrewarmedFullUrls.has(src)) return;
       window._b2PrewarmedFullUrls.add(src);
-      _b2SchedulePrewarm(()=>{
+      setTimeout(()=>{
         try{
           const _img = new Image();
           try{ _img.decoding = 'async'; }catch(e){}
           _img.src = src;
         }catch(e){}
-      });
+      }, _slotIdx * 80);
     });
   }catch(e){}
   
@@ -101,13 +107,22 @@ function _b2UpdateMainDisplay(playerName) {
     const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
     return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
   };
+  // [FIX-GIF-STATIC] gif는 images.weserv.nl 리사이즈 프록시(toScaledUrl)를 거치면
+  // webp로 재인코딩되면서 애니메이션이 사라지고 첫 프레임만 남는 정지 이미지가
+  // 됐다. 그리드 카드(우측)는 이미 gif를 원본 그대로 쓰도록 처리돼 있었는데
+  // 좌측 히어로 슬라이드쇼만 빠져 있었음 — 동일하게 처리한다.
+  const _b2IsGifUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.gif');
+  };
   const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
     const url = String(rawUrl||'').trim();
     if(!url) return '';
     const isVid = _b2IsVideoUrl(url);
-    // [FIX-IMG-HERO-SCALED] 비디오는 그대로, 사진은 원본 대신 리사이즈 프록시로 —
+    const isGif = !isVid && _b2IsGifUrl(url);
+    // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
     // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
-    const src = isVid ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
+    const src = (isVid || isGif) ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
@@ -122,7 +137,13 @@ function _b2UpdateMainDisplay(playerName) {
     // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
     const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
+      // [FIX-VIDEO-NOT-PLAYING] preload="metadata"만 쓰면 실제 프레임 데이터를 전혀
+      // 미리 받아두지 않아서, 이 슬롯이 활성화되어 play()가 호출되는 순간부터에서야
+      // 데이터를 받기 시작해 "재생이 안 되는" 것처럼 멈춰 보였다. 지금 바로 보이는
+      // 슬롯(opacity 1)은 auto로 미리 버퍼링해서 즉시 재생되게 하고, 아직 안 보이는
+      // 슬롯은 metadata만 받아 불필요한 트래픽을 피한다.
+      const _vidPreload = (Number(opacity) === 1) ? 'auto' : 'metadata';
+      return `<video ${common} src="${src}" preload="${_vidPreload}" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
