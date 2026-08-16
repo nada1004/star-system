@@ -131,12 +131,6 @@ function rComp(C,T){
     ];
     if(compSub==='tiertour'||compSub==='input'||compSub==='leaguebrief'||compSub==='tourbrief') compSub='league';
   }
-  // (설정) 🧷 탭/모드 표시 관리에서 comp.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
-  if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
-    const _filtered = window.TabVis.filterDefs(subOpts, 'comp.sub');
-    if(_filtered.length) subOpts = _filtered;
-    if(!subOpts.some(o=>o.id===compSub)) compSub = subOpts[0].id;
-  }
   subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('comp', subOpts) : subOpts;
   // (요청사항) 대회 하위메뉴도 '필터'로 접기/펼치기
   if(_enableSubFilter && !_lockOpen){

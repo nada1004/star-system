@@ -311,11 +311,8 @@ function _b2FreeView() {
   const _fvBodyBg = _fvIsDark
     ? 'linear-gradient(180deg,rgba(15,23,42,.92),rgba(10,17,32,.86))'
     : 'linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90))';
-  const _fvModeBtn = (mode, label) => {
-    if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.free.mode.' + mode)) return '';
-    return `
+  const _fvModeBtn = (mode, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeViewMode('${mode}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvMode===mode?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvMode===mode?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
-  };
   const _fvGenderBtn = (g, label) => `
     <button type="button" class="no-export" onclick="_b2SetFreeGenderFilter('${g}')" style="padding:4px 11px;border-radius:999px;border:1px solid ${_fvGenderFilter===g?'rgba(255,255,255,.7)':'rgba(255,255,255,.22)'};background:${_fvGenderFilter===g?'rgba(255,255,255,.24)':'rgba(255,255,255,.08)'};color:#fff;font-size:10px;font-weight:900;cursor:pointer">${label}</button>`;
   let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid ${_fvWrapBorder};background:${_fvWrapBg};box-shadow:0 18px 32px rgba(15,23,42,.06)">
@@ -401,17 +398,12 @@ function _b2FreeView() {
 }
 
 function _b2GetFreeViewMode() {
-  let v = 'default';
   try{
     const raw = String(localStorage.getItem('su_b2_free_view') || '').trim();
-    v = ['default','stat','table'].includes(raw) ? raw : 'default';
+    return ['default','stat','table'].includes(raw) ? raw : 'default';
   }catch(e){
-    v = 'default';
+    return 'default';
   }
-  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.free.mode.' + v)) {
-    v = ['default','stat','table'].find(m => window.TabVis.visible('b2.free.mode.' + m)) || 'default';
-  }
-  return v;
 }
 
 function _b2SetFreeViewMode(mode) {
