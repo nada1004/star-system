@@ -413,14 +413,6 @@ function sw(t,el){
     }
   }catch(e){}
 
-  // 스트리머 주제곡은 현황판 > 프로필 보기 전용이다. 다른 최상위 탭으로
-  // 이동하는 즉시 플레이어와 재시도 타이머를 함께 정지한다.
-  try{
-    if(t !== 'board2' && typeof window._b2PlayerBgmStop === 'function') {
-      window._b2PlayerBgmStop();
-    }
-  }catch(e){}
-
   // [FIX-14] TAB_ENTER 맵 실행
   try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
   // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
@@ -463,9 +455,6 @@ if(!window.__tabLinkPopstateBound){
   window.addEventListener('popstate', ()=>{
     try{
       window._tabLinkApplying = true;
-      // URL 상태 적용 전에 기존 프로필 BGM을 정지한다. 새 URL이 프로필 보기라면
-      // 해당 화면 렌더가 선택된 스트리머의 곡을 다시 시작한다.
-      try{ if(typeof window._b2PlayerBgmStop === 'function') window._b2PlayerBgmStop(); }catch(e){}
       // 브라우저 뒤로가기/앞으로가기는 sw()를 거치지 않고 curTab을 직접 바꾸므로,
       // sw()의 TTS 정지 로직이 적용되지 않는다. 여기서도 동일하게 재생/일시정지 중인
       // TTS(라인업/브리핑/리포트 등)를 정지시킨다.

@@ -849,10 +849,6 @@ function rBoard2(C, T) {
       // 라인업 "소개 연출"(_b2LineupPlayIntroShow)은 SUTTS와 별개의 상태값으로 돌아가므로
       // 위 SUTTS 정지만으로는 멈추지 않음 — 서브뷰가 바뀌면 별도로 확실히 정지시켜준다.
       try{ if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow(); }catch(e){}
-      // 프로필 보기에서 나가면 스트리머 주제곡도 즉시 정지한다.
-      if (_b2View !== 'players') {
-        try{ if (typeof window._b2PlayerBgmStop === 'function') window._b2PlayerBgmStop(); }catch(e){}
-      }
     }
     window._b2LastRenderedView = _b2View;
     if (_b2View === 'univ') {
@@ -888,13 +884,6 @@ function rBoard2(C, T) {
       } else {
         window._b2PlayersLastSig = _sig;
         sub.innerHTML = _b2PlayersView();
-        // 최초 프로필 렌더는 카드 클릭 경로(_b2UpdateMainDisplay)를 거치지 않으므로
-        // 선택된 스트리머의 주제곡을 여기서 명시적으로 시작한다.
-        try{
-          if (_b2SelectedPlayer && typeof window._b2PlayerBgmStart === 'function') {
-            window._b2PlayerBgmStart(_b2SelectedPlayer.name);
-          }
-        }catch(e){}
         _b2BindAutoFitResize();
         setTimeout(() => {
           try{
