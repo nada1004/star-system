@@ -180,7 +180,17 @@ function applyLoginState(){
   // FAB(모바일 플로팅 버튼)의 설정/관리자 메뉴 표시 상태도 로그인 변화 즉시 반영
   try{ if(typeof updateFabVisibility==='function') updateFabVisibility(); }catch(e){}
   try{ if(window.TabVis && typeof window.TabVis.apply==='function') window.TabVis.apply(); }catch(e){}
-  render();
+  // [FIX-NO-REFRESH-ON-REENTRY] 브라우저 탭을 다른 곳에 갔다가 다시 돌아오면
+  // visibilitychange 리스너가 세션 유효성만 재확인하려고 매번 applyLoginState()를
+  // 부른다. 로그인/부관리자 여부가 실제로는 안 바뀌었는데도 여기서 항상 render()를
+  // 호출해버려서, 전체/티어/기록 등 목록 화면의 선수 썸네일 <img>가 매번 통째로
+  // 다시 그려지며 "새로고침"처럼 깜빡였다. 로그인 상태가 실제로 바뀐 경우에만
+  // render()를 호출하도록 해서 불필요한 전체 재렌더를 없앤다.
+  const _alsState = (isLoggedIn?'1':'0') + ':' + (isSubAdmin?'1':'0');
+  if(window._alsLastState !== _alsState){
+    window._alsLastState = _alsState;
+    render();
+  }
 }
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState !== 'visible') return;

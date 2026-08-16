@@ -121,7 +121,12 @@ function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   const _prio = opts.lazy ? 'auto' : (opts.priority || 'high');
   const _prioAttr = ' fetchpriority="' + _prio + '"';
   const _origAttr = ' data-orig="'+String(origSrc).replace(/"/g,'&quot;')+'"';
-  const _imgHtml = '<img class="pph-avatar-img" '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
+  // [FIX-IMG-FLICKER] decoding="async"였던 걸 "sync"로 변경. 탭 이동/배경 동기화 등으로
+  // 목록(전체·티어·기록 등)이 통째로 다시 그려질 때, 같은 URL이라 브라우저 캐시는 이미
+  // 히트하는데도 async 디코딩은 여러 이미지가 동시에 새로 삽입되면 디코딩을 별도 프레임으로
+  // 미뤄서 짧게 빈 박스로 보였다가 나타나는 "새로고침" 플리커가 생겼다. sync로 강제하면
+  // 캐시 히트 시 디코딩 비용이 거의 없어 삽입과 동시에 바로 그려진다.
+  const _imgHtml = '<img class="pph-avatar-img" '+clickAttr+_lazyAttr+_prioAttr+_origAttr+' src="'+src+'" decoding="sync" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');}">';
   if (p && p.secondProfileFile && typeof _phSwap2ndHTML === 'function') {
     const _2ndImgHtml = _phSwap2ndHTML(p.secondProfileFile, { style: 'border-radius:inherit;'+(fit?('object-fit:'+fit+';'):'') });
     const _innerImg = _imgHtml.replace('style="'+base, 'style="position:absolute;inset:0;'+base);

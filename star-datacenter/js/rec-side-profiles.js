@@ -266,7 +266,9 @@
       if(!url) return '';
       var radius = _getProfileRadius();
       var clip = _getProfileClip();
-      return '<img src="' + (typeof toHttpsUrl==='function'?toHttpsUrl(url):url) + '"'
+      // [FIX-IMG-FLICKER] decoding="sync": 캐시된 이미지도 목록 재렌더 시 async 디코딩
+      // 프레임 지연으로 잠깐 빈 박스로 보이는 걸 막는다 (프로필 패널과 동일 처리).
+      return '<img src="' + (typeof toHttpsUrl==='function'?toHttpsUrl(url):url) + '" decoding="sync"'
            + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';'+(clip!=='none'?'clip-path:'+clip+';':'')+';display:block;"'
            + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">' ;
     }catch(e){ return ''; }
