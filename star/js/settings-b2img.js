@@ -191,7 +191,7 @@ const _DEFAULT_CATSECS = {
     'procompcard','procompleaguecard','procompteamcard','procompgjcard',
     'h2hpanel','sharecard','calui'
   ],
-  '🎨 UI/테마':['designv2','hdr','appfont','uisize','cardgap','tierrank-view','uibtn','uifilter','tablabels','tabcolors','autofitall'],
+  '🎨 UI/테마':['designv2','hdr','appfont','uisize','cardgap','tierrank-view','uibtn','uifilter','tablabels','tabcolors','tabvis','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg','briefingfx'],
   '💾 데이터':['sync','firebase','aibot','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],

@@ -75,7 +75,9 @@ window.cfgUnivOrderMove = function(i, dir){
         if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">캘린더 로딩 중...</div>';
         return;
       }
-      loader('js/calendar.js?v=20260717-ds03').then(()=>{
+      loader('js/calendar.js?v=20260813-split2').then(()=>{
+        return loader('js/calendar-sched.js?v=20260813-split2');
+      }).then(()=>{
         const fn = window.rCal;
         if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
       }).catch((e)=>{

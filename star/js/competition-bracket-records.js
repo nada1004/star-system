@@ -152,26 +152,33 @@ function rBracketSchedule(tn){
   let h=`<div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">⚔️ 토너먼트</span>
-      ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="openBktSeedModal('${tn.id}')" title="상위 시드(부전승/라운드 합류) 및 자동 배치">🎫 시드/부전승</button>
-<button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','64강')">64강</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','32강')">32강</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','16강')">16강</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','8강')">8강</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','4강')">4강</button>
-<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','결승')">결승</button>`:''}
-      <div style="margin-left:auto;display:flex;gap:4px">
-        <button class="pill ${bktSchedSortDir==='desc'?'on':''}" onclick="bktSchedSortDir='desc';render()">최신순</button>
-        <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';render()">오래된순</button>
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <button class="pill ${bktSchedSortDir==='desc'?'on':''}" onclick="bktSchedSortDir='desc';recSortDir='desc';render()">최신순</button>
+        <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';recSortDir='asc';render()">오래된순</button>
+        <span class="hist-inline-sep"></span>
+        <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
+        ${(()=>{const _alt=(typeof compAltViewMode==='function')?compAltViewMode('cpbkt'):'basic';const _on=(v)=>(_alt==='basic'&&bktViewMode===v)?'on':'';const _go=(v)=>`bktViewMode='${v}';(typeof compAltClearMode==='function')?compAltClearMode('cpbkt'):render()`;return `
+        <button class="pill ${_on('card')}" onclick="${_go('card')}">🗂️ 카드형</button>
+        <button class="pill ${_on('round')}" onclick="${_go('round')}">🗃️ 라운드뷰</button>`;})()}
+        ${(typeof compAltViewModeBarHTML==='function')?`<span class="hist-inline-sep"></span>${compAltViewModeBarHTML('cpbkt',true)}`:''}
       </div>
+      ${isLoggedIn?`<div class="no-export" style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap">
+<button class="btn btn-w btn-sm" onclick="openBktSeedModal('${tn.id}')" title="상위 시드(부전승/라운드 합류) 및 자동 배치">🎫 시드/부전승</button>
+<button class="btn btn-b btn-sm" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','64강')">64강</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','32강')">32강</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','16강')">16강</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','8강')">8강</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','4강')">4강</button>
+<button class="btn btn-w btn-xs" onclick="openBktBulkPaste('${tn.id}','결승')">결승</button>
+      </div>`:''}
     </div>
     ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:6px 10px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:10px;cursor:pointer;line-height:1;min-height:32px;min-width:32px" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
-    <div class="no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0">보기</span>
-      <button class="pill ${bktViewMode==='card'?'on':''}" onclick="bktViewMode='card';render()">🗂️ 카드형</button>
-      <button class="pill ${bktViewMode==='round'?'on':''}" onclick="bktViewMode='round';render()">🗃️ 라운드뷰</button>
-    </div>
     `;
+
+  if(typeof compAltViewMode==='function' && compAltViewMode('cpbkt')!=='basic'){
+    return h + compAltRenderHTML('cpbkt', compAltBktItems(_sortedDone)) + `</div>`;
+  }
 
   if(bktViewMode==='round'){
     const _bktAll=_filtered.filter(m=>m.teamA||m.teamB);

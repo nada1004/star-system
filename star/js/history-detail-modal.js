@@ -9,7 +9,7 @@ function _ensureHistDetailModal(){
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
   m.style.cssText='z-index:var(--z-modal-4);display:none';
-  m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}");
+  m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none';try{if(window.SUTTS)window.SUTTS.stop();}catch(e){}try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}");
   m.innerHTML=`
     <div class="mbox mbox--matchdetail" onclick="event.stopPropagation()">
       <div class="cmd-head">
@@ -19,15 +19,16 @@ function _ensureHistDetailModal(){
         </div>
         <div class="cmd-head-actions no-export">
           <button id="hmdActStyle" class="cmd-hbtn detail-act-md-style" style="display:none" title="스타일 전환" onclick="event.stopPropagation();try{_mdToggleStylePicker(event);}catch(e){console.error('[hmdActStyle]',e);}">🎨</button>
+          <button id="hmdActTts" class="cmd-hbtn" title="음성듣기">🔊</button>
           <button id="hmdActCopy" class="cmd-hbtn" title="결과 복사">📤</button>
           <button id="hmdActShare" class="cmd-hbtn" title="공유 카드">🎴</button>
         </div>
-        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}" aria-label="닫기">✕</button>
+        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none';try{if(window.SUTTS)window.SUTTS.stop();}catch(e){}try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}" aria-label="닫기">✕</button>
       </div>
       <div id="hmdScoreBar" class="cmd-scorebar" style="display:none"></div>
       <div id="histDetBody" class="cmd-body"></div>
       <div class="cmd-actions no-export">
-        <button class="btn btn-w" onclick="document.getElementById('histDetModal').style.display='none';try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}">닫기</button>
+        <button class="btn btn-w" onclick="document.getElementById('histDetModal').style.display='none';try{if(window.SUTTS)window.SUTTS.stop();}catch(e){}try{if(typeof _mdCloseStylePicker==='function')_mdCloseStylePicker();}catch(e){}">닫기</button>
       </div>
     </div>`;
   document.body.appendChild(m);
@@ -80,7 +81,7 @@ function _applyOpenHistDetailTeamHeaderColors(){
 function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
-  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo','league','noir','blueprint'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster','arena','scoreboard','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{
     window._lastHistDetailState = {
@@ -186,8 +187,56 @@ function openHistDetailModal(key){
       if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(_payload);
     }catch(e){}
   };
+  // 🔊 경기 상세 음성듣기 문장 생성
+  const _buildDetailSpeakText = ()=>{
+    try{
+      const A = String(match.a || reg.lA || match.wName || 'A');
+      const B = String(match.b || reg.lB || match.lName || 'B');
+      const lines = [];
+      const dateTxt = String(match.d || '').trim().slice(0, 10);
+      const nameTxt = String(match.n || '').trim();
+      lines.push(`경기 상세 정보입니다.${dateTxt?` ${dateTxt} 경기.`:''}${nameTxt?` ${nameTxt}.`:''}`);
+      if(match.wName && match.lName && !match.sets){
+        lines.push(`${match.wName} 승, ${match.lName} 패.${match.map?` 맵은 ${match.map} 입니다.`:''}`);
+        return lines;
+      }
+      const sa = Number(match.sa||0), sb = Number(match.sb||0);
+      lines.push(`${A} 대 ${B}, 스코어 ${sa} 대 ${sb}.`);
+      const sets = Array.isArray(match.sets) ? match.sets : [];
+      sets.forEach((st, si)=>{
+        const games = Array.isArray(st && st.games) ? st.games : [];
+        if(sets.length > 1) lines.push(`${si+1}세트입니다.`);
+        games.forEach((g, gidx)=>{
+          const gi = gidx + 1;
+          const pa = String(g.playerA||A), pb = String(g.playerB||B);
+          const w = g.wName || (g.winner==='A' ? pa : (g.winner==='B' ? pb : ''));
+          const l = w===pa ? pb : pa;
+          lines.push(`경기 ${gi}, ${g.map?`맵 ${g.map}, `:''}${w?`${w} 승리`:'무승부'}${w?`, ${l} 패배`:''}.`);
+        });
+      });
+      if(sa!==sb) lines.push(`최종 승자는 ${sa>sb?A:B} 입니다.`);
+      return lines;
+    }catch(e){ return ['경기 정보를 읽을 수 없습니다.']; }
+  };
+
   // 헤더 액션(고정)
   try{
+    const ttsBtn=document.getElementById('hmdActTts');
+    if(ttsBtn){
+      ttsBtn.onclick = (e)=>{
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        try{
+          if(!window.SUTTS) return;
+          if(window.SUTTS.isSpeaking()){ window.SUTTS.pause(); ttsBtn.textContent='▶'; return; }
+          if(window.SUTTS.isPaused && window.SUTTS.isPaused()){ window.SUTTS.resume(); ttsBtn.textContent='⏸'; return; }
+          ttsBtn.textContent='⏸';
+          window.SUTTS.speak(_buildDetailSpeakText().map(t=>({text:t})), {
+            onEnd: ()=>{ try{ ttsBtn.textContent='🔊'; }catch(_){} }
+          });
+        }catch(err){ console.warn('[matchdetail TTS]', err); }
+      };
+      ttsBtn.textContent = '🔊';
+    }
     const copyBtn=document.getElementById('hmdActCopy');
     if(copyBtn){
       copyBtn.onclick = (e)=>{

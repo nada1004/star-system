@@ -163,6 +163,7 @@ function renderChatHistory() {
     const content = msg.content;
     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
     const copyBtn = msg.role === 'bot' ? `<button data-chatbot-copy-index="${index}" style="background:none;border:none;font-size:var(--fs-sm);color:var(--text3);cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
+    const speakBtn = msg.role === 'bot' ? `<button data-chatbot-speak-index="${index}" title="음성듣기" style="background:none;border:none;font-size:var(--fs-sm);color:var(--text3);cursor:pointer;padding:4px;border-radius:4px">🔊</button>` : '';
     
     const isHtml = (msg && msg.format === 'html');
     const wsStyle = isHtml ? 'white-space:normal' : 'white-space:pre-wrap';
@@ -173,6 +174,7 @@ function renderChatHistory() {
         <div class="chat-content ${isHtml ? 'chat-content-card' : ''}" style="${wsStyle};${padStyle}">${isHtml ? String(content || '') : renderMarkdownText(String(content || ''))}</div>
         <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:3px;gap:8px">
           ${timestamp ? `<span style="font-size:var(--fs-caption);color:var(--text3)">${timestamp}</span>` : ''}
+          ${speakBtn}
           ${copyBtn}
         </div>
       </div>
@@ -182,6 +184,26 @@ function renderChatHistory() {
   });
   
   container.scrollTop = container.scrollHeight;
+}
+
+// 🔊 알등이봇 메시지 음성듣기 (같은 버튼 다시 누르면 정지)
+function speakChatMessage(index) {
+  const msg = chatHistory[index];
+  if (!msg) return;
+  try {
+    if (window.SUTTS) {
+      if (window.SUTTS.isSpeaking()) { window.SUTTS.pause(); return; }
+      if (window.SUTTS.isPaused && window.SUTTS.isPaused()) { window.SUTTS.resume(); return; }
+    }
+  } catch(e) { console.warn('[chatbot TTS]', e); }
+  const text = String(msg.content || '')
+    .replace(/<br\s*\/?>/gi, '. ')
+    .replace(/<\/(div|p|li|tr|h[1-6])>/gi, '. ')
+    .replace(/<[^>]*>/g, ' ');
+  if (!text.trim()) return;
+  try {
+    if (window.SUTTS) window.SUTTS.speak([{ text }]);
+  } catch(e) { console.warn('[chatbot TTS]', e); }
 }
 
 function copyChatMessage(index) {
@@ -231,6 +253,13 @@ function openChatbot(mode) {
 function closeChatbot(e) {
   if (e && e.target !== document.getElementById('chatbotOverlay')) return;
   chatbotOpen = false;
+  // 챗봇 창을 닫으면 재생/일시정지 버튼도 함께 사라져 더 이상 멈출 수단이 없어지므로,
+  // 읽어주던 메시지 음성(TTS)도 함께 정지시킨다.
+  try{
+    if (window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+      window.SUTTS.stop();
+    }
+  }catch(e2){}
   const overlay = document.getElementById('chatbotOverlay');
   if (overlay) {
     overlay.classList.remove('open');
@@ -321,7 +350,7 @@ function initChatbot() {
       window._chatbotDelegatedClicksBound = true;
       const overlay = document.getElementById('chatbotOverlay');
       (overlay || document).addEventListener('click', (e) => {
-        const el = e.target && e.target.closest ? e.target.closest('[data-chatbot-quick],[data-chatbot-player],[data-chatbot-univ],[data-chatbot-nav-key],[data-chatbot-copy-index]') : null;
+        const el = e.target && e.target.closest ? e.target.closest('[data-chatbot-quick],[data-chatbot-player],[data-chatbot-univ],[data-chatbot-nav-key],[data-chatbot-copy-index],[data-chatbot-speak-index]') : null;
         if (!el) return;
 
         if (el.hasAttribute('data-chatbot-quick')) {
@@ -346,6 +375,12 @@ function initChatbot() {
           const key = el.getAttribute('data-chatbot-nav-key') || '';
           const dir = parseInt(el.getAttribute('data-chatbot-nav-dir') || '0', 10) || 0;
           if (key && dir && typeof chatNavPage === 'function') { e.preventDefault(); chatNavPage(key, dir); }
+          return;
+        }
+
+        if (el.hasAttribute('data-chatbot-speak-index')) {
+          const sidx = parseInt(el.getAttribute('data-chatbot-speak-index') || '-1', 10);
+          if (sidx >= 0) { e.preventDefault(); speakChatMessage(sidx); }
           return;
         }
 
@@ -378,6 +413,7 @@ try{
   window.handleChatInputKeydown = handleChatInputKeydown;
   window.clearChatHistory = clearChatHistory;
   window.copyChatMessage = copyChatMessage;
+  window.speakChatMessage = speakChatMessage;
   window.setChatbotMode = setChatbotMode;
   window.sendQuickMessage = sendQuickMessage;
   window.openPlayerDetail = openPlayerDetail;

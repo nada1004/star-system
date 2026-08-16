@@ -1,0 +1,252 @@
+/* ══════════════════════════════════════════════════════════════
+   대전기록 - 방송형(스코어보드) 보기모드 스타일 (신규기능, 2026-08-14, histbroadcastview)
+   K-리그식 중계 그래픽을 모티브로 한 팀(대학) 스코어보드 + 번호별 세부경기 카드
+   (수정, 2026-08-14) 다크 헤더 → 양쪽 대학색상 그라디언트 효과로 변경,
+   세부경기 행에 맵 이름 가운데 배치 + 스트리머명 옆 종족뱃지 + 승자 표시박스 추가
+   ══════════════════════════════════════════════════════════════ */
+
+.bc-match-card{
+  /* 상단 스코어보드와 세부경기 행이 같은 그리드를 공유하기 위한 열 폭 변수 */
+  --bc-col-num:56px;
+  --bc-col-mid:76px;
+  --bc-col-gap:14px;
+  border:1px solid var(--border);
+  border-left:5px solid var(--bc-ca);
+  border-right:5px solid var(--bc-cb);
+  border-radius:var(--r2);
+  background:var(--card);
+  box-shadow:var(--sh);
+  overflow:hidden;
+  margin-bottom:14px;
+}
+
+.bc-card-top{
+  background:linear-gradient(90deg,
+    rgba(var(--bc-ca-rgb),.34) 0%,
+    rgba(var(--bc-ca-rgb),.09) 38%,
+    rgba(var(--bc-cb-rgb),.09) 62%,
+    rgba(var(--bc-cb-rgb),.34) 100%);
+  border-bottom:1px solid var(--border);
+}
+
+.bc-match-meta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 16px 0;
+}
+.bc-match-title-badge{
+  font-size:var(--fs-caption);
+  font-weight:800;
+  padding:2px 8px;
+  border-radius:999px;
+  flex-shrink:0;
+}
+.bc-match-title-txt{
+  font-weight:900;
+  font-size:var(--fs-sm);
+  letter-spacing:.2px;
+  color:var(--text);
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.bc-match-date{
+  font-size:var(--fs-caption);
+  color:var(--text3);
+  flex-shrink:0;
+  white-space:nowrap;
+}
+
+/* (수정, 2026-08-14) 상단 스코어와 아래 세부경기의 '맵' 칸이 서로 어긋나 보이던 문제 →
+   세부경기 행과 완전히 동일한 4열 그리드(번호/A/맵·스코어/B)를 사용해 세로줄을 맞춘다. */
+.bc-scoreboard{
+  display:grid;
+  grid-template-columns:var(--bc-col-num) minmax(0,1fr) var(--bc-col-mid) minmax(0,1fr);
+  align-items:center;
+  column-gap:var(--bc-col-gap);
+  padding:12px 16px 16px;
+}
+.bc-sb-spacer{ display:block; }
+.bc-team{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width:0;
+}
+.bc-team-b{ justify-content:flex-end; }
+.bc-team-logo-img{
+  width:28px;
+  height:28px;
+  object-fit:contain;
+  flex-shrink:0;
+}
+.bc-team-badge{
+  font-weight:900;
+  font-size:var(--fs-base);
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  cursor:pointer;
+  opacity:.88;
+}
+.bc-team.is-win .bc-team-badge{
+  opacity:1;
+  box-shadow:0 0 0 2px rgba(255,255,255,.55) inset, 0 2px 8px rgba(0,0,0,.18);
+}
+.bc-score{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  font-family:'Noto Sans KR',sans-serif;
+  font-weight:900;
+  font-size:22px;
+  flex-shrink:0;
+  padding:0;
+}
+.bc-score-sep{
+  color:var(--text3);
+  font-size:.7em;
+  opacity:.8;
+}
+
+.bc-games{
+  display:flex;
+  flex-direction:column;
+}
+/* (수정, 2026-08-14) 우측에 있던 번호 라벨용 더미 여백(bc-game-num-spacer) 때문에
+   브라우저 폭을 줄이면 B팀 오른쪽에 빈 공간이 생겼다 → 그리드 4열(번호/A/맵/B)로 바꿔
+   맵을 가운데 두면서 좌우 폭을 균등하게 쓰고, 승리 표시와 "N경기" 라벨 간격도 넓혔다. */
+.bc-game-row{
+  display:grid;
+  grid-template-columns:var(--bc-col-num) minmax(0,1fr) var(--bc-col-mid) minmax(0,1fr);
+  align-items:center;
+  column-gap:var(--bc-col-gap);
+  padding:9px 16px;
+  font-size:var(--fs-sm);
+  border-top:1px solid var(--border);
+}
+.bc-game-num-spacer{ display:none; }
+.bc-game-row:nth-child(odd){
+  background:var(--surface);
+}
+
+.bc-game-num{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.25;
+  padding:3px 6px;
+  border-radius:7px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  color:var(--text2);
+  font-size:10px;
+  font-weight:800;
+  white-space:normal;
+  word-break:keep-all;
+  box-sizing:border-box;
+}
+/* (수정, 2026-08-14) 좌측 "승" 박스가 "N경기" 라벨에 너무 붙고, 우측 "승" 박스는
+   카드 오른쪽 끝으로 치우쳐 보이던 문제 → 양쪽 안쪽 여백을 줘서 균형을 맞춘다. */
+.bc-game-side{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+  cursor:pointer;
+  opacity:.62;
+}
+.bc-game-side-a{ padding-left:12px; }
+.bc-game-side-b{ padding-right:12px; }
+/* 종족 뱃지는 스트리머 이름 바로 옆(적당한 간격)에 붙인다 */
+.bc-name-wrap{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+.bc-game-side.is-win{
+  opacity:1;
+  font-weight:900;
+  color:var(--side-col);
+}
+.bc-win-slot{
+  flex:0 0 22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.bc-game-name{
+  flex:0 1 auto;
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  min-width:0;
+}
+.bc-race.rbadge{
+  flex-shrink:0;
+}
+.bc-win-box{
+  flex-shrink:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:19px;
+  height:19px;
+  border-radius:5px;
+  background:var(--side-col);
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+}
+.bc-game-map{
+  text-align:center;
+  font-size:var(--fs-caption);
+  font-weight:800;
+  color:var(--text2);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:0 2px;
+}
+.bc-games-empty{
+  padding:14px;
+  text-align:center;
+  font-size:var(--fs-sm);
+  color:var(--gray-l);
+}
+
+body.dark .bc-game-row:nth-child(odd){
+  background:rgba(255,255,255,.03);
+}
+body.dark .bc-card-top{
+  background:linear-gradient(90deg,
+    rgba(var(--bc-ca-rgb),.42) 0%,
+    rgba(var(--bc-ca-rgb),.12) 38%,
+    rgba(var(--bc-cb-rgb),.12) 62%,
+    rgba(var(--bc-cb-rgb),.42) 100%);
+}
+
+@media (max-width:560px){
+  .bc-scoreboard{ padding:10px 12px 14px; gap:10px; }
+  .bc-score{ font-size:18px; }
+  .bc-team-badge{ font-size:var(--fs-sm); }
+  .bc-match-card{ --bc-col-num:44px; --bc-col-mid:56px; --bc-col-gap:8px; }
+  .bc-game-row{ padding:8px 10px; }
+  .bc-game-side{ gap:6px; }
+  .bc-game-side-a{ padding-left:6px; }
+  .bc-game-side-b{ padding-right:6px; }
+  .bc-name-wrap{ gap:5px; }
+  .bc-win-slot{ flex-basis:18px; }
+  .bc-game-num{ font-size:9px; padding:2px 4px; }
+  .bc-game-map{ font-size:10px; }
+}

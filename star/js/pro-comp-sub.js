@@ -693,6 +693,9 @@ function proCompGJSection(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   if (!tn.gjMatches) tn.gjMatches = [];
   let h = '';
+  if(typeof pcAltViewModeBarHTML==='function'){
+    h += `<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">${pcAltViewModeBarHTML('pcgj')}</div>`;
+  }
   if (isLoggedIn) {
     const pA = _pcgjA, pB = _pcgjB;
     const pAObj = players.find(p=>p.name===pA)||{}, pBObj = players.find(p=>p.name===pB)||{};
@@ -729,6 +732,10 @@ function proCompGJSection(tn) {
         <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">💾 저장</button>
       </div>
     </div>`;
+  }
+  // (신규기능) 미니 기본/그리드/컴팩트 테이블형 보기모드
+  if((typeof pcAltViewMode==='function') && pcAltViewMode('pcgj')!=='basic'){
+    return h + pcAltRecordsHTML('pcgj', tn);
   }
   if (!tn.gjMatches.length) {
     h += `<div class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-title">중장전 기록이 없습니다</div><div class="empty-state-desc">위에서 경기를 추가해보세요</div></div>`;

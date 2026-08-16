@@ -1811,3 +1811,75 @@
       @media (prefers-reduced-motion: reduce) {
         .b2w2-kpi-card, .b2w2-highlight-card, .b2w2-mvp-card, .b2w2-card { animation: none }
       }
+
+      /* ══════════════════════════════════════════════════════════════
+         대회 브리핑(조별리그/토너먼트/종합) 전용 — 정보 위계 강화
+         b2w2-dual-title 등 공용 클래스는 주간 현황판 브리핑과 공유되므로
+         건드리지 않고, cbf-* 전용 클래스로 섹션 제목의 무게감과 구분을
+         명확히 준다. (섹션마다 같은 굵기라 밋밋해 보이던 문제 해결)
+         ══════════════════════════════════════════════════════════════ */
+      .b2w2-wrap { counter-reset: cbfsec; }
+      .cbf-sec { counter-increment: cbfsec; }
+      /* 최상위 섹션(.b2w2-wrap 바로 아래)만 굵은 구분선으로 분리한다.
+         2열 그리드 안에 나란히 들어가는 하위 섹션(예: 팀 순위/개인 순위 짝)은
+         그리드 gap이 이미 구분을 주므로 여기서는 여백만 준다. */
+      .b2w2-wrap > .cbf-sec {
+        margin-top: 32px;
+        padding-top: 22px;
+        border-top: 1px solid var(--b2w-rule-soft);
+      }
+      .b2w2-wrap > .cbf-sec:first-of-type { margin-top: 18px; padding-top: 0; border-top: none; }
+      .cbf-sec-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .cbf-sec-heading { display: flex; align-items: baseline; gap: 11px; min-width: 0; }
+      .cbf-sec-num {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 25px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--b2w-accent), var(--b2w-accent-strong));
+        color: #fff;
+        font-family: Georgia, serif;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0;
+        box-shadow: 0 2px 6px var(--b2w-accent-shadow-strong, rgba(37,99,235,.2));
+      }
+      .cbf-sec-num::before { content: counter(cbfsec, decimal-leading-zero); }
+      .cbf-sec-title {
+        font-family: 'Noto Serif KR', Georgia, serif;
+        font-size: 19px;
+        font-weight: 900;
+        letter-spacing: -.01em;
+        color: var(--b2w-ink);
+        line-height: 1.25;
+        word-break: keep-all;
+      }
+      .cbf-sec-sub { margin-top: 4px; padding-left: 36px; font-size: 12px; font-weight: 600; color: var(--b2w-ink-soft); }
+      .cbf-sec-tag {
+        flex-shrink: 0;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--b2w-ink-soft);
+        padding: 4px 10px;
+        border: 1px solid var(--b2w-rule-soft);
+        border-radius: 999px;
+        background: var(--b2w-paper-alt);
+      }
+      @media (max-width: 600px) {
+        .cbf-sec { margin-top: 24px; padding-top: 16px; }
+        .cbf-sec-title { font-size: 16px; }
+        .cbf-sec-sub { padding-left: 0; margin-top: 6px; }
+      }

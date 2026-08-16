@@ -66,18 +66,58 @@ var _b2SaveUniv = '전체';
 var _b2LineupUniv = '';
 var _b2LineupCardMode = (()=>{try{const m=localStorage.getItem('su_b2_lineup_card_mode')||'default';return m==='list'?'default':m;}catch(e){return 'default';}})(); // 라인업 카드 스타일: 'default'(기본) | 'stat'(사진+통계그리드형) | 'table'(테이블형)
 function _b2SetLineupCardMode(mode){
+  if (typeof _b2LineupStopSpeak === 'function') _b2LineupStopSpeak();
+  if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow();
   _b2LineupCardMode = ['default','stat','table'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
   const el = document.getElementById('b2-content');
   if (el) { el.innerHTML = _b2LineupView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
   if (typeof render === 'function') render();
 }
+// 라인업 "소개 연출" — 음성듣기와 완전히 분리된 독립 연출.
+// 버튼을 누르면 카드가 모두 숨겨진 뒤, 순서대로 화면 중앙에 크게 등장했다가
+// 자기 자리로 날아가 배치되는 스타팅 라인업 발표 연출이 재생된다.
+var _b2LineupIntroAnim = false; // (레거시 호환용 플래그 — 음성듣기와 연동하지 않음)
+function _b2ToggleLineupIntroAnim(){
+  if (typeof _b2LineupPlayIntroShow === 'function') _b2LineupPlayIntroShow();
+}
+try { window._b2ToggleLineupIntroAnim = _b2ToggleLineupIntroAnim; } catch(e){}
 var _b2Collapsed = new Set();
 // 프로필 탭 필터 변수
 var _b2PlayersUnivFilter = '전체';
 var _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
 var _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
 var _b2SelectedPlayer = null;
+
+// [FIX-IMG-RESET] 프로필탭(이미지탭) 재렌더 시 시그니처가 그대로면 다시 그리지 않기 위한 헬퍼.
+// 배경 자동동기화(30초/8초 폴링 등)로 인해 이 화면과 무관한 데이터가 갱신될 때마다
+// render()가 호출되면서 board2 'players' 서브뷰 전체가 매번 새로 그려졌다.
+// 그 결과 (1) 이미 떠 있던 사진이 새 <img> 엘리먼트로 교체되며 잠깐 빈 화면(회색)이
+// 보였다가 나타나는 현상과 (2) 진행 중이던 이미지 슬라이드쇼가 항상 1번 이미지부터
+// 다시 시작하는 현상(정상적으로는 순서대로 넘어가야 함)이 발생했다.
+// → 실제로 화면에 영향을 주는 값(필터/선택된 선수/선수 목록의 사진·티어·종족·대학)이
+//   바뀌지 않았다면 재렌더를 건너뛰어 기존 DOM(및 진행 중이던 슬라이드쇼)을 그대로 둔다.
+function _b2ComputePlayersSig(){
+  try{
+    const list = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+    const parts = list.map(p => [
+      p && p.name, p && p.tier, p && p.race, p && p.univ,
+      p && p.photo, p && p.secondProfileFile, p && p.profileFile3, p && p.profileFile4,
+      p && p.profileFile5, p && p.profileFile6, p && p.profileFile7, p && p.profileFile8,
+      p && p.profileFile9, p && p.profileFile10
+    ].join('~')).join('|');
+    const shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1');
+    return [
+      _b2PlayersUnivFilter, _b2PlayersFilter, _b2PlayersTierFilter, shuffle,
+      _b2SelectedPlayer && _b2SelectedPlayer.name,
+      String(window._b2PlayersRenderLimit || ''),
+      parts
+    ].join('###');
+  }catch(e){
+    // 시그니처 계산에 실패하면 항상 다시 그리도록(안전 폴백) 빈 값이 아닌 매번 다른 값을 준다.
+    return 'ERR' + Date.now();
+  }
+}
 var _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 const _b2BgImageMeta = {};
 let _b2AutoFitResizeBound = false;
@@ -414,6 +454,10 @@ function rBoard2(C, T) {
   // 적합하지 않아 요청에 따라 숨김) — 데스크톱에서 라이브 탭에 있다가 창을 좁히거나,
   // 모바일로 접속했는데 이전 상태가 남아있는 경우 안전하게 다른 탭으로 이동
   if (_b2View === 'live' && window.innerWidth <= 768) _b2View = 'univ';
+  // 설정에서 OFF된(비로그인 시 숨김) 하위탭에 머물러 있으면 안전한 탭으로 이동
+  if (window.TabVis && typeof window.TabVis.visible==='function' && !window.TabVis.visible('b2.'+_b2View)) {
+    _b2View = window.TabVis.visible('b2.univ') ? 'univ' : 'weekly';
+  }
 
   // 저장/초기화 바
   let saveBar = '';
@@ -439,27 +483,51 @@ function rBoard2(C, T) {
   } else if (_b2View === 'lineup') {
     if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
     const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
+    // TabVis: 라인업 카드 모드(기본/통계카드/테이블) — OFF된 모드는 비로그인 사용자에게 숨김
+    let _lcAllModes=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+    const _lcTv = (id)=> (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.lineup.mode.'+id) : true;
+    let _lcItems = _lcAllModes.filter(it=>_lcTv(it.id));
+    if (!_lcItems.length) _lcItems = _lcAllModes; // 전부 꺼졌으면 안전하게 전체 노출(관리자 실수 방지)
+    if (!_lcItems.some(it=>it.id===_b2LineupCardMode)) {
+      _b2LineupCardMode = _lcItems[0].id;
+      try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
+    }
+    // TabVis: 애니메이션 인트로 재생 버튼 노출 여부
+    const _lcIntroOn = (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.lineup.mode.intro') : true;
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
-        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
+      ${_lcItems.length>1 ? `<div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
         <div style="display:flex;gap:4px">
-          ${_lcModeBtn('default','🖼️ 기본')}
-          ${_lcModeBtn('stat','📊 통계카드')}
-          ${_lcModeBtn('table','🗂️ 테이블')}
+          ${_lcItems.map(it=>_lcModeBtn(it.id,it.label)).join('')}
         </div>
-      </div>
-      ${(function(){
-        const _lcItems=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+      </div>` : ''}
+      ${_lcItems.length>1 ? (function(){
         window._b2LineupModeItems = _lcItems.map(it=>({id:it.id, label:it.label, action:`_b2SetLineupCardMode('${it.id}')`, active:_b2LineupCardMode===it.id}));
         const _curLc = _lcItems.find(it=>it.id===_b2LineupCardMode) || _lcItems[0];
         return `<button type="button" class="pill mode-select-trigger" style="flex-shrink:0" onclick="_toggleModePopover(this,'라인업 모드',window._b2LineupModeItems)">${_curLc.label} ▾</button>`;
+      })() : ''}
+      ${(function(){
+        // 🔊 음성듣기 대상 선택 — '라인업 전체' 또는 특정 스트리머 한 명
+        let _spMembers = [];
+        try { _spMembers = (typeof _b2LineupMembers==='function' ? _b2LineupMembers(_b2LineupUniv).members : []); } catch(e){ _spMembers = []; }
+        const _cur = (typeof _b2LineupSpeakTarget!=='undefined') ? _b2LineupSpeakTarget : '';
+        return `<div style="position:relative">
+          <select id="b2-lineup-speak-sel" class="b2-toolbar-select" title="음성으로 소개할 대상" onchange="_b2LineupSetSpeakTarget(this.value)" style="padding:4px 26px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer;max-width:150px">
+            <option value=""${!_cur?' selected':''}>🎙️ 라인업 전체</option>
+            ${_spMembers.map(p=>`<option value="${String(p.name||'').replace(/"/g,'&quot;')}"${_cur===p.name?' selected':''}>${p.name||''}</option>`).join('')}
+          </select>
+          <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        </div>`;
       })()}
+      <button id="b2-lineup-speak-btn" class="b2-toolbar-btn" onclick="_b2LineupToggleSpeak()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">${(typeof _b2LineupSpeaking!=='undefined'&&_b2LineupSpeaking)?'⏹ 정지':'🔊 음성듣기'}</button>
+      ${_lcIntroOn ? `<button id="b2-lineup-intro-btn" class="b2-toolbar-btn" onclick="_b2LineupPlayIntroShow()" title="카드가 화면 중앙에 크게 등장했다가 자기 자리로 이동하는 라인업 발표 연출을 재생합니다 (음성듣기와 별개). 재생 중 다시 누르면 일시정지/이어보기가 토글됩니다." style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">▶ 재생</button>
+      <button id="b2-lineup-intro-stop-btn" class="b2-toolbar-btn" onclick="if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow()" title="소개 연출을 완전히 종료합니다" style="display:none;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;align-items:center;gap:4px;margin-bottom:0">⏹ 종료</button>` : ''}
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -518,12 +586,13 @@ function rBoard2(C, T) {
       </div>
     </div>
   ` : '';
-  const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑'));
-  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
-  const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
-  const rankingBtn = _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹'));
-  const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
-  const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
+  const _tv = (id)=> (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.'+id) : true;
+  const weeklyBtn = _tv('weekly') ? _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')) : '';
+  const oldBtn = (isLoggedIn && _tv('old'))?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
+  const summaryBtn = _tv('summary') ? _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')) : '';
+  const rankingBtn = _tv('ranking') ? _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹')) : '';
+  const heatmapBtn = _tv('heatmap') ? _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵')) : '';
+  const bubbleBtn  = _tv('bubble') ? _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵')) : '';
   // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/요약/구현황판)을
   // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
   const _b2TabDefs = [
@@ -539,8 +608,9 @@ function rBoard2(C, T) {
     {id:'summary', label:(typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')},
   ];
   if(isLoggedIn) _b2TabDefs.push({id:'old', label:(typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')});
-  window._b2TabPopoverItems = _b2TabDefs.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
-  const _curB2TabItem = _b2TabDefs.find(it=>it.id===_b2View) || _b2TabDefs[0];
+  const _b2TabDefsVisible = (window.TabVis && typeof window.TabVis.filterDefs==='function') ? window.TabVis.filterDefs(_b2TabDefs, 'b2') : _b2TabDefs;
+  window._b2TabPopoverItems = _b2TabDefsVisible.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
+  const _curB2TabItem = _b2TabDefsVisible.find(it=>it.id===_b2View) || _b2TabDefsVisible[0] || _b2TabDefs[0];
   const _b2TabMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'현황판 화면 선택',window._b2TabPopoverItems)">
     <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${_curB2TabItem.label}</span></span>
     <span class="mode-select-trigger-caret">▾</span>
@@ -701,12 +771,12 @@ function rBoard2(C, T) {
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
         ${weeklyBtn}
-        ${window.innerWidth > 768 ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
-        ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
-        ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
-        ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
-        ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
-        ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
+        ${(window.innerWidth > 768 && _tv('live')) ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
+        ${_tv('lineup') ? _b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')) : ''}
+        ${_tv('univ') ? _b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')) : ''}
+        ${_tv('femco') ? _b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')) : ''}
+        ${_tv('free') ? _b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속')) : ''}
+        ${_tv('players') ? _b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel)) : ''}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}
@@ -726,7 +796,7 @@ function rBoard2(C, T) {
         ${univList.map(u=>{
           const _uc = gc(u.name);
           const _on = u.name===_b2LineupUniv;
-          return `<button type="button" onclick="_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
+          return `<button type="button" onclick="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:2px 9px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:10px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
         }).join('')}
       </div>
       ` : ''}
@@ -767,6 +837,20 @@ function rBoard2(C, T) {
     if(!sub) return;
     const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','heatmap','bubble','live','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
+    // board2 서브뷰(라인업/브리핑 등)가 바뀌면 재생 중이던 음성 소개를 정지
+    // (다른 서브뷰에서 계속 읽어주면 혼란스러움). 기존엔 라인업 전용 상태값만 검사해서
+    // 브리핑(_b2View==='weekly') 음성듣기 중 다른 서브뷰로 이동해도 멈추지 않는 누락이 있었음 —
+    // SUTTS는 싱글톤이라 stop()이 재생 중인 기능(라인업/브리핑 등)의 onEnd 정리 콜백을
+    // 그대로 실행해주므로, 서브뷰가 실제로 바뀔 때마다 범용으로 정지시키도록 수정.
+    if (window._b2LastRenderedView !== undefined && window._b2LastRenderedView !== _b2View) {
+      if (window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
+        try{ window.SUTTS.stop(); }catch(e){}
+      }
+      // 라인업 "소개 연출"(_b2LineupPlayIntroShow)은 SUTTS와 별개의 상태값으로 돌아가므로
+      // 위 SUTTS 정지만으로는 멈추지 않음 — 서브뷰가 바뀌면 별도로 확실히 정지시켜준다.
+      try{ if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow(); }catch(e){}
+    }
+    window._b2LastRenderedView = _b2View;
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
       injectUnivIcons(sub);
@@ -789,20 +873,33 @@ function rBoard2(C, T) {
       injectUnivIcons(sub);
       setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 60); }catch(e){} }, 120);
     } else if (_b2View === 'players') {
-      sub.innerHTML = _b2PlayersView();
-      _b2BindAutoFitResize();
-      setTimeout(() => {
-        try{
-          if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+      // [FIX-IMG-RESET] 화면에 실제 영향을 주는 값이 이전과 동일하면(=배경 동기화 등
+      // 무관한 이유로 render()가 호출된 경우) 다시 그리지 않는다. 이미 떠 있는 메인
+      // 이미지/슬라이드쇼를 그대로 유지해 "빈 화면 깜빡임"과 "슬라이드쇼가 1번으로
+      // 되돌아가는" 현상을 막는다.
+      const _sig = _b2ComputePlayersSig();
+      const _alreadyBuilt = !!document.getElementById('b2-players-main-box');
+      if (_alreadyBuilt && window._b2PlayersLastSig === _sig) {
+        // 아무것도 바뀌지 않음 — 기존 DOM(및 진행 중인 슬라이드쇼 타이머) 유지
+      } else {
+        window._b2PlayersLastSig = _sig;
+        sub.innerHTML = _b2PlayersView();
+        _b2BindAutoFitResize();
+        // 🎵 스트리머 전용 BGM — 프로필탭 진입/필터변경으로 선택된 스트리머가 바뀌면 재생
+        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
+        setTimeout(() => {
+          try{
+            if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+              _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+              _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+            }
+            _b2ApplyBgAutoSizing(sub);
+          }catch(e){
+            console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
           }
-          _b2ApplyBgAutoSizing(sub);
-        }catch(e){
-          console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
-        }
-      }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
+        }, 0);
+        setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
+      }
     } else if (_b2View === 'lineup') {
       sub.innerHTML = _b2LineupView();
       injectUnivIcons && injectUnivIcons(sub);

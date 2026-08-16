@@ -12,14 +12,68 @@ function _b2UpdateMainDisplay(playerName) {
     if(lower === 'null' || lower === 'undefined' || lower === 'about:blank' || lower === 'javascript:void(0)' || lower === '#') return '';
     return s;
   };
+  // [FIX-IMG-SWAP-PREWARM] 기존에는 prewarmImageUrls()가 썸네일 프록시 URL
+  // (images.weserv.nl, 96px webp)만 미리 받아뒀는데, 실제 크로스페이드 슬라이드쇼의
+  // <img src>는 toHttpsUrl()로 만든 "원본 그대로의" URL이라 서로 다른 리소스였음.
+  // 즉 미리 받아둔 캐시가 실제 화면에 쓰이는 이미지와 전혀 무관해서 전환 시점에
+  // 원본이 처음부터 새로 다운로드되며 "화면이 잠깐 비었다가 뚝 끊기듯 나타나는"
+  // 현상의 원인이었다. 또한 photo/secondProfileFile(슬롯1~2)만 미리 받고 3~10번
+  // (예: 새로 추가한 스트리머용 3번째 이미지)은 아예 미리 받지 않아서 그 슬롯이
+  // 처음 순환될 때 항상 콜드 로딩이었다.
+  // [FIX-IMG-HERO-SCALED] 그런데 여기서 "실제로 표시되는 원본"을 toHttpsUrl()로만
+  // 미리 받다 보니, 원본 사진이 수백KB~수MB인 경우 좌측 메인(히어로) 이미지가 늦게
+  // 뜨는 원인이 됐다. 그리드/호버팝업 등 다른 화면은 전부 images.weserv.nl 리사이즈
+  // 프록시(toScaledUrl/toThumbUrl)를 쓰는데 이 히어로 슬라이드쇼만 원본을 그대로 썼음.
+  // 이제 표시(_b2MainMediaHTML)와 프리웜이 항상 "같은" toScaledUrl() 결과를 쓰도록
+  // 통일해서, 리사이즈된(훨씬 가벼운) 이미지를 프리웜 → 즉시 캐시 히트로 표시한다.
   try{
-    if(typeof prewarmImageUrls==='function'){
-      prewarmImageUrls([player.photo, player.secondProfileFile], 4);
-    }
+    const _b2PrewarmIsVideo = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+    };
+    const _b2PrewarmIsGif = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.gif');
+    };
+    const _b2PrewarmSlots = [
+      player.photo, player.secondProfileFile, player.profileFile3, player.profileFile4,
+      player.profileFile5, player.profileFile6, player.profileFile7, player.profileFile8,
+      player.profileFile9, player.profileFile10
+    ];
+    // [FIX-IMG-SLOW] 슬롯1(player.photo)은 지금 바로 화면에 그려지는 <img id="b2-main-img-1">이
+    // 이미 fetchpriority="high"로 직접 요청하므로 여기서 또 한 번 new Image()로 같은 URL을
+    // 동시에 요청하면 같은 순간에 요청이 두 배로 몰려 정작 화면에 보이는 이미지가 늦게 뜨는
+    // 원인이 됐다. 슬롯1은 건너뛰고 나머지 슬롯부터 프리웜한다.
+    // [FIX-IMG-SLOT-LATE] requestIdleCallback으로 미루면(최대 1.5초 + 브라우저가 바쁠 때는
+    // 더 늦게) 슬라이드쇼가 다음 슬롯(보통 4초 뒤)으로 넘어갈 때까지도 프리웜이 안 끝나서
+    // "2~10번 이미지가 전환될 때마다 늦게 뜬다"는 원인이 됐다. 이제는 슬롯 순서대로 아주
+    // 짧은 간격(80ms)만 두고 곧바로 요청을 시작해서, 슬롯1과 완전히 동시에 몰리는 것만
+    // 피하면서도 다음 전환 시점 전에 충분히 미리 받아두게 한다.
+    _b2PrewarmSlots.forEach((rawUrl, _slotIdx)=>{
+      if(_slotIdx === 0) return; // 슬롯1은 위에서 이미 high-priority로 로딩됨
+      const u = _normMediaUrl(rawUrl);
+      if(!u || _b2PrewarmIsVideo(u)) return;
+      // [FIX-GIF-STATIC] gif는 리사이즈 프록시를 거치면 애니메이션이 사라지므로,
+      // 실제 표시(_b2MainMediaHTML)와 동일하게 원본 URL 그대로 프리웜해야 한다.
+      const src = _b2PrewarmIsGif(u) ? toHttpsUrl(u) : ((typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u));
+      if(!src) return;
+      window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
+      if(window._b2PrewarmedFullUrls.has(src)) return;
+      window._b2PrewarmedFullUrls.add(src);
+      setTimeout(()=>{
+        try{
+          const _img = new Image();
+          try{ _img.decoding = 'async'; }catch(e){}
+          _img.src = src;
+        }catch(e){}
+      }, _slotIdx * 80);
+    });
   }catch(e){}
   
   _b2SelectedPlayer = player;
   // localStorage 저장 제거 - 새로고침 시 랜덤 선수 선택을 위해
+  // 🎵 스트리머 전용 BGM — 현황판 프로필탭에서 스트리머 클릭(선택) 시 자동 재생
+  try{ if(typeof _plyrBgmStart==='function') _plyrBgmStart(player); }catch(e){}
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(player.univ) || '#6366f1';
@@ -53,11 +107,22 @@ function _b2UpdateMainDisplay(playerName) {
     const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
     return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
   };
+  // [FIX-GIF-STATIC] gif는 images.weserv.nl 리사이즈 프록시(toScaledUrl)를 거치면
+  // webp로 재인코딩되면서 애니메이션이 사라지고 첫 프레임만 남는 정지 이미지가
+  // 됐다. 그리드 카드(우측)는 이미 gif를 원본 그대로 쓰도록 처리돼 있었는데
+  // 좌측 히어로 슬라이드쇼만 빠져 있었음 — 동일하게 처리한다.
+  const _b2IsGifUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.gif');
+  };
   const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
     const url = String(rawUrl||'').trim();
     if(!url) return '';
-    const src = toHttpsUrl(url);
     const isVid = _b2IsVideoUrl(url);
+    const isGif = !isVid && _b2IsGifUrl(url);
+    // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
+    // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
+    const src = (isVid || isGif) ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
@@ -72,14 +137,20 @@ function _b2UpdateMainDisplay(playerName) {
     // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
     const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
+      // [FIX-VIDEO-NOT-PLAYING] preload="metadata"만 쓰면 실제 프레임 데이터를 전혀
+      // 미리 받아두지 않아서, 이 슬롯이 활성화되어 play()가 호출되는 순간부터에서야
+      // 데이터를 받기 시작해 "재생이 안 되는" 것처럼 멈춰 보였다. 지금 바로 보이는
+      // 슬롯(opacity 1)은 auto로 미리 버퍼링해서 즉시 재생되게 하고, 아직 안 보이는
+      // 슬롯은 metadata만 받아 불필요한 트래픽을 피한다.
+      const _vidPreload = (Number(opacity) === 1) ? 'auto' : 'metadata';
+      return `<video ${common} src="${src}" preload="${_vidPreload}" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
   const _hasMediaUrl2 = (v)=>!!_normMediaUrl(v);
   const _slot1 = _hasMediaUrl2(player.photo)
-    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'transition:opacity 0.4s ease;' })
+    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:'transition:opacity 0.4s ease;' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
   const _slot2 = _hasMediaUrl2(player.secondProfileFile)
     ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
@@ -172,8 +243,9 @@ function _b2UpdateMainDisplay(playerName) {
     if (!_hasMediaUrl2(player.photo)) {
       _b2ScheduleImageSwap(player.name);
     } else if (_slot1El && !_isSlot1Video && _slot1El.complete) {
-      // 캐시에서 즉시 로드된 경우 onload가 발화 안 함 → 직접 호출
-      _b2ScheduleImageSwap(player.name);
+      // 캐시에서 즉시 로드된 경우 onload가 늦게(또는 다시) 발화할 수 있으므로
+      // 동일 엘리먼트에서 중복 호출되지 않도록 _b2SwapStartOnce로 가드한다.
+      _b2SwapStartOnce(player.name, _slot1El);
     }
     // 비디오인 경우 onloadedmetadata 이벤트에서 자동 호출됨
   }
@@ -182,5 +254,51 @@ function _b2UpdateMainDisplay(playerName) {
   document.querySelectorAll('.b2-players-card').forEach(card => {
     card.classList.remove('active');
   });
+}
+
+// [FIX-NO-REFRESH-ON-SAVE] 사진/영상 등 미디어는 그대로인데 이름·티어·종족·대학 같은
+// 텍스트 정보만 바뀐 경우, 이미지 DOM(슬라이드쇼 진행 상태 포함)은 건드리지 않고
+// 이름/뱃지 영역만 다시 그려서 "저장하면 이미지가 새로고침되는" 현상을 없앤다.
+function _b2UpdateMainDisplayInfoOnly(playerName) {
+  try {
+    const player = players.find(p => p.name === playerName);
+    if (!player) return;
+    const mainBox = document.getElementById('b2-players-main-box');
+    if (!mainBox) return;
+    const infoEl = mainBox.querySelector('.b2-players-info');
+    if (!infoEl) { _b2UpdateMainDisplay(playerName); return; }
+
+    const univColor = gc(player.univ) || '#6366f1';
+    const _updUnivIcon = (() => {
+      const uCfg = univCfg.find(x => x.name === player.univ) || {};
+      return uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
+    })();
+
+    const nameEl = infoEl.querySelector('.b2-players-name');
+    if (nameEl) nameEl.textContent = player.name || '이름 없음';
+
+    const tierEl = infoEl.querySelector('.b2-players-tier');
+    if (tierEl) {
+      tierEl.textContent = _b2TierLabel(player.tier);
+      tierEl.style.background = univColor;
+    }
+
+    const detailsEl = infoEl.querySelector('.b2-players-details');
+    if (detailsEl) {
+      const raceHTML = (player.race==='P'||player.race==='T'||player.race==='Z')
+        ? `<span class="rbadge r${player.race}" style="font-size:14px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)">${player.race}</span>`
+        : `<span class="b2-players-chip b2-players-race">종족미정</span>`;
+      const univHTML = player.univ
+        ? (_updUnivIcon
+            ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_updUnivIcon)}" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+            : `<span class="b2-players-chip">🏫 ${player.univ}</span>`)
+        : '<span class="b2-players-chip">🏫 무소속</span>';
+      const tierHTML = tierEl ? tierEl.outerHTML : `<span class="b2-players-tier" style="background:${univColor}">${_b2TierLabel(player.tier)}</span>`;
+      detailsEl.innerHTML = tierHTML + raceHTML + univHTML;
+    }
+  } catch (e) {
+    // 안전하게 실패하면 기존처럼 전체 재그리기로 폴백
+    try { _b2UpdateMainDisplay(playerName); } catch (e2) {}
+  }
 }
 

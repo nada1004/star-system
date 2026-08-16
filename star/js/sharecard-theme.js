@@ -67,7 +67,48 @@
     const entityLayout=((t ? localStorage.getItem(`su_sc_entity_layout_${t}`) : null) ?? localStorage.getItem('su_sc_entity_layout') ?? 'default').trim();
     const matchLayout=((t ? localStorage.getItem(`su_sc_match_layout_${t}`) : null) ?? localStorage.getItem('su_sc_match_layout') ?? 'default').trim();
     const showTally = (localStorage.getItem('su_sc_show_tally') ?? '0') === '1';
-    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape, entityLayout, matchLayout, showTally };
+    const imgFxSrc=((t ? localStorage.getItem(`su_sc_img_fx_${t}`) : null) ?? localStorage.getItem('su_sc_img_fx') ?? 'none').trim();
+    const imgFx = ['none','ring','glass','film','sticker','mono','duotone','spotlight'].includes(imgFxSrc) ? imgFxSrc : 'none';
+    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape, entityLayout, matchLayout, showTally, imgFx };
+  };
+
+  // 스트리머 프로필/대학 로고 이미지 효과 — 프레임(테두리) 계열은 wrap div에, 톤(필터) 계열은 img 태그에 적용
+  window._scImgFxParts = window._scImgFxParts || function(kind, accent){
+    const list = ['none','ring','glass','film','sticker','mono','duotone','spotlight'];
+    const k = list.includes(kind) ? kind : 'none';
+    const col = hexNorm(accent||'#64748b');
+    const hue = (()=>{
+      try{
+        const h=col.slice(1);
+        const r=parseInt(h.slice(0,2),16)/255, g=parseInt(h.slice(2,4),16)/255, b=parseInt(h.slice(4,6),16)/255;
+        const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+        let hh=0;
+        if(d){
+          if(max===r) hh=60*(((g-b)/d)%6);
+          else if(max===g) hh=60*((b-r)/d+2);
+          else hh=60*((r-g)/d+4);
+        }
+        return Math.round(hh<0?hh+360:hh);
+      }catch(e){ return 200; }
+    })();
+    switch(k){
+      case 'ring':
+        return { wrapExtra:`border:2px solid ${col} !important;box-shadow:0 0 0 5px ${col}33,0 16px 32px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
+      case 'glass':
+        return { wrapExtra:`border:2px solid rgba(255,255,255,.62) !important;box-shadow:0 0 0 4px rgba(255,255,255,.16),0 16px 30px rgba(0,0,0,.30) !important;`, imgExtra:'', overlay:'' };
+      case 'film':
+        return { wrapExtra:`border:5px solid #fff !important;border-radius:6px !important;box-shadow:0 16px 28px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
+      case 'sticker':
+        return { wrapExtra:`border:4px solid #fff !important;transform:rotate(-4deg) !important;box-shadow:0 14px 26px rgba(0,0,0,.36) !important;`, imgExtra:'', overlay:'' };
+      case 'mono':
+        return { wrapExtra:'', imgExtra:'filter:grayscale(1) contrast(1.08) !important;', overlay:'' };
+      case 'duotone':
+        return { wrapExtra:'', imgExtra:`filter:grayscale(.55) sepia(.35) saturate(2.4) hue-rotate(${hue}deg) contrast(1.05) !important;`, overlay:'' };
+      case 'spotlight':
+        return { wrapExtra:'', imgExtra:'', overlay:`<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(0,0,0,0) 32%,rgba(0,0,0,.55) 100%);pointer-events:none"></div>` };
+      default:
+        return { wrapExtra:'', imgExtra:'', overlay:'' };
+    }
   };
 
   // (darkfix25) 사이트가 다크모드일 때, 카드 자체 스타일(su_sc_mode)이 campus/vivid/soft/minimal/mono처럼

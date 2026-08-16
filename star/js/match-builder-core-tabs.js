@@ -23,10 +23,16 @@ function rInd(C,T){
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
   let h='';
+  // (신규기능) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
+  // (대전기록 탭〉개인전 서브탭과 동일한 'ind' 상태를 공유해 두 화면에서 같은 보기모드가 유지됨)
+  // (요청사항) 보기모드 버튼은 "최신순/오래된순" 바로 우측(같은 줄)에 이어붙이되,
+  // 날짜필터/정렬/보기모드 세 그룹이 한눈에 구분되도록 구분선(hist-inline-sep)으로 나눈다
   const extra = (indSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('ind', true)
+      + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`
+      + (indSub==='records' && typeof histTabViewModeBarHTML==='function' ? `<span class="hist-inline-sep"></span>${histTabViewModeBarHTML('ind', true)}` : ''))
     : '';
   h+=_buildMatchSubtabShell(indSub, subOpts, '_indFilterOpen', extra, 'ind');
   if(indSub==='input'&&_li){
@@ -34,7 +40,10 @@ function rInd(C,T){
   } else if(indSub==='rank'){
     h+=indRankHTML();
   } else {
-    h+=indRecordsHTML();
+    // 보기모드 버튼줄은 위 _buildMatchSubtabShell에서 이미 별도 줄로 붙였으므로 suppressBar로 중복 방지
+    h += (typeof histTabWithViewModes==='function')
+      ? histTabWithViewModes('ind', ()=>indRecordsHTML(), {suppressBar:true})
+      : indRecordsHTML();
   }
   C.innerHTML=h;
 }
@@ -102,18 +111,28 @@ function rGJ(C,T,proOnly,proInput){
   const _gjSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
   if(!showInput&&gjSub==='input') gjSub='records';
   let h='';
+  const _gjAltTab = proOnly ? 'progj' : 'gj';
+  // (신규기능) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
+  // (대전기록 탭〉끝장전·프로 끝장전 서브탭과 동일한 상태를 공유해 두 화면에서 같은 보기모드가 유지됨)
+  // (요청사항) 보기모드 버튼은 "최신순/오래된순" 바로 우측(같은 줄)에 이어붙이되,
+  // 날짜필터/정렬/보기모드 세 그룹이 한눈에 구분되도록 구분선(hist-inline-sep)으로 나눈다
   const extra = (gjSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('gj', true)
+      + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`
+      + (gjSub==='records' && typeof histTabViewModeBarHTML==='function' ? `<span class="hist-inline-sep"></span>${histTabViewModeBarHTML(_gjAltTab, true)}` : ''))
     : '';
-  h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra, proOnly?'progj':'gj');
+  h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra, _gjAltTab);
   if(gjSub==='input'&&_li&&showInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
     h+=gjRankHTML(proOnly);
   } else {
-    h+=gjRecordsHTML(proOnly);
+    // 보기모드 버튼줄은 위 _buildMatchSubtabShell에서 이미 별도 줄로 붙였으므로 suppressBar로 중복 방지
+    h += (typeof histTabWithViewModes==='function')
+      ? histTabWithViewModes(_gjAltTab, ()=>gjRecordsHTML(proOnly), {suppressBar:true})
+      : gjRecordsHTML(proOnly);
   }
   C.innerHTML=h;
 }

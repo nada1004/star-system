@@ -3,34 +3,9 @@
 // - settings.js에서 분리
 // ─────────────────────────────────────────────────────────────
 
-window.cfgSetAppFontSettings = function(){
-  let preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
-  const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
-  let fam      = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-  // CSS 직접 입력은 줄바꿈/앞뒤 공백이 의미 있을 수 있어 trim 하지 않음
-  const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '');
-  // 프리셋 드롭다운에서 "커스텀:FontName" 형태로 선택한 경우
-  try{
-    if(/^custom:/.test(preset)){
-      const name = preset.slice('custom:'.length).trim();
-      preset = 'custom';
-      if(name){
-        fam = `${name}, "Noto Sans KR", sans-serif`;
-        const inp = document.getElementById('cfg-appfont-family');
-        if(inp) inp.value = fam;
-      }
-    }
-  }catch(e){}
-  try{ localStorage.setItem('su_app_font_preset', preset); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css', cssUrl); }catch(e){}
-  try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css_text', cssTxt); }catch(e){}
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
-};
+// cfgSetAppFontSettings 정의는 js/init-theme-apply.js로 이전됨
+// (index.html 로드 순서상 이 파일보다 나중에 로드되어 실제로는 그쪽 정의가 항상 적용되므로,
+//  두 곳에 중복 정의해 혼동을 만들지 않도록 여기서는 제거함. _applyAppFont와 함께 관리)
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 전역 폰트 크기 — 기기별 분리
@@ -38,43 +13,9 @@ window.cfgSetAppFontSettings = function(){
 //   su_app_font_scale_pc_pct / su_app_font_scale_tb_pct / su_app_font_scale_mb_pct
 //   (구버전 호환: su_app_font_scale_pct)
 // ─────────────────────────────────────────────────────────────
-window.cfgSetAppFontScalePct = function(device, v){
-  try{
-    const n = Math.max(85, Math.min(130, parseInt(v||'100',10)||100));
-    const key = device==='pc' ? 'su_app_font_scale_pc_pct' : device==='tb' ? 'su_app_font_scale_tb_pct' : device==='mb' ? 'su_app_font_scale_mb_pct' : 'su_app_font_scale_pct';
-    localStorage.setItem(key, String(n));
-    if(key === 'su_app_font_scale_pct'){
-      localStorage.setItem('su_app_font_scale_pc_pct', String(n));
-      localStorage.setItem('su_app_font_scale_tb_pct', String(n));
-      localStorage.setItem('su_app_font_scale_mb_pct', String(n));
-    }
-  }catch(e){}
-  try{
-    const id = device==='pc' ? 'cfg-appfont-scale-pc-v' : device==='tb' ? 'cfg-appfont-scale-tb-v' : device==='mb' ? 'cfg-appfont-scale-mb-v' : 'cfg-appfont-scale-v';
-    const key = device==='pc' ? 'su_app_font_scale_pc_pct' : device==='tb' ? 'su_app_font_scale_tb_pct' : device==='mb' ? 'su_app_font_scale_mb_pct' : 'su_app_font_scale_pct';
-    const el=document.getElementById(id);
-    if(el) el.textContent = (localStorage.getItem(key)||'100') + '%';
-  }catch(e){}
-  try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
-};
-window.cfgResetAppFontScalePct = function(){
-  try{
-    ['su_app_font_scale_pct','su_app_font_scale_pc_pct','su_app_font_scale_tb_pct','su_app_font_scale_mb_pct'].forEach(k=>localStorage.removeItem(k));
-  }catch(e){}
-  try{
-    [['cfg-appfont-scale-pc','100'],['cfg-appfont-scale-tb','100'],['cfg-appfont-scale-mb','100']].forEach(([id,v])=>{ const r=document.getElementById(id); if(r) r.value=v; });
-  }catch(e){}
-  try{
-    [['cfg-appfont-scale-pc-v','100%'],['cfg-appfont-scale-tb-v','100%'],['cfg-appfont-scale-mb-v','100%']].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.textContent=v; });
-  }catch(e){}
-  try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
-};
+// cfgSetAppFontScalePct / cfgResetAppFontScalePct 정의는 js/settings-data-uiprefs.js로 이전됨
+// (index.html 로드 순서상 이 파일보다 나중에 로드되어 실제로는 그쪽 정의가 항상 적용되므로,
+//  두 곳에 중복 정의해 혼동을 만들지 않도록 여기서는 제거함)
 
 // 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록/별칭 편집기 갱신
 // [FIX] 이 스크립트는 render-core.js보다 먼저 로드되기 때문에, 로드 시점에
@@ -173,38 +114,6 @@ window.cfgRenderAppFontAliasEditor = function(){
     `;
   }).join('');
 };
-window.cfgRenderCustomFontPresetOptions = function(){
-  const sel = document.getElementById('cfg-appfont-custompreset');
-  if(!sel) return;
-  const fams = window.cfgGetCustomFontFamilies ? window.cfgGetCustomFontFamilies() : [];
-  const cur = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-  const curMain = cur.split(',')[0].replace(/['"]/g,'').trim();
-  let html = `<option value="">(직접입력에서 자동 추출)</option>`;
-  fams.forEach(f=>{
-    const on = (curMain && curMain.toLowerCase() === f.toLowerCase());
-    html += `<option value="${esc(f)}" ${on?'selected':''}>${esc(f)}</option>`;
-  });
-  sel.innerHTML = html;
-};
-window.cfgApplyCustomFontPreset = function(v){
-  const val = String(v||'').trim();
-  if(!val) return;
-  const inp = document.getElementById('cfg-appfont-family');
-  if(inp){
-    inp.value = `${val}, "Noto Sans KR", sans-serif`;
-  }
-  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
-};
-
-// (추가) font-family를 입력 없이 고르기(요청): 드롭다운 선택 → 바로 적용
-window.cfgApplyFontFamilyChoice = function(v){
-  const val = String(v||'').trim();
-  if(!val) return;
-  try{
-    const presetSel = document.getElementById('cfg-appfont-preset');
-    if(presetSel) presetSel.value = 'custom';
-  }catch(e){}
-  const inp = document.getElementById('cfg-appfont-family');
-  if(inp) inp.value = val;
-  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
-};
+// cfgRenderCustomFontPresetOptions / cfgApplyCustomFontPreset / cfgApplyFontFamilyChoice 정의는
+// js/settings-data-uiprefs.js로 이전됨 (index.html 로드 순서상 이 파일보다 나중에 로드되어
+// 실제로는 그쪽 정의가 항상 적용되므로, 두 곳에 중복 정의해 혼동을 만들지 않도록 여기서는 제거함)

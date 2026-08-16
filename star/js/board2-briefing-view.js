@@ -441,6 +441,7 @@ function _b2WeeklyBriefingView() {
         <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
         <button type="button" class="b2w2-btn b2w2-ghostbtn no-export" onclick="_b2ResetBriefingFilters()" title="이번주 브리핑으로 초기화" aria-label="초기화">↺</button>
       </div>
+      <button type="button" id="b2w2-speak-btn" class="b2w2-btn no-export" title="브리핑 음성으로 듣기" onclick="_b2BriefingToggleSpeak()">🔊 음성듣기</button>
       <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 2px 10px;border-bottom:1px dashed var(--b2w-rule-soft);margin-bottom:16px">
@@ -1046,6 +1047,27 @@ function _b2WeeklyBriefingView() {
     });
 
     h += `</div></div>`;
+
+    // ── 🔊 브리핑 음성듣기(TTS)용 데이터 스냅샷 저장 ──
+    // (이 함수 안에서 이미 계산해둔 통계를 그대로 재사용, 별도 재계산 없음)
+    try{
+      window._b2BriefingSpeakSnapshot = {
+        title: _briefingInfo.title,
+        isMonthly: _isMonthly,
+        dateFrom, dateTo,
+        totalGames: _totalGames,
+        activeUnivCount: _activeUnivs,
+        activePlayerCount: activePlayers.length,
+        mvp, mvp2, worstPlayer,
+        rankedUnivs: _isMonthly ? rankedUnivs : null,
+        topUnivs: !_isMonthly ? topUnivs : null,
+        silentUnivs,
+        hotPlayer, coldPlayer,
+        streakPlayer, loseStreakPlayer,
+        bestWrPlayer, mostWinsPlayer, mostActivePlayer
+      };
+    }catch(e){}
+
     return h;
 
   } catch(e) {

@@ -146,8 +146,23 @@ const _imgDataUrlCache = (window._imgDataUrlCache = window._imgDataUrlCache || {
 const _imgDataUrlInflight = (window._imgDataUrlInflight = window._imgDataUrlInflight || {});
 const _imgDataUrlCacheOrder = (window._imgDataUrlCacheOrder = window._imgDataUrlCacheOrder || []);
 async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
-  const imgs = [...container.querySelectorAll('img')];
+  // 캡처 대상 안에는 숨겨진 탭/모달 복사본까지 들어와 이미지가 수백~천 개가 되는 경우가 있다.
+  // 전부 data URL 로 바꾸려 하면 '저장 중' 상태가 사실상 끝나지 않으므로,
+  // (1) 실제로 보이는 이미지만 변환하고 (2) 전체 작업에 상한 시간을 둔다. (2026-08-16)
+  const _allImgs = [...container.querySelectorAll('img')];
+  const imgs = _allImgs.filter(im => {
+    try{
+      if(!im.getAttribute('src')) return false;
+      if(im.closest('[hidden],[style*="display:none"],[style*="display: none"]')) return false;
+      const r = im.getBoundingClientRect();
+      if(!r.width || !r.height) return false;
+      const cs = getComputedStyle(im);
+      if(cs.display === 'none' || cs.visibility === 'hidden') return false;
+      return true;
+    }catch(e){ return true; }
+  });
   const maxConcurrent = 20;
+  const overallDeadline = Date.now() + Math.max(timeoutMs, 15000);
   let idx = 0;
   let doneCount = 0;
 
@@ -294,6 +309,7 @@ async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
     while(true){
       const i = idx++;
       if(i >= imgs.length) break;
+      if(Date.now() > overallDeadline) break; // 상한 초과 시 남은 이미지는 원본 URL 그대로 사용
       try{ await convertOne(imgs[i]); }catch(e){}
       doneCount++;
       if(typeof onProgress === 'function'){
@@ -589,6 +605,10 @@ async function _dlCanvasBoard(canvas, filename) {
 async function _captureAndSave(tmpDiv, w, h, filename) {
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
+  // html2canvas가 못 읽는 color-mix()/color() 등의 CSS 색상 함수를 안전한 값으로 치환
+  // (라인업 테이블형처럼 style 태그에 color-mix()가 포함된 뷰를 저장할 때
+  //  "Attempting to parse an unsupported color function \"color\"" 오류가 나던 문제 수정)
+  try{ if(typeof _sanitizeUnsupportedCssFunctions==='function') _sanitizeUnsupportedCssFunctions(tmpDiv); }catch(e){}
   try{
     // 레이아웃 강제 flush: 고정 80ms×2 대신 rAF 2프레임으로 최소 대기
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -631,6 +651,7 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
             try{ clonedDoc.adoptedStyleSheets = []; }catch(e){}
           }
         }catch(e){}
+        try{ if(typeof _sanitizeUnsupportedColorsInDoc==='function') _sanitizeUnsupportedColorsInDoc(clonedDoc); }catch(e){}
         if(!aggressive) return;
         try{ clonedDoc.querySelectorAll('svg').forEach(el => el.remove()); }catch(e){}
         try{

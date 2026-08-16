@@ -9,7 +9,7 @@ function _bindPlayerHeaderDelegatedEvents(){
       e.preventDefault();
       try{ cm('playerModal'); }catch(_){}
       const univ = el.getAttribute('data-pph-univ') || '';
-      setTimeout(()=>{ if(typeof openUnivModal === 'function') openUnivModal(univ); }, 100);
+      if(typeof openUnivModal === 'function') openUnivModal(univ);
     }
   });
 }
@@ -168,6 +168,18 @@ function buildPlayerHeaderCardHTML(opts){
 
   const photoBorder = `width:${pmPhotoSz+14}px;height:${pmPhotoSz+14}px;border-radius:var(--su_profile_radius,${pmPhotoR+6}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.14);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 10px 28px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.1));backdrop-filter:blur(8px)`;
 
+  // 프로필 이미지·이름·배너 효과 (스트리머 정보 수정 패널에서 설정, 대학 상세와 동일한 효과 세트 공유)
+  const _pdPhotoFx = String(p.pdPhotoFx || 'none');
+  const _pdPhotoFilterFxSet = ['glow','shadow','aura','rainbow','flash','flicker'];
+  const _pdPhotoBoxFxSet = ['float','shine','spotlight','prism','sparkle','pulse','tilt','halo','wobble','orbit','flip','bounce'];
+  const _pdPhotoInnerClass = _pdPhotoFilterFxSet.includes(_pdPhotoFx) ? ` ud-logo-fx-${_pdPhotoFx}` : '';
+  const _pdPhotoOuterClass = _pdPhotoBoxFxSet.includes(_pdPhotoFx) ? ` ud-logo-fx-${_pdPhotoFx}` : '';
+  const _pdNameFx = String(p.pdNameFx || 'none');
+  const _pdNameClass = _pdNameFx !== 'none' ? ` ud-name-fx-${_pdNameFx}` : '';
+  const _pdHeroFx = String(p.pdHeroFx || 'none');
+  const _pdHeroFxClass = _pdHeroFx !== 'none' ? ` ud-hero-fx-${_pdHeroFx}` : '';
+  const _pdPhotoWrap = (boxPx, borderStyle) => `<span class="pd-hero-photo-fxwrap${_pdPhotoOuterClass}" style="position:relative;display:inline-flex;flex-shrink:0;--ud-logo-box:${boxPx}px"><div class="pd-hero-photo ph-swap${_pdPhotoInnerClass}" style="${borderStyle}">${photoHTML}</div></span>`;
+
   const _glassChipShadow = 'box-shadow:0 2px 8px rgba(0,0,0,.08);';
   const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
@@ -208,10 +220,10 @@ function buildPlayerHeaderCardHTML(opts){
 
   const hdrContent_PC = `
     <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
-      <div class="pd-hero-photo ph-swap" style="${photoBorder}">${photoHTML}</div>
+      ${_pdPhotoWrap(pmPhotoSz+14, photoBorder)}
       <div class="pd-hero-meta" style="min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-          <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
+          <span class="pd-hero-name${_pdNameClass}" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
@@ -230,9 +242,9 @@ function buildPlayerHeaderCardHTML(opts){
   const hdrContent_MB = `
     <div class="pd-hero-main pd-hero-main--mb" style="display:flex;flex-direction:column;gap:11px;position:relative">
       <div class="pd-hero-row" style="display:flex;align-items:center;gap:12px">
-        <div class="pd-hero-photo ph-swap" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
+        ${_pdPhotoWrap(pmPhotoSz+8, photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`))}
         <div class="pd-hero-meta" style="min-width:0;flex:1">
-          <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
+          <div class="pd-hero-name${_pdNameClass}" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierRaceBadge}
           </div>
@@ -248,7 +260,7 @@ function buildPlayerHeaderCardHTML(opts){
     </div>`;
 
   return `<div class="pd-hero" data-pd-layout="${layoutMode}" style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.16);border-radius:${pmCardR+6}px;margin-bottom:16px;overflow:hidden;box-shadow:0 20px 52px rgba(15,23,42,.12),0 4px 16px rgba(15,23,42,.06)">
-    <div class="pd-hero-top" style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
+    <div class="pd-hero-top${_pdHeroFxClass}" style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
       ${bgLayerHTML}
       ${noiseOverlay}
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(15,23,42,.06),rgba(15,23,42,.26));pointer-events:none"></div>

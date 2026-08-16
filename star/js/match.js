@@ -215,6 +215,7 @@ function setFilterYear(y, section){
   openDetails={};
   window._ttPageMap=window._ttPageMap||{};
   window._ttPageMap['tiertour-gen']=0;
+  if(typeof histPage!=='undefined'){histPage['tourney']=0;histPage['tourney-gen']=0;histPage['tourney-league']=0;histPage['tourney-bkt']=0;}
   render();
 }
 
@@ -223,6 +224,7 @@ function setFilterMonth(m, section){
   openDetails={};
   window._ttPageMap=window._ttPageMap||{};
   window._ttPageMap['tiertour-gen']=0;
+  if(typeof histPage!=='undefined'){histPage['tourney']=0;histPage['tourney-gen']=0;histPage['tourney-league']=0;histPage['tourney-bkt']=0;}
   render();
 }
 

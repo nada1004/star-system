@@ -515,6 +515,7 @@ function _prHeroHTML(p){
     <div class="pr-hero-actions no-export">
       <button class="pr-btn pr-btn-primary" onclick="openPlayerModal('${escJS(p.name)}')">👤 상세 프로필</button>
       <a class="pr-btn pr-btn-ghost pr-btn-iconOnly" href="${eloBoardUrl}" target="_blank" rel="noopener" title="ELO 보드">📡<span>ELO 보드</span></a>
+      <button id="pr-report-speak-btn" class="pr-btn pr-btn-ghost pr-btn-iconOnly" title="리포트 음성으로 듣기" onclick="_prToggleSpeak()">🔊<span>음성듣기</span></button>
       <button class="pr-btn pr-btn-ghost pr-btn-iconOnly" title="리포트 이미지 저장" onclick="_prSaveReportImage()">📸<span>리포트 이미지 저장</span></button>
     </div>
   </div>`;
@@ -547,6 +548,7 @@ function _prOnSearchInput(val){
   drop.style.display='block';
 }
 function _prSelectPlayer(name){
+  try{ if(window.SUTTS) window.SUTTS.stop(); }catch(e){}
   window._prName = name;
   window._prVsOpp = '';
   window._prTableLimit = 20;

@@ -2,6 +2,92 @@
    보드2 - 선수 목록 메인 뷰 렌더러 (board2-players.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// [FIX-NO-GRID-REFRESH] 우측 그리드의 카드 1장을 그리는 로직을 별도 함수로 분리.
+// _b2PlayersView() 전체 렌더와, 저장 후 카드 1장만 갱신하는 _b2UpdatePlayerCard()가
+// 이 함수를 함께 재사용해서, "카드 1개만 바뀌었는데 그리드 전체가 다시 그려지며
+// 모든 사진이 새로고침되는" 문제 없이 항상 동일한 마크업을 보장한다.
+// [FIX-IMG-SLOW] 그리드 카드 이미지의 loading/fetchpriority를 카드 순서에 따라
+// 다르게 준다. 처음 화면에 보이는 만큼(대략 상단 2줄)만 eager+high로 즉시 받고,
+// 그 아래(스크롤해야 보이는) 카드들은 lazy로 미뤄서 한꺼번에 수십~수백 장이
+// 동시에 "높은 우선순위"로 요청되며 정작 화면에 보이는 이미지까지 늦게 뜨는
+// 현상을 막는다.
+const _B2_GRID_EAGER_COUNT = 18;
+function _b2PlayersCardHTML(p, hexToRgba, idx) {
+  hexToRgba = hexToRgba || ((h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;});
+  const _eager = (typeof idx === 'number' && idx >= 0) ? (idx < _B2_GRID_EAGER_COUNT) : true;
+  const _loadAttr = _eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  const encodedPlayerName = encodeURIComponent(String(p.name || ''));
+  const playerColor = gc(p.univ) || '#6366f1';
+  const playerTheme = {
+    bg: hexToRgba(playerColor, 0.1),
+    border: playerColor
+  };
+  const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
+  const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+  const raceTxt  = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '';
+  const gridUnivIcon = (() => {
+    const uCfg = univCfg.find(x => x.name === p.univ) || {};
+    return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
+  })();
+  // 우측 호버 스크럽 미리보기용 두번째 프로필 이미지 (PC 전용, 동영상 제외)
+  const _gridSecondRaw = String(p.secondProfileFile || '').trim();
+  const _gridSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_gridSecondRaw);
+  const gridSecondPhoto = (_gridSecondRaw && !_gridSecondIsVideo) ? _gridSecondRaw : '';
+  const _gridSecondIsGif = /\.gif(\?|$)/i.test(_gridSecondRaw);
+  // gif는 toScaledUrl(webp 변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+  const gridSecondSrc = gridSecondPhoto ? (_gridSecondIsGif ? toHttpsUrl(gridSecondPhoto) : toScaledUrl(gridSecondPhoto,260)) : '';
+
+  return `
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
+        ${p.photo
+          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" ${_loadAttr} decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+             <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+        }
+        ${gridSecondPhoto
+          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+          : ''
+        }
+        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
+        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
+          <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
+            ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
+            <span style="color:rgba(255,255,255,.85);font-size:var(--fs-base);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
+            ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
+            <span style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.95)">${p.univ||'무소속'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+}
+
+// [FIX-NO-GRID-REFRESH] 프로필 저장 후 "이 선수 카드 1장"만 그리드에서 교체한다.
+// 기존에는 저장할 때마다 #b2-content 전체(=그리드의 모든 <img>)를 innerHTML로
+// 다시 만들어서, 방금 수정한 선수뿐 아니라 화면에 있던 다른 모든 스트리머의 사진까지
+// 브라우저가 새로 요청/디코딩하며 "전체가 새로고침되는" 것처럼 보였다.
+// 이제는 해당 선수의 카드 엘리먼트만 찾아 outerHTML을 교체해서 나머지 카드는
+// DOM에 전혀 손대지 않는다(=이미지 재요청 없음).
+function _b2UpdatePlayerCard(playerName) {
+  try {
+    const p = players.find(x => x.name === playerName);
+    if (!p) return false;
+    const key = encodeURIComponent(String(playerName || ''));
+    const cardEl = document.querySelector(`.b2-players-card[data-player-key="${key}"]`);
+    if (!cardEl) return false;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = _b2PlayersCardHTML(p);
+    const newCard = wrap.firstElementChild;
+    if (!newCard) return false;
+    cardEl.replaceWith(newCard);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+try{ window._b2UpdatePlayerCard = _b2UpdatePlayerCard; }catch(e){}
+
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
   const visPlayers = players.filter(p => {
@@ -652,24 +738,76 @@ function _b2PlayersView() {
   const _p9pos = _b2PosPct(_b2SelectedPlayer.photo9PosUse, _b2SelectedPlayer.photo9PosX, _b2SelectedPlayer.photo9PosY);
   const _p10pos = _b2PosPct(_b2SelectedPlayer.photo10PosUse, _b2SelectedPlayer.photo10PosX, _b2SelectedPlayer.photo10PosY);
   try{
+    // [FIX-IMG-SWAP-PREWARM] 우측 그리드 썸네일은 기존처럼 썸네일 프록시로 미리 받고,
+    // 좌측 메인 슬라이드쇼(선수 탭 최초 진입 시 표시되는 선수)의 이미지도 실제 표시에
+    // 쓰이는 URL 그대로 미리 받아야 전환 시 콜드 로딩으로 인한
+    // "화면이 비었다가 뚝 끊기듯 나타나는" 현상이 없다 (board2-players-main-display.js의
+    // _b2UpdateMainDisplay와 동일한 수정).
+    // [FIX-IMG-HERO-SCALED] 예전엔 여기서 toHttpsUrl(원본)을 그대로 프리웜해서,
+    // 원본 사진이 수백KB~수MB인 경우 프로필탭 좌측 히어로 이미지가 늦게 뜨는 원인이
+    // 됐다. 아래 _b2MainMediaHTML과 동일하게 리사이즈 프록시(toScaledUrl)를 써서
+    // "프리웜 URL === 실제 표시 URL"을 유지하면서도 훨씬 가벼운 이미지를 받는다.
     if(typeof prewarmImageUrls==='function'){
-      prewarmImageUrls([
-        _b2SelectedPlayer.photo,
-        _b2SelectedPlayer.secondProfileFile,
-        ...tierFilteredPlayers.map(p=>p.photo).filter(Boolean)
-      ], 24);
+      prewarmImageUrls(tierFilteredPlayers.map(p=>p.photo).filter(Boolean), 24);
     }
+    const _b2InitPrewarmIsVideo = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+    };
+    const _b2InitPrewarmIsGif = (u)=>{
+      const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+      return s.endsWith('.gif');
+    };
+    // [FIX-IMG-SLOW] 슬롯1(선택된 선수의 대표 사진)은 아래 _slot1의 <img>가
+    // fetchpriority="high"로 바로 요청하므로, 여기서 동시에 new Image()로 같은 URL을
+    // 또 요청하면 지금 화면에 보이는 이미지 요청과 우선순위를 다투게 돼 오히려 늦게
+    // 뜨는 원인이 됐다. 슬롯1은 건너뛰고 나머지 슬라이드쇼용 슬롯부터 프리웜한다.
+    // [FIX-IMG-SLOT-LATE] requestIdleCallback으로 미루면 브라우저가 바쁠 때 다음 전환
+    // 시점까지도 프리웜이 안 끝나 "2~10번 이미지가 늦게 뜬다"는 원인이 됐다 — 슬롯 순서대로
+    // 짧은 간격(80ms)만 두고 곧바로 요청을 시작하도록 바꾼다.
+    [
+      _b2SelectedPlayer.photo, _b2SelectedPlayer.secondProfileFile, _b2SelectedPlayer.profileFile3,
+      _b2SelectedPlayer.profileFile4, _b2SelectedPlayer.profileFile5, _b2SelectedPlayer.profileFile6,
+      _b2SelectedPlayer.profileFile7, _b2SelectedPlayer.profileFile8, _b2SelectedPlayer.profileFile9,
+      _b2SelectedPlayer.profileFile10
+    ].forEach((rawUrl, _slotIdx)=>{
+      if(_slotIdx === 0) return; // 슬롯1은 아래에서 이미 high-priority로 로딩됨
+      const u = _normMediaUrl(rawUrl);
+      if(!u || _b2InitPrewarmIsVideo(u)) return;
+      // [FIX-GIF-STATIC] gif는 실제 표시(_b2MainMediaHTML)와 동일하게 원본 그대로 프리웜
+      const src = _b2InitPrewarmIsGif(u) ? toHttpsUrl(u) : ((typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u));
+      if(!src) return;
+      window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
+      if(window._b2PrewarmedFullUrls.has(src)) return;
+      window._b2PrewarmedFullUrls.add(src);
+      setTimeout(()=>{
+        try{
+          const _img = new Image();
+          try{ _img.decoding = 'async'; }catch(e){}
+          _img.src = src;
+        }catch(e){}
+      }, _slotIdx * 80);
+    });
   }catch(e){}
 
   const _b2IsVideoUrl = (u)=>{
     const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
     return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
   };
+  // [FIX-GIF-STATIC] gif는 리사이즈 프록시를 거치면 webp로 재인코딩되며 애니메이션이
+  // 사라지므로(첫 프레임만 남는 정지 이미지) 원본 URL을 그대로 사용한다.
+  const _b2IsGifUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.gif');
+  };
   const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
     const url = String(rawUrl||'').trim();
     if(!url) return '';
-    const src = toHttpsUrl(url);
     const isVid = _b2IsVideoUrl(url);
+    const isGif = !isVid && _b2IsGifUrl(url);
+    // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
+    // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
+    const src = (isVid || isGif) ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
@@ -684,7 +822,10 @@ function _b2PlayersView() {
     // 실패하면 그때 해당 슬롯을 완전히 숨긴다 (첨부파일 아이콘처럼 보이는 현상 방지).
     const onErrJs = `var _t=this;var _fail=function(){_t.dataset.b2Broken='1';_t.style.opacity='0';_t.style.visibility='hidden';try{if(typeof window._b2HandleMediaFailure==='function'){window._b2HandleMediaFailure(_t);}}catch(e){}};var _n=(parseInt(_t.dataset.b2ErrCount||'0',10)+1);_t.dataset.b2ErrCount=_n;if(_n===1){var _o=_t.src;var _re=new Image();_re.onload=function(){_t.src=_o;};_re.onerror=function(){_fail();};setTimeout(function(){_re.src=_o;},600);}else{_fail();}`;
     if(isVid){
-      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
+      // [FIX-VIDEO-NOT-PLAYING] 지금 바로 보이는 슬롯(opacity 1)은 preload="auto"로
+      // 미리 버퍼링해서 즉시 재생되게 하고, 아직 안 보이는 슬롯은 metadata만 받는다.
+      const _vidPreload = (Number(opacity) === 1) ? 'auto' : 'metadata';
+      return `<video ${common} src="${src}" preload="${_vidPreload}" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
@@ -693,7 +834,7 @@ function _b2PlayersView() {
     ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
       z: 1,
       opacity: 1,
-      onLoadJs: `_b2ScheduleImageSwap('${_b2NameEsc}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
+      onLoadJs: `if(typeof _b2SwapStartOnce==='function'){ _b2SwapStartOnce('${_b2NameEsc}', this); }else if(typeof _b2ScheduleImageSwap==='function'){ _b2ScheduleImageSwap('${_b2NameEsc}'); } if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
       style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;
@@ -797,53 +938,8 @@ function _b2PlayersView() {
       <div class="b2-players-grid">
   `;
 
-  _gridShow.forEach(p => {
-    const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
-    const encodedPlayerName = encodeURIComponent(String(p.name || ''));
-    const playerColor = gc(p.univ) || '#6366f1';
-    const playerTheme = {
-      bg: hexToRgba(playerColor, 0.1),
-      border: playerColor
-    };
-    const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
-    const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-    const raceTxt  = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '';
-    const gridUnivIcon = (() => {
-      const uCfg = univCfg.find(x => x.name === p.univ) || {};
-      return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
-    })();
-    // 우측 호버 스크럽 미리보기용 두번째 프로필 이미지 (PC 전용, 동영상 제외)
-    const _gridSecondRaw = String(p.secondProfileFile || '').trim();
-    const _gridSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_gridSecondRaw);
-    const gridSecondPhoto = (_gridSecondRaw && !_gridSecondIsVideo) ? _gridSecondRaw : '';
-    const _gridSecondIsGif = /\.gif(\?|$)/i.test(_gridSecondRaw);
-    // gif는 toScaledUrl(webp 변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
-    const gridSecondSrc = gridSecondPhoto ? (_gridSecondIsGif ? toHttpsUrl(gridSecondPhoto) : toScaledUrl(gridSecondPhoto,260)) : '';
-
-    h += `
-      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
-        ${p.photo
-          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" loading="lazy" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
-             <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
-          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
-        }
-        ${gridSecondPhoto
-          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
-          : ''
-        }
-        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
-          <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
-            ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
-            <span style="color:rgba(255,255,255,.85);font-size:var(--fs-base);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
-            ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
-            <span style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.95)">${p.univ||'무소속'}</span>
-          </div>
-        </div>
-      </div>
-    `;
+  _gridShow.forEach((p, idx) => {
+    h += _b2PlayersCardHTML(p, hexToRgba, idx);
   });
 
   h += `

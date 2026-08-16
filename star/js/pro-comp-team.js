@@ -6,11 +6,18 @@ function proCompTeamSection(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   const tms = tn.teamMatches||[];
   let h = `<div style="font-weight:900;font-size:var(--fs-md);color:var(--blue);margin-bottom:12px">🏆 ${tn.name} 팀전</div>`;
+  if(typeof pcAltViewModeBarHTML==='function'){
+    h += `<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">${pcAltViewModeBarHTML('pcteam')}</div>`;
+  }
   if (isLoggedIn) {
     h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-b btn-sm" onclick="proCompCreateTeamMatch('${tn.id}')">+ 경기 추가</button>
       <button class="btn btn-w btn-sm" onclick="proCompOpenTeamPasteModal('${tn.id}',null)">📋 일괄 입력</button>
     </div>`;
+  }
+  // (신규기능) 미니 기본/그리드/컴팩트 테이블형 보기모드
+  if((typeof pcAltViewMode==='function') && pcAltViewMode('pcteam')!=='basic'){
+    return h + pcAltRecordsHTML('pcteam', tn);
   }
   if (!tms.length) {
     h += `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">팀을 구성하고 경기 결과를 기록할 수 있습니다</div></div>`;

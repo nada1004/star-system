@@ -63,7 +63,7 @@ function _renderCfgMatchDetailSection(){
   const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
-  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo','league','noir','blueprint'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','focus','broadcast','poster','arena','cute','magazine','nintendo'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
@@ -89,7 +89,10 @@ function _renderCfgMatchDetailSection(){
           ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)'],
           ['retro','레트로','80s 아케이드풍 원색 대비','linear-gradient(135deg,#fde047,#ef4444)'],
           ['paper','스크랩북','종이 질감의 다이어리 콜라주 톤','linear-gradient(135deg,#fef3c7,#fbcfe8)'],
-          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)']
+          ['holo','홀로그램','펄이 도는 무지개빛 글로시 톤','linear-gradient(135deg,#a5f3fc,#f0abfc,#fde68a)'],
+          ['league','리그 오피셜','실제 중계 그래픽풍 · 팀컬러 스코어보드','linear-gradient(135deg,#111827,#dc2626 55%,#f8fafc)'],
+          ['noir','느와르 필름','흑백 고대비 시네마틱 톤','linear-gradient(135deg,#0a0a0a,#4b5563,#e5e7eb)'],
+          ['blueprint','블루프린트','청사진 제도 라인 도식 톤','linear-gradient(135deg,#0b3d91,#1e4fb0,#3b6fd6)']
         ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdDesignMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailMode('${key}')"
           style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdDesignMode===key?'2px':'1px'}">
           <span style="display:block;height:52px;background:${bg};padding:8px;position:relative">
@@ -334,7 +337,7 @@ function _refreshOpenMatchDetailModals(){
 }
 
 function cfgSetMatchDetailMode(mode){
-  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo'].includes(mode)?mode:'classic'); }catch(e){}
+  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','sunset','aurora','mono','retro','paper','holo','league','noir','blueprint'].includes(mode)?mode:'classic'); }catch(e){}
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   try{
     const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();

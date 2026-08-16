@@ -564,7 +564,11 @@ window.saveCurrentView = async function saveCurrentView(){
     const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
     const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
 
-    await _captureAndSave(tmpDiv, w, h, fname);
+    // 이미지가 매우 많은 화면에서 캡처가 무한정 길어져 '저장중' 표시가 사라지지 않는 문제 방지 (2026-08-16)
+    await Promise.race([
+      _captureAndSave(tmpDiv, w, h, fname),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('이미지가 너무 많아 저장이 지연됩니다. 탭/필터를 좁힌 뒤 다시 시도해주세요.')), 180000))
+    ]);
   }catch(e){
     alert('이미지 저장 오류: ' + _captureErrText(e));
   }finally{

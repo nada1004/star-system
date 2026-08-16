@@ -20,7 +20,12 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'memory' && tab !== 'memory' && typeof _mmCleanup === 'function') _mmCleanup();
   if (_gcTab === 'mole' && tab !== 'mole' && typeof _mwCleanup === 'function') _mwCleanup();
   if (_gcTab === 'omok' && tab !== 'omok' && typeof _omCleanup === 'function') _omCleanup();
+  if (_gcTab === 'janggi' && tab !== 'janggi' && typeof _jgCleanup === 'function') _jgCleanup();
+  if (_gcTab === 'othello' && tab !== 'othello' && typeof _otCleanup === 'function') _otCleanup();
+  if (_gcTab === 'teamsplit' && tab !== 'teamsplit' && typeof _tsCleanup === 'function') _tsCleanup();
+  if (_gcTab === 'bracket' && tab !== 'bracket' && typeof _bkCleanup === 'function') _bkCleanup();
   _gcTab = tab;
+  if (_GC_TAB_GROUP[tab]) _gcLastTab[_GC_TAB_GROUP[tab]] = tab;
   render();
   if (tab === 'ladder') {
     setTimeout(()=>{ try{ if(typeof _ldInit==='function') _ldInit(); }catch(e){} }, 60);
@@ -42,9 +47,25 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
   } else if (tab === 'omok') {
     setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
+  } else if (tab === 'janggi') {
+    setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60);
+  } else if (tab === 'othello') {
+    setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60);
+  } else if (tab === 'teamsplit') {
+    setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
+  } else if (tab === 'bracket') {
+    setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
+}
+
+// (추가) 룰렛·추첨 / 미니게임 그룹 전환 — 해당 그룹에서 마지막으로 보던 탭으로 이동
+function _gcSwitchGroup(group) {
+  if (group !== 'roulette' && group !== 'game') return;
+  const fallback = group === 'game' ? 'teammatch' : 'player';
+  const target = _gcLastTab[group] || fallback;
+  _gcSwitchTab(target);
 }
 
 function _gcToggleInput() {

@@ -191,6 +191,27 @@ function savePlayer(){
   if(!newName){alert('이름을 입력하세요.');return;}
   const oldName=editName;
 
+  // [FIX-NO-REFRESH-ON-SAVE] 저장 후 실제로 화면에 보이는 미디어(사진/영상 슬롯·위치·효과)가
+  // 바뀌었을 때만 좌측 메인 이미지 DOM을 다시 그린다. 사진과 무관한 필드(승패/메모/티어 등)만
+  // 바꿔 저장한 경우엔 이미지가 깜빡이며 새로고침(슬라이드쇼도 1번으로 리셋)되는 게 불필요한
+  // 현상이었음 — 아래 스냅샷으로 저장 전/후를 비교해 필요할 때만 전체 재그리기를 한다.
+  const _b2MediaSnapshot = (pl) => JSON.stringify([
+    pl.photo, pl.secondProfileFile, pl.profileFile3, pl.profileFile4, pl.profileFile5,
+    pl.profileFile6, pl.profileFile7, pl.profileFile8, pl.profileFile9, pl.profileFile10,
+    pl.photoPosX, pl.photoPosY, pl.photoPosUse,
+    pl.photo2PosX, pl.photo2PosY, pl.photo2PosUse,
+    pl.photo3PosX, pl.photo3PosY, pl.photo3PosUse,
+    pl.photo4PosX, pl.photo4PosY, pl.photo4PosUse,
+    pl.photo5PosX, pl.photo5PosY, pl.photo5PosUse,
+    pl.photo6PosX, pl.photo6PosY, pl.photo6PosUse,
+    pl.photo7PosX, pl.photo7PosY, pl.photo7PosUse,
+    pl.photo8PosX, pl.photo8PosY, pl.photo8PosUse,
+    pl.photo9PosX, pl.photo9PosY, pl.photo9PosUse,
+    pl.photo10PosX, pl.photo10PosY, pl.photo10PosUse,
+    pl.pdPhotoFx, pl.name, pl.tier, pl.race, pl.univ
+  ]);
+  const _b2MediaBefore = _b2MediaSnapshot(p);
+
   // 이름 변경 시 모든 기록 자동 갱신
   if(newName !== oldName){
     if(players.some(x=>x.name===newName)&&!confirm(`"${newName}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 변경하시겠습니까?`))return;
@@ -336,6 +357,9 @@ function savePlayer(){
 
   p.memo            = _strVal('ed-memo');
   p.channelUrl      = _strVal('ed-channel');
+  p.oneLiner        = _strVal('ed-oneliner');
+  p.bgmUrl          = _strVal('ed-bgm-url');
+  p.bgmVolume       = p.bgmUrl ? Math.max(0,Math.min(100, parseInt(document.getElementById('ed-bgm-vol')?.value||'50',10)||50)) : undefined;
 
   // 이미지 URL (비어 있으면 undefined)
   p.secondProfileFile = _strVal('ed-photo2');
@@ -356,6 +380,11 @@ function savePlayer(){
   const _phbgPos   = (document.getElementById('ed-phbg-pos')?.value || 'center center').trim();
   const _phbgPosX  = _intVal('ed-phbg-posx', 50);
   const _phbgPosY  = _intVal('ed-phbg-posy', 50);
+
+  // 프로필 이미지·이름·배너 효과
+  const _photoFx = (document.getElementById('ed-photo-fx')?.value || 'none').trim();
+  const _nameFx  = (document.getElementById('ed-name-fx')?.value || 'none').trim();
+  const _heroFx  = (document.getElementById('ed-hero-fx')?.value || 'none').trim();
 
   // 공유카드 배경 설정
   const _shareBg     = _strVal('ed-sharebg') || '';
@@ -395,6 +424,9 @@ function savePlayer(){
   p.detailHeaderBgPos=_phbg ? _phbgPos : undefined;
   p.detailHeaderBgPosX=_phbg ? (isNaN(_phbgPosX)?50:Math.max(0,Math.min(100,_phbgPosX))) : undefined;
   p.detailHeaderBgPosY=_phbg ? (isNaN(_phbgPosY)?50:Math.max(0,Math.min(100,_phbgPosY))) : undefined;
+  p.pdPhotoFx=(_photoFx&&_photoFx!=='none') ? _photoFx : undefined;
+  p.pdNameFx=(_nameFx&&_nameFx!=='none') ? _nameFx : undefined;
+  p.pdHeroFx=(_heroFx&&_heroFx!=='none') ? _heroFx : undefined;
   p.shareCardBgImg=_shareBg||undefined;
   p.shareCardBgFit=_shareBgFit||undefined;
   p.shareCardBgScale=_shareBg ? _shareBgScale : undefined;
@@ -408,15 +440,40 @@ function savePlayer(){
   
   // (요청사항) 크루 자동 전환 로직 제거
   
-  render();
+  // [FIX-NO-GRID-REFRESH] 예전에는 여기서 항상 render()로 현재 탭 전체를 다시 그렸는데,
+  // 스트리머탭(board2 players)이 열려있는 상태로 상세 팝업 → 수정 → 저장을 하면
+  // 그리드에 있던 다른 모든 스트리머 카드의 <img>까지 새로 생성되며 "탭 전체가
+  // 새로고침"되는 것처럼 보였다. 스트리머탭이 열려 있을 때는 전체 렌더 대신
+  // 수정한 선수의 카드 1장만 교체하고, 그 외의 탭에서는 기존처럼 전체를 다시 그린다.
+  const _onB2PlayersTab = (typeof curTab !== 'undefined' && curTab === 'board2'
+    && typeof _b2View !== 'undefined' && _b2View === 'players'
+    && !!document.getElementById('b2-content'));
+  if (_onB2PlayersTab) {
+    const _cardUpdated = (typeof window._b2UpdatePlayerCard === 'function') ? window._b2UpdatePlayerCard(p.name) : false;
+    if (!_cardUpdated && typeof _b2PlayersView === 'function') {
+      // 카드를 못 찾은 경우(필터에 걸려 화면에 없었던 등)에만 안전하게 그리드만 다시 그림
+      const _b2ContentEl = document.getElementById('b2-content');
+      if (_b2ContentEl) {
+        _b2ContentEl.innerHTML = _b2PlayersView();
+        try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
+      }
+    }
+  } else {
+    render();
+  }
   try{
     const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
-    // [FIX] 프로필 링크(이미지2~5)를 지운 경우, 스케줄만 다시 잡으면 삭제된 슬롯의 DOM이
-    // 그대로 남아 빈 화면(공백)으로 보일 수 있었음. 슬롯 HTML을 통째로 다시 그려주는
-    // _b2UpdateMainDisplay를 우선 사용하고, 없으면 기존 방식으로 폴백한다.
+    // [FIX-NO-REFRESH-ON-SAVE] 화면에 실제 영향을 주는 미디어 필드가 하나도 안 바뀌었으면
+    // 좌측 메인 이미지 DOM은 그대로 두고(슬라이드쇼 유지), 이름/티어/종족/대학 같은 텍스트만
+    // 가볍게 갱신한다. 사진/영상이 바뀐 경우에만 기존처럼 전체를 다시 그린다.
     if(cur === p.name){
-      if(typeof window._b2UpdateMainDisplay === 'function') window._b2UpdateMainDisplay(p.name);
-      else if(typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+      const _mediaChanged = _b2MediaBefore !== _b2MediaSnapshot(p);
+      if(_mediaChanged){
+        if(typeof window._b2UpdateMainDisplay === 'function') window._b2UpdateMainDisplay(p.name);
+        else if(typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+      } else if(typeof window._b2UpdateMainDisplayInfoOnly === 'function'){
+        window._b2UpdateMainDisplayInfoOnly(p.name);
+      }
     }
   }catch(e){}
   if(typeof openPlayerModal==='function'){

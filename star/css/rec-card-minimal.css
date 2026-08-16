@@ -225,3 +225,85 @@ body.dark .hist-all-mc-avatar-frame{
   text-overflow:ellipsis;
   max-width:100%;
 }
+
+/* ══════════════════════════════════════
+   대전기록탭 '종합〉전체 통합' 신규 보기모드 (2026-08-10)
+   그리드카드형 / 매치업카드형 / 컴팩트테이블형 / 캘린더히트맵형
+══════════════════════════════════════ */
+
+/* 🖼 그리드 카드형 */
+.hist-view-grid-wrap{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+  margin-bottom:4px;
+}
+@media (min-width:640px){
+  .hist-view-grid-wrap{grid-template-columns:repeat(3, minmax(0,1fr));}
+}
+@media (min-width:960px){
+  .hist-view-grid-wrap{grid-template-columns:repeat(4, minmax(0,1fr));}
+}
+.hist-view-grid-card{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px;
+  background:var(--white);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+body.dark .hist-view-grid-card{ background:var(--surface); }
+.hist-view-grid-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.hist-view-grid-mid{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+}
+.hist-view-grid-side{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  flex:1;
+  min-width:0;
+}
+.hist-view-grid-side img{
+  width:56px;height:56px;object-fit:cover;border-radius:14px;flex-shrink:0;
+}
+.hist-view-grid-avatar-fallback{
+  width:56px;height:56px;border-radius:14px;background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--text3);flex-shrink:0;
+}
+.hist-view-grid-name{
+  font-size:var(--fs-sm);font-weight:700;text-align:center;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+}
+.hist-view-grid-score{
+  font-size:15px;font-weight:800;color:var(--text);flex-shrink:0;padding:0 4px;white-space:nowrap;
+}
+.hist-view-grid-map{
+  font-size:var(--fs-caption);color:var(--text3);text-align:center;
+}
+
+/* 📊 컴팩트 테이블형 */
+.hist-view-table-wrap{
+  overflow-x:auto;border:1px solid var(--border);border-radius:12px;
+}
+.hist-view-table{
+  width:100%;border-collapse:collapse;font-size:var(--fs-sm);
+}
+.hist-view-table th{
+  text-align:left;padding:8px 10px;background:var(--surface);color:var(--text2);
+  font-weight:800;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;
+}
+.hist-view-table td{
+  padding:7px 10px;border-bottom:1px solid var(--border);
+}
+.hist-view-table tbody tr:hover{ background:var(--surface); }
+.hist-view-table tbody tr:last-child td{ border-bottom:none; }

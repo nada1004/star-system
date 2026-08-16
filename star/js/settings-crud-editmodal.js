@@ -94,6 +94,7 @@ window.openEP=function(name){
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-header-sec')">헤더배경</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-card-sec')">공유카드</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-score-sec')">승패</button>
+      <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-bgm-sec')">BGM</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-memo-sec')">메모</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-alias-sec')">별명</button>
     </div>
@@ -136,6 +137,11 @@ window.openEP=function(name){
           <input type="number" id="ed-role-order" value="${(typeof p.roleOrder==='number')?p.roleOrder:''}" placeholder="숫자가 작을수록 앞에 표시" ${(typeof p.roleOrder==='number')?'':'disabled'} style="width:170px;flex-shrink:0">
         </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:3px">체크하지 않으면 위 직책 텍스트로 자동 정렬됩니다. 같은 순서 번호끼리는 티어 순으로 정렬됩니다.</div>
+      </div>
+      <div style="grid-column:1 / -1;min-width:0">
+        <label>💬 한줄평 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(라인업 소개연출 자막/음성에 사용)</span></label>
+        <input type="text" id="ed-oneliner" value="${(p.oneLiner||'').replace(/"/g,'&quot;')}" placeholder="예: 한 방이 무서운 저그 라인의 에이스" style="width:100%" maxlength="60">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">입력하지 않으면 소개연출에서 한줄평이 표시되지 않습니다.</div>
       </div>
       <div style="grid-column:1 / -1;min-width:0">
         <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
@@ -296,6 +302,76 @@ window.openEP=function(name){
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="header" onclick="toggleEditPlayerSection('header', this)">${_epHeaderCollapsed?'펼치기':'접기'}</button>
       </div>
       <div id="ep-sec-body-header" style="display:${_epHeaderCollapsed?'none':'block'};margin-top:${_epHeaderCollapsed?'0':'10px'}">
+      <div style="padding:10px;background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px">
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:8px">🎨 프로필·이름·배너 효과</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          <div>
+            <label>프로필 이미지 효과</label>
+            <select id="ed-photo-fx">
+              <option value="none"${!p.pdPhotoFx||p.pdPhotoFx==='none'?' selected':''}>없음</option>
+              <option value="glow"${p.pdPhotoFx==='glow'?' selected':''}>✨ 은은한 글로우</option>
+              <option value="aura"${p.pdPhotoFx==='aura'?' selected':''}>💡 맥동하는 빛(오라)</option>
+              <option value="spotlight"${p.pdPhotoFx==='spotlight'?' selected':''}>🔦 스포트라이트</option>
+              <option value="prism"${p.pdPhotoFx==='prism'?' selected':''}>🌈 프리즘 링(회전)</option>
+              <option value="sparkle"${p.pdPhotoFx==='sparkle'?' selected':''}>✦ 반짝반짝(별)</option>
+              <option value="shadow"${p.pdPhotoFx==='shadow'?' selected':''}>🌑 강한 그림자</option>
+              <option value="float"${p.pdPhotoFx==='float'?' selected':''}>🎈 둥실둥실</option>
+              <option value="shine"${p.pdPhotoFx==='shine'?' selected':''}>💫 반짝임(스윕)</option>
+              <option value="pulse"${p.pdPhotoFx==='pulse'?' selected':''}>🫀 맥박</option>
+              <option value="tilt"${p.pdPhotoFx==='tilt'?' selected':''}>🌀 좌우 흔들림</option>
+              <option value="halo"${p.pdPhotoFx==='halo'?' selected':''}>⭕ 퍼지는 링(헤일로)</option>
+              <option value="rainbow"${p.pdPhotoFx==='rainbow'?' selected':''}>🌈 색상 순환</option>
+              <option value="flash"${p.pdPhotoFx==='flash'?' selected':''}>⚡ 플래시</option>
+              <option value="wobble"${p.pdPhotoFx==='wobble'?' selected':''}>🤸 왕복 기울임</option>
+              <option value="orbit"${p.pdPhotoFx==='orbit'?' selected':''}>🪐 공전하는 점</option>
+              <option value="flip"${p.pdPhotoFx==='flip'?' selected':''}>🔄 카드 플립</option>
+              <option value="bounce"${p.pdPhotoFx==='bounce'?' selected':''}>🏀 바운스</option>
+              <option value="flicker"${p.pdPhotoFx==='flicker'?' selected':''}>📺 지지직(플리커)</option>
+            </select>
+          </div>
+          <div>
+            <label>스트리머명 글자 효과</label>
+            <select id="ed-name-fx">
+              <option value="none"${!p.pdNameFx||p.pdNameFx==='none'?' selected':''}>없음</option>
+              <option value="outline"${p.pdNameFx==='outline'?' selected':''}>✏️ 외곽선</option>
+              <option value="gradient"${p.pdNameFx==='gradient'?' selected':''}>🌈 그라디언트</option>
+              <option value="neon"${p.pdNameFx==='neon'?' selected':''}>💡 네온</option>
+              <option value="glow"${p.pdNameFx==='glow'?' selected':''}>🔆 은은한 글로우</option>
+              <option value="shimmer"${p.pdNameFx==='shimmer'?' selected':''}>✨ 시머(빛 스윕)</option>
+              <option value="holo"${p.pdNameFx==='holo'?' selected':''}>💿 홀로그램</option>
+              <option value="shadow3d"${p.pdNameFx==='shadow3d'?' selected':''}>🧱 입체 그림자</option>
+              <option value="fire"${p.pdNameFx==='fire'?' selected':''}>🔥 불꽃</option>
+              <option value="ice"${p.pdNameFx==='ice'?' selected':''}>❄️ 아이스</option>
+              <option value="metallic"${p.pdNameFx==='metallic'?' selected':''}>🥇 메탈릭(금속광)</option>
+              <option value="emboss"${p.pdNameFx==='emboss'?' selected':''}>🪙 양각 각인</option>
+              <option value="candy"${p.pdNameFx==='candy'?' selected':''}>🍬 캔디 레인보우</option>
+              <option value="flicker"${p.pdNameFx==='flicker'?' selected':''}>⚡ 네온 플리커</option>
+              <option value="stone"${p.pdNameFx==='stone'?' selected':''}>🪨 돌 각인</option>
+              <option value="glitch"${p.pdNameFx==='glitch'?' selected':''}>👾 글리치</option>
+              <option value="chrome"${p.pdNameFx==='chrome'?' selected':''}>🔩 크롬(은속광)</option>
+              <option value="pastel"${p.pdNameFx==='pastel'?' selected':''}>🌸 파스텔 레인보우</option>
+            </select>
+          </div>
+          <div>
+            <label>상단 배너 전체 효과</label>
+            <select id="ed-hero-fx">
+              <option value="none"${!p.pdHeroFx||p.pdHeroFx==='none'?' selected':''}>없음</option>
+              <option value="aurora"${p.pdHeroFx==='aurora'?' selected':''}>🌌 오로라(부유하는 빛)</option>
+              <option value="grid"${p.pdHeroFx==='grid'?' selected':''}>▦ 그리드 패턴</option>
+              <option value="particles"${p.pdHeroFx==='particles'?' selected':''}>✨ 떠오르는 파티클</option>
+              <option value="shine"${p.pdHeroFx==='shine'?' selected':''}>💫 전체 반짝임(스윕)</option>
+              <option value="spotlight"${p.pdHeroFx==='spotlight'?' selected':''}>🔦 이동하는 스포트라이트</option>
+              <option value="stripes"${p.pdHeroFx==='stripes'?' selected':''}>➗ 대각선 스트라이프</option>
+              <option value="confetti"${p.pdHeroFx==='confetti'?' selected':''}>🎊 색종이(컨페티)</option>
+              <option value="vignette"${p.pdHeroFx==='vignette'?' selected':''}>🌗 맥동하는 비네트</option>
+              <option value="wavebands"${p.pdHeroFx==='wavebands'?' selected':''}>〰️ 흐르는 밴드</option>
+              <option value="snow"${p.pdHeroFx==='snow'?' selected':''}>❄️ 눈송이</option>
+              <option value="beam"${p.pdHeroFx==='beam'?' selected':''}>🔆 무빙 빔</option>
+              <option value="glowpulse"${p.pdHeroFx==='glowpulse'?' selected':''}>💡 은은한 발광 펄스</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
       <input type="text" id="ed-phbg" value="${p.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL">
       <div id="ed-phbg-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);margin-top:10px;background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
@@ -531,6 +607,20 @@ window.openEP=function(name){
       </label>
     </div>
     <!-- (요청사항) 크루 소속 항목 제거 -->
+    <div id="ep-bgm-sec" class="ep-adv-section" style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🎵 스트리머 전용 BGM</div>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">유튜브 링크</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input type="text" id="ed-bgm-url" value="${(p.bgmUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
+        <button type="button" class="btn btn-w btn-sm" title="새 창에서 링크 열기" onclick="const v=(document.getElementById('ed-bgm-url')?.value||'').trim();if(v)window.open(v,'_blank');else alert('먼저 링크를 입력하세요.');">🔗 열기</button>
+      </div>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">BGM 볼륨</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="ed-bgm-vol" min="0" max="100" step="5" value="${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-bgm-vol-val').textContent=this.value">
+        <span id="ed-bgm-vol-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:24px;text-align:right;font-weight:700">${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}</span>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">저장하면 스트리머 상세 팝업과 현황판 프로필탭에서 이 스트리머를 볼 때 자동으로 배경음악이 재생됩니다.</div>
+    </div>
     <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
       <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2);margin-bottom:8px">선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:var(--fs-sm);border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--white);resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>

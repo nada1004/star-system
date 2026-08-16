@@ -111,6 +111,13 @@ function _gcFindPlayer(keyword) {
 }
 
 function renderRoulettePanel(dome, capR, isWide, avW, avH) {
+  // 탭/모드 표시 관리(TabVis)에서 현재 서브탭이 OFF된 경우, 같은 그룹 내 노출 중인 첫 탭으로 이동
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('roulette.' + _gcTab)) {
+    const _gcFallbackGroup = _GC_TAB_GROUP[_gcTab] || 'roulette';
+    const _gcFallbackPool = _gcFallbackGroup === 'game' ? _GC_GAME_TABS : _GC_ROULETTE_TABS;
+    const _gcFallbackTab = _gcFallbackPool.find(t => window.TabVis.visible('roulette.' + t.id));
+    if (_gcFallbackTab) _gcTab = _gcFallbackTab.id;
+  }
   dome   = dome  || window._GC_DOME;
   capR   = capR  || window._GC_CAP_R;
   isWide = isWide != null ? isWide : (window.innerWidth >= 700);
@@ -122,12 +129,16 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isDuck   = _gcTab === 'duck';
   const isWheel  = _gcTab === 'wheel';
   const isPpopgi = _gcTab === 'ppopgi';
+  const isTeamSplit = _gcTab === 'teamsplit';
+  const isBracket = _gcTab === 'bracket';
   const isTeamMatch = _gcTab === 'teammatch';
   const isTierMatch = _gcTab === 'tiermatch';
   const isQuiz = _gcTab === 'quiz';
   const isMemory = _gcTab === 'memory';
   const isMole = _gcTab === 'mole';
   const isOmok = _gcTab === 'omok';
+  const isJanggi = _gcTab === 'janggi';
+  const isOthello = _gcTab === 'othello';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (_rLsGet(isPlayer ? 'su_gc_p' : 'su_gc_m', '') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
@@ -151,12 +162,16 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     duck: { kicker:'LUCKY DRAW', icon:'🐥', accent:'linear-gradient(135deg,#fbbf24,#f97316)', title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
     wheel: { kicker:'LUCKY DRAW', icon:'🎡', accent:'linear-gradient(135deg,#f472b6,#ec4899)', title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
     ppopgi: { kicker:'LUCKY DRAW', icon:'🎁', accent:'linear-gradient(135deg,#fb7185,#f43f5e)', title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
+    teamsplit: { kicker:'LUCKY DRAW', icon:'👥', accent:'linear-gradient(135deg,#38bdf8,#6366f1)', title:'팀 나누기', desc:'참가자를 원하는 팀 수만큼 랜덤으로 균등하게 나눕니다.', badge1:'2~8팀 지원', badge2:'균등 분배' },
+    bracket: { kicker:'LUCKY DRAW', icon:'🏆', accent:'linear-gradient(135deg,#f59e0b,#ef4444)', title:'대진표 뽑기', desc:'참가자를 랜덤으로 섞어 1라운드 대진을 만들어줍니다.', badge1:'랜덤 매칭', badge2:'부전승 자동 처리' },
     teammatch: { kicker:'PUZZLE GAME', icon:'🧩', accent:'linear-gradient(135deg,#fb7185,#ec4899)', title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
     memory: { kicker:'PUZZLE GAME', icon:'🃏', accent:'linear-gradient(135deg,#818cf8,#a78bfa)', title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' },
     mole: { kicker:'ACTION GAME', icon:'🐹', accent:'linear-gradient(135deg,#facc15,#f59e0b)', title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' },
-    omok: { kicker:'BOARD GAME', icon:'⚫⚪', accent:'linear-gradient(135deg,#334155,#0f172a)', title:'스타대학 오목', desc:'응원할 대학과 상대 대학을 골라 스트리머 프로필로 오목 대결을 펼칩니다.', badge1:'AI 대결', badge2:'대학 대항전' }
+    omok: { kicker:'BOARD GAME', icon:'⚫⚪', accent:'linear-gradient(135deg,#334155,#0f172a)', title:'스타대학 오목', desc:'응원할 대학과 상대 대학을 골라 스트리머 프로필로 오목 대결을 펼칩니다.', badge1:'AI 대결', badge2:'대학 대항전' },
+    janggi: { kicker:'BOARD GAME', icon:'♟️', accent:'linear-gradient(135deg,#7c2d12,#451a03)', title:'스타대학 장기', desc:'응원할 대학과 상대 대학을 골라 스트리머 프로필로 장기 대결을 펼칩니다.', badge1:'AI 대결', badge2:'대학 대항전' },
+    othello: { kicker:'BOARD GAME', icon:'🟢', accent:'linear-gradient(135deg,#065f46,#022c22)', title:'스타대학 오델로', desc:'응원할 대학과 상대 대학을 골라 스트리머 프로필로 오델로(리버시) 대결을 펼칩니다.', badge1:'AI 대결', badge2:'대학 대항전' }
   }[_gcTab] || { kicker:'LUCKY STUDIO', icon:'🎰', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
   const _hero = `<section class="gc-hero" style="--gc-accent:${_tabMeta.accent}">
     <div class="gc-hero-main">
@@ -174,22 +189,24 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     </div>
   </section>`;
 
+  // (추가) 현재 탭이 속한 그룹 판별 + 그룹별 탭 목록
+  const _gcGroup = _GC_TAB_GROUP[_gcTab] || 'roulette';
+  const _gcGroupTabsAll = _gcGroup === 'game' ? _GC_GAME_TABS : _GC_ROULETTE_TABS;
+  const _gcGroupTabs = (window.TabVis && typeof window.TabVis.visible === 'function')
+    ? _gcGroupTabsAll.filter(t => window.TabVis.visible('roulette.' + t.id))
+    : _gcGroupTabsAll;
+
+  // 상단 그룹 세그먼트 — "🎰 룰렛·추첨" / "🎮 미니게임"
+  const _groupBar = `<div class="gc-group-bar no-export">
+    <button class="gc-group-btn${_gcGroup==='roulette'?' on':''}" onclick="_gcSwitchGroup('roulette')">🎰 룰렛·추첨</button>
+    <button class="gc-group-btn${_gcGroup==='game'?' on':''}" onclick="_gcSwitchGroup('game')">🎮 미니게임</button>
+  </div>`;
+
   // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일 + 라벨/스크롤 힌트로 가독성 보강
-  const _tabBar = `<div class="gc-tabbar-label">🎮 게임 선택</div>
-  <div class="gc-tabbar-scroll">
+  // (선택된 그룹의 서브탭만 표시)
+  const _tabBar = `${_groupBar}<div class="gc-tabbar-scroll">
   <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-    <button class="pill${_gcTab==='player'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
-    <button class="pill${_gcTab==='map'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
-    <button class="pill${_gcTab==='ladder'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
-    <button class="pill${_gcTab==='duck'?' on':''}"   style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('duck')">🐥 경주</button>
-    <button class="pill${_gcTab==='wheel'?' on':''}"  style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
-    <button class="pill${_gcTab==='ppopgi'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ppopgi')">🎁 뽑기</button>
-    <button class="pill${_gcTab==='teammatch'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('teammatch')">🧩 소속매칭</button>
-    <button class="pill${_gcTab==='tiermatch'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('tiermatch')">🎖️ 티어매칭</button>
-    <button class="pill${_gcTab==='quiz'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('quiz')">🖼️ 얼굴맞추기</button>
-    <button class="pill${_gcTab==='memory'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('memory')">🃏 짝맞추기</button>
-    <button class="pill${_gcTab==='mole'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('mole')">🐹 두더지</button>
-    <button class="pill${_gcTab==='omok'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('omok')">⚫⚪ 오목</button>
+    ${_gcGroupTabs.map(t => `<button class="pill${_gcTab===t.id?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('${t.id}')">${t.icon} ${t.label}</button>`).join('')}
   </div>
   </div>`;
 
@@ -278,6 +295,42 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div id="om-root"></div>
+</div>`;
+  }
+
+  // ♟️ 장기 탭: 별도 레이아웃 (내용은 janggi-game.js가 #jg-root에 채움)
+  if (isJanggi) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="jg-root"></div>
+</div>`;
+  }
+
+  // 🟢 오델로 탭: 별도 레이아웃 (내용은 othello-game.js가 #ot-root에 채움)
+  if (isOthello) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="ot-root"></div>
+</div>`;
+  }
+
+  // 👥 팀 나누기 탭: 별도 레이아웃 (내용은 roulette-teamsplit.js가 #ts-root에 채움)
+  if (isTeamSplit) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="ts-root"></div>
+</div>`;
+  }
+
+  // 🏆 대진표 탭: 별도 레이아웃 (내용은 roulette-bracket.js가 #bk-root에 채움)
+  if (isBracket) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="bk-root"></div>
 </div>`;
   }
 

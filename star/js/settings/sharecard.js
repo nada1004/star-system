@@ -57,6 +57,7 @@
     const cardShape = (document.getElementById('cfg-sc-cardshape')?.value || 'rounded').trim();
     const entityLayout = (document.getElementById('cfg-sc-entity-layout')?.value || 'default').trim();
     const matchLayout = (document.getElementById('cfg-sc-match-layout')?.value || 'default').trim();
+    const imgFx = (document.getElementById('cfg-sc-img-fx')?.value || 'none').trim();
     try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal','aurora','poster','mono','glacier','rose','midnight'].includes(mode)?mode:'campus'); }catch(e){}
     try{ localStorage.setItem('su_sc_color', String(Math.max(20,Math.min(100,color)))); }catch(e){}
     try{ localStorage.setItem('su_sc_fx', String(Math.max(0,Math.min(100,fx)))); }catch(e){}
@@ -75,6 +76,7 @@
     try{ localStorage.setItem('su_sc_cardshape', ['rounded','sharp','soft','ribbon','tag','ticket'].includes(cardShape)?cardShape:'rounded'); }catch(e){}
     try{ localStorage.setItem('su_sc_entity_layout', ['default','photocard','showcase','compact'].includes(entityLayout)?entityLayout:'default'); }catch(e){}
     try{ localStorage.setItem('su_sc_match_layout', ['default','spotlight','broadcast','compact'].includes(matchLayout)?matchLayout:'default'); }catch(e){}
+    try{ localStorage.setItem('su_sc_img_fx', ['none','ring','glass','film','sticker','mono','duotone','spotlight'].includes(imgFx)?imgFx:'none'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
     try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
   };
@@ -85,13 +87,33 @@
     window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
   };
 
+  window.cfgPreviewShareCardEntityLayout = function(layout){
+    const el=document.getElementById('cfg-sc-entity-layout');
+    if(el) el.value = ['default','photocard','showcase','compact'].includes(layout)?layout:'default';
+    window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+  };
+
+  window.cfgPreviewShareCardMatchLayout = function(layout){
+    const el=document.getElementById('cfg-sc-match-layout');
+    if(el) el.value = ['default','spotlight','broadcast','compact'].includes(layout)?layout:'default';
+    window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+  };
+
+  window.cfgPreviewShareCardImgFx = function(fx){
+    const el=document.getElementById('cfg-sc-img-fx');
+    if(el) el.value = ['none','ring','glass','film','sticker','mono','duotone','spotlight'].includes(fx)?fx:'none';
+    window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+  };
+
   window.cfgSetShareCardCategorySettings = function(kind){
     const t = String(kind||'').trim();
     if(!['player','univ','match'].includes(t)) return;
     const modeEl = document.getElementById(`cfg-sc-cat-mode-${t}`);
     const layoutEl = document.getElementById(`cfg-sc-cat-layout-${t}`);
+    const imgFxEl = document.getElementById(`cfg-sc-cat-imgfx-${t}`);
     const mode = (modeEl?.value || 'inherit').trim();
     const layout = (layoutEl?.value || 'inherit').trim();
+    const imgFx = (imgFxEl?.value || 'inherit').trim();
     const validModes = ['inherit','campus','vivid','soft','dark','minimal','aurora','poster','mono','glacier','rose','midnight'];
     try{
       if(mode==='inherit') localStorage.removeItem(`su_sc_mode_${t}`);
@@ -106,6 +128,13 @@
         const validLayouts = ['inherit','default','photocard','showcase','compact'];
         if(layout==='inherit') localStorage.removeItem(`su_sc_entity_layout_${t}`);
         else localStorage.setItem(`su_sc_entity_layout_${t}`, validLayouts.includes(layout)?layout:'default');
+      }
+    }catch(e){}
+    try{
+      if(t!=='match' && imgFxEl){
+        const validFx = ['inherit','none','ring','glass','film','sticker','mono','duotone','spotlight'];
+        if(imgFx==='inherit') localStorage.removeItem(`su_sc_img_fx_${t}`);
+        else localStorage.setItem(`su_sc_img_fx_${t}`, validFx.includes(imgFx)?imgFx:'none');
       }
     }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
@@ -133,6 +162,19 @@
     const _entityLayoutPlayer = (localStorage.getItem('su_sc_entity_layout_player') ?? 'inherit');
     const _entityLayoutUniv = (localStorage.getItem('su_sc_entity_layout_univ') ?? 'inherit');
     const _matchLayoutMatch = (localStorage.getItem('su_sc_match_layout_match') ?? 'inherit');
+    const _imgFx = (localStorage.getItem('su_sc_img_fx') ?? 'none');
+    const _imgFxPlayer = (localStorage.getItem('su_sc_img_fx_player') ?? 'inherit');
+    const _imgFxUniv = (localStorage.getItem('su_sc_img_fx_univ') ?? 'inherit');
+    const _imgFxOptionsHtml = (cur)=>`
+                <option value="inherit" ${cur==='inherit'?'selected':''}>전역 따름</option>
+                <option value="none" ${cur==='none'?'selected':''}>기본(효과 없음)</option>
+                <option value="ring" ${cur==='ring'?'selected':''}>네온 링</option>
+                <option value="glass" ${cur==='glass'?'selected':''}>글래스 프레임</option>
+                <option value="film" ${cur==='film'?'selected':''}>필름 프레임</option>
+                <option value="sticker" ${cur==='sticker'?'selected':''}>스티커컷</option>
+                <option value="mono" ${cur==='mono'?'selected':''}>모노톤</option>
+                <option value="duotone" ${cur==='duotone'?'selected':''}>듀오톤</option>
+                <option value="spotlight" ${cur==='spotlight'?'selected':''}>스포트라이트</option>`;
     const _cardShape = (localStorage.getItem('su_sc_cardshape') ?? 'rounded');
     const _shapeDef = (localStorage.getItem('su_sc_cardshape_default') ?? 'inherit');
     const _shapeCk = (localStorage.getItem('su_sc_cardshape_ck') ?? 'inherit');
@@ -173,10 +215,10 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
         ${[
-          ['player','🎬 스트리머 공유카드',_modePlayer,_entityLayoutPlayer,'player'],
-          ['univ','🏫 대학 공유카드',_modeUniv,_entityLayoutUniv,'univ'],
-          ['match','🎮 경기 공유카드',_modeMatch,_matchLayoutMatch,'match']
-        ].map(([key,title,modeVal,layoutVal,kind])=>`
+          ['player','🎬 스트리머 공유카드',_modePlayer,_entityLayoutPlayer,'player',_imgFxPlayer],
+          ['univ','🏫 대학 공유카드',_modeUniv,_entityLayoutUniv,'univ',_imgFxUniv],
+          ['match','🎮 경기 공유카드',_modeMatch,_matchLayoutMatch,'match',null]
+        ].map(([key,title,modeVal,layoutVal,kind,imgFxVal])=>`
           <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);display:flex;flex-direction:column;gap:8px">
             <div style="font-size:12px;font-weight:900;color:var(--text2)">${title}</div>
             <div style="font-size:10px;color:var(--gray-l);font-weight:700">${key==='match'?'경기 결과 공유카드 전용 디자인/배치':'전역 공유카드와 별도로 이 카드 타입만 따로 적용'}</div>
@@ -216,6 +258,12 @@
                   </select>`
               }
             </div>
+            ${key!=='match'?`<div>
+              <div style="font-size:10px;color:var(--text3);font-weight:800;margin-bottom:4px">이미지 효과 <span style="color:var(--gray-l);font-weight:600">— ${key==='player'?'프로필 사진':'대학 로고'}</span></div>
+              <select id="cfg-sc-cat-imgfx-${kind}" onchange="cfgSetShareCardCategorySettings('${kind}')" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+                ${_imgFxOptionsHtml(imgFxVal)}
+              </select>
+            </div>`:''}
           </div>`).join('')}
       </div>
     </div>
@@ -273,6 +321,20 @@
         </select>
         <span style="font-size:11px;color:var(--gray-l)">대학색 중심 정도와 대비감을 바꿉니다.</span>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 미리보기(스트리머/대학)</div>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardEntityLayout('default')">기본형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardEntityLayout('photocard')">포토카드형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardEntityLayout('showcase')">쇼케이스형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardEntityLayout('compact')">컴팩트형</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 미리보기(경기)</div>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMatchLayout('default')">기본형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMatchLayout('spotlight')">스포트라이트형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMatchLayout('broadcast')">브로드캐스트형</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMatchLayout('compact')">컴팩트형</button>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머/대학 공유카드 레이아웃</div>
@@ -292,6 +354,31 @@
             <option value="compact" ${_matchLayout==='compact'?'selected':''}>컴팩트형</option>
           </select>
         </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">이미지 효과 미리보기 <span style="color:var(--gray-l);font-weight:600">(프로필/로고)</span></div>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('none')">기본</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('ring')">네온 링</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('glass')">글래스</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('film')">필름</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('sticker')">스티커컷</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('mono')">모노톤</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('duotone')">듀오톤</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardImgFx('spotlight')">스포트라이트</button>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">이미지 효과 (스트리머 프로필 사진 / 대학 로고)</div>
+        <select id="cfg-sc-img-fx" onchange="cfgSetShareCardSettings()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="none" ${_imgFx==='none'?'selected':''}>기본(효과 없음)</option>
+          <option value="ring" ${_imgFx==='ring'?'selected':''}>네온 링 — 대학색 글로우 테두리</option>
+          <option value="glass" ${_imgFx==='glass'?'selected':''}>글래스 프레임 — 화이트 반투명 테두리</option>
+          <option value="film" ${_imgFx==='film'?'selected':''}>필름 프레임 — 두꺼운 화이트 보더</option>
+          <option value="sticker" ${_imgFx==='sticker'?'selected':''}>스티커컷 — 살짝 기울어진 화이트 보더</option>
+          <option value="mono" ${_imgFx==='mono'?'selected':''}>모노톤 — 흑백 필터</option>
+          <option value="duotone" ${_imgFx==='duotone'?'selected':''}>듀오톤 — 대학색 톤 필터</option>
+          <option value="spotlight" ${_imgFx==='spotlight'?'selected':''}>스포트라이트 — 가장자리 비네트</option>
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">전역 설정이며, 위 '카테고리별 공유카드 설정'에서 스트리머/대학 카드별로 따로 지정할 수도 있습니다.</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">표면 스타일</div>

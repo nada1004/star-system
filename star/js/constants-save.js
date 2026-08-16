@@ -125,12 +125,13 @@ function saveCfg(){
             .catch((e)=>{ if(statusEl){ statusEl.style.color='#dc2626'; statusEl.textContent='❌ 설정 GitHub 실패'; } console.error('[fbUpdate cfg]',e); });
         } else {
           // GitHub 토큰 미설정이거나 자동 반영 OFF면 로컬만 저장
-          if(statusEl){
-            if(!token){
-              statusEl.style.color='#d97706';
-              statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
-              setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
-            }else if(!autoCfgRemote){
+          // [FIX-STATUS-SPAM] 아래 _setCloudStatusMsg를 거치도록 해서, 토큰 미설정
+          // 경고가 너무 자주(설정 바꿀 때마다) 반복해서 뜨지 않게 쿨다운을 공유한다.
+          if(!token){
+            _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+            if(statusEl) setTimeout(()=>{ if(statusEl && statusEl.textContent.indexOf('로컬만 저장')!==-1){statusEl.textContent='';statusEl.style.color='';} }, 4000);
+          }else if(!autoCfgRemote){
+            if(statusEl){
               statusEl.style.color='#64748b';
               statusEl.textContent='💾 로컬 저장만 수행됨 (설정 자동 GitHub 저장 OFF)';
               setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2200);
@@ -177,8 +178,21 @@ function _clearPendingRemoteSave(){
   }catch(e){}
   try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
 }
+// [FIX-STATUS-SPAM] "⚠️ 로컬만 저장 (GitHub 토큰 필요)" 경고는 GitHub 토큰을
+// 설정하지 않은 관리자가 아무 편집(선수 저장, 설정 변경 등)을 할 때마다 매번
+// 떠서 너무 자주 반복적으로 보인다는 피드백이 있었다. 이 경고는 여러 저장
+// 경로(saveCfg/save/_flushRemoteCloudSave)에서 각각 독립적으로 호출되므로,
+// 여기 한 곳에서 쿨다운을 걸어 일정 시간 안에는 다시 띄우지 않는다.
+// (다른 상태 메시지 — 성공/실패/오프라인 등 — 는 그대로 매번 표시된다.)
+let _lastLocalOnlyWarnTs = 0;
+const _LOCAL_ONLY_WARN_COOLDOWN_MS = 5 * 60 * 1000; // 5분
 function _setCloudStatusMsg(msg, color){
   try{
+    if(typeof msg === 'string' && msg.indexOf('⚠️ 로컬만 저장') === 0){
+      const now = Date.now();
+      if(now - _lastLocalOnlyWarnTs < _LOCAL_ONLY_WARN_COOLDOWN_MS) return;
+      _lastLocalOnlyWarnTs = now;
+    }
     if(typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus(msg, color);
     else{
       const statusEl = document.getElementById('cloudStatus');

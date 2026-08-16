@@ -70,12 +70,25 @@
       return JSON.stringify({
         saveTime: localStorage.getItem('su_last_save_time')||'0',
         mode: localStorage.getItem('su_sc_mode')||'campus',
+        mode_player: localStorage.getItem('su_sc_mode_player')||'inherit',
+        mode_univ: localStorage.getItem('su_sc_mode_univ')||'inherit',
+        mode_match: localStorage.getItem('su_sc_mode_match')||'inherit',
         mode_ck: localStorage.getItem('su_sc_mode_ck')||'inherit',
         mode_pro: localStorage.getItem('su_sc_mode_pro')||'inherit',
         mode_tt: localStorage.getItem('su_sc_mode_tt')||'inherit',
         mode_comp: localStorage.getItem('su_sc_mode_comp')||'inherit',
         mode_default: localStorage.getItem('su_sc_mode_default')||'inherit',
         'mode_procomp-bkt': localStorage.getItem('su_sc_mode_procomp-bkt')||'inherit',
+        entity_layout: localStorage.getItem('su_sc_entity_layout')||'default',
+        entity_layout_player: localStorage.getItem('su_sc_entity_layout_player')||'inherit',
+        entity_layout_univ: localStorage.getItem('su_sc_entity_layout_univ')||'inherit',
+        match_layout: localStorage.getItem('su_sc_match_layout')||'default',
+        match_layout_match: localStorage.getItem('su_sc_match_layout_match')||'inherit',
+        hero_bright: localStorage.getItem('su_sc_hero_bright')||'100',
+        loser_photo_bright: localStorage.getItem('su_sc_loser_photo_bright')||'88',
+        title_pct: localStorage.getItem('su_sc_title_pct')||'100',
+        univ_pct: localStorage.getItem('su_sc_univ_pct')||'100',
+        show_tally: localStorage.getItem('su_sc_show_tally')||'0',
         color: localStorage.getItem('su_sc_color')||'72',
         fx: localStorage.getItem('su_sc_fx')||'55',
         winbg: localStorage.getItem('su_sc_winbg')||'55',
@@ -229,11 +242,15 @@
     ['minimal','미니멀'],
     ['aurora','오로라'],
     ['poster','포스터'],
-    ['mono','모노']
+    ['mono','모노'],
+    ['glacier','글레이셔'],
+    ['rose','로즈'],
+    ['midnight','미드나잇']
   ];
 
   function _scCanEditStyle(){
-    try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin); }catch(e){ return false; }
+    // 부관리자도 공유카드 스타일(색상/톤·레이아웃)을 미리보고 전환할 수 있도록 허용
+    try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn); }catch(e){ return false; }
   }
 
   function _scModeChipsHTML(){
@@ -271,10 +288,12 @@
   }
 
   function _scStylePickerBodyHTML(){
-    const layoutSection = (window._shareMode==='match') ? `
-      <div style="height:1px;background:rgba(148,163,184,.22);margin:10px 0"></div>
-      ${_scLayoutPickerBodyHTML()}` : '';
-    return `<div style="font-size:11px;font-weight:900;color:var(--text3, #94a3b8);letter-spacing:.06em;margin-bottom:6px">스타일 전환</div>
+    const layoutSection = (window._shareMode==='match')
+      ? `<div style="height:1px;background:rgba(148,163,184,.22);margin:10px 0"></div>${_scLayoutPickerBodyHTML()}`
+      : (window._shareMode==='player' || window._shareMode==='univ')
+        ? `<div style="height:1px;background:rgba(148,163,184,.22);margin:10px 0"></div>${_scEntityLayoutPickerBodyHTML()}`
+        : '';
+    return `<div style="font-size:11px;font-weight:900;color:var(--text3, #94a3b8);letter-spacing:.06em;margin-bottom:6px">색상/톤 전환</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">${_scModeChipsHTML()}</div>${layoutSection}`;
   }
 
@@ -371,6 +390,44 @@
 
   window._scMatchLayoutChipsHTML = _scMatchLayoutChipsHTML;
   window._scSwitchMatchLayout = _scSwitchMatchLayout;
+
+  // ── 스트리머/대학 공유카드 레이아웃 전환 칩 (색상 톤과 별개 축) : 관리자 로그인 시에만 노출 ──
+  var SC_ENTITY_LAYOUT_LIST = [
+    ['default','기본형'],
+    ['photocard','포토카드형'],
+    ['showcase','쇼케이스형'],
+    ['compact','컴팩트형']
+  ];
+
+  function _scEntityLayoutChipsHTML(){
+    let cur='default';
+    try{ cur=(localStorage.getItem('su_sc_entity_layout')||'default').trim(); }catch(e){}
+    return SC_ENTITY_LAYOUT_LIST.map(([key,label])=>{
+      const on = cur===key;
+      return `<button type="button" class="sc-layout-chip" data-layout="${key}" onclick="_scSwitchEntityLayout('${key}')"
+        style="font-size:11px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;
+        border:1.5px solid ${on?'var(--text, #0f172a)':'var(--border2, rgba(148,163,184,.32))'};
+        background:${on?'var(--text, #0f172a)':'var(--card, var(--white, #fff))'};color:${on?'#fff':'var(--text2, #334155)'}">${label}${on?' ✓':''}</button>`;
+    }).join('');
+  }
+
+  function _scSwitchEntityLayout(layout){
+    try{
+      const valid = SC_ENTITY_LAYOUT_LIST.some(([key])=>key===layout);
+      localStorage.setItem('su_sc_entity_layout', valid?layout:'default');
+      const panel=document.getElementById('scStylePicker');
+      if(panel) panel.innerHTML=_scStylePickerBodyHTML();
+      _shareCardRerenderCurrent();
+    }catch(e){}
+  }
+
+  function _scEntityLayoutPickerBodyHTML(){
+    return `<div style="font-size:11px;font-weight:900;color:var(--text3, #94a3b8);letter-spacing:.06em;margin-bottom:6px">레이아웃 전환</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${_scEntityLayoutChipsHTML()}</div>`;
+  }
+
+  window._scEntityLayoutChipsHTML = _scEntityLayoutChipsHTML;
+  window._scSwitchEntityLayout = _scSwitchEntityLayout;
 
   function openShareCardModal(){
     const existing=document.getElementById('sharecard-overlay');

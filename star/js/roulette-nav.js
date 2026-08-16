@@ -54,6 +54,10 @@ function rRoulette(C, T) {
     else if (_gcTab === 'memory') { setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'mole') { setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'omok') { setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'janggi') { setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'othello') { setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'teamsplit') { setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'bracket') { setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60); }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -93,6 +97,14 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'omok') {
     setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'janggi') {
+    setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'othello') {
+    setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'teamsplit') {
+    setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'bracket') {
+    setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
@@ -119,6 +131,14 @@ function rRoulette(C, T) {
     + '.gc-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;flex-shrink:0}'
     + '.gc-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.18);font-size:var(--fs-sm);font-weight:800;color:var(--text2);box-shadow:0 8px 20px rgba(15,23,42,.05);white-space:nowrap}'
     + '.gc-tabbar-card{position:relative;padding:10px 8px 8px;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.88));box-shadow:0 14px 30px rgba(15,23,42,.06);margin-bottom:14px}'
+    + '.gc-group-bar{display:flex;gap:6px;padding:4px;margin:0 0 10px;background:rgba(148,163,184,.14);border-radius:16px}'
+    + '.gc-group-btn{flex:1;padding:9px 10px;border:none;border-radius:12px;background:transparent;color:var(--text3);font-weight:900;font-size:13px;letter-spacing:-.01em;cursor:pointer;transition:.15s;white-space:nowrap}'
+    + '.gc-group-btn:hover{color:var(--text2)}'
+    + '.gc-group-btn.on{background:linear-gradient(135deg,#60a5fa,#6366f1);color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.28)}'
+    + 'body.dark .gc-group-bar{background:rgba(51,65,85,.42)}'
+    + 'body.dark .gc-group-btn{color:#94a3b8}'
+    + 'body.dark .gc-group-btn.on{color:#fff}'
+    + '@media (max-width:420px){.gc-group-btn{font-size:12px;padding:8px 6px}}'
     + '.gc-tabbar-label{font-size:10.5px;font-weight:900;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;padding:0 8px 6px;display:flex;align-items:center;gap:5px}'
     + '.gc-tabbar-scroll{position:relative}'
     + '.gc-tabbar-scroll::before,.gc-tabbar-scroll::after{content:"";position:absolute;top:0;bottom:0;width:18px;pointer-events:none;z-index:2}'

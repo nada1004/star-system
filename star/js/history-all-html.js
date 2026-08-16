@@ -2,6 +2,362 @@
    대전기록 - 전체 통합 탭 HTML (history-render-tabs.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// (신규기능) 대전기록탭 '종합〉전체 통합' 보기모드 전환 (2026-08-10, viewmodes2에서 매치업/히트맵 삭제)
+// 정렬버튼 옆에 위치, 기본형(카드) 유지 + 그리드카드형/컴팩트테이블형 2종
+// (히트맵은 날짜별 셀 다량 렌더링으로 브라우저 딜레이 유발 신고 → 매치업과 함께 완전 삭제)
+function setHistAllViewMode(mode){
+  const valid=['card','grid','compact','broadcast'];
+  let m = valid.includes(mode) ? mode : 'card';
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('mode.all.'+m)) m = 'card';
+  histAllViewMode = m;
+  window.histAllViewMode = histAllViewMode;
+  try{ localStorage.setItem('su_hist_all_view_mode', histAllViewMode); }catch(e){}
+  if(typeof histPage!=='undefined' && histPage) histPage['all']=0;
+  render();
+}
+function histAllViewModeBarHTML(){
+  let _cur=(typeof histAllViewMode!=='undefined'&&histAllViewMode)||(window.histAllViewMode)||'card';
+  if(!['card','grid','compact','broadcast'].includes(_cur)) _cur='card'; // 구버전(matchup/table/heatmap) localStorage 값 방어
+  let _modes=[
+    {id:'card',lbl:'🗂 기본'},
+    {id:'grid',lbl:'🖼 그리드'},
+    {id:'compact',lbl:'📊 컴팩트 테이블형'},
+    {id:'broadcast',lbl:'📺 방송형'},
+  ];
+  if (window.TabVis && typeof window.TabVis.visible === 'function') {
+    _modes = _modes.filter(mo => window.TabVis.visible('mode.all.' + mo.id));
+    if (!_modes.some(mo=>mo.id===_cur)) _cur = 'card';
+  }
+  return `<div class="hist-ctrl-group" style="flex-shrink:0">${_modes.map(mo=>
+    `<button class="pill ${_cur===mo.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="setHistAllViewMode('${mo.id}')">${mo.lbl}</button>`
+  ).join('')}</div>`;
+}
+
+
+// (수정, 2026-08-10) 대회/티어대회 팀 기록: 팀명으로 로고를 못 찾을 때 멤버 프로필로 대체.
+// 요청에 따라 그리드 모드는 '1장만' 표시하고, 미니 기본 모드에서는 사용하지 않는다.
+function _altMembersThumbHTML(members, size, maxCount){
+  try{
+    if(typeof getPlayerPhotoHTML!=='function') return '';
+    const max=Math.max(1, maxCount||1);
+    const list=(members||[]).map(x=> typeof x==='string'?x:(x&&x.name)||'').filter(Boolean).slice(0,max);
+    if(!list.length) return '';
+    const inner=list.map((n,i)=>`<span style="display:inline-block;margin-left:${i?-Math.round(parseInt(size)*0.35):0}px">${getPlayerPhotoHTML(n,size,'border:none;',{lazy:true})}</span>`).join('');
+    return `<span style="display:inline-flex;align-items:center;flex-shrink:0">${inner}</span>`;
+  }catch(e){ return ''; }
+}
+
+// (신규기능) 신규 보기모드가 공통으로 쓰는 매치 기본정보 추출 (팀명/점수/승자/날짜라벨/썸네일)
+// 기존 기본형 카드(로스터 팝업/인라인 수정 등)는 손대지 않고, 신규 모드는 읽기전용 요약 표시로 단순화
+function _histAllBasicFields(type,d,m,typeInfo){
+  const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
+  const isCK=(type==='ck'||type==='pro');
+  const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
+  let teamA='',teamB='',scoreA='',scoreB='';
+  if(isInd){ teamA=m.wName||''; teamB=m.lName||''; }
+  else if(isCK){ teamA='A팀'; teamB='B팀'; scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:''; }
+  else { teamA=m.a||''; teamB=m.b||''; scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:''; }
+  const winner = isInd ? teamA : (scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
+  const dLabel = d?d.slice(2).replace(/-/g,'/'):'미정';
+  let thumbA='',thumbB='';
+  try{
+    if(isInd && typeof getPlayerPhotoHTML==='function' && typeof players!=='undefined'){
+      const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
+      if(wp) thumbA=getPlayerPhotoHTML(wp.name,'40px','border:none;',{lazy:true});
+      if(lp) thumbB=getPlayerPhotoHTML(lp.name,'40px','border:none;',{lazy:true});
+    } else if(isCK){
+      // (버그픽스, 2026-08-10) CK/프로리그는 A팀/B팀 고정 라벨이라 로고를 찾을 수 없으므로
+      // 팀원 프로필 사진 1장으로 대체 (그리드/컴팩트 테이블형에서 프로필 이미지가 비어보이던 문제)
+      thumbA=_altMembersThumbHTML(m.teamAMembers,'44px',1);
+      thumbB=_altMembersThumbHTML(m.teamBMembers,'44px',1);
+    } else if(!isCK){
+      const logo=(n)=>{
+        const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
+        if(url){
+          const src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+          return `<img src="${src}" loading="lazy" style="width:40px;height:40px;object-fit:contain;flex-shrink:0">`;
+        }
+        // (보완) 선수(스트리머)명이면 프로필 사진으로 대체 — 프로리그 대회 중장전 등
+        if(typeof getPlayerPhotoHTML==='function'&&typeof players!=='undefined'){
+          const p=players.find(x=>x&&x.name===n);
+          if(p) return getPlayerPhotoHTML(p.name,'40px','border:none;',{lazy:true});
+        }
+        return '';
+      };
+      thumbA=logo(teamA)||_altMembersThumbHTML(m.teamAMembers,'44px',1);
+      thumbB=logo(teamB)||_altMembersThumbHTML(m.teamBMembers,'44px',1);
+
+    }
+  }catch(e){}
+  const memberTagA = isCK && Array.isArray(m.teamAMembers) && m.teamAMembers.length ? `👥${m.teamAMembers.length}` : '';
+  const memberTagB = isCK && Array.isArray(m.teamBMembers) && m.teamBMembers.length ? `👥${m.teamBMembers.length}` : '';
+  return {ti,isCK,isInd,teamA,teamB,scoreA,scoreB,winner,dLabel,thumbA,thumbB,memberTagA,memberTagB};
+}
+
+// 🖼 그리드 카드형: 사진/로고를 크게 키운 시각 중심 그리드 (기존 기본형과 동일 인터랙션·상세토글·수정 유지, 크기/여백만 확대)
+function histAllGridModeHTML(paged,typeInfo){
+  let h='';
+  let lastD=null, open=false;
+  paged.forEach(({type,d,m,idx,_ref},pageIdx)=>{
+    if(d!==lastD){
+      if(open){ h+='</div>'; open=false; }
+      lastD=d;
+      const dv=d?d.slice(2).replace(/-/g,'/'):'날짜 미정';
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin:16px 0 10px;${pageIdx===0?'margin-top:0;':''}">
+        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">${dv}</span>
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>`;
+    }
+    if(!open){ h+='<div class="hist-view-grid-wrap">'; open=true; }
+    const f=_histAllBasicFields(type,d,m,typeInfo);
+    h+=`<div class="hist-view-grid-card" style="border-color:${f.ti.col}44">
+      <div class="hist-view-grid-top">
+        <span class="hist-all-mc-type" style="background:${f.ti.col}1f;color:${f.ti.col}">${f.ti.lbl}</span>
+        <span style="font-size:var(--fs-caption);color:var(--text3)">${f.dLabel}</span>
+      </div>
+      <div class="hist-view-grid-mid">
+        <div class="hist-view-grid-side">
+          ${f.thumbA||`<span class="hist-view-grid-avatar-fallback">${(f.teamA||'?').slice(0,1)}</span>`}
+          <span class="hist-view-grid-name" style="color:${f.winner&&f.winner===f.teamA?'var(--win-col)':'var(--text)'}">${f.teamA}${f.memberTagA?` <small style="opacity:.7">${f.memberTagA}</small>`:''}</span>
+        </div>
+        <div class="hist-view-grid-score">${f.isInd?'승':`${f.scoreA}:${f.scoreB}`}</div>
+        <div class="hist-view-grid-side right">
+          ${f.thumbB||`<span class="hist-view-grid-avatar-fallback">${(f.teamB||'?').slice(0,1)}</span>`}
+          <span class="hist-view-grid-name" style="color:${f.winner&&f.winner===f.teamB?'var(--win-col)':'var(--text)'}">${f.teamB}${f.memberTagB?` <small style="opacity:.7">${f.memberTagB}</small>`:''}</span>
+        </div>
+      </div>
+      ${m.map&&m.map!=='-'?`<div class="hist-view-grid-map">🗺 ${m.map}</div>`:''}
+    </div>`;
+  });
+  if(open) h+='</div>';
+  return h;
+}
+
+// 📊 컴팩트 테이블형: 밀도 높은 한줄 리스트 (PC 스캔용, 읽기전용)
+function histAllCompactTableModeHTML(paged,typeInfo){
+  let h=`<div class="hist-view-table-wrap"><table class="hist-view-table">
+    <thead><tr><th>날짜</th><th>구분</th><th style="text-align:right">A</th><th style="text-align:center">결과</th><th>B</th><th>맵</th></tr></thead><tbody>`;
+  paged.forEach(({type,d,m})=>{
+    const f=_histAllBasicFields(type,d,m,typeInfo);
+    const aWin=f.winner&&f.winner===f.teamA, bWin=f.winner&&f.winner===f.teamB;
+    h+=`<tr>
+      <td style="white-space:nowrap;color:var(--text3)">${f.dLabel}</td>
+      <td><span class="hist-all-mc-type" style="background:${f.ti.col}1f;color:${f.ti.col}">${f.ti.lbl}</span></td>
+      <td style="text-align:right;font-weight:${aWin?800:400};color:${aWin?'var(--win-col)':'var(--text)'}">${f.teamA}${f.memberTagA?` <small style="opacity:.6">${f.memberTagA}</small>`:''}</td>
+      <td style="text-align:center;white-space:nowrap;font-weight:700">${f.isInd?'승 / 패':`${f.scoreA} : ${f.scoreB}`}</td>
+      <td style="font-weight:${bWin?800:400};color:${bWin?'var(--win-col)':'var(--text)'}">${f.teamB}${f.memberTagB?` <small style="opacity:.6">${f.memberTagB}</small>`:''}</td>
+      <td style="color:var(--text3);white-space:nowrap">${(m.map&&m.map!=='-')?m.map:'-'}</td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+// (신규기능) 미니카드(기본) 1건 렌더 — histAllHTML에서 분리해 개인전/끝장전/대학전/프로리그 등
+// 개별 탭의 '미니 기본' 보기모드에서도 재사용할 수 있도록 함 (2026-08-10, histviewmodes2)
+function _histAllCardItemHTML(type,d,m,idx,_ref,typeInfo){
+    const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
+    const isCK=(type==='ck'||type==='pro');
+    const isInd=(type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
+    let teamA='',teamB='',scoreA='',scoreB='';
+    // (UI/UX 개선) CK/프로리그처럼 팀원이 많은 경기는 이름을 전부 나열하면 카드가 쓸데없이 길어짐 →
+    // 헤더에는 짧은 팀 라벨만 표시하고, 팀원 목록은 "참여자 보기" 버튼으로 팝업(openProMembersPopup, 개별 탭과 동일 컴포넌트 재사용)에서 확인
+    let aMembers=[], bMembers=[];
+    if(isInd){
+      teamA=m.wName||''; teamB=m.lName||'';
+    } else if(isCK){
+      aMembers=m.teamAMembers||[]; bMembers=m.teamBMembers||[];
+      teamA='A팀'; teamB='B팀';
+      scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
+    } else {
+      teamA=m.a||''; teamB=m.b||'';
+      scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
+    }
+    const winner=isInd?teamA:(!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
+    const dLabel=d?d.slice(2).replace(/-/g,'/'):'미정';
+    const dColor=d?'var(--text3)':'#f59e0b';
+    const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
+    const _regIdx = (typeof idx==='number' ? idx : 0);
+    // (버그예방) CK/프로리그는 teamA/teamB가 이제 'A팀'/'B팀'으로 고정돼 더 이상 유니크하지 않으므로
+    // idx를 포함해 상세토글 키가 서로 충돌하지 않도록 함
+    const key=`hist-all-${type}-${d}-${_regIdx}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
+    const labelA=isCK?'A팀':(m.a||teamA);
+    const labelB=isCK?'B팀':(m.b||teamB);
+    const _sideCols = type==='ck' ? getFixedSideColors('ck') : type==='pro' ? getFixedSideColors('pro') : getFixedSideColors('tt');
+    const ca=isCK?_sideCols.a:gc(m.a||teamA);
+    const cb=isCK?_sideCols.b:gc(m.b||teamB);
+    const aWin=!isInd && Number(scoreA)>Number(scoreB);
+    const bWin=!isInd && Number(scoreB)>Number(scoreA);
+    const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',ind:'ind',gj:'gj',progj:'progj',tourney:'tourney',procomp:'procomp'};
+    const mode=modeMap[type]||'comp';
+    const _detM = _ref ? {...m, _editRef:_ref} : m;
+    const _isIndLike = (type==='ind'||type==='gj'||type==='progj'||type==='procomp'||type==='procompbkt');
+    let dotA=ca, dotB=cb;
+    let _raceA='', _raceB='';
+    let _thumbA='', _thumbB='';
+    if(_isIndLike){
+      const _wp=players.find(p=>p.name===(m.wName||teamA||'')); const _lp=players.find(p=>p.name===(m.lName||teamB||''));
+      dotA=_wp?gc(_wp.univ):'#94a3b8'; dotB=_lp?gc(_lp.univ):'#94a3b8';
+      const _rIcon={'테란':'🔵','저그':'🟣','프로토스':'🟡'};
+      _raceA=_wp?(_rIcon[_wp.race]||''):''; _raceB=_lp?(_rIcon[_lp.race]||''):'';
+      if(typeof getPlayerPhotoHTML==='function'){
+        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'44px','border:none;',{lazy:true});
+        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'44px','border:none;',{lazy:true});
+      }
+    } else if(!isCK){
+      // (UI/UX 개선) 대학 대 대학 매치는 선수 얼굴 대신 대학 로고를 카드 양끝 썸네일로 사용
+      const _univLogoHTML=(n,side)=>{
+        try{
+          const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
+          // (요청, 2026-08-10) 미니 기본: 팀 이름 위에는 로고만 표시하고, 프로필 사진 대체는 하지 않는다.
+          if(!url) return '';
+          const _src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
+
+          const _won=side==='a'?aWin:bWin;
+          const _filt=_won?'none':'grayscale(0.7) opacity(0.8)';
+          const _nAttr=String(n).replace(/"/g,'&quot;');
+          return `<img src="${_src}" loading="lazy" title="${_nAttr}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:${_filt}" onerror="this.style.display='none'">`;
+        }catch(e){ return ''; }
+      };
+      // (요청, 2026-08-10) 미니 기본 모드에서는 팀 위 멤버 프로필 겹침 이미지를 표시하지 않는다.
+      _thumbA=_univLogoHTML(teamA,'a');
+      _thumbB=_univLogoHTML(teamB,'b');
+    }
+    // (UI/UX 개선) 대학 대 대학 매치: 세트/게임 기록에서 실제 출전한 선수를 게임 순서대로 모아
+    // 로고 아래에 프로필 사진 1장을 슬라이드쇼처럼 순환 표시. 팀 승패 × 개인 승패 조합으로 명암 처리:
+    //  - 이긴팀 + 개인승  : 정상(효과 없음)
+    //  - 이긴팀 + 개인패  : 아주 약하게만 회색 처리
+    //  - 진팀   + 개인승  : 살짝만 연하게
+    //  - 진팀   + 개인패  : 기본 회색 처리(가장 진하게)
+    const _sideOrderedParticipants=(side)=>{
+      if(isInd) return [];
+      if(!m.sets||!Array.isArray(m.sets)) return [];
+      const seen=new Set(); const out=[];
+      m.sets.forEach(set=>{
+        (set.games||[]).forEach(g=>{
+          const n=side==='a'?g.playerA:g.playerB;
+          if(!n||seen.has(n)) return;
+          seen.add(n);
+          const _won=(side==='a')?(g.winner==='A'):(g.winner==='B');
+          out.push({name:n,won:_won});
+        });
+      });
+      return out;
+    };
+    const _individualFilter=(playerWon,teamWon)=>{
+      if(teamWon&&playerWon) return '';
+      if(teamWon&&!playerWon) return 'grayscale(0.35) opacity(0.9)';
+      if(!teamWon&&playerWon) return 'grayscale(0.55) opacity(0.85)';
+      return 'grayscale(1) opacity(0.55)';
+    };
+    const _participantsHTML=(side)=>{
+      const list=_sideOrderedParticipants(side);
+      if(!list.length || typeof getPlayerPhotoHTML!=='function') return '';
+      const teamWon=(side==='a')?aWin:bWin;
+      const N=list.length;
+      const animName=`rspRot_${key}_${side}`.replace(/[^\w]/g,'_');
+      const DUR=Math.max(2.4, N*2.4);
+      const frames=list.map((p,i)=>{
+        const raw=getPlayerPhotoHTML(p.name,'46px','border:none;display:block;',{lazy:true});
+        const filt=_individualFilter(p.won,teamWon);
+        const animStyle=N>1?`animation:${animName}_${i} ${DUR}s linear infinite;`:'opacity:1;';
+        return `<span class="hist-all-mc-avatar-frame" style="${animStyle}filter:${filt||'none'}">${raw}</span>`;
+      }).join('');
+      const styleTag=N>1?`<style>${list.map((p,i)=>{
+        const start=(i/N*100), end=((i+1)/N*100);
+        const fadeGap=Math.min(1.2,(end-start)*0.12);
+        return `@keyframes ${animName}_${i}{${start.toFixed(2)}%{opacity:0}${(start+fadeGap).toFixed(2)}%{opacity:1}${(end-fadeGap).toFixed(2)}%{opacity:1}${end.toFixed(2)}%{opacity:0}}`;
+      }).join('')}</style>`:'';
+      return `${styleTag}<div class="hist-all-mc-participants">${frames}</div>`;
+    };
+    // (UI/UX 개선) 참여자 보기 버튼 마크업 (CK/프로리그, 팀원 정보 있을 때만) — 카드 하단용 축소 버전
+    const _memBtn=(side,members)=>{
+      if(!isCK || !members || !members.length) return '';
+      const col=side==='a'?ca:cb;
+      const lbl=side==='a'?teamA:teamB;
+      const memJson=JSON.stringify(members).replace(/"/g,"'");
+      return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:1px 7px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:9px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥${members.length}</button>`;
+    };
+    const _extraTag = m._src==='tour_normal'?'일반경기':(m._src==='tour_bracket'||m._src==='tour_manual')?'토너먼트':(m._teamMatchType?m._teamMatchType.replace('v',':')+'전':'');
+    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp'&&type!=='procompbkt');
+    const _editBtn = (()=>{
+      if(!_canEdit) return '';
+      if(type==='ind'||type==='gj'||type==='progj'){
+        const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
+        return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
+      }
+      return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
+    })();
+    const _bottomContent = (_memBtn('a',aMembers)||_memBtn('b',bMembers))
+      ? `${_memBtn('a',aMembers)}${_memBtn('b',bMembers)}`
+      : (_extraTag ? `<span class="hist-all-mc-map">${_extraTag}</span>`
+        : (m.map&&m.map!=='-' ? `<span class="hist-all-mc-map">${m.map}</span>` : ''));
+    const _teamAAttr=String(teamA).replace(/"/g,'&quot;');
+    const _teamBAttr=String(teamB).replace(/"/g,'&quot;');
+    return `<div class="hist-all-minicard" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};border-left-color:${dotA};border-right-color:${dotB};background:linear-gradient(90deg, ${dotA}26 0%, ${dotA}0d 14%, var(--white) 28%, var(--white) 72%, ${dotB}0d 86%, ${dotB}26 100%)" onclick="toggleDetail('${key}')">
+      <div class="hist-all-mc-top">
+        <span class="hist-all-mc-type" style="background:${ti.col}1f;color:${ti.col}">${ti.lbl}</span>
+        <span class="hist-all-mc-date" style="color:${dColor}">${dLabel}</span>
+        ${_editBtn}
+      </div>
+      <div class="hist-all-mc-mid">
+        <div class="hist-all-mc-side">
+          ${_thumbA || `<span class="hist-all-mc-dot" style="background:${dotA}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamAAttr}" style="color:${(!isCK&&!_isIndLike)?dotA:(winner===teamA?'var(--win-col)':winner===teamB?'var(--lose-col)':'var(--text)')}">${_raceA?`${_raceA} `:''}${teamA}</span>
+          ${_participantsHTML('a')}
+        </div>
+        ${isInd
+          ?`<span class="hist-all-mc-score" style="color:var(--win-col)">승</span>`
+          :`<span class="hist-all-mc-score">
+            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
+          </span>`}
+        <div class="hist-all-mc-side right">
+          ${_thumbB || `<span class="hist-all-mc-dot" style="background:${dotB}"></span>`}
+          <span class="hist-all-mc-name" title="${_teamBAttr}" style="color:${(!isCK&&!_isIndLike)?dotB:(winner===teamB?'var(--win-col)':winner===teamA?'var(--lose-col)':'var(--text)')}">${teamB}${_raceB?` ${_raceB}`:''}</span>
+          ${_participantsHTML('b')}
+        </div>
+      </div>
+      <div class="hist-all-mc-bottom">${_bottomContent}</div>
+      <div id="det-${key}" class="rec-detail-area">
+        ${isInd
+          ? (()=> {
+              const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
+              const wc=wp?gc(wp.univ):'#888'; const lc=lp?gc(lp.univ):'#888';
+              const mapStr=m.map&&m.map!=='-'?`<span style="font-size:var(--fs-caption);color:var(--gray-l)">${m.map}</span>`:'';
+              return `<div style="padding:8px 10px;display:flex;align-items:center;gap:8px">
+                ${wp?getPlayerPhotoHTML(wp.name,'24px'):''}<span class="ubadge" style="background:${wc}">${m.wName||''}</span>
+                <span style="color:var(--gray-l)">vs</span>
+                ${lp?getPlayerPhotoHTML(lp.name,'24px'):''}<span class="ubadge" style="background:${lc}">${m.lName||''}</span>
+                ${mapStr}
+              </div>`;
+            })()
+          : _regDet(key, _detM, mode, labelA, labelB, ca, cb, aWin, bWin, _regIdx)}
+      </div>
+    </div>`;
+}
+
+// (신규기능) 날짜별 구분선 + 미니카드 그리드 배치 — histAllHTML의 '기본형' 로직을 분리해
+// 개별 탭의 '미니 기본' 보기모드에서도 재사용 (2026-08-10, histviewmodes2)
+function _histCardGridWithDayHeaders(paged,typeInfo){
+  let h='';
+  let _lastD=null, _open=false;
+  paged.forEach(({type,d,m,idx,_ref}, pageIdx)=>{
+    if(d!==_lastD){
+      if(_open){ h+='</div>'; _open=false; }
+      _lastD=d;
+      const _dvLabel=d?d.slice(2).replace(/-/g,'/'):'날짜 미정';
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;${pageIdx===0?'margin-top:0;':''}">
+        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">${_dvLabel}</span>
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>`;
+    }
+    if(!_open){ h+='<div class="hist-all-cardgrid">'; _open=true; }
+    h+=_histAllCardItemHTML(type,d,m,idx,_ref,typeInfo);
+  });
+  if(_open) h+='</div>';
+  return h;
+}
+
 function histAllHTML(){
   const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
   const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
@@ -222,197 +578,27 @@ function histAllHTML(){
     return h;
   }
 
-  // (UI/UX 개선) 긴 가로 막대형 대신 신용카드 비율의 미니 카드를 그리드로 배치.
-  // 같은 날짜끼리는 구분선으로 묶어 하루 단위 그리드로 나눔 (날짜 바뀔 때 그리드 새로 오픈)
-  let _histAllLastD=null;
-  let _histAllGridOpen=false;
-  paged.forEach(({type,d,m,idx,_ref}, pageIdx)=>{
-    if(d!==_histAllLastD){
-      if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
-      _histAllLastD=d;
-      const _dvLabel=d?d.slice(2).replace(/-/g,'/'):'날짜 미정';
-      h+=`<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;${pageIdx===0?'margin-top:0;':''}">
-        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">${_dvLabel}</span>
-        <span style="flex:1;height:1px;background:var(--border)"></span>
+  // (신규기능) 기본형 이외 보기모드는 전용 렌더러로 위임 (더보기 버튼은 공통 하단에서 처리)
+  let _curViewMode=(typeof histAllViewMode!=='undefined'&&histAllViewMode)||'card';
+  if(!['card','grid','compact','broadcast'].includes(_curViewMode)) _curViewMode='card'; // 구버전 localStorage 값 방어
+  if(_curViewMode==='broadcast' && typeof histBroadcastModeHTML==='function'){ h+=histBroadcastModeHTML(paged,typeInfo); }
+  else if(_curViewMode==='grid'){ h+=histAllGridModeHTML(paged,typeInfo); }
+  else if(_curViewMode==='compact'){ h+=histAllCompactTableModeHTML(paged,typeInfo); }
+  if(_curViewMode!=='card'){
+    if(_mapFiltered.length>pageSize){
+      h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">${paged.length} / ${_mapFiltered.length}건 표시 중</span>
+        ${_hasMore?`<button class="btn btn-sm" onclick="histPage['all']=${histPage['all']+1};render()">더 보기 ↓</button>`:''}
+        ${histPage['all']>0?`<button class="btn btn-sm btn-w" onclick="histPage['all']=0;render()">처음으로</button>`:''}
       </div>`;
     }
-    if(!_histAllGridOpen){ h+='<div class="hist-all-cardgrid">'; _histAllGridOpen=true; }
-    const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
-    const isCK=(type==='ck'||type==='pro');
-    const isInd=(type==='ind'||type==='gj'||type==='procomp');
-    let teamA='',teamB='',scoreA='',scoreB='';
-    // (UI/UX 개선) CK/프로리그처럼 팀원이 많은 경기는 이름을 전부 나열하면 카드가 쓸데없이 길어짐 →
-    // 헤더에는 짧은 팀 라벨만 표시하고, 팀원 목록은 "참여자 보기" 버튼으로 팝업(openProMembersPopup, 개별 탭과 동일 컴포넌트 재사용)에서 확인
-    let aMembers=[], bMembers=[];
-    if(isInd){
-      teamA=m.wName||''; teamB=m.lName||'';
-    } else if(isCK){
-      aMembers=m.teamAMembers||[]; bMembers=m.teamBMembers||[];
-      teamA='A팀'; teamB='B팀';
-      scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
-    } else {
-      teamA=m.a||''; teamB=m.b||'';
-      scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
-    }
-    const winner=isInd?teamA:(!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
-    const dLabel=d?d.slice(2).replace(/-/g,'/'):'미정';
-    const dColor=d?'var(--text3)':'#f59e0b';
-    const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
-    const _regIdx = (typeof idx==='number' ? idx : pageIdx);
-    // (버그예방) CK/프로리그는 teamA/teamB가 이제 'A팀'/'B팀'으로 고정돼 더 이상 유니크하지 않으므로
-    // idx를 포함해 상세토글 키가 서로 충돌하지 않도록 함
-    const key=`hist-all-${type}-${d}-${_regIdx}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
-    const labelA=isCK?'A팀':(m.a||teamA);
-    const labelB=isCK?'B팀':(m.b||teamB);
-    const _sideCols = type==='ck' ? getFixedSideColors('ck') : type==='pro' ? getFixedSideColors('pro') : getFixedSideColors('tt');
-    const ca=isCK?_sideCols.a:gc(m.a||teamA);
-    const cb=isCK?_sideCols.b:gc(m.b||teamB);
-    const aWin=!isInd && Number(scoreA)>Number(scoreB);
-    const bWin=!isInd && Number(scoreB)>Number(scoreA);
-    const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',ind:'ind',gj:'gj',progj:'progj',tourney:'tourney',procomp:'procomp'};
-    const mode=modeMap[type]||'comp';
-    const _detM = _ref ? {...m, _editRef:_ref} : m;
-    const _isIndLike = (type==='ind'||type==='gj'||type==='procomp');
-    let dotA=ca, dotB=cb;
-    let _raceA='', _raceB='';
-    let _thumbA='', _thumbB='';
-    if(_isIndLike){
-      const _wp=players.find(p=>p.name===(m.wName||teamA||'')); const _lp=players.find(p=>p.name===(m.lName||teamB||''));
-      dotA=_wp?gc(_wp.univ):'#94a3b8'; dotB=_lp?gc(_lp.univ):'#94a3b8';
-      const _rIcon={'테란':'🔵','저그':'🟣','프로토스':'🟡'};
-      _raceA=_wp?(_rIcon[_wp.race]||''):''; _raceB=_lp?(_rIcon[_lp.race]||''):'';
-      if(typeof getPlayerPhotoHTML==='function'){
-        if(_wp) _thumbA=getPlayerPhotoHTML(_wp.name,'44px','border:none;',{lazy:true});
-        if(_lp) _thumbB=getPlayerPhotoHTML(_lp.name,'44px','border:none;',{lazy:true});
-      }
-    } else if(!isCK){
-      // (UI/UX 개선) 대학 대 대학 매치는 선수 얼굴 대신 대학 로고를 카드 양끝 썸네일로 사용
-      const _univLogoHTML=(n,side)=>{
-        try{
-          const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[n])||((typeof univCfg!=='undefined'&&univCfg.find(x=>x&&x.name===n))||{}).icon||'';
-          if(!url) return '';
-          const _src=(typeof toHttpsUrl==='function')?toHttpsUrl(url):url;
-          const _won=side==='a'?aWin:bWin;
-          const _filt=_won?'none':'grayscale(0.7) opacity(0.8)';
-          const _nAttr=String(n).replace(/"/g,'&quot;');
-          return `<img src="${_src}" loading="lazy" title="${_nAttr}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:${_filt}" onerror="this.style.display='none'">`;
-        }catch(e){ return ''; }
-      };
-      _thumbA=_univLogoHTML(teamA,'a'); _thumbB=_univLogoHTML(teamB,'b');
-    }
-    // (UI/UX 개선) 대학 대 대학 매치: 세트/게임 기록에서 실제 출전한 선수를 게임 순서대로 모아
-    // 로고 아래에 프로필 사진 1장을 슬라이드쇼처럼 순환 표시. 팀 승패 × 개인 승패 조합으로 명암 처리:
-    //  - 이긴팀 + 개인승  : 정상(효과 없음)
-    //  - 이긴팀 + 개인패  : 아주 약하게만 회색 처리
-    //  - 진팀   + 개인승  : 살짝만 연하게
-    //  - 진팀   + 개인패  : 기본 회색 처리(가장 진하게)
-    const _sideOrderedParticipants=(side)=>{
-      if(isInd) return [];
-      if(!m.sets||!Array.isArray(m.sets)) return [];
-      const seen=new Set(); const out=[];
-      m.sets.forEach(set=>{
-        (set.games||[]).forEach(g=>{
-          const n=side==='a'?g.playerA:g.playerB;
-          if(!n||seen.has(n)) return;
-          seen.add(n);
-          const _won=(side==='a')?(g.winner==='A'):(g.winner==='B');
-          out.push({name:n,won:_won});
-        });
-      });
-      return out;
-    };
-    const _individualFilter=(playerWon,teamWon)=>{
-      if(teamWon&&playerWon) return '';
-      if(teamWon&&!playerWon) return 'grayscale(0.35) opacity(0.9)';
-      if(!teamWon&&playerWon) return 'grayscale(0.55) opacity(0.85)';
-      return 'grayscale(1) opacity(0.55)';
-    };
-    const _participantsHTML=(side)=>{
-      const list=_sideOrderedParticipants(side);
-      if(!list.length || typeof getPlayerPhotoHTML!=='function') return '';
-      const teamWon=(side==='a')?aWin:bWin;
-      const N=list.length;
-      const animName=`rspRot_${key}_${side}`.replace(/[^\w]/g,'_');
-      const DUR=Math.max(2.4, N*2.4);
-      const frames=list.map((p,i)=>{
-        const raw=getPlayerPhotoHTML(p.name,'46px','border:none;display:block;',{lazy:true});
-        const filt=_individualFilter(p.won,teamWon);
-        const animStyle=N>1?`animation:${animName}_${i} ${DUR}s linear infinite;`:'opacity:1;';
-        return `<span class="hist-all-mc-avatar-frame" style="${animStyle}filter:${filt||'none'}">${raw}</span>`;
-      }).join('');
-      const styleTag=N>1?`<style>${list.map((p,i)=>{
-        const start=(i/N*100), end=((i+1)/N*100);
-        const fadeGap=Math.min(1.2,(end-start)*0.12);
-        return `@keyframes ${animName}_${i}{${start.toFixed(2)}%{opacity:0}${(start+fadeGap).toFixed(2)}%{opacity:1}${(end-fadeGap).toFixed(2)}%{opacity:1}${end.toFixed(2)}%{opacity:0}}`;
-      }).join('')}</style>`:'';
-      return `${styleTag}<div class="hist-all-mc-participants">${frames}</div>`;
-    };
-    // (UI/UX 개선) 참여자 보기 버튼 마크업 (CK/프로리그, 팀원 정보 있을 때만) — 카드 하단용 축소 버전
-    const _memBtn=(side,members)=>{
-      if(!isCK || !members || !members.length) return '';
-      const col=side==='a'?ca:cb;
-      const lbl=side==='a'?teamA:teamB;
-      const memJson=JSON.stringify(members).replace(/"/g,"'");
-      return `<button class="btn btn-xs no-export" style="flex-shrink:0;padding:1px 7px;border-radius:12px;border:1px solid ${col}55;background:${col}15;color:${col};font-weight:700;font-size:9px;white-space:nowrap" onclick="event.stopPropagation();openProMembersPopup('${lbl}','${col}',${memJson})">👥${members.length}</button>`;
-    };
-    const _extraTag = m._src==='tour_normal'?'일반경기':(m._src==='tour_bracket'||m._src==='tour_manual')?'토너먼트':(m._teamMatchType?m._teamMatchType.replace('v',':')+'전':'');
-    const _canEdit = (typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp');
-    const _editBtn = (()=>{
-      if(!_canEdit) return '';
-      if(type==='ind'||type==='gj'||type==='progj'){
-        const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
-        return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">수정</button>`;
-      }
-      return `<button class="btn btn-xs no-export" style="border:none;background:transparent;color:var(--text3);font-size:9px;padding:0" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">수정</button>`;
-    })();
-    const _bottomContent = (_memBtn('a',aMembers)||_memBtn('b',bMembers))
-      ? `${_memBtn('a',aMembers)}${_memBtn('b',bMembers)}`
-      : (_extraTag ? `<span class="hist-all-mc-map">${_extraTag}</span>`
-        : (m.map&&m.map!=='-' ? `<span class="hist-all-mc-map">${m.map}</span>` : ''));
-    const _teamAAttr=String(teamA).replace(/"/g,'&quot;');
-    const _teamBAttr=String(teamB).replace(/"/g,'&quot;');
-    h+=`<div class="hist-all-minicard" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};border-left-color:${dotA};border-right-color:${dotB};background:linear-gradient(90deg, ${dotA}26 0%, ${dotA}0d 14%, var(--white) 28%, var(--white) 72%, ${dotB}0d 86%, ${dotB}26 100%)" onclick="toggleDetail('${key}')">
-      <div class="hist-all-mc-top">
-        <span class="hist-all-mc-type" style="background:${ti.col}1f;color:${ti.col}">${ti.lbl}</span>
-        <span class="hist-all-mc-date" style="color:${dColor}">${dLabel}</span>
-        ${_editBtn}
-      </div>
-      <div class="hist-all-mc-mid">
-        <div class="hist-all-mc-side">
-          ${_thumbA || `<span class="hist-all-mc-dot" style="background:${dotA}"></span>`}
-          <span class="hist-all-mc-name" title="${_teamAAttr}" style="color:${(!isCK&&!_isIndLike)?dotA:(winner===teamA?'var(--win-col)':winner===teamB?'var(--lose-col)':'var(--text)')}">${_raceA?`${_raceA} `:''}${teamA}</span>
-          ${_participantsHTML('a')}
-        </div>
-        ${isInd
-          ?`<span class="hist-all-mc-score" style="color:var(--win-col)">승</span>`
-          :`<span class="hist-all-mc-score">
-            <span style="color:${Number(scoreA)>Number(scoreB)?'var(--win-col)':Number(scoreB)>Number(scoreA)?'var(--lose-col)':'var(--text)'}">${scoreA}</span><span style="color:var(--gray-l);font-weight:400">:</span><span style="color:${Number(scoreB)>Number(scoreA)?'var(--win-col)':Number(scoreA)>Number(scoreB)?'var(--lose-col)':'var(--text)'}">${scoreB}</span>
-          </span>`}
-        <div class="hist-all-mc-side right">
-          ${_thumbB || `<span class="hist-all-mc-dot" style="background:${dotB}"></span>`}
-          <span class="hist-all-mc-name" title="${_teamBAttr}" style="color:${(!isCK&&!_isIndLike)?dotB:(winner===teamB?'var(--win-col)':winner===teamA?'var(--lose-col)':'var(--text)')}">${teamB}${_raceB?` ${_raceB}`:''}</span>
-          ${_participantsHTML('b')}
-        </div>
-      </div>
-      <div class="hist-all-mc-bottom">${_bottomContent}</div>
-      <div id="det-${key}" class="rec-detail-area">
-        ${isInd
-          ? (()=> {
-              const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
-              const wc=wp?gc(wp.univ):'#888'; const lc=lp?gc(lp.univ):'#888';
-              const mapStr=m.map&&m.map!=='-'?`<span style="font-size:var(--fs-caption);color:var(--gray-l)">${m.map}</span>`:'';
-              return `<div style="padding:8px 10px;display:flex;align-items:center;gap:8px">
-                ${wp?getPlayerPhotoHTML(wp.name,'24px'):''}<span class="ubadge" style="background:${wc}">${m.wName||''}</span>
-                <span style="color:var(--gray-l)">vs</span>
-                ${lp?getPlayerPhotoHTML(lp.name,'24px'):''}<span class="ubadge" style="background:${lc}">${m.lName||''}</span>
-                ${mapStr}
-              </div>`;
-            })()
-          : _regDet(key, _detM, mode, labelA, labelB, ca, cb, aWin, bWin, _regIdx)}
-      </div>
-    </div>`;
-  });
-  if(_histAllGridOpen){ h+='</div>'; _histAllGridOpen=false; }
+    return h;
+  }
+
+  // (UI/UX 개선) 긴 가로 막대형 대신 신용카드 비율의 미니 카드를 그리드로 배치.
+  // 같은 날짜끼리는 구분선으로 묶어 하루 단위 그리드로 나눔 (날짜 바뀔 때 그리드 새로 오픈)
+  // (2026-08-10, histviewmodes2) 실제 렌더 로직은 _histCardGridWithDayHeaders로 분리됨(재사용 목적)
+  h+=_histCardGridWithDayHeaders(paged,typeInfo);
 
   // (UI/UX 개선) prev/next 대신 "더보기"로 이어붙이는 피드형 로딩. 여러 페이지를 불러온 뒤엔 "처음으로"도 제공.
   if(_mapFiltered.length>pageSize){

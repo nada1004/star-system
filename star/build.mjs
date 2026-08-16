@@ -49,6 +49,7 @@ const CORE_FILES = [
   'js/constants-tab-colors.js',
   'js/constants-player-html.js',
   'js/unified-settings.js',
+  'js/tts-common.js',
   'js/modal-open.js',
   'js/modal-drag.js',
   'js/data.js',
@@ -59,6 +60,7 @@ const CORE_FILES = [
   'js/auth-login-flow.js',
   'js/auth-game-edit.js',
   'js/auth-ui-utils.js',
+  'js/tab-visibility.js',
   'js/settings-sync/merge.js',
   'js/settings-sync/gist-io.js',
   'js/settings-sync/signal.js',
@@ -72,9 +74,9 @@ const CORE_FILES = [
   'js/tier-tour-migrate.js',
   'js/tier-tour-render.js',
   'js/tier-tour-cfg.js',
+  'js/tier-tour-cfg-bulkops.js',
   'js/tier-tour-misc.js',
   'js/settings/font-controls.js',
-  'js/settings/ui-scale-controls.js',
   'js/settings-base-core.js',
   'js/settings-b2img.js',
   'js/settings-cfg-menu.js',
@@ -85,11 +87,10 @@ const CORE_FILES = [
   'js/settings-cfg-modal.js',
   'js/settings-cfg-nav.js',
   'js/settings-cfg-view-toggle.js',
+  'js/settings-tabvis-render.js',
   'js/settings-cfg-univ-order.js',
   'js/settings-cfg-qa-dryrun.js',
   'js/settings-cfg-search.js',
-  'js/settings-cfg-gistsync.js',
-  'js/settings-cfg-legacy-openep.js',
   'js/settings-cfg-misc.js',
   'js/settings-render-reccard.js',
   'js/settings-render-tourneycard.js',
@@ -99,7 +100,10 @@ const CORE_FILES = [
   'js/settings-render-sec3.js',
   'js/settings-render-sec4.js',
   'js/settings-render.js',
-  'js/settings-data-ops.js',
+  'js/settings-data-gistsync.js',
+  'js/settings-data-images.js',
+  'js/settings-data-bulkops.js',
+  'js/settings-data-uiprefs.js',
   'js/settings-crud-add.js',
   'js/settings-crud-editmodal.js',
   'js/settings-crud-save.js',
@@ -161,14 +165,21 @@ const CORE_FILES = [
 
 /** 경기/대전 기록 번들 */
 const MATCH_FILES = [
-  'js/competition.js',
+  'js/competition-core.js',
+  'js/competition-bracket-seed.js',
+  'js/competition-bracket-state.js',
+  'js/competition-bracket-views.js',
+  'js/competition-player-rank.js',
   'js/competition-detail-modal.js',
   'js/competition-group-records.js',
   'js/competition-bracket-records.js',
   'js/competition-briefing.js',
   'js/competition-bracket-editor.js',
   'js/competition-group-editor.js',
-  'js/competition-normal-matches.js',
+  'js/competition-normal-matches-list.js',
+  'js/competition-normal-matches-edit.js',
+  'js/competition-normal-matches-detail.js',
+  'js/competition-normal-matches-util.js',
   'js/history-share.js',
   'js/history-action-utils.js',
   'js/history-external-utils.js',
@@ -176,6 +187,10 @@ const MATCH_FILES = [
   'js/history-hist-nav.js',
   'js/history-bulk-map.js',
   'js/history-all-html.js',
+  'js/history-tab-alt-views.js',
+  'js/history-broadcast-view.js',
+  'js/pro-comp-alt-views.js',
+  'js/comp-alt-views.js',
   'js/history-tourney-html.js',
   'js/history-univ-stat.js',
   'js/history-render-utils.js',
@@ -273,6 +288,7 @@ const BOARD_FILES = [
   'js/board2-image-utils.js',
   'js/board2-card-utils.js',
   'js/board2-core.js',
+  'js/player-bgm.js',
   'js/board2-univ-views-core.js',
   'js/board2-univ-views-femco.js',
   'js/board2-univ-views-freeboard.js',
@@ -289,6 +305,7 @@ const BOARD_FILES = [
   'js/board2-briefing-data.js',
   'js/board2-briefing-state.js',
   'js/board2-briefing-view.js',
+  'js/board2-briefing-tts.js',
   'js/sync/firebase-github.js',
   'js/sync/firebase-signal.js',
 ];
@@ -362,9 +379,14 @@ const LAZY_CHUNKS = {
     'js/memory-match-game.js',
     'js/mole-whack-game.js',
     'js/omok-game.js',
+    'js/janggi-game.js',
+    'js/othello-game.js',
+    'js/roulette-teamsplit.js',
+    'js/roulette-bracket.js',
   ],
   'lazy-calendar.js': [
     'js/calendar.js',
+    'js/calendar-sched.js',
   ],
   'lazy-chatbot.js': [
     'js/chatbot.js',
@@ -401,7 +423,10 @@ const LAZY_CHUNKS = {
  * ⚠️ 캐스케이드(적용 순서)가 곧 우선순위이므로 반드시 index.html에 등장하는 순서를 그대로 유지한다.
  */
 const CSS_FILES = [
-  'css/style.css',
+  'css/style-core.css',
+  'css/style-popups.css',
+  'css/style-cards.css',
+  'css/style-modes.css',
   'css/ui-improvements.css',
   'css/design-improvements.css',
   'css/ui-fix-empty-classes.css',
@@ -410,6 +435,7 @@ const CSS_FILES = [
   'css/univ-detail-design-modes.css',
   'css/match-detail-design-modes.css',
   'css/rec-card-minimal.css',
+  'css/history-broadcast-view.css',
   'css/board2-briefing.css',
   'css/tier-rank.css',
   'css/stats-core.css',
@@ -452,12 +478,16 @@ async function minifyFile(filePath) {
   }
 }
 
-async function buildChunk(outName, files) {
+async function buildChunk(outName, files, overrides) {
   const outPath = path.join(DIST, 'js', outName);
   const parts = [];
   let missing = 0;
 
   for (const f of files) {
+    if (overrides && Object.prototype.hasOwnProperty.call(overrides, f)) {
+      parts.push(`/* ${path.basename(f)} (patched) */\n${overrides[f]}`);
+      continue;
+    }
     const full = path.join(SRC, f);
     if (!fs.existsSync(full)) {
       console.warn(`  ⚠️  파일 없음: ${f}`);
@@ -679,6 +709,7 @@ async function patchLazyUtils() {
     .then(r => r.code)
     .catch(() => patched);
   fs.writeFileSync(outPath, minified, 'utf8');
+  return minified;
 }
 
 // ──────────────────────────────────────────
@@ -781,9 +812,16 @@ async function main() {
   console.log('');
 
   console.log('📦 코어/기능 청크 빌드:');
+  // (버그픽스, 2026-08-14) patchLazyUtils()가 정의만 되어있고 실제로는 호출되지 않아서,
+  // chunk-core.js에 render-lazy-utils.js의 "원본"(개별 js/*.js 경로를 직접 fetch하는 버전)이
+  // 그대로 들어가고 있었다. dist만 배포하는 환경(원본 js/ 폴더 없이)에서는 stats/공유카드/
+  // 룰렛/캘린더/챗봇/엘보드/투표 등 지연 로딩 기능을 열 때마다 "load fail: js/xxx.js" 오류가
+  // 날 수 있는 구조였음 — 이번에 실제로 패치된 버전을 chunk-core.js에 넣도록 연결한다.
+  const patchedLazyUtils = await patchLazyUtils();
+  const coreOverrides = { 'js/render-lazy-utils.js': patchedLazyUtils };
   const results = [];
   for (const [name, files] of chunks) {
-    results.push(await buildChunk(name, files));
+    results.push(await buildChunk(name, files, name === 'chunk-core.js' ? coreOverrides : null));
   }
 
   console.log('\n⏳ 지연 로딩 청크 빌드:');
