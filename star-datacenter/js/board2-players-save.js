@@ -7,7 +7,6 @@ function saveB2Profile(playerName) {
   if (!player) return;
   
   const photoUrl = (document.getElementById('b2-ed-photo')?.value || '').trim();
-  const bgmUrl = (document.getElementById('b2-ed-bgm-url')?.value || '').trim();
   const secondProfileUrl = (document.getElementById('b2-ed-second-profile')?.value || '').trim();
   const thirdProfileUrl = (document.getElementById('b2-ed-photo3')?.value || '').trim();
   const fourthProfileUrl = (document.getElementById('b2-ed-photo4')?.value || '').trim();
@@ -30,7 +29,6 @@ function saveB2Profile(playerName) {
   }
   
   player.photo = photoUrl || undefined;
-  player.bgmUrl = bgmUrl || undefined;
   player.secondProfileFile = secondProfileUrl || undefined;
   player.profileFile3 = thirdProfileUrl || undefined;
   player.profileFile4 = fourthProfileUrl || undefined;

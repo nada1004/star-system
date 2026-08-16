@@ -150,11 +150,6 @@ window.openEP=function(name){
         </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:6px">치지직/트위치/유튜브 등 방송국 주소. 스트리머 상세에서 홈 아이콘으로 이동됩니다.</div>
       </div>
-      <div style="grid-column:1 / -1;min-width:0">
-        <label>🎵 주제곡 BGM <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(유튜브 링크 — 프로필탭에서 이 선수를 선택하면 재생됩니다)</span></label>
-        <input type="text" id="ed-bgm-url" value="${p.bgmUrl||''}" placeholder="https://www.youtube.com/watch?v=... 또는 https://youtu.be/..." style="width:100%">
-        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">다른 선수를 선택하면 자동으로 정지되고 새 곡으로 바뀝니다. 비워두면 BGM 없이 조용히 표시됩니다.</div>
-      </div>
     </div>
     <div id="ep-p1-sec" class="ep-adv-section">
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">

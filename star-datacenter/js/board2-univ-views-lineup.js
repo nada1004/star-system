@@ -163,7 +163,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${col}44 0%,${col}1a 100%)"></div>`;
   // 메인 사진 (전체 꽉 채움, 모양 적용 없이 카드 자체 overflow:hidden으로 처리)
   const photoHtml = photo
-    ? `<img class="b2-lineup-card-photo" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+    ? `<img class="b2-lineup-card-photo" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
          <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`

@@ -173,9 +173,6 @@ function _b2UpdateMainDisplay(playerName) {
       
       <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
       ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:var(--fs-sm);font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
-
-      <!-- 🎵 주제곡 음소거 토글 — BGM이 재생 중일 때만 표시 (모든 사용자에게 노출) -->
-      <button id="b2-bgm-toggle-btn" onclick="if(typeof _b2PlayerBgmToggleMute==='function')_b2PlayerBgmToggleMute();" style="display:none;position:absolute;top:16px;${isLoggedIn?'right:96px':'right:16px'};z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:var(--fs-sm);font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">🔊</button>
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
@@ -191,9 +188,6 @@ function _b2UpdateMainDisplay(playerName) {
         ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:var(--fs-sm);font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
       </div>
     `;
-    // 🎵 이 스트리머의 프로필을 보기 시작하는 시점 — 등록된 주제곡이 있으면 재생을
-    // 시작하고(다른 스트리머를 보던 중이었다면 그 곡은 자동으로 정지된다), 없으면 정지만 한다.
-    if (typeof _b2PlayerBgmStart === 'function') _b2PlayerBgmStart(playerName);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
     // [FIX] 슬롯1의 onload가 캐시 이미지의 경우 발화 안 할 수 있으므로
