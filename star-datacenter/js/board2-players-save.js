@@ -53,20 +53,14 @@ function saveB2Profile(playerName) {
 
   document.getElementById('b2-profile-edit-modal').remove();
 
-  // [FIX-NO-GRID-REFRESH] 예전에는 저장할 때마다 #b2-content 전체를 innerHTML로
-  // 다시 그려서(=_b2PlayersView() 재호출), 이미 캐시된 다른 선수들의 카드 이미지까지
-  // DOM에서 새로 생성되며 "스트리머탭 전체가 새로고침되는" 것처럼 보이는 문제가 있었음.
-  // 이제는 수정한 선수의 카드 1장만 교체하고, 좌측 메인(히어로)도 그 선수가 현재
-  // 선택돼 있을 때만 갱신해서 나머지 카드/이미지는 전혀 건드리지 않는다.
+  // [FIX] 기존에는 render()로 앱 전체를 다시 그려서, 이미 캐시된 프로필 이미지들까지
+  // DOM에서 새로 생성되며 재로딩되는 것처럼 느려지는 문제가 있었음.
+  // 스트리머탭(board2) 화면이 열려 있으면 #b2-content만 가볍게 다시 그려서
+  // 다른 선수 카드들의 <img>가 불필요하게 재생성되지 않도록 함.
   const _b2ContentEl = document.getElementById('b2-content');
   if (_b2ContentEl && typeof _b2PlayersView === 'function') {
-    const _cardUpdated = (typeof _b2UpdatePlayerCard === 'function') ? _b2UpdatePlayerCard(playerName) : false;
-    if (!_cardUpdated) {
-      // 카드가 화면에 없거나(필터에 의해 숨겨짐 등) 갱신에 실패한 경우에만
-      // 안전하게 그리드 전체를 다시 그린다.
-      _b2ContentEl.innerHTML = _b2PlayersView();
-      try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
-    }
+    _b2ContentEl.innerHTML = _b2PlayersView();
+    try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
     if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
       _b2UpdateMainDisplay(playerName);
     }

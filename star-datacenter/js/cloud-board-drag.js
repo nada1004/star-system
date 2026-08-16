@@ -146,23 +146,8 @@ const _imgDataUrlCache = (window._imgDataUrlCache = window._imgDataUrlCache || {
 const _imgDataUrlInflight = (window._imgDataUrlInflight = window._imgDataUrlInflight || {});
 const _imgDataUrlCacheOrder = (window._imgDataUrlCacheOrder = window._imgDataUrlCacheOrder || []);
 async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
-  // 캡처 대상 안에는 숨겨진 탭/모달 복사본까지 들어와 이미지가 수백~천 개가 되는 경우가 있다.
-  // 전부 data URL 로 바꾸려 하면 '저장 중' 상태가 사실상 끝나지 않으므로,
-  // (1) 실제로 보이는 이미지만 변환하고 (2) 전체 작업에 상한 시간을 둔다. (2026-08-16)
-  const _allImgs = [...container.querySelectorAll('img')];
-  const imgs = _allImgs.filter(im => {
-    try{
-      if(!im.getAttribute('src')) return false;
-      if(im.closest('[hidden],[style*="display:none"],[style*="display: none"]')) return false;
-      const r = im.getBoundingClientRect();
-      if(!r.width || !r.height) return false;
-      const cs = getComputedStyle(im);
-      if(cs.display === 'none' || cs.visibility === 'hidden') return false;
-      return true;
-    }catch(e){ return true; }
-  });
+  const imgs = [...container.querySelectorAll('img')];
   const maxConcurrent = 20;
-  const overallDeadline = Date.now() + Math.max(timeoutMs, 15000);
   let idx = 0;
   let doneCount = 0;
 
@@ -309,7 +294,6 @@ async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
     while(true){
       const i = idx++;
       if(i >= imgs.length) break;
-      if(Date.now() > overallDeadline) break; // 상한 초과 시 남은 이미지는 원본 URL 그대로 사용
       try{ await convertOne(imgs[i]); }catch(e){}
       doneCount++;
       if(typeof onProgress === 'function'){

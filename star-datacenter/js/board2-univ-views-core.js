@@ -276,10 +276,10 @@ try{
                     const _avSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_avSecondRaw);
                     const avSecondPhoto = (_avSecondRaw && !_avSecondIsVideo) ? _avSecondRaw : '';
                     const avSecondHtml = avSecondPhoto
-                      ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="this.remove()">`
+                      ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
                       : '';
                     const avHoverAttrs = avSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
-                    return `<button type="button" class="b2rt-av" style="position:relative"${avHoverAttrs} onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
+                    return `<button type="button" class="b2rt-av" style="position:relative"${avHoverAttrs} onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
                   }).join('')}</div>
                 </div>`;
               }).join('')}</div>`;
@@ -296,14 +296,14 @@ try{
               const uCol = (typeof gc==='function' ? (gc(univ)||'#64748b') : '#64748b');
               const uLogo = (univ && univ!=='무소속' && typeof gUI==='function') ? gUI(univ,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univ,'players','16px'):'16px')) : '';
               const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" onerror="this.style.display='none'">` : '';
+              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2rt-fb" style="display:${photo?'none':'flex'}">${String(p?.race||'?')}</div>`;
               // (버그픽스) 두번째 프로필 사진 호버 미리보기 — 다른 카드들과 동일하게 secondProfileFile 기반으로 표시
               const _rtSecondRaw = String(p?.secondProfileFile||'').trim();
               const _rtSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_rtSecondRaw);
               const rtSecondPhoto = (_rtSecondRaw && !_rtSecondIsVideo) ? _rtSecondRaw : '';
               const rtSecondHtml = rtSecondPhoto
-                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(rtSecondPhoto).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="this.remove()">`
+                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(rtSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
                 : '';
               const rtHoverAttrs = rtSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
               return `<div class="b2rt-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')"${rtHoverAttrs}>
@@ -490,10 +490,10 @@ try{
                       const _avSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_avSecondRaw);
                       const avSecondPhoto = (_avSecondRaw && !_avSecondIsVideo) ? _avSecondRaw : '';
                       const avSecondHtml = avSecondPhoto
-                        ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="this.remove()">`
+                        ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(avSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
                         : '';
                       const avHoverAttrs = avSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
-                      return `<button type="button" class="b2tu-av" style="position:relative"${avHoverAttrs} onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
+                      return `<button type="button" class="b2tu-av" style="position:relative"${avHoverAttrs} onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}${avSecondHtml}</button>`;
                     }).join('')}</div>
                   </div>`;
                 }).join('')}</div>`
@@ -506,14 +506,14 @@ try{
               const col = (typeof gc==='function') ? (gc(univName)||'#64748b') : '#64748b';
               const logo = (univName && univName!=='무소속' && typeof gUI==='function') ? gUI(univName,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univName,'players','16px'):'16px')) : '';
               const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" onerror="this.style.display='none'">` : '';
+              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2tu-fb" style="display:${photo?'none':'flex'}">${race}</div>`;
               // (버그픽스) 두번째 프로필 사진 호버 미리보기
               const _tuSecondRaw = String(p?.secondProfileFile||'').trim();
               const _tuSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_tuSecondRaw);
               const tuSecondPhoto = (_tuSecondRaw && !_tuSecondIsVideo) ? _tuSecondRaw : '';
               const tuSecondHtml = tuSecondPhoto
-                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(tuSecondPhoto).replace(/\"/g,'&quot;')}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="this.remove()">`
+                ? `<img class="b2-players-card-secondary" src="${toHttpsUrl(tuSecondPhoto).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
                 : '';
               const tuHoverAttrs = tuSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
               return `<div class="b2tu-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')"${tuHoverAttrs}>
