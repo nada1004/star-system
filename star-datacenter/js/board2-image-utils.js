@@ -499,13 +499,28 @@ function _b2ScheduleImageSwap(playerName) {
   }
   // 이어서 재생: 최근(10분 이내)에 이 선수를 보던 중이었고, 그때 보던 슬롯이 지금도
   // 유효한(살아있는) 이미지 목록에 있다면 그 슬롯부터 시작. 아니면 1번부터(신규 진입).
+  // [FIX-IMG-RESUME-BROKEN] 예전에는 "그때 보던 슬롯"이 하필 지금 이 순간(반복 요청으로 인한
+  // 일시적 로드 실패 등) 깨져 있으면, 곧바로 포기하고 등록 목록의 맨 앞(대개 슬롯1)으로
+  // 되돌아갔다. 그래서 화면에 보이던 이미지가 아주 잠깐 깨졌다 살아나는 것만으로도
+  // "1 → 다음 → 다시 1로" 처럼 순환이 슬롯1로 계속 튕겨나가는 원인이 됐다.
+  // 이제는 그 슬롯 자체가 지금 깨져 있어도, 등록 순서(baseOrder)상 그 다음으로 살아있는
+  // 슬롯부터 이어서 시작해서(예: 4번이 잠깐 깨졌으면 5번부터), 순서 자체가 슬롯1로
+  // 되돌아가지 않고 원래 흐름을 그대로 유지하도록 한다.
   const _resumeSlotCandidate = (()=>{
     try{
       const st = window._b2SwapResumeState && window._b2SwapResumeState[playerName];
       if(!st) return null;
       if(Date.now() - (st.ts||0) > 10*60*1000) return null; // 너무 오래됐으면 무시
-      const found = initialLiveList.find(item=>item.slot === st.slot);
-      return found ? found.slot : null;
+      const rememberedIdx = imgList.findIndex(item => item.slot === st.slot);
+      if(rememberedIdx < 0) return null; // 아예 등록되지 않은 슬롯(삭제됨 등)이면 신규 진입
+      const stillLive = initialLiveList.find(item=>item.slot === st.slot);
+      if(stillLive) return stillLive.slot; // 정상 케이스: 그대로 이어서 재생
+      // 기억해둔 슬롯이 지금 깨져 있으면, 등록 순서 안에서 그 다음으로 살아있는 슬롯을 찾는다.
+      for(let step = 1; step <= imgList.length; step++){
+        const cand = imgList[(rememberedIdx + step) % imgList.length];
+        if(initialLiveList.some(item => item.slot === cand.slot)) return cand.slot;
+      }
+      return null; // 전부 깨져 있으면 아래에서 안전하게 첫 이미지로 폴백
     }catch(e){ return null; }
   })();
   // [FIX-IMG-ORDER] 순환 순서의 "기준"은 여기서 딱 한 번만 고정한다(baseOrder).
@@ -751,6 +766,15 @@ window._b2HandleMediaFailure = function(mediaEl) {
     mediaEl.dataset.b2Broken = '1';
     const playerName = String(window._b2SelectedPlayer?.name || '').trim();
     if(!playerName || typeof window._b2ScheduleImageSwap !== 'function') return;
+    // [FIX-IMG-FAIL-SCOPE] 예전에는 10장 중 어느 슬롯이든(지금 화면에 안 보이는 대기 중인
+    // 슬롯이라도) 로드 실패하면 전체 순환 스케줄을 처음부터 다시 시작했다. 그러면 실제로는
+    // 화면에 아무 변화가 없어야 할 상황에서도 "다음 전환까지 남은 시간"이 계속 리셋되며
+    // 타이밍이 설정과 어긋나 보이는 원인이 됐다. 지금 실제로 화면에 보여지고 있는 슬롯이
+    // 깨진 경우에만(그 자리를 즉시 벗어나야 하므로) 재시작하고, 대기 중인 슬롯의 실패는
+    // baseOrder 순회 시 자동으로 건너뛰도록만 두어 재생 타이밍을 건드리지 않는다.
+    const mainBox = document.getElementById('b2-players-main-box');
+    const isCurrentlyShown = !!(mainBox && mainBox._swapCurSlot != null && mediaEl.id === ('b2-main-img-' + mainBox._swapCurSlot));
+    if(!isCurrentlyShown) return;
     setTimeout(()=>window._b2ScheduleImageSwap(playerName), 0);
   }catch(e){}
 };
