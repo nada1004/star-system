@@ -7,9 +7,20 @@ function rTotal(C,T){
   try{ _bindTotalDelegatedEvents(); }catch(e){}
   try{ _bindFocusPhoto2DragEvents(); }catch(e){}
   try{ if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true); }catch(e){}
-  const _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
-  const _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
-  const _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
+  // TabVis: 보기 방식(카드형/상세형/리스트/심플형)이 OFF(비로그인 숨김)면 비로그인 사용자는 리스트형으로 고정
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('total.mode.' + totalViewMode)) {
+    totalViewMode = 'table';
+  }
+  let _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  let _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  let _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
+  // TabVis: 디자인/레이아웃/UI 스킨이 OFF(비로그인 숨김)면 비로그인 사용자에게는 기본값으로 표시
+  if ((_streamerTabDesignMode!=='classic' || _streamerTabLayoutMode!=='default' || _streamerTabUiMode!=='standard')
+      && window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('total.mode.designskin')) {
+    _streamerTabDesignMode = 'classic';
+    _streamerTabLayoutMode = 'default';
+    _streamerTabUiMode = 'standard';
+  }
   const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : null;
   const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
   if(!_pl || !_getUnivs){
@@ -75,20 +86,21 @@ function rTotal(C,T){
   const _kpiBar = '';
   // 뷰 전환(카드형/상세형/리스트/심플형) 버튼은 별도의 고정 세그먼트 컨트롤로 분리 —
   // 아래 필터바(가로 스크롤)에 섞여 있으면 모바일에서 원하는 뷰 버튼을 찾으려 계속 스크롤해야 하는 문제가 있었음
-  const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">
-    <button class="streamer-viewmode-btn ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()" title="카드형 대시보드 보기"><span class="streamer-viewmode-ico">🪪</span><span class="streamer-viewmode-txt">카드형</span></button>
-    <button class="streamer-viewmode-btn ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기"><span class="streamer-viewmode-ico">🧾</span><span class="streamer-viewmode-txt">상세형</span></button>
-    <button class="streamer-viewmode-btn ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기"><span class="streamer-viewmode-ico">☰</span><span class="streamer-viewmode-txt">리스트</span></button>
-    <button class="streamer-viewmode-btn ${totalViewMode==='simple'?'on':''}" onclick="totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()" title="여백을 줄인 한 줄 미니멀 리스트"><span class="streamer-viewmode-ico">✨</span><span class="streamer-viewmode-txt">심플형</span></button>
-  </div>`;
-  // 모바일 전용: 위 4개 버튼을 한 줄 드롭다운 트리거로 대체 (streamer-viewmode-seg는 CSS로 숨김)
   const _streamerViewModeMeta = {
-    gallery:{icon:'🪪',label:'카드형',action:"totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()"},
-    focus:{icon:'🧾',label:'상세형',action:"if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()"},
-    table:{icon:'☰',label:'리스트',action:"totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()"},
-    simple:{icon:'✨',label:'심플형',action:"totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()"}
+    gallery:{icon:'🪪',label:'카드형',title:'카드형 대시보드 보기',action:"totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()"},
+    focus:{icon:'🧾',label:'상세형',title:'좌측 목록 + 우측 상세 보기',action:"if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()"},
+    table:{icon:'☰',label:'리스트',title:'리스트 보기',action:"totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()"},
+    simple:{icon:'✨',label:'심플형',title:'여백을 줄인 한 줄 미니멀 리스트',action:"totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()"}
   };
-  window._streamerViewModeItems = Object.keys(_streamerViewModeMeta).map(id=>({id, icon:_streamerViewModeMeta[id].icon, label:_streamerViewModeMeta[id].label, action:_streamerViewModeMeta[id].action, active:totalViewMode===id}));
+  // TabVis: OFF(비로그인 숨김) 처리된 보기 방식은 비로그인 사용자에게 버튼 자체를 숨김
+  // (단, 'table'은 폴백 기본값이므로 항상 최소 하나는 남도록 필터에서 제외하지 않음)
+  const _streamerViewModeIds = Object.keys(_streamerViewModeMeta).filter(id => id==='table' ||
+    !(window.TabVis && typeof window.TabVis.visible === 'function') || window.TabVis.visible('total.mode.' + id));
+  const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">
+    ${_streamerViewModeIds.map(id => `<button class="streamer-viewmode-btn ${totalViewMode===id?'on':''}" onclick="${_streamerViewModeMeta[id].action}" title="${_streamerViewModeMeta[id].title}"><span class="streamer-viewmode-ico">${_streamerViewModeMeta[id].icon}</span><span class="streamer-viewmode-txt">${_streamerViewModeMeta[id].label}</span></button>`).join('')}
+  </div>`;
+  // 모바일 전용: 위 버튼들을 한 줄 드롭다운 트리거로 대체 (streamer-viewmode-seg는 CSS로 숨김)
+  window._streamerViewModeItems = _streamerViewModeIds.map(id=>({id, icon:_streamerViewModeMeta[id].icon, label:_streamerViewModeMeta[id].label, action:_streamerViewModeMeta[id].action, active:totalViewMode===id}));
   const _curStreamerVm = _streamerViewModeMeta[totalViewMode] || _streamerViewModeMeta.table;
   const _viewSegMobile = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'보기 방식',window._streamerViewModeItems)">
     <span class="mode-select-trigger-main"><span class="mode-select-trigger-ico">${_curStreamerVm.icon}</span><span class="mode-select-trigger-label">${_curStreamerVm.label}</span></span>

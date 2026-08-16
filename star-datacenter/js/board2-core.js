@@ -424,6 +424,10 @@ function rBoard2(C, T) {
   // 적합하지 않아 요청에 따라 숨김) — 데스크톱에서 라이브 탭에 있다가 창을 좁히거나,
   // 모바일로 접속했는데 이전 상태가 남아있는 경우 안전하게 다른 탭으로 이동
   if (_b2View === 'live' && window.innerWidth <= 768) _b2View = 'univ';
+  // 설정에서 OFF된(비로그인 시 숨김) 하위탭에 머물러 있으면 안전한 탭으로 이동
+  if (window.TabVis && typeof window.TabVis.visible==='function' && !window.TabVis.visible('b2.'+_b2View)) {
+    _b2View = window.TabVis.visible('b2.univ') ? 'univ' : 'weekly';
+  }
 
   // 저장/초기화 바
   let saveBar = '';
@@ -449,6 +453,17 @@ function rBoard2(C, T) {
   } else if (_b2View === 'lineup') {
     if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
     const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
+    // TabVis: 라인업 카드 모드(기본/통계카드/테이블) — OFF된 모드는 비로그인 사용자에게 숨김
+    let _lcAllModes=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+    const _lcTv = (id)=> (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.lineup.mode.'+id) : true;
+    let _lcItems = _lcAllModes.filter(it=>_lcTv(it.id));
+    if (!_lcItems.length) _lcItems = _lcAllModes; // 전부 꺼졌으면 안전하게 전체 노출(관리자 실수 방지)
+    if (!_lcItems.some(it=>it.id===_b2LineupCardMode)) {
+      _b2LineupCardMode = _lcItems[0].id;
+      try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
+    }
+    // TabVis: 애니메이션 인트로 재생 버튼 노출 여부
+    const _lcIntroOn = (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.lineup.mode.intro') : true;
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
         <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="if(typeof _b2LineupStopSpeak==='function')_b2LineupStopSpeak();if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow();if(typeof _b2LineupSetSpeakTarget==='function')_b2LineupSetSpeakTarget('');_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
@@ -456,20 +471,17 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
+      ${_lcItems.length>1 ? `<div style="display:flex;align-items:center;gap:6px" class="b2-lineup-mode-desktop">
         <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
         <div style="display:flex;gap:4px">
-          ${_lcModeBtn('default','🖼️ 기본')}
-          ${_lcModeBtn('stat','📊 통계카드')}
-          ${_lcModeBtn('table','🗂️ 테이블')}
+          ${_lcItems.map(it=>_lcModeBtn(it.id,it.label)).join('')}
         </div>
-      </div>
-      ${(function(){
-        const _lcItems=[{id:'default',label:'🖼️ 기본'},{id:'stat',label:'📊 통계카드'},{id:'table',label:'🗂️ 테이블'}];
+      </div>` : ''}
+      ${_lcItems.length>1 ? (function(){
         window._b2LineupModeItems = _lcItems.map(it=>({id:it.id, label:it.label, action:`_b2SetLineupCardMode('${it.id}')`, active:_b2LineupCardMode===it.id}));
         const _curLc = _lcItems.find(it=>it.id===_b2LineupCardMode) || _lcItems[0];
         return `<button type="button" class="pill mode-select-trigger" style="flex-shrink:0" onclick="_toggleModePopover(this,'라인업 모드',window._b2LineupModeItems)">${_curLc.label} ▾</button>`;
-      })()}
+      })() : ''}
       ${(function(){
         // 🔊 음성듣기 대상 선택 — '라인업 전체' 또는 특정 스트리머 한 명
         let _spMembers = [];
@@ -484,8 +496,8 @@ function rBoard2(C, T) {
         </div>`;
       })()}
       <button id="b2-lineup-speak-btn" class="b2-toolbar-btn" onclick="_b2LineupToggleSpeak()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">${(typeof _b2LineupSpeaking!=='undefined'&&_b2LineupSpeaking)?'⏹ 정지':'🔊 음성듣기'}</button>
-      <button id="b2-lineup-intro-btn" class="b2-toolbar-btn" onclick="_b2LineupPlayIntroShow()" title="카드가 화면 중앙에 크게 등장했다가 자기 자리로 이동하는 라인업 발표 연출을 재생합니다 (음성듣기와 별개). 재생 중 다시 누르면 일시정지/이어보기가 토글됩니다." style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">▶ 재생</button>
-      <button id="b2-lineup-intro-stop-btn" class="b2-toolbar-btn" onclick="if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow()" title="소개 연출을 완전히 종료합니다" style="display:none;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;align-items:center;gap:4px;margin-bottom:0">⏹ 종료</button>
+      ${_lcIntroOn ? `<button id="b2-lineup-intro-btn" class="b2-toolbar-btn" onclick="_b2LineupPlayIntroShow()" title="카드가 화면 중앙에 크게 등장했다가 자기 자리로 이동하는 라인업 발표 연출을 재생합니다 (음성듣기와 별개). 재생 중 다시 누르면 일시정지/이어보기가 토글됩니다." style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">▶ 재생</button>
+      <button id="b2-lineup-intro-stop-btn" class="b2-toolbar-btn" onclick="if(typeof _b2LineupStopIntroShow==='function')_b2LineupStopIntroShow()" title="소개 연출을 완전히 종료합니다" style="display:none;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;align-items:center;gap:4px;margin-bottom:0">⏹ 종료</button>` : ''}
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
@@ -544,12 +556,13 @@ function rBoard2(C, T) {
       </div>
     </div>
   ` : '';
-  const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑'));
-  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
-  const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
-  const rankingBtn = _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹'));
-  const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
-  const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
+  const _tv = (id)=> (window.TabVis && typeof window.TabVis.visible==='function') ? window.TabVis.visible('b2.'+id) : true;
+  const weeklyBtn = _tv('weekly') ? _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑')) : '';
+  const oldBtn = (isLoggedIn && _tv('old'))?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
+  const summaryBtn = _tv('summary') ? _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')) : '';
+  const rankingBtn = _tv('ranking') ? _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹')) : '';
+  const heatmapBtn = _tv('heatmap') ? _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵')) : '';
+  const bubbleBtn  = _tv('bubble') ? _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵')) : '';
   // 모바일 전용: 위 서브탭들(브리핑/라인업/대학별/펨코/무소속/프로필/히트맵/버블맵/요약/구현황판)을
   // 한 줄 드롭다운 트리거로 대체 (.b2-toolbar-main은 CSS로 모바일에서 숨김)
   const _b2TabDefs = [
@@ -565,8 +578,9 @@ function rBoard2(C, T) {
     {id:'summary', label:(typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약')},
   ];
   if(isLoggedIn) _b2TabDefs.push({id:'old', label:(typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')});
-  window._b2TabPopoverItems = _b2TabDefs.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
-  const _curB2TabItem = _b2TabDefs.find(it=>it.id===_b2View) || _b2TabDefs[0];
+  const _b2TabDefsVisible = (window.TabVis && typeof window.TabVis.filterDefs==='function') ? window.TabVis.filterDefs(_b2TabDefs, 'b2') : _b2TabDefs;
+  window._b2TabPopoverItems = _b2TabDefsVisible.map(it=>({id:it.id, label:it.label, action:`_b2View='${it.id}';render()`, active:_b2View===it.id}));
+  const _curB2TabItem = _b2TabDefsVisible.find(it=>it.id===_b2View) || _b2TabDefsVisible[0] || _b2TabDefs[0];
   const _b2TabMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'현황판 화면 선택',window._b2TabPopoverItems)">
     <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${_curB2TabItem.label}</span></span>
     <span class="mode-select-trigger-caret">▾</span>
@@ -727,12 +741,12 @@ function rBoard2(C, T) {
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
         ${weeklyBtn}
-        ${window.innerWidth > 768 ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
-        ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
-        ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
-        ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
-        ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
-        ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
+        ${(window.innerWidth > 768 && _tv('live')) ? _b2TabBtn('live','#e11d48', (typeof getTabLabel==='function'?getTabLabel('board2','live','📺 라이브'):'📺 라이브')) : ''}
+        ${_tv('lineup') ? _b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업')) : ''}
+        ${_tv('univ') ? _b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별')) : ''}
+        ${_tv('femco') ? _b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코')) : ''}
+        ${_tv('free') ? _b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속')) : ''}
+        ${_tv('players') ? _b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel)) : ''}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${heatmapBtn}
         ${bubbleBtn}

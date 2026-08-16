@@ -48,11 +48,19 @@ function _histTabAltAllowedModes(tabId){
 // 탭별 보기모드 상태 (localStorage 키: su_hist_tab_view_mode_<tabId>)
 window._histTabViewMode = window._histTabViewMode || {};
 function getHistTabViewMode(tabId){
-  if(window._histTabViewMode[tabId]) return window._histTabViewMode[tabId];
+  if(window._histTabViewMode[tabId]) {
+    const _v = window._histTabViewMode[tabId];
+    if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('mode.' + tabId + '.' + _v)) {
+      window._histTabViewMode[tabId] = 'basic';
+      return 'basic';
+    }
+    return _v;
+  }
   let v = 'basic';
   try{ v = localStorage.getItem('su_hist_tab_view_mode_' + tabId) || 'basic'; }catch(e){}
   const allowed = _histTabAltAllowedModes(tabId);
   if(!allowed.includes(v)) v = 'basic';
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('mode.' + tabId + '.' + v)) v = 'basic';
   window._histTabViewMode[tabId] = v;
   return v;
 }
@@ -79,7 +87,10 @@ function histTabViewModeBarHTML(tabId, bare){
     { id: 'broadcast', lbl: '📺 방송형' },
   ];
   const _allowed = _histTabAltAllowedModes(tabId);
-  const _modes = _allModes.filter(mo => _allowed.includes(mo.id));
+  let _modes = _allModes.filter(mo => _allowed.includes(mo.id));
+  if (window.TabVis && typeof window.TabVis.visible === 'function') {
+    _modes = _modes.filter(mo => window.TabVis.visible('mode.' + tabId + '.' + mo.id));
+  }
   const _btns = _modes.map(mo =>
     `<button class="pill ${_cur === mo.id ? 'on' : ''}" style="flex-shrink:0;white-space:nowrap" onclick="setHistTabViewMode('${tabId}','${mo.id}')">${mo.lbl}</button>`
   ).join('');

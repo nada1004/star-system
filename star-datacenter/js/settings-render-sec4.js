@@ -46,6 +46,7 @@ function _cfgSecGroup4(ctx){
       </div>
     </div>
   </details>
+  ${(typeof _cfgTabVisSectionHTML==='function') ? _cfgTabVisSectionHTML() : ''}
   ${_scfgD('imgsettings','🖼️ 이미지탭 이미지 설정')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">이미지탭 ⚙️ 버튼과 동일한 설정입니다. 크기·밝기·배치·위치를 조절하면 즉시 반영됩니다.</div>
     <div id="cfg-b2-img-settings-wrap" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">

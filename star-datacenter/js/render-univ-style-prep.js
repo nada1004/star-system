@@ -17,7 +17,11 @@ function prepareUnivDetailStyleData(univName){
   const bgPosX=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosX ?? udStyle.header_bg_pos_x ?? 50) || 50));
   const bgPosY=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosY ?? udStyle.header_bg_pos_y ?? 50) || 50));
   const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
-  const designMode = _validUdModes.includes(udStyle.design_mode) ? udStyle.design_mode : 'classic';
+  let designMode = _validUdModes.includes(udStyle.design_mode) ? udStyle.design_mode : 'classic';
+  // TabVis: 대학 상세 디자인모드 스킨이 OFF(비로그인 숨김)면 비로그인 사용자에게는 기본(classic)으로 표시
+  if (designMode !== 'classic' && typeof window !== 'undefined' && window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.univ.mode.designskin')) {
+    designMode = 'classic';
+  }
   const _hexToRgb = (hex) => {
     const s = String(hex||'').trim();
     const m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);

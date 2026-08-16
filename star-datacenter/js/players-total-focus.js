@@ -200,6 +200,10 @@ function _bindFocusPhoto2DragEvents(){
 }
 
 function _buildFocusView(rankMap){
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('total.mode.focus.' + totalFocusDetailStyle)) {
+    totalFocusDetailStyle = window.TabVis.visible('total.mode.focus.hero') ? 'hero' : 'card';
+    try{ localStorage.setItem('su_focus_detail_style', totalFocusDetailStyle); }catch(e){}
+  }
   const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
   const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
   if(!_getUnivs) return `<div class="streamer-content-card"><div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">스트리머 데이터를 불러오는 중입니다.</div></div></div>`;
@@ -367,8 +371,8 @@ function _buildFocusView(rankMap){
       <div class="streamer-focus-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;row-gap:6px">
         <span>스트리머 선택</span>
         <span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
-          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 포토</button>
+          ${(!window.TabVis || typeof window.TabVis.visible !== 'function' || window.TabVis.visible('total.mode.focus.hero')) ? `<button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>` : ''}
+          ${(!window.TabVis || typeof window.TabVis.visible !== 'function' || window.TabVis.visible('total.mode.focus.photo')) ? `<button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 포토</button>` : ''}
         </span>
       </div>
       ${listHtml}

@@ -111,6 +111,13 @@ function _gcFindPlayer(keyword) {
 }
 
 function renderRoulettePanel(dome, capR, isWide, avW, avH) {
+  // 탭/모드 표시 관리(TabVis)에서 현재 서브탭이 OFF된 경우, 같은 그룹 내 노출 중인 첫 탭으로 이동
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('roulette.' + _gcTab)) {
+    const _gcFallbackGroup = _GC_TAB_GROUP[_gcTab] || 'roulette';
+    const _gcFallbackPool = _gcFallbackGroup === 'game' ? _GC_GAME_TABS : _GC_ROULETTE_TABS;
+    const _gcFallbackTab = _gcFallbackPool.find(t => window.TabVis.visible('roulette.' + t.id));
+    if (_gcFallbackTab) _gcTab = _gcFallbackTab.id;
+  }
   dome   = dome  || window._GC_DOME;
   capR   = capR  || window._GC_CAP_R;
   isWide = isWide != null ? isWide : (window.innerWidth >= 700);
@@ -184,7 +191,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // (추가) 현재 탭이 속한 그룹 판별 + 그룹별 탭 목록
   const _gcGroup = _GC_TAB_GROUP[_gcTab] || 'roulette';
-  const _gcGroupTabs = _gcGroup === 'game' ? _GC_GAME_TABS : _GC_ROULETTE_TABS;
+  const _gcGroupTabsAll = _gcGroup === 'game' ? _GC_GAME_TABS : _GC_ROULETTE_TABS;
+  const _gcGroupTabs = (window.TabVis && typeof window.TabVis.visible === 'function')
+    ? _gcGroupTabsAll.filter(t => window.TabVis.visible('roulette.' + t.id))
+    : _gcGroupTabsAll;
 
   // 상단 그룹 세그먼트 — "🎰 룰렛·추첨" / "🎮 미니게임"
   const _groupBar = `<div class="gc-group-bar no-export">

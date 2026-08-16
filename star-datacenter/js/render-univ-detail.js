@@ -62,7 +62,7 @@ function buildUnivDetailHTML(univName){
 
   const h = `${_secHeader}${_secMembers}${_secOpp}${_secRecent}${_secAce}`;
 
-  const _udMode = _style?.designMode || 'classic';
+  const _udMode = _style?.designMode || 'classic'; // TabVis 반영은 prepareUnivDetailStyleData()에서 이미 처리됨
   const _udDecor = (typeof buildUnivDetailModeDecorHTML==='function') ? buildUnivDetailModeDecorHTML(_udMode) : '';
   try{
     const _um = document.getElementById('univModal');

@@ -7,7 +7,9 @@
 // (히트맵은 날짜별 셀 다량 렌더링으로 브라우저 딜레이 유발 신고 → 매치업과 함께 완전 삭제)
 function setHistAllViewMode(mode){
   const valid=['card','grid','compact','broadcast'];
-  histAllViewMode = valid.includes(mode) ? mode : 'card';
+  let m = valid.includes(mode) ? mode : 'card';
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('mode.all.'+m)) m = 'card';
+  histAllViewMode = m;
   window.histAllViewMode = histAllViewMode;
   try{ localStorage.setItem('su_hist_all_view_mode', histAllViewMode); }catch(e){}
   if(typeof histPage!=='undefined' && histPage) histPage['all']=0;
@@ -16,12 +18,16 @@ function setHistAllViewMode(mode){
 function histAllViewModeBarHTML(){
   let _cur=(typeof histAllViewMode!=='undefined'&&histAllViewMode)||(window.histAllViewMode)||'card';
   if(!['card','grid','compact','broadcast'].includes(_cur)) _cur='card'; // 구버전(matchup/table/heatmap) localStorage 값 방어
-  const _modes=[
+  let _modes=[
     {id:'card',lbl:'🗂 기본'},
     {id:'grid',lbl:'🖼 그리드'},
     {id:'compact',lbl:'📊 컴팩트 테이블형'},
     {id:'broadcast',lbl:'📺 방송형'},
   ];
+  if (window.TabVis && typeof window.TabVis.visible === 'function') {
+    _modes = _modes.filter(mo => window.TabVis.visible('mode.all.' + mo.id));
+    if (!_modes.some(mo=>mo.id===_cur)) _cur = 'card';
+  }
   return `<div class="hist-ctrl-group" style="flex-shrink:0">${_modes.map(mo=>
     `<button class="pill ${_cur===mo.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="setHistAllViewMode('${mo.id}')">${mo.lbl}</button>`
   ).join('')}</div>`;

@@ -76,6 +76,10 @@ function rStats(C,T){
       ...(_li?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
+  // 탭/모드 표시 관리(TabVis)에서 OFF된 서브탭은 비로그인 사용자에게 숨김
+  if (window.TabVis && typeof window.TabVis.visible === 'function') {
+    _statsGroups.forEach(g => { g.tabs = g.tabs.filter(t => window.TabVis.visible('stats.' + t.id)); });
+  }
   try{
     if(typeof applyTabLabels==='function'){
       _statsGroups.forEach(g=>{ g.tabs = applyTabLabels('stats', g.tabs); });

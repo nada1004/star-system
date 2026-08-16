@@ -472,6 +472,7 @@ var _b2LcHoverCurName = '';
 
 function _b2LineupCardHoverEnter(e, card, name, col) {
   try {
+    if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.univ.hoverpopup')) return;
     if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (_b2LcHoverTimer) clearTimeout(_b2LcHoverTimer);
     _b2LcHoverCurName = name;
@@ -1714,6 +1715,8 @@ function _b2LineupStopIntroShow() {
 }
 
 async function _b2LineupPlayIntroShow() {
+  // TabVis: 인트로 연출 자체가 OFF(비로그인 숨김)면 버튼이 안 보이지만, 방어적으로 한 번 더 체크
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.lineup.mode.intro')) return;
   // 재생 중 다시 누르면: 일시정지 ↔ 이어보기 토글.
   // (완전 정지는 대학/탭 이동 시 _b2LineupStopIntroShow가 별도로 처리)
   if (_b2LineupIntroPlaying) {

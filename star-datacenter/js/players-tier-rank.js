@@ -259,14 +259,22 @@ function rTier(C,T){
   // ── 뷰 전환 버튼(모드)/최소경기: 필터 패널 안으로 이동(요청) — 아래 if(window._tierFilterOpen) 블록에서 렌더 ──
 
   if(window._tierFilterOpen){
-    const _viewModes=[
+    let _viewModes=[
       {id:'table',      icon:'📋', title:'테이블'},
       {id:'magazine',   icon:'📷', title:'매거진/룩북'},
       {id:'podium',     icon:'🏆', title:'포디움'},
       {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
       {id:'compact',    icon:'📝', title:'컴팩트'},
     ];
+    // TabVis: table(기본)은 항상 노출, 나머지 뷰는 OFF 시 비로그인 사용자에게 숨김
+    if (window.TabVis && typeof window.TabVis.visible === 'function') {
+      _viewModes = _viewModes.filter(vm => vm.id==='table' || window.TabVis.visible('tier.mode.'+vm.id));
+    }
     if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
+    if(!_viewModes.some(vm=>vm.id===window._tierViewMode)){
+      window._tierViewMode='table';
+      try{ localStorage.setItem('su_tier_view_mode','table'); }catch(e){}
+    }
     fh+=`<div class="tier-view-row">`;
     fh+=`<span class="tier-view-row-label">🎛️ 모드</span>`;
     fh+=`<div class="tier-view-row-btns">`;
@@ -913,6 +921,11 @@ function rTier(C,T){
     _vm = 'table';
     window._tierViewMode = 'table';
     try{ localStorage.setItem('su_tier_view_mode','table'); }catch(e){}
+  }
+  // TabVis: OFF(비로그인 숨김)된 뷰가 저장돼 있으면(예: 로그인 중 선택 후 로그아웃) 테이블로 안전 대체
+  if (_vm !== 'table' && window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('tier.mode.'+_vm)) {
+    _vm = 'table';
+    window._tierViewMode = 'table';
   }
   let h='';
 
