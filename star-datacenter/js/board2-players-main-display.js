@@ -36,7 +36,17 @@ function _b2UpdateMainDisplay(playerName) {
       player.profileFile5, player.profileFile6, player.profileFile7, player.profileFile8,
       player.profileFile9, player.profileFile10
     ];
-    _b2PrewarmSlots.forEach(rawUrl=>{
+    // [FIX-IMG-SLOW] 슬롯1(player.photo)은 지금 바로 화면에 그려지는 <img id="b2-main-img-1">이
+    // 이미 fetchpriority="high"로 직접 요청하므로 여기서 또 한 번 new Image()로 같은 URL을
+    // 동시에 요청하면 같은 순간에 요청이 두 배로 몰려 정작 화면에 보이는 이미지가 늦게 뜨는
+    // 원인이 됐다. 슬롯1은 건너뛰고, 나머지(아직 화면에 안 보이는 슬라이드쇼용) 슬롯들은
+    // 브라우저가 한가할 때(requestIdleCallback) 미뤄서 프리웜하도록 해 지금 보이는 이미지의
+    // 네트워크 우선순위를 지켜준다.
+    const _b2SchedulePrewarm = (typeof window.requestIdleCallback === 'function')
+      ? (fn)=>window.requestIdleCallback(fn, { timeout: 1500 })
+      : (fn)=>setTimeout(fn, 250);
+    _b2PrewarmSlots.forEach((rawUrl, _slotIdx)=>{
+      if(_slotIdx === 0) return; // 슬롯1은 위에서 이미 high-priority로 로딩됨
       const u = _normMediaUrl(rawUrl);
       if(!u || _b2PrewarmIsVideo(u)) return;
       const src = (typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u);
@@ -44,9 +54,13 @@ function _b2UpdateMainDisplay(playerName) {
       window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
       if(window._b2PrewarmedFullUrls.has(src)) return;
       window._b2PrewarmedFullUrls.add(src);
-      const _img = new Image();
-      try{ _img.decoding = 'async'; }catch(e){}
-      _img.src = src;
+      _b2SchedulePrewarm(()=>{
+        try{
+          const _img = new Image();
+          try{ _img.decoding = 'async'; }catch(e){}
+          _img.src = src;
+        }catch(e){}
+      });
     });
   }catch(e){}
   

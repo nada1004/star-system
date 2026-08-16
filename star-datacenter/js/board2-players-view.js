@@ -6,8 +6,16 @@
 // _b2PlayersView() 전체 렌더와, 저장 후 카드 1장만 갱신하는 _b2UpdatePlayerCard()가
 // 이 함수를 함께 재사용해서, "카드 1개만 바뀌었는데 그리드 전체가 다시 그려지며
 // 모든 사진이 새로고침되는" 문제 없이 항상 동일한 마크업을 보장한다.
-function _b2PlayersCardHTML(p, hexToRgba) {
+// [FIX-IMG-SLOW] 그리드 카드 이미지의 loading/fetchpriority를 카드 순서에 따라
+// 다르게 준다. 처음 화면에 보이는 만큼(대략 상단 2줄)만 eager+high로 즉시 받고,
+// 그 아래(스크롤해야 보이는) 카드들은 lazy로 미뤄서 한꺼번에 수십~수백 장이
+// 동시에 "높은 우선순위"로 요청되며 정작 화면에 보이는 이미지까지 늦게 뜨는
+// 현상을 막는다.
+const _B2_GRID_EAGER_COUNT = 18;
+function _b2PlayersCardHTML(p, hexToRgba, idx) {
   hexToRgba = hexToRgba || ((h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;});
+  const _eager = (typeof idx === 'number' && idx >= 0) ? (idx < _B2_GRID_EAGER_COUNT) : true;
+  const _loadAttr = _eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
   const encodedPlayerName = encodeURIComponent(String(p.name || ''));
   const playerColor = gc(p.univ) || '#6366f1';
   const playerTheme = {
@@ -32,12 +40,12 @@ function _b2PlayersCardHTML(p, hexToRgba) {
   return `
       <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
         ${p.photo
-          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" loading="eager" fetchpriority="high" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" ${_loadAttr} decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
              <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
         }
         ${gridSecondPhoto
-          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
           : ''
         }
         ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
@@ -746,12 +754,21 @@ function _b2PlayersView() {
       const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
       return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
     };
+    // [FIX-IMG-SLOW] 슬롯1(선택된 선수의 대표 사진)은 아래 _slot1의 <img>가
+    // fetchpriority="high"로 바로 요청하므로, 여기서 동시에 new Image()로 같은 URL을
+    // 또 요청하면 지금 화면에 보이는 이미지 요청과 우선순위를 다투게 돼 오히려 늦게
+    // 뜨는 원인이 됐다. 슬롯1은 건너뛰고 나머지 슬라이드쇼용 슬롯은 브라우저가
+    // 한가할 때(requestIdleCallback) 미뤄서 프리웜한다.
+    const _b2InitSchedulePrewarm = (typeof window.requestIdleCallback === 'function')
+      ? (fn)=>window.requestIdleCallback(fn, { timeout: 1500 })
+      : (fn)=>setTimeout(fn, 250);
     [
       _b2SelectedPlayer.photo, _b2SelectedPlayer.secondProfileFile, _b2SelectedPlayer.profileFile3,
       _b2SelectedPlayer.profileFile4, _b2SelectedPlayer.profileFile5, _b2SelectedPlayer.profileFile6,
       _b2SelectedPlayer.profileFile7, _b2SelectedPlayer.profileFile8, _b2SelectedPlayer.profileFile9,
       _b2SelectedPlayer.profileFile10
-    ].forEach(rawUrl=>{
+    ].forEach((rawUrl, _slotIdx)=>{
+      if(_slotIdx === 0) return; // 슬롯1은 아래에서 이미 high-priority로 로딩됨
       const u = _normMediaUrl(rawUrl);
       if(!u || _b2InitPrewarmIsVideo(u)) return;
       const src = (typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u);
@@ -759,9 +776,13 @@ function _b2PlayersView() {
       window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
       if(window._b2PrewarmedFullUrls.has(src)) return;
       window._b2PrewarmedFullUrls.add(src);
-      const _img = new Image();
-      try{ _img.decoding = 'async'; }catch(e){}
-      _img.src = src;
+      _b2InitSchedulePrewarm(()=>{
+        try{
+          const _img = new Image();
+          try{ _img.decoding = 'async'; }catch(e){}
+          _img.src = src;
+        }catch(e){}
+      });
     });
   }catch(e){}
 
@@ -903,8 +924,8 @@ function _b2PlayersView() {
       <div class="b2-players-grid">
   `;
 
-  _gridShow.forEach(p => {
-    h += _b2PlayersCardHTML(p, hexToRgba);
+  _gridShow.forEach((p, idx) => {
+    h += _b2PlayersCardHTML(p, hexToRgba, idx);
   });
 
   h += `
