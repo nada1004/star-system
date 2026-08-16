@@ -1,0 +1,162 @@
+/* ══════════════════════════════════════════════════════════════
+   🎵 스트리머 전용 BGM (신규, 2026-08-16)
+   선수 정보 수정 팝업에서 등록한 유튜브 링크(p.bgmUrl)를 스트리머 상세 팝업 및
+   현황판 프로필탭에서 해당 스트리머를 볼 때 배경음악으로 자동 재생한다.
+   대학별 "소개연출" BGM(js/board2-univ-views-lineup.js)과 동일한 패턴이되,
+   완전히 분리된 별도 YT.Player 인스턴스를 사용해 서로 간섭하지 않는다.
+   ══════════════════════════════════════════════════════════════ */
+var _plyrBgmPlayer = null;
+var _plyrBgmReady = false;
+var _plyrBgmApiLoading = false;
+var _plyrBgmPendingVid = null;
+var _plyrBgmVolume = 50;
+var _plyrBgmActive = false;
+var _plyrBgmKickTimer = null;
+var _plyrBgmCurrentName = '';
+var _plyrBgmCurrentVid = '';
+
+function _plyrBgmExtractId(urlOrId) {
+  const s = String(urlOrId || '').trim();
+  if (!s) return '';
+  if (/^[a-zA-Z0-9_-]{8,15}$/.test(s) && !s.includes('/')) return s;
+  const m1 = s.match(/[?&]v=([a-zA-Z0-9_-]{8,15})/); if (m1) return m1[1];
+  const m2 = s.match(/youtu\.be\/([a-zA-Z0-9_-]{8,15})/); if (m2) return m2[1];
+  const m3 = s.match(/\/shorts\/([a-zA-Z0-9_-]{8,15})/); if (m3) return m3[1];
+  const m4 = s.match(/\/embed\/([a-zA-Z0-9_-]{8,15})/); if (m4) return m4[1];
+  return '';
+}
+
+function _plyrBgmLoadApi() {
+  return new Promise((resolve) => {
+    if (window.YT && window.YT.Player) return resolve(true);
+    const check = () => { if (window.YT && window.YT.Player) resolve(true); else setTimeout(check, 150); };
+    if (!_plyrBgmApiLoading) {
+      _plyrBgmApiLoading = true;
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.async = true;
+        document.head.appendChild(tag);
+      }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { try { prev && prev(); } catch (e) {} resolve(true); };
+    }
+    check();
+  });
+}
+
+function _plyrBgmEnsurePlayer() {
+  return _plyrBgmLoadApi().then(() => {
+    if (_plyrBgmPlayer) return _plyrBgmPlayer;
+    let host = document.getElementById('plyrBgmHost');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'plyrBgmHost';
+      host.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1';
+      document.body.appendChild(host);
+    }
+    _plyrBgmPlayer = new YT.Player('plyrBgmHost', {
+      width: '1', height: '1', videoId: '',
+      playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => {
+          _plyrBgmReady = true;
+          _plyrBgmApplyVol();
+          if (_plyrBgmPendingVid) {
+            const vid = _plyrBgmPendingVid;
+            _plyrBgmPendingVid = null;
+            _plyrBgmPlayNow(vid);
+          }
+        },
+        onStateChange: (e) => {
+          // 곡이 끝나면 처음부터 반복 재생
+          if (e.data === 0) { try { _plyrBgmPlayer.seekTo(0); _plyrBgmPlayer.playVideo(); } catch (e2) {} }
+        }
+      }
+    });
+    return _plyrBgmPlayer;
+  });
+}
+
+function _plyrBgmApplyVol() {
+  if (!_plyrBgmPlayer) return;
+  try {
+    const v = Math.max(0, Math.min(100, parseInt(_plyrBgmVolume, 10) || 0));
+    if (v <= 0) { _plyrBgmPlayer.mute && _plyrBgmPlayer.mute(); }
+    else { _plyrBgmPlayer.unMute && _plyrBgmPlayer.unMute(); }
+    _plyrBgmPlayer.setVolume(v);
+  } catch (e) {}
+}
+
+// 브라우저 자동재생 정책 대응: 음소거로 먼저 재생 시작 후, 재생이 실제로 붙으면
+// 음소거를 풀고 저장된 볼륨을 적용한다 (대학 BGM과 동일 패턴).
+function _plyrBgmPlayNow(vid) {
+  const p = _plyrBgmPlayer;
+  if (!p || !vid) return;
+  try {
+    if (p.mute) p.mute();
+    p.loadVideoById(vid);
+    if (p.playVideo) p.playVideo();
+  } catch (e) {}
+  if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
+  let tries = 0;
+  _plyrBgmKickTimer = setInterval(() => {
+    if (!_plyrBgmActive || !_plyrBgmPlayer) {
+      clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return;
+    }
+    let st = -1;
+    try { st = _plyrBgmPlayer.getPlayerState(); } catch (e) {}
+    if (st === 1) {
+      _plyrBgmApplyVol();
+      clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return;
+    }
+    if (++tries > 20) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return; }
+    try { _plyrBgmPlayer.playVideo(); } catch (e) {}
+  }, 300);
+}
+
+// 스트리머 상세 팝업이 열리거나 현황판 프로필탭에서 스트리머를 선택했을 때 호출.
+// 등록된 BGM 링크가 없으면 재생 중이던 것을 정지한다.
+function _plyrBgmStart(player) {
+  try {
+    const name = player ? String(player.name || '') : '';
+    const vid = player ? _plyrBgmExtractId(player.bgmUrl) : '';
+    if (!vid) {
+      // 이 스트리머는 BGM이 없음 — 재생 중이던 다른 스트리머 BGM만 정지
+      _plyrBgmStop();
+      return;
+    }
+    // 이미 같은 스트리머의 같은 곡이 재생 중이면 재시작하지 않음(재렌더 시 끊김 방지)
+    if (_plyrBgmActive && _plyrBgmCurrentName === name && _plyrBgmCurrentVid === vid) return;
+    _plyrBgmCurrentName = name;
+    _plyrBgmCurrentVid = vid;
+    _plyrBgmVolume = Number.isFinite(parseInt(player.bgmVolume, 10)) ? Math.max(0, Math.min(100, parseInt(player.bgmVolume, 10))) : 50;
+    _plyrBgmActive = true;
+    _plyrBgmEnsurePlayer().then(() => {
+      if (!_plyrBgmActive || _plyrBgmCurrentName !== name) return; // 그 사이 다른 스트리머로 바뀐 경우 무시
+      if (_plyrBgmReady) { _plyrBgmPlayNow(vid); }
+      else { _plyrBgmPendingVid = vid; }
+    });
+  } catch (e) {}
+}
+
+function _plyrBgmStop() {
+  if (!_plyrBgmActive && !_plyrBgmCurrentName) return;
+  _plyrBgmActive = false;
+  _plyrBgmCurrentName = '';
+  _plyrBgmCurrentVid = '';
+  _plyrBgmPendingVid = null;
+  if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
+  try { if (_plyrBgmPlayer) _plyrBgmPlayer.stopVideo(); } catch (e) {}
+}
+
+// 스트리머 상세 팝업이 닫혔을 때 호출 — 현황판 프로필탭에 선택된 스트리머가 있고
+// 그 탭이 여전히 보이는 중이면 그 스트리머의 BGM으로 복귀, 아니면 그냥 정지.
+function _plyrBgmResumeProfileTab() {
+  try {
+    const sel = (typeof _b2SelectedPlayer !== 'undefined') ? _b2SelectedPlayer : null;
+    const b2Visible = !!(typeof curTab !== 'undefined' && curTab === 'board2' && typeof _b2View !== 'undefined' && _b2View === 'players');
+    if (sel && b2Visible) { _plyrBgmStart(sel); }
+    else { _plyrBgmStop(); }
+  } catch (e) { try { _plyrBgmStop(); } catch (e2) {} }
+}
