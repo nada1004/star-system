@@ -25,8 +25,24 @@
 
   var ANY_IMG_RE = /<img\b([^>]*)>/gi;
 
+  // 항상 즉시 로드해야 하는 "메인/히어로" 이미지 (현황판 프로필탭 좌측 큰 사진 등).
+  // 이런 이미지는 절대 lazy 로 낮추지 않는다 — 화면 전환 애니메이션/opacity 처리 때문에
+  // 지연 로딩이 걸리면 아예 뜨지 않는 것처럼 보인다.
+  var KEEP_EAGER_RE = /b2-players-main-image|b2-main-img-|hero-img|main-hero|data-hero/i;
+
   function tuneAttrs(attrs){
     if (/data-eager/i.test(attrs)) return null;               // 명시적으로 즉시 로딩을 요청한 이미지는 그대로
+    if (KEEP_EAGER_RE.test(attrs)){
+      var keep = attrs;
+      if (/\bloading\s*=/i.test(keep)){
+        keep = keep.replace(/\bloading\s*=\s*(["'])lazy\1/gi, 'loading=$1eager$1')
+                   .replace(/\bloading\s*=\s*lazy\b/gi, 'loading=eager');
+      } else {
+        keep = ' loading="eager"' + keep;
+      }
+      if (!/\bfetchpriority\s*=/i.test(keep)) keep = ' fetchpriority="high"' + keep;
+      return keep === attrs ? null : keep;
+    }
     var out = attrs;
     if (/\bloading\s*=\s*["']?eager/i.test(out)){
       // 앱 곳곳에서 loading="eager" 가 하드코딩돼 있어 첫 진입에 900건 넘는 이미지가
@@ -104,12 +120,60 @@
   function scheduleScan(){
     if (scanPending) return;
     scanPending = true;
-    requestAnimationFrame(function(){ scanPending = false; observeImages(document); });
+    requestAnimationFrame(function(){ scanPending = false; applyWarmAll(document); observeImages(document); });
   }
   document.addEventListener('DOMContentLoaded', scheduleScan);
   try{
     new MutationObserver(scheduleScan).observe(document.documentElement, { childList: true, subtree: true });
   }catch(e){}
+
+  // 3-2) 이미 한 번 받은 이미지는 메모리에 고정해 두고, 다시 렌더링될 때
+  //      (스트리머 정보 저장 후 재렌더 / 탭 이동 등) 즉시 그려지게 한다.
+  //      - 로드된 URL 을 기억하고, 같은 URL 의 Image 객체를 유지해서 브라우저가
+  //        디코딩된 비트맵을 버리지 않도록 한다(= 새로고침처럼 다시 뜨는 현상 방지).
+  //      - 새로 삽입된 img 가 이미 아는 URL 이면 lazy/async 대신 eager/sync 로 올려
+  //        빈 칸이 잠깐 보였다가 채워지는 깜빡임을 없앤다.
+  var warmed = new Map();
+  var WARM_MAX = 800;
+  function rememberUrl(url){
+    if (!url || url.indexOf('data:') === 0) return;
+    if (warmed.has(url)) return;
+    if (warmed.size >= WARM_MAX){
+      var firstKey = warmed.keys().next().value;
+      warmed.delete(firstKey);
+    }
+    try{
+      var holder = new Image();
+      holder.decoding = 'async';
+      holder.src = url;
+      warmed.set(url, holder);
+    }catch(e){ warmed.set(url, 1); }
+  }
+  document.addEventListener('load', function(e){
+    var t = e.target;
+    if (!t || t.tagName !== 'IMG') return;
+    rememberUrl(t.currentSrc || t.src);
+  }, true);
+
+  function applyWarm(img){
+    try{
+      var src = img.getAttribute('src');
+      if (!src || !warmed.has(src)) return;
+      if (img.getAttribute('loading') !== 'eager') img.setAttribute('loading', 'eager');
+      img.setAttribute('decoding', 'sync');
+      img.setAttribute('fetchpriority', 'high');
+    }catch(e){}
+  }
+  function applyWarmAll(root){
+    var scope = (root && root.querySelectorAll) ? root : document;
+    var imgs;
+    try{ imgs = scope.querySelectorAll('img[loading="lazy"]:not([data-warmchk])'); }catch(e){ return; }
+    for (var i = 0; i < imgs.length; i++){
+      try{ imgs[i].setAttribute('data-warmchk', '1'); }catch(e){}
+      applyWarm(imgs[i]);
+    }
+  }
+  window.warmImageCache = rememberUrl;
 
   // 4) 캡처(이미지 저장) 전에는 대상 영역 이미지를 강제로 모두 로드
   window.forceLoadImages = function(el, timeoutMs){

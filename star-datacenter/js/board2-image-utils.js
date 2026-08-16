@@ -342,6 +342,11 @@ function _b2ClearSwapTimer(mainBox) {
     clearTimeout(mainBox._swapTimer);
     mainBox._swapTimer = null;
   }
+  if (mainBox && mainBox._swapEndedEl && mainBox._swapEndedHandler) {
+    try{ mainBox._swapEndedEl.removeEventListener('ended', mainBox._swapEndedHandler); }catch(e){}
+    mainBox._swapEndedEl = null;
+    mainBox._swapEndedHandler = null;
+  }
   if (mainBox) mainBox._swapIdx = 0;
 }
 function _b2ScheduleImageSwap(playerName) {
@@ -547,6 +552,41 @@ function _b2ScheduleImageSwap(playerName) {
   const totalImgs = imgList.length;
   // 첫 이미지가 비디오면 즉시 재생
   applyMediaForSlot(firstSlot);
+  // [FEATURE-VIDEO-FULL-PLAY] mp4/webm 등 영상 슬롯은 설정된 전환 시간이 아니라 영상이
+  // 실제로 끝까지 재생된 뒤(ended 이벤트)에 다음으로 넘어가도록 한다. gif는 브라우저에서
+  // "애니메이션이 끝났다"를 감지할 방법 자체가 없으므로(반복 재생 특성상 ended 이벤트가
+  // 없음) 그대로 설정된 전환 시간을 따른다. 자동재생이 막히는 등 예외로 ended가 끝내
+  // 발생하지 않는 상황을 대비해 안전장치로 최대 5분 뒤에는 강제로 다음으로 넘어간다.
+  const _clearEndedWatcher = () => {
+    if (mainBox._swapEndedEl && mainBox._swapEndedHandler) {
+      try{ mainBox._swapEndedEl.removeEventListener('ended', mainBox._swapEndedHandler); }catch(e){}
+    }
+    mainBox._swapEndedEl = null;
+    mainBox._swapEndedHandler = null;
+  };
+  const _scheduleNextSwap = (curSlot, toSlot) => {
+    if (mainBox._swapTimer) { clearTimeout(mainBox._swapTimer); mainBox._swapTimer = null; }
+    _clearEndedWatcher();
+    const curEl = getEl(curSlot);
+    if (isVideo(curEl) && !isBrokenEl(curEl)) {
+      const handler = () => {
+        if (mainBox._swapGen !== _myGen) return;
+        _clearEndedWatcher();
+        if (mainBox._swapTimer) { clearTimeout(mainBox._swapTimer); mainBox._swapTimer = null; }
+        doSwap();
+      };
+      curEl.addEventListener('ended', handler);
+      mainBox._swapEndedEl = curEl;
+      mainBox._swapEndedHandler = handler;
+      mainBox._swapTimer = setTimeout(() => {
+        if (mainBox._swapGen !== _myGen) return;
+        _clearEndedWatcher();
+        doSwap();
+      }, 5 * 60 * 1000);
+    } else {
+      mainBox._swapTimer = setTimeout(doSwap, delayMs(curSlot, toSlot));
+    }
+  };
   function doSwap() {
     if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
     const liveImgList = getLiveImgList();
@@ -637,14 +677,13 @@ function _b2ScheduleImageSwap(playerName) {
       }
     }, CROSSFADE_MS + 40);
 
-    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름.
+    // 다음 전환 예약(현재→다음 기준) — 영상 슬롯이면 재생 완료(ended) 시점, 그 외에는
+    // 설정된 전환 시간(초)을 따름.
     // "다음"도 baseOrder 기준 고정 순서에서 그대로 한 칸 더 (지연 시간 계산용일 뿐,
     // 실제 다음 전환 대상은 다음 doSwap() 호출 시점에 다시 동일한 방식으로 정해짐).
-    if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
     const curBaseIdx = _findBaseIdx(curSlot);
     const toSlot = baseOrder[(curBaseIdx + 1) % baseOrder.length];
-    const fromSlot = curSlot;
-    mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
+    _scheduleNextSwap(curSlot, toSlot);
   }
   // [FIX-IMG-RESUME-DELAY] 이어서 재생(resume)할 때 첫 전환까지의 대기시간을
   // 예전에는 무조건 "1번→2번" 전환 시간(photoDelay12)으로 계산했다. 그런데
@@ -655,9 +694,12 @@ function _b2ScheduleImageSwap(playerName) {
   // baseOrder 안에서 실제 "다음 슬롯"을 찾아 그 구간에 맞는 시간을 사용한다.
   const _firstBaseIdx = _findBaseIdx(firstSlot);
   const _firstToSlot = baseOrder[(_firstBaseIdx + 1) % baseOrder.length];
-  const firstDelay = (baseOrder.length >= 2) ? delayMs(firstSlot, _firstToSlot) : 1000;
   mainBox._swapCurSlot = firstSlot;
-  mainBox._swapTimer = setTimeout(doSwap, firstDelay);
+  if (baseOrder.length >= 2) {
+    _scheduleNextSwap(firstSlot, _firstToSlot);
+  } else {
+    mainBox._swapTimer = setTimeout(doSwap, 1000);
+  }
 }
 // [FIX-IMG-BLANK] 등록된 이미지가 전부 깨졌을 때 완전히 텅 빈(회색) 화면 대신
 // 이름 이니셜 플레이스홀더를 보여준다. photo가 아예 없는 선수의 기본 슬롯1과

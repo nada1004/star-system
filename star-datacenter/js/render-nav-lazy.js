@@ -413,6 +413,15 @@ function sw(t,el){
     }
   }catch(e){}
 
+  // 🎵 스트리머 전용 BGM — 스트리머 상세 팝업(#playerModal)이나 현황판(board2) 프로필탭을
+  // 보고 있다가 다른 최상위 탭으로 이동하면 재생 중이던 스트리머 BGM을 무조건 정지한다.
+  // (이전엔 팝업이 열려 있는 상태로 탭을 이동하면 "그 팝업 자체의 BGM"이라며 정지하지
+  //  않았고, curTab이 board2가 아닐 때도 정지 체크 자체를 건너뛰어 다른 탭에서 팝업을
+  //  열어둔 채 이동하면 BGM이 계속 재생되는 버그가 있었음)
+  try{
+    if(t !== curTab && typeof _plyrBgmStop === 'function') _plyrBgmStop();
+  }catch(e){}
+
   // [FIX-14] TAB_ENTER 맵 실행
   try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
   // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
