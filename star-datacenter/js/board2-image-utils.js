@@ -342,11 +342,6 @@ function _b2ClearSwapTimer(mainBox) {
     clearTimeout(mainBox._swapTimer);
     mainBox._swapTimer = null;
   }
-  if (mainBox && mainBox._swapEndedEl && mainBox._swapEndedHandler) {
-    try{ mainBox._swapEndedEl.removeEventListener('ended', mainBox._swapEndedHandler); }catch(e){}
-    mainBox._swapEndedEl = null;
-    mainBox._swapEndedHandler = null;
-  }
   if (mainBox) mainBox._swapIdx = 0;
 }
 function _b2ScheduleImageSwap(playerName) {
@@ -504,28 +499,13 @@ function _b2ScheduleImageSwap(playerName) {
   }
   // 이어서 재생: 최근(10분 이내)에 이 선수를 보던 중이었고, 그때 보던 슬롯이 지금도
   // 유효한(살아있는) 이미지 목록에 있다면 그 슬롯부터 시작. 아니면 1번부터(신규 진입).
-  // [FIX-IMG-RESUME-BROKEN] 예전에는 "그때 보던 슬롯"이 하필 지금 이 순간(반복 요청으로 인한
-  // 일시적 로드 실패 등) 깨져 있으면, 곧바로 포기하고 등록 목록의 맨 앞(대개 슬롯1)으로
-  // 되돌아갔다. 그래서 화면에 보이던 이미지가 아주 잠깐 깨졌다 살아나는 것만으로도
-  // "1 → 다음 → 다시 1로" 처럼 순환이 슬롯1로 계속 튕겨나가는 원인이 됐다.
-  // 이제는 그 슬롯 자체가 지금 깨져 있어도, 등록 순서(baseOrder)상 그 다음으로 살아있는
-  // 슬롯부터 이어서 시작해서(예: 4번이 잠깐 깨졌으면 5번부터), 순서 자체가 슬롯1로
-  // 되돌아가지 않고 원래 흐름을 그대로 유지하도록 한다.
   const _resumeSlotCandidate = (()=>{
     try{
       const st = window._b2SwapResumeState && window._b2SwapResumeState[playerName];
       if(!st) return null;
       if(Date.now() - (st.ts||0) > 10*60*1000) return null; // 너무 오래됐으면 무시
-      const rememberedIdx = imgList.findIndex(item => item.slot === st.slot);
-      if(rememberedIdx < 0) return null; // 아예 등록되지 않은 슬롯(삭제됨 등)이면 신규 진입
-      const stillLive = initialLiveList.find(item=>item.slot === st.slot);
-      if(stillLive) return stillLive.slot; // 정상 케이스: 그대로 이어서 재생
-      // 기억해둔 슬롯이 지금 깨져 있으면, 등록 순서 안에서 그 다음으로 살아있는 슬롯을 찾는다.
-      for(let step = 1; step <= imgList.length; step++){
-        const cand = imgList[(rememberedIdx + step) % imgList.length];
-        if(initialLiveList.some(item => item.slot === cand.slot)) return cand.slot;
-      }
-      return null; // 전부 깨져 있으면 아래에서 안전하게 첫 이미지로 폴백
+      const found = initialLiveList.find(item=>item.slot === st.slot);
+      return found ? found.slot : null;
     }catch(e){ return null; }
   })();
   // [FIX-IMG-ORDER] 순환 순서의 "기준"은 여기서 딱 한 번만 고정한다(baseOrder).
@@ -552,41 +532,6 @@ function _b2ScheduleImageSwap(playerName) {
   const totalImgs = imgList.length;
   // 첫 이미지가 비디오면 즉시 재생
   applyMediaForSlot(firstSlot);
-  // [FEATURE-VIDEO-FULL-PLAY] mp4/webm 등 영상 슬롯은 설정된 전환 시간이 아니라 영상이
-  // 실제로 끝까지 재생된 뒤(ended 이벤트)에 다음으로 넘어가도록 한다. gif는 브라우저에서
-  // "애니메이션이 끝났다"를 감지할 방법 자체가 없으므로(반복 재생 특성상 ended 이벤트가
-  // 없음) 그대로 설정된 전환 시간을 따른다. 자동재생이 막히는 등 예외로 ended가 끝내
-  // 발생하지 않는 상황을 대비해 안전장치로 최대 5분 뒤에는 강제로 다음으로 넘어간다.
-  const _clearEndedWatcher = () => {
-    if (mainBox._swapEndedEl && mainBox._swapEndedHandler) {
-      try{ mainBox._swapEndedEl.removeEventListener('ended', mainBox._swapEndedHandler); }catch(e){}
-    }
-    mainBox._swapEndedEl = null;
-    mainBox._swapEndedHandler = null;
-  };
-  const _scheduleNextSwap = (curSlot, toSlot) => {
-    if (mainBox._swapTimer) { clearTimeout(mainBox._swapTimer); mainBox._swapTimer = null; }
-    _clearEndedWatcher();
-    const curEl = getEl(curSlot);
-    if (isVideo(curEl) && !isBrokenEl(curEl)) {
-      const handler = () => {
-        if (mainBox._swapGen !== _myGen) return;
-        _clearEndedWatcher();
-        if (mainBox._swapTimer) { clearTimeout(mainBox._swapTimer); mainBox._swapTimer = null; }
-        doSwap();
-      };
-      curEl.addEventListener('ended', handler);
-      mainBox._swapEndedEl = curEl;
-      mainBox._swapEndedHandler = handler;
-      mainBox._swapTimer = setTimeout(() => {
-        if (mainBox._swapGen !== _myGen) return;
-        _clearEndedWatcher();
-        doSwap();
-      }, 5 * 60 * 1000);
-    } else {
-      mainBox._swapTimer = setTimeout(doSwap, delayMs(curSlot, toSlot));
-    }
-  };
   function doSwap() {
     if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
     const liveImgList = getLiveImgList();
@@ -677,13 +622,14 @@ function _b2ScheduleImageSwap(playerName) {
       }
     }, CROSSFADE_MS + 40);
 
-    // 다음 전환 예약(현재→다음 기준) — 영상 슬롯이면 재생 완료(ended) 시점, 그 외에는
-    // 설정된 전환 시간(초)을 따름.
+    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름.
     // "다음"도 baseOrder 기준 고정 순서에서 그대로 한 칸 더 (지연 시간 계산용일 뿐,
     // 실제 다음 전환 대상은 다음 doSwap() 호출 시점에 다시 동일한 방식으로 정해짐).
+    if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
     const curBaseIdx = _findBaseIdx(curSlot);
     const toSlot = baseOrder[(curBaseIdx + 1) % baseOrder.length];
-    _scheduleNextSwap(curSlot, toSlot);
+    const fromSlot = curSlot;
+    mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
   // [FIX-IMG-RESUME-DELAY] 이어서 재생(resume)할 때 첫 전환까지의 대기시간을
   // 예전에는 무조건 "1번→2번" 전환 시간(photoDelay12)으로 계산했다. 그런데
@@ -694,12 +640,9 @@ function _b2ScheduleImageSwap(playerName) {
   // baseOrder 안에서 실제 "다음 슬롯"을 찾아 그 구간에 맞는 시간을 사용한다.
   const _firstBaseIdx = _findBaseIdx(firstSlot);
   const _firstToSlot = baseOrder[(_firstBaseIdx + 1) % baseOrder.length];
+  const firstDelay = (baseOrder.length >= 2) ? delayMs(firstSlot, _firstToSlot) : 1000;
   mainBox._swapCurSlot = firstSlot;
-  if (baseOrder.length >= 2) {
-    _scheduleNextSwap(firstSlot, _firstToSlot);
-  } else {
-    mainBox._swapTimer = setTimeout(doSwap, 1000);
-  }
+  mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
 // [FIX-IMG-BLANK] 등록된 이미지가 전부 깨졌을 때 완전히 텅 빈(회색) 화면 대신
 // 이름 이니셜 플레이스홀더를 보여준다. photo가 아예 없는 선수의 기본 슬롯1과
@@ -808,15 +751,6 @@ window._b2HandleMediaFailure = function(mediaEl) {
     mediaEl.dataset.b2Broken = '1';
     const playerName = String(window._b2SelectedPlayer?.name || '').trim();
     if(!playerName || typeof window._b2ScheduleImageSwap !== 'function') return;
-    // [FIX-IMG-FAIL-SCOPE] 예전에는 10장 중 어느 슬롯이든(지금 화면에 안 보이는 대기 중인
-    // 슬롯이라도) 로드 실패하면 전체 순환 스케줄을 처음부터 다시 시작했다. 그러면 실제로는
-    // 화면에 아무 변화가 없어야 할 상황에서도 "다음 전환까지 남은 시간"이 계속 리셋되며
-    // 타이밍이 설정과 어긋나 보이는 원인이 됐다. 지금 실제로 화면에 보여지고 있는 슬롯이
-    // 깨진 경우에만(그 자리를 즉시 벗어나야 하므로) 재시작하고, 대기 중인 슬롯의 실패는
-    // baseOrder 순회 시 자동으로 건너뛰도록만 두어 재생 타이밍을 건드리지 않는다.
-    const mainBox = document.getElementById('b2-players-main-box');
-    const isCurrentlyShown = !!(mainBox && mainBox._swapCurSlot != null && mediaEl.id === ('b2-main-img-' + mainBox._swapCurSlot));
-    if(!isCurrentlyShown) return;
     setTimeout(()=>window._b2ScheduleImageSwap(playerName), 0);
   }catch(e){}
 };
