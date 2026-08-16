@@ -430,8 +430,11 @@ window._b2StashPlayersDom = function(){
   try{
     if (typeof _b2View === 'undefined' || _b2View !== 'players') return;
     const sub = document.getElementById('b2-content');
-    if (!sub || !sub.firstChild) { window._b2PlayersDomStash = null; return; }
-    if (!document.getElementById('b2-players-main-box')) { window._b2PlayersDomStash = null; return; }
+    // 이미 다른 경로(예: sw() 탭 전환 훅)에서 방금 떼어내서 sub가 비어있는 경우,
+    // 여기서 또 호출되면 "보관할 게 없다"고 판단해 기존에 잘 보관해둔 스태시를
+    // null로 덮어써버리는 버그가 있었다 — 절대 기존 스태시를 지우지 않고 그냥 둔다.
+    if (!sub || !sub.firstChild) return;
+    if (!document.getElementById('b2-players-main-box')) return;
     // 진행 중인 슬라이드쇼 타이머는 정지해둔다 (돌아왔을 때 다시 시작함).
     try{
       const mainBox = document.getElementById('b2-players-main-box');
@@ -440,9 +443,7 @@ window._b2StashPlayersDom = function(){
     const holder = document.createDocumentFragment();
     while (sub.firstChild) holder.appendChild(sub.firstChild);
     window._b2PlayersDomStash = { node: holder, sig: window._b2PlayersLastSig || '' };
-  }catch(e){
-    window._b2PlayersDomStash = null;
-  }
+  }catch(e){}
 };
 
 function rBoard2(C, T) {
@@ -917,8 +918,9 @@ function rBoard2(C, T) {
         window._b2PlayersLastSig = _sig;
         _b2BindAutoFitResize();
         try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
-        // 복원된 DOM은 슬라이드쇼 타이머가 멈춰있으므로 다시 시작해준다.
-        try{ if (_b2SelectedPlayer && typeof _b2ScheduleImageSwap === 'function') _b2ScheduleImageSwap(_b2SelectedPlayer.name); }catch(e){}
+        // [FEATURE-HERO-NO-IMAGE-REVERTED] 탭 재진입으로 스태시된 DOM을 복원할 때
+        // 정지해둔 슬라이드쇼 타이머를 다시 시작한다.
+        try{ if(_b2SelectedPlayer && typeof _b2ScheduleImageSwap==='function') _b2ScheduleImageSwap(_b2SelectedPlayer.name); }catch(e){}
       } else {
         window._b2PlayersDomStash = null;
         window._b2PlayersLastSig = _sig;

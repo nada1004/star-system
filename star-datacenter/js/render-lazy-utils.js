@@ -89,6 +89,36 @@ function _lazyLoadingView(T, C, title, desc){
   }catch(e){}
 }
 
+// [FIX-INFINITE-LOADING] 지연 로딩(통계/캘린더/투표/현황판/ELO현황판 등) 중 스크립트
+// 로드가 실패하거나(네트워크 오류, 404 등) 응답이 아예 없이 멈춰버리면(hang), 예전에는
+// 콘솔에 에러만 찍고 "⏳ 로딩 중..." 화면이 그대로 영원히 남아있는 "무한로딩" 상태가 됐다.
+// 이제는 (1) 일정 시간 안에 끝나지 않으면 타임아웃으로 실패 처리하고, (2) 실패 시
+// 항상 "다시 시도" 버튼이 있는 에러 화면으로 바꿔서, 화면이 절대 무한정 멈춰있지 않게 한다.
+function _lazyRunWithFallback(loaderFn, C, T, title, desc, timeoutMs){
+  _lazyLoadingView(T, C, title, desc);
+  const _tab = (typeof curTab !== 'undefined') ? curTab : '';
+  const _timeout = new Promise((_, reject)=>{
+    setTimeout(()=>reject(new Error('timeout')), timeoutMs || 20000);
+  });
+  Promise.race([ (async()=>loaderFn())(), _timeout ])
+    .then(()=>{
+      // 그 사이 다른 탭으로 이동했으면 이 화면을 건드리지 않는다.
+      if (typeof curTab !== 'undefined' && curTab !== _tab) return;
+      if (typeof render === 'function') render(true);
+    })
+    .catch((e)=>{
+      console.error(`[lazy] ${title||''} load fail`, e);
+      if (typeof curTab !== 'undefined' && curTab !== _tab) return;
+      try{
+        if(C) C.innerHTML =
+          `<div class="empty-state"><div class="empty-state-icon">⚠️</div>`+
+          `<div class="empty-state-title">${title||''} 로딩 실패</div>`+
+          `<div class="empty-state-desc">네트워크 상태를 확인한 뒤 다시 시도해주세요.</div>`+
+          `<button class="btn btn-w" style="margin-top:12px" onclick="if(typeof render==='function')render(true)">🔄 다시 시도</button></div>`;
+      }catch(_e){}
+    });
+}
+
 async function _ensureRouletteLoaded(){
   const scripts=[
     'js/wheel.js?v=20260717-ds03',
@@ -304,20 +334,20 @@ async function _ensureElboardLoaded(){
 }
 function _lazyRCfg(C, T){
   _lazyLoadingView(T, C, '설정', '설정 모듈을 불러오는 중...');
-  (async()=>{
-    try{
-      await _ensureSettingsLoaded();
+  const _timeout = new Promise((_, reject)=>setTimeout(()=>reject(new Error('timeout')), 20000));
+  Promise.race([_ensureSettingsLoaded(), _timeout])
+    .then(()=>{
       const fn = window.rCfg;
       if(typeof fn === 'function' && fn !== _lazyRCfg) fn(C, T);
       // else: 무한루프 방지 - settings 로드 후에도 rCfg 없으면 에러 표시
       else if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">새로고침(F5) 후 다시 시도해주세요.</div></div>';
-    }catch(e){
+    })
+    .catch((e)=>{
       console.error('[lazy] settings load fail', e);
       try{
-        if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>';
+        if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">네트워크 상태를 확인한 뒤 다시 시도해주세요.</div><button class="btn btn-w" style="margin-top:12px" onclick="if(typeof window._goTopTab===\'function\')window._goTopTab(\'cfg\')">🔄 다시 시도</button></div>';
       }catch(_){}
-    }
-  })();
+    });
 }
 function _lazyCfgGo(secId){
   (async()=>{
@@ -417,6 +447,7 @@ window.reCfg = window.reCfg || _lazyReCfg;
 try{
   window.RenderLazyUtils = window.RenderLazyUtils || {
     loadScriptOnce: _loadScriptOnce,
-    lazyLoadingView: _lazyLoadingView
+    lazyLoadingView: _lazyLoadingView,
+    lazyRunWithFallback: _lazyRunWithFallback
   };
 }catch(e){}

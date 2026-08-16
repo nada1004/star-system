@@ -307,7 +307,8 @@ async function _fetchGithubData(){
 }
 
 // 가져온 데이터를 전역 상태에 적용 + 탭/캐시 초기화 + init() 재실행까지 공통 처리
-function _applyFetchedCloudData(d){
+function _applyFetchedCloudData(d, opts){
+  const silent = !!(opts && opts.silent);
   _applyCloudData(d);
   window.LOG('불러오기', '데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
@@ -316,18 +317,31 @@ function _applyFetchedCloudData(d){
   window._compListCache={}; // 대회 목록 캐시 초기화
   window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
   window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
-  curTab='total'; // 탭 초기화 (렌더링 오류 방지)
-  statsSub='overview';
-  histSub='mini';
-  compSub='league';
-  // yearOptions를 불러온 데이터에서 자동 추출
-  (function(){
-    const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
-    mergeValidYearsIntoOptions(yearOptions, allD);
-  })();
-  filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
-  filterMonth='전체';
-  init();
+  // [FIX-NO-REFRESH-ON-AUTOSYNC] 백그라운드 자동 동기화(다른 브라우저 탭/창으로 갔다가
+  // 돌아왔을 때 "원격에 더 새 데이터가 있으면" 조용히 반영하는 기능)가 지금까지는
+  // 수동 "데이터 불러오기" 버튼과 완전히 같은 경로를 타서, 보고 있던 탭을 'total'로
+  // 강제로 되돌리고 전체 부트스트랩(init())까지 다시 돌렸다. init()은 render()를
+  // 포함하므로 결과적으로 화면 전체(스트리머탭의 이미지 포함)가 통째로 다시 그려지며
+  // "다른 탭 갔다가 돌아오면 프로필 이미지가 새로고침된다"는 원인이 됐다.
+  // 자동 동기화(silent)일 때는 지금 보고 있던 탭/서브뷰를 그대로 두고, 무거운 init()
+  // 대신 가벼운 render()만 호출해서 데이터만 반영하고 화면 상태는 그대로 유지한다.
+  if (silent) {
+    try{ if(typeof syncTourneyHistory==='function') syncTourneyHistory(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+  } else {
+    curTab='total'; // 탭 초기화 (렌더링 오류 방지)
+    statsSub='overview';
+    histSub='mini';
+    compSub='league';
+    // yearOptions를 불러온 데이터에서 자동 추출
+    (function(){
+      const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
+      mergeValidYearsIntoOptions(yearOptions, allD);
+    })();
+    filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
+    filterMonth='전체';
+    init();
+  }
 
   const compCount=(d.comps||[]).length;
   const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
@@ -367,7 +381,7 @@ window.cloudLoad = async function(){
 // 호출 시점 가드(모달 열림/입력 중 여부 등)는 _autoSyncCheck에서 처리한다.
 window._autoSyncApply = async function(){
   const d = await _fetchGithubData();
-  return _applyFetchedCloudData(d);
+  return _applyFetchedCloudData(d, { silent: true });
 };
 
 

@@ -180,18 +180,17 @@ function _clearPendingRemoteSave(){
 }
 // [FIX-STATUS-SPAM] "⚠️ 로컬만 저장 (GitHub 토큰 필요)" 경고는 GitHub 토큰을
 // 설정하지 않은 관리자가 아무 편집(선수 저장, 설정 변경 등)을 할 때마다 매번
-// 떠서 너무 자주 반복적으로 보인다는 피드백이 있었다. 이 경고는 여러 저장
-// 경로(saveCfg/save/_flushRemoteCloudSave)에서 각각 독립적으로 호출되므로,
-// 여기 한 곳에서 쿨다운을 걸어 일정 시간 안에는 다시 띄우지 않는다.
-// (다른 상태 메시지 — 성공/실패/오프라인 등 — 는 그대로 매번 표시된다.)
-let _lastLocalOnlyWarnTs = 0;
-const _LOCAL_ONLY_WARN_COOLDOWN_MS = 5 * 60 * 1000; // 5분
+// 떠서 너무 자주 반복적으로(체감상 "무한으로") 보인다는 피드백이 있었다.
+// GitHub 연동을 아예 쓰지 않는 관리자에게는 "로컬만 저장됨"이 애초에 정상
+// 상태이므로, 매 저장마다/몇 분마다 반복해서 알릴 필요가 없다. 이제는 페이지를
+// 새로 불러온 뒤 세션당 딱 한 번만 보여주고, 이후로는 다시 새로고침하기 전까지
+// 뜨지 않는다. (다른 상태 메시지 — 성공/실패/오프라인 등 — 는 그대로 매번 표시된다.)
+let _localOnlyWarnShownThisSession = false;
 function _setCloudStatusMsg(msg, color){
   try{
     if(typeof msg === 'string' && msg.indexOf('⚠️ 로컬만 저장') === 0){
-      const now = Date.now();
-      if(now - _lastLocalOnlyWarnTs < _LOCAL_ONLY_WARN_COOLDOWN_MS) return;
-      _lastLocalOnlyWarnTs = now;
+      if(_localOnlyWarnShownThisSession) return;
+      _localOnlyWarnShownThisSession = true;
     }
     if(typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus(msg, color);
     else{

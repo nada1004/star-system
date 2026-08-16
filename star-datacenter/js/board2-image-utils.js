@@ -396,6 +396,8 @@ function _b2ClearSwapTimer(mainBox) {
   if (mainBox) mainBox._swapIdx = 0;
 }
 function _b2ScheduleImageSwap(playerName) {
+  // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지 1~10번 슬라이드쇼 순환을
+  // 복원한다.
   const mainBox = document.getElementById('b2-players-main-box');
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
@@ -751,18 +753,15 @@ function _b2ScheduleImageSwap(playerName) {
 // 이름 이니셜 플레이스홀더를 보여준다. photo가 아예 없는 선수의 기본 슬롯1과
 // 동일한 스타일을 별도 오버레이 레이어로 그려서, 기존 img/video 슬롯들은
 // 건드리지 않고 그 위에만 덮어씌운다.
+// [FIX-NO-FALLBACK-LETTER] 이미지가 안 뜰 때 큰 이니셜 글자를 워터마크처럼
+// 띄우던 것도 "이상한 게 보인다"는 피드백으로 제거했다. 이제는 이미지가 없거나
+// 계속 로딩에 실패해도 아무것도 그리지 않고, 박스의 테마 배경색과 하단의
+// 이름/티어/대학 정보만 보이는 깔끔한 상태로 남는다.
 window._b2ShowFallbackLetter = function(mainBox, playerName) {
   try {
     if (!mainBox) return;
-    let fb = mainBox.querySelector('#b2-main-fallback-letter');
-    if (!fb) {
-      fb = document.createElement('div');
-      fb.id = 'b2-main-fallback-letter';
-      fb.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2);z-index:45;pointer-events:none;';
-      mainBox.appendChild(fb);
-    }
-    fb.textContent = (String(playerName || '').trim()[0]) || '?';
-    fb.style.display = 'flex';
+    const fb = mainBox.querySelector('#b2-main-fallback-letter');
+    if (fb) fb.style.display = 'none';
   } catch (e) {}
 };
 window._b2HideFallbackLetter = function(mainBox) {

@@ -23,6 +23,13 @@ function _renderImpl(){
     const active=oc.includes("'"+curTab+"'");
     b.classList.toggle('on',active);
   });
+  // [FIX-NO-REFRESH-ON-REENTRY] sw()로 탭을 바꿀 때뿐 아니라, 백그라운드 클라우드
+  // 동기화(다른 브라우저 탭에서 돌아왔을 때 등)처럼 curTab이 그대로 'board2'인
+  // 채로 render()가 다시 호출되는 경우에도, 아래 C.innerHTML=''이 프로필탭의
+  // 이미지 DOM을 통째로 파괴해버렸다. 여기서도 동일하게 파괴 직전에 떼어서
+  // 보관해두면, 화면에 실제 영향을 주는 값이 안 바뀌었을 때 board2-core.js의
+  // 복원 로직이 새로 그리지 않고 그대로 재사용한다.
+  try{ if (typeof window._b2StashPlayersDom === 'function') window._b2StashPlayersDom(); }catch(e){}
   C.innerHTML='';
   window._compListCache={};
   window._histTourneyCache={};
@@ -41,49 +48,35 @@ function _renderImpl(){
         if(typeof Chart==='undefined'){ window.ensureChartJS().then(()=>render(true)).catch(()=>rStats(C,T)); return; }
         rStats(C,T);
       }else{
-        _lazyLoadingView(T,C,'통계','통계 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureStatsLoaded(); render(true); }catch(e){ console.error('[lazy] stats load fail', e); } })();
+        _lazyRunWithFallback(_ensureStatsLoaded, C, T, '통계', '통계 모듈을 불러오는 중...');
       }
       break;
     case 'cal':
       if(typeof rCal==='function'){
         rCal(C,T);
       }else{
-        _lazyLoadingView(T,C,'캘린더','캘린더 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureCalendarLoaded(); render(true); }catch(e){ console.error('[lazy] calendar load fail', e); } })();
+        _lazyRunWithFallback(_ensureCalendarLoaded, C, T, '캘린더', '캘린더 모듈을 불러오는 중...');
       }
       break;
     case 'roulette':
       if(typeof rRoulette==='function'){
         rRoulette(C,T);
       }else{
-        T.textContent = '룰렛/게임';
-        C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">룰렛/게임 기능 로딩 중...</div><div class="empty-state-desc">최초 1회만 로드됩니다.</div></div>';
-        (async()=>{
-          try{
-            await _ensureRouletteLoaded();
-            render(true);
-          }catch(e){
-            console.error('[lazy] roulette load fail', e);
-            C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">룰렛/게임 로딩 실패</div><div class="empty-state-desc">콘솔 에러를 확인해주세요.</div></div>';
-          }
-        })();
+        _lazyRunWithFallback(_ensureRouletteLoaded, C, T, '룰렛/게임', '룰렛/게임 기능을 불러오는 중... (최초 1회만 로드됩니다)');
       }
       break;
     case 'vote':
       if(typeof rVote==='function'){
         rVote(C,T);
       }else{
-        _lazyLoadingView(T,C,'투표','투표 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureVoteLoaded(); render(true); }catch(e){ console.error('[lazy] vote load fail', e); } })();
+        _lazyRunWithFallback(_ensureVoteLoaded, C, T, '투표', '투표 모듈을 불러오는 중...');
       }
       break;
     case 'board':
       if(typeof rBoard==='function'){
         rBoard(C,T);
       }else{
-        _lazyLoadingView(T,C,'현황판','현황판 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureCloudBoardLoaded(); render(true); }catch(e){ console.error('[lazy] board load fail', e); } })();
+        _lazyRunWithFallback(_ensureCloudBoardLoaded, C, T, '현황판', '현황판 모듈을 불러오는 중...');
       }
       break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  else C.innerHTML='<div class="empty-state">현황판을 불러올 수 없습니다.</div>'; break;
@@ -91,8 +84,7 @@ function _renderImpl(){
       if(typeof rElboard==='function'){
         rElboard(C,T);
       }else{
-        _lazyLoadingView(T,C,'ELO 현황판','ELO 현황판 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureElboardLoaded(); render(true); }catch(e){ console.error('[lazy] elboard load fail', e); } })();
+        _lazyRunWithFallback(_ensureElboardLoaded, C, T, 'ELO 현황판', 'ELO 현황판 모듈을 불러오는 중...');
       }
       break;
     default: break;

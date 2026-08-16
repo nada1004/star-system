@@ -42,6 +42,21 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
+    // [FIX-SW-STALE-DEPLOY] 새 코드를 서버에 올려도, 이미 열려있던 브라우저 탭은
+    // 새 서비스워커가 백그라운드에서 설치·활성화(skipWaiting)되는 것과 별개로
+    // "지금 이 페이지"는 여전히 예전 서비스워커가 캐싱해준 예전 JS로 실행 중이었다.
+    // 그래서 새로고침 한 번으로는 예전 코드가 그대로 보이고, 반영을 확인하려면
+    // 한 번 더 새로고침해야 하는 상황이 반복적으로 발생했다("고쳤다고 했는데
+    // 서버는 여전히 그대로다"의 실제 원인 중 하나). 새 서비스워커가 이 탭의 제어권을
+    // 넘겨받는 순간(controllerchange) 자동으로 한 번만 새로고침해서, 배포 직후
+    // 첫 새로고침만으로도 항상 최신 코드가 보이도록 한다. (재귀적 새로고침 방지를
+    // 위해 세션당 1회만 실행)
+    let _swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (_swReloaded) return;
+      _swReloaded = true;
+      try{ location.reload(); }catch(e){}
+    });
     navigator.serviceWorker.register('/sw.js?v=20260803-darkfix9', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
@@ -681,7 +696,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/constants-ui-vars.js?v=20260730-split6"></script>
 <script defer src="js/constants-tier-theme.js?v=20260730-split6"></script>
 <script defer src="js/constants-state.js?v=20260806-grpfix2"></script>
-<script defer src="js/constants-save.js?v=20260816-fix6"></script>
+<script defer src="js/constants-save.js?v=20260816-fix10"></script>
 <script defer src="js/constants-game.js?v=20260810-viewmodes2"></script>
 <script defer src="js/constants-tab-colors.js?v=20260717-ds01"></script>
 <script defer src="js/constants-player-html.js?v=20260803-darkfix12"></script>
@@ -768,7 +783,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/competition-normal-matches-util.js?v=20260813-split1"></script>
 <script defer src="js/history-share.js?v=20260717-ds01"></script>
 <script defer src="js/render-lazy-utils.js?v=20260812-ot1"></script>
-<script defer src="js/render-core.js?v=20260717-ds01"></script>
+<script defer src="js/render-core.js?v=20260816-fix10"></script>
 <script defer src="js/render-nav-lazy.js?v=20260816-fix9"></script>
 <script defer src="js/render-iconify-ui.js?v=20260717-ds01"></script>
 <script defer src="js/render-capture-core.js?v=20260730-split14"></script>
@@ -906,9 +921,9 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/init-bootstrap.js?v=20260731-imefix1"></script>
 <script defer src="js/init-theme-apply.js?v=20260730-split11"></script>
 <script defer src="js/init-card-theme.js?v=20260730-split11"></script>
-<script defer src="js/board2-image-utils.js?v=20260816-fix5"></script>
+<script defer src="js/board2-image-utils.js?v=20260816-fix13"></script>
 <script defer src="js/board2-card-utils.js?v=20260717-ds01"></script>
-<script defer src="js/board2-core.js?v=20260816-fix9"></script>
+<script defer src="js/board2-core.js?v=20260816-fix13"></script>
 <script defer src="js/player-bgm.js?v=20260816-fix5"></script>
 <script defer src="js/board2-univ-views-core.js?v=20260816-imgfix2"></script>
 <script defer src="js/board2-univ-views-femco.js?v=20260730-split1"></script>
@@ -916,8 +931,8 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/board2-univ-views-cards.js?v=20260816-imgfix2"></script>
 <script defer src="js/board2-univ-views-lineup.js?v=20260816-bgmfix2"></script>
 <script defer src="js/board2-players-hover.js?v=20260730-split15"></script>
-<script defer src="js/board2-players-view.js?v=20260816-fix8"></script>
-<script defer src="js/board2-players-main-display.js?v=20260816-fix9"></script>
+<script defer src="js/board2-players-view.js?v=20260816-fix13"></script>
+<script defer src="js/board2-players-main-display.js?v=20260816-fix13"></script>
 <script defer src="js/board2-players-edit-modal.js?v=20260730-split15"></script>
 <script defer src="js/board2-players-save.js?v=20260816-fix5"></script>
 <script defer src="js/board2-analytics.js?v=20260717-ds03"></script>

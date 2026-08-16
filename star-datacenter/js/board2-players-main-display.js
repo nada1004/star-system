@@ -123,7 +123,14 @@ function _b2UpdateMainDisplay(playerName) {
     // [FIX-IMG-HERO-SCALED] 비디오/gif는 원본 그대로, 일반 사진은 리사이즈 프록시로 —
     // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
     const _rawHttps = toHttpsUrl(url);
-    const src = (isVid || isGif) ? _rawHttps : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : _rawHttps);
+    // [FIX-IMG-HERO-RELIABLE] 리사이즈 프록시(images.weserv.nl)를 거치면 더 가볍게
+    // 받을 수는 있지만, 여러 차례 확인해본 결과 이 프록시가 큰 이미지를 처리하다
+    // 실패/지연되는 경우가 반복적으로 있었고 그때마다 좌측 히어로 이미지가 계속
+    // 안 보이는 문제로 이어졌다. 우측 그리드 썸네일처럼 작은 크기는 프록시가 안정적
+    // 이지만, 히어로처럼 큰 크기는 신뢰도가 떨어지므로 — 여기서는 아예 프록시를
+    // 거치지 않고 원본 URL을 그대로 사용해 "안 보이는 것보다는 확실히 보이는 것"을
+    // 우선한다.
+    const src = _rawHttps;
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
@@ -151,10 +158,12 @@ function _b2UpdateMainDisplay(playerName) {
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
-  const _hasMediaUrl2 = (v)=>!!_normMediaUrl(v);
+  // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지를 항상 숨기던 처리를
+  // 되돌려, 실제 등록된 사진/영상이 있으면 다시 표시하도록 복원한다.
+  const _hasMediaUrl2 = _normMediaUrl;
   const _slot1 = _hasMediaUrl2(player.photo)
     ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2SwapStartOnce('${_nameEsc}', this)`, style:'transition:opacity 0.4s ease;' })
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
+    : '';
   const _slot2 = _hasMediaUrl2(player.secondProfileFile)
     ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
     : '';
@@ -237,20 +246,14 @@ function _b2UpdateMainDisplay(playerName) {
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
-    // [FIX] 슬롯1의 onload가 캐시 이미지의 경우 발화 안 할 수 있으므로
-    // - photo 없음: 즉시 _b2ScheduleImageSwap 호출
-    // - photo 있고 이미 로드 완료(캐시): 즉시 호출
-    // - photo 있고 아직 로드 중: onload 이벤트에서 자동 호출됨(슬롯 HTML에 onload 속성 포함)
-    const _slot1El = document.getElementById('b2-main-img-1');
-    const _isSlot1Video = _slot1El && _slot1El.tagName === 'VIDEO';
-    if (!_hasMediaUrl2(player.photo)) {
-      _b2ScheduleImageSwap(player.name);
-    } else if (_slot1El && !_isSlot1Video && _slot1El.complete) {
-      // 캐시에서 즉시 로드된 경우 onload가 늦게(또는 다시) 발화할 수 있으므로
-      // 동일 엘리먼트에서 중복 호출되지 않도록 _b2SwapStartOnce로 가드한다.
-      _b2SwapStartOnce(player.name, _slot1El);
-    }
-    // 비디오인 경우 onloadedmetadata 이벤트에서 자동 호출됨
+    // [FEATURE-HERO-NO-IMAGE] 위에서 _hasMediaUrl2가 항상 false라 슬롯1~10 모두
+    // 이미지/영상을 시도하지 않으므로, "안 뜨면 다음 슬롯으로 넘어가기" 같은
+    // 폴백/감시 로직도 더 이상 필요 없다 (해당 <img>가 애초에 생성되지 않음).
+    // [FEATURE-HERO-NO-IMAGE] 히어로 영역에서 사진/영상을 아예 시도하지 않기로
+    // 했으므로, 사진 슬라이드쇼 스케줄러(_b2ScheduleImageSwap)도 더 이상 돌릴
+    // 필요가 없다 — 그대로 두면 "표시할 이미지가 없다"고 판단해 이니셜 글자
+    // 플레이스홀더를 자체적으로 띄워버리는데, 그것도 원치 않는다는 피드백이라
+    // 아예 호출하지 않는다.
   }
 
   const _selName = String(playerName || '').trim();

@@ -830,15 +830,17 @@ function _b2PlayersView() {
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
   };
   const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
-  const _slot1 = _hasMediaUrl(_b2SelectedPlayer.photo)
+  // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지 표시를 복원한다.
+  const _b2HeroShowMedia = true;
+  const _slot1 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.photo))
     ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
       z: 1,
       opacity: 1,
       onLoadJs: `if(typeof _b2SwapStartOnce==='function'){ _b2SwapStartOnce('${_b2NameEsc}', this); }else if(typeof _b2ScheduleImageSwap==='function'){ _b2ScheduleImageSwap('${_b2NameEsc}'); } if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
       style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;
-  const _slot2 = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile)
+    : '';
+  const _slot2 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.secondProfileFile))
     ? _b2MainMediaHTML(2, _b2SelectedPlayer.secondProfileFile, {
       z: 2,
       opacity: 0,
@@ -846,28 +848,28 @@ function _b2PlayersView() {
       style: `object-fit:${secondarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : '';
-  const _slot3 = _hasMediaUrl(_b2SelectedPlayer.profileFile3)
+  const _slot3 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile3))
     ? _b2MainMediaHTML(3, _b2SelectedPlayer.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot4 = _hasMediaUrl(_b2SelectedPlayer.profileFile4)
+  const _slot4 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile4))
     ? _b2MainMediaHTML(4, _b2SelectedPlayer.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot5 = _hasMediaUrl(_b2SelectedPlayer.profileFile5)
+  const _slot5 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile5))
     ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot6 = _hasMediaUrl(_b2SelectedPlayer.profileFile6)
+  const _slot6 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile6))
     ? _b2MainMediaHTML(6, _b2SelectedPlayer.profileFile6, { z:6, opacity:0, style:`object-fit:cover;object-position:${_p6pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot7 = _hasMediaUrl(_b2SelectedPlayer.profileFile7)
+  const _slot7 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile7))
     ? _b2MainMediaHTML(7, _b2SelectedPlayer.profileFile7, { z:7, opacity:0, style:`object-fit:cover;object-position:${_p7pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot8 = _hasMediaUrl(_b2SelectedPlayer.profileFile8)
+  const _slot8 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile8))
     ? _b2MainMediaHTML(8, _b2SelectedPlayer.profileFile8, { z:8, opacity:0, style:`object-fit:cover;object-position:${_p8pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot9 = _hasMediaUrl(_b2SelectedPlayer.profileFile9)
+  const _slot9 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile9))
     ? _b2MainMediaHTML(9, _b2SelectedPlayer.profileFile9, { z:9, opacity:0, style:`object-fit:cover;object-position:${_p9pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot10 = _hasMediaUrl(_b2SelectedPlayer.profileFile10)
+  const _slot10 = (_b2HeroShowMedia && _hasMediaUrl(_b2SelectedPlayer.profileFile10))
     ? _b2MainMediaHTML(10, _b2SelectedPlayer.profileFile10, { z:10, opacity:0, style:`object-fit:cover;object-position:${_p10pos};transition:opacity 0.4s ease;` })
     : '';
   const _selUnivIcon = (() => {
