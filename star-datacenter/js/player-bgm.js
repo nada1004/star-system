@@ -15,6 +15,57 @@ var _plyrBgmKickTimer = null;
 var _plyrBgmCurrentName = '';
 var _plyrBgmCurrentVid = '';
 
+/* ── 🔘 재생 on/off 토글 버튼 (기능추가, 2026-08-17)
+   스트리머 상세 팝업 / 현황판 프로필탭에서 자동 재생되는 BGM을 사용자가 직접
+   껐다 켤 수 있도록 떠있는 작은 버튼을 하나 둔다. 두 화면 모두 같은 플레이어
+   인스턴스를 공유하므로 버튼도 하나만 있으면 된다(활성 상태일 때만 노출). ── */
+var _plyrBgmUserOff = false;
+try { _plyrBgmUserOff = localStorage.getItem('su_plyr_bgm_off') === '1'; } catch (e) {}
+
+function _plyrBgmToggleBtnEnsure() {
+  let btn = document.getElementById('plyrBgmToggleBtn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'plyrBgmToggleBtn';
+    btn.type = 'button';
+    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;width:42px;height:42px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#fff;font-size:17px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(15,23,42,.28);backdrop-filter:blur(6px);transition:opacity .15s,transform .12s;padding:0';
+    btn.onmousedown = () => { btn.style.transform = 'scale(.92)'; };
+    btn.onmouseup = btn.onmouseleave = () => { btn.style.transform = 'scale(1)'; };
+    btn.onclick = (ev) => { ev.stopPropagation(); _plyrBgmToggleUser(); };
+    document.body.appendChild(btn);
+  }
+  return btn;
+}
+
+function _plyrBgmToggleBtnSync() {
+  const btn = document.getElementById('plyrBgmToggleBtn');
+  if (!btn) return;
+  btn.style.display = _plyrBgmActive ? 'flex' : 'none';
+  btn.textContent = _plyrBgmUserOff ? '🔇' : '🎵';
+  btn.style.opacity = _plyrBgmUserOff ? '.55' : '1';
+  btn.title = (_plyrBgmUserOff ? '스트리머 BGM 꺼짐 (클릭하여 켜기)' : '스트리머 BGM 켜짐 (클릭하여 끄기)') +
+    (_plyrBgmCurrentName ? ' — ' + _plyrBgmCurrentName : '');
+}
+
+function _plyrBgmToggleUser() {
+  _plyrBgmUserOff = !_plyrBgmUserOff;
+  try { localStorage.setItem('su_plyr_bgm_off', _plyrBgmUserOff ? '1' : '0'); } catch (e) {}
+  if (_plyrBgmPlayer && _plyrBgmActive) {
+    try {
+      if (_plyrBgmUserOff) {
+        _plyrBgmPlayer.pauseVideo();
+        if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
+      } else {
+        _plyrBgmPlayer.playVideo();
+        _plyrBgmApplyVol();
+      }
+    } catch (e) {}
+  }
+  _plyrBgmToggleBtnSync();
+}
+
+try { window._plyrBgmToggleUser = _plyrBgmToggleUser; } catch (e) {}
+
 function _plyrBgmExtractId(urlOrId) {
   const s = String(urlOrId || '').trim();
   if (!s) return '';
@@ -111,6 +162,13 @@ function _plyrBgmPlayNow(vid) {
     p.loadVideoById(vid);
     if (p.playVideo) p.playVideo();
   } catch (e) {}
+  // 🔘 사용자가 재생 on/off 토글로 꺼둔 상태라면 곡을 불러오되 바로 일시정지해
+  // 자동재생을 시작하지 않는다(다음 사용자 조작 전까지 무음 유지).
+  if (_plyrBgmUserOff) {
+    try { p.pauseVideo && p.pauseVideo(); } catch (e) {}
+    _plyrBgmToggleBtnSync();
+    return;
+  }
   // [FIX-BGM-AUTOPLAY] 브라우저의 자동재생 정책이 유독 엄격해서 muted 상태로도
   // 재생이 시작되지 않는 경우(제스처 없이 열린 팝업 등)를 대비한 최종 안전장치.
   // 사용자가 상세 팝업 안에서 아무 곳이나 한 번 클릭/터치하면 그 제스처를 이용해
@@ -119,7 +177,7 @@ function _plyrBgmPlayNow(vid) {
   if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
   let tries = 0;
   _plyrBgmKickTimer = setInterval(() => {
-    if (!_plyrBgmActive || !_plyrBgmPlayer) {
+    if (!_plyrBgmActive || !_plyrBgmPlayer || _plyrBgmUserOff) {
       clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return;
     }
     let st = -1;
@@ -178,6 +236,7 @@ function _plyrBgmStart(player) {
     _plyrBgmCurrentVid = vid;
     _plyrBgmVolume = Number.isFinite(parseInt(player.bgmVolume, 10)) ? Math.max(0, Math.min(100, parseInt(player.bgmVolume, 10))) : 50;
     _plyrBgmActive = true;
+    try { _plyrBgmToggleBtnEnsure(); _plyrBgmToggleBtnSync(); } catch (e) {}
     _plyrBgmEnsurePlayer().then(() => {
       if (!_plyrBgmActive || _plyrBgmCurrentName !== name) return; // 그 사이 다른 스트리머로 바뀐 경우 무시
       if (_plyrBgmReady) { _plyrBgmPlayNow(vid); }
@@ -195,6 +254,7 @@ function _plyrBgmStop() {
   if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
   try { if (_plyrBgmPlayer) _plyrBgmPlayer.stopVideo(); } catch (e) {}
   _plyrBgmGestureArmed = false;
+  try { _plyrBgmToggleBtnSync(); } catch (e) {}
 }
 
 // 스트리머 상세 팝업이 닫혔을 때 호출 — 현황판 프로필탭에 선택된 스트리머가 있고
