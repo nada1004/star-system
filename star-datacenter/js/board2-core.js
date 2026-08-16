@@ -421,6 +421,30 @@ function _b2VisUnivs() {
   return getAllUnivs().filter(u => !u.hidden && !u.dissolved);
 }
 
+// [FIX-NO-REFRESH-ON-REENTRY] 프로필탭(board2 players)을 벗어나기 직전에 호출된다.
+// #b2-content 안의 실제 라이브 DOM(이미지 <img>/<video> 포함)을 파괴하지 않고
+// 그대로 떼어내(appendChild로 이동 — src 재설정 없이 이동만 하므로 재요청/재디코딩이
+// 일어나지 않는다) window._b2PlayersDomStash에 보관해둔다. 다시 프로필탭으로
+// 돌아왔을 때 화면에 영향을 주는 값이 그대로면(같은 시그니처) 이 DOM을 재사용한다.
+window._b2StashPlayersDom = function(){
+  try{
+    if (typeof _b2View === 'undefined' || _b2View !== 'players') return;
+    const sub = document.getElementById('b2-content');
+    if (!sub || !sub.firstChild) { window._b2PlayersDomStash = null; return; }
+    if (!document.getElementById('b2-players-main-box')) { window._b2PlayersDomStash = null; return; }
+    // 진행 중인 슬라이드쇼 타이머는 정지해둔다 (돌아왔을 때 다시 시작함).
+    try{
+      const mainBox = document.getElementById('b2-players-main-box');
+      if (mainBox && typeof _b2ClearSwapTimer === 'function') _b2ClearSwapTimer(mainBox);
+    }catch(e){}
+    const holder = document.createDocumentFragment();
+    while (sub.firstChild) holder.appendChild(sub.firstChild);
+    window._b2PlayersDomStash = { node: holder, sig: window._b2PlayersLastSig || '' };
+  }catch(e){
+    window._b2PlayersDomStash = null;
+  }
+};
+
 function rBoard2(C, T) {
   try {
   T.innerText = '📊 현황판';
@@ -879,9 +903,24 @@ function rBoard2(C, T) {
       // 되돌아가는" 현상을 막는다.
       const _sig = _b2ComputePlayersSig();
       const _alreadyBuilt = !!document.getElementById('b2-players-main-box');
+      // [FIX-NO-REFRESH-ON-REENTRY] 다른 탭에 갔다가 프로필탭으로 돌아온 경우 —
+      // sw()에서 떠나기 직전에 떼어 보관해둔 DOM이 있고, 그 사이 화면에 영향을 주는
+      // 값이 하나도 안 바뀌었다면(같은 시그니처) 새로 그리지 않고 그 DOM을 그대로
+      // 복원한다. <img>가 다시 생성되지 않으므로 재요청/재디코딩 없이 즉시 보인다.
+      const _stash = window._b2PlayersDomStash;
       if (_alreadyBuilt && window._b2PlayersLastSig === _sig) {
         // 아무것도 바뀌지 않음 — 기존 DOM(및 진행 중인 슬라이드쇼 타이머) 유지
+      } else if (!_alreadyBuilt && _stash && _stash.sig === _sig && _stash.node) {
+        sub.innerHTML = '';
+        sub.appendChild(_stash.node);
+        window._b2PlayersDomStash = null;
+        window._b2PlayersLastSig = _sig;
+        _b2BindAutoFitResize();
+        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
+        // 복원된 DOM은 슬라이드쇼 타이머가 멈춰있으므로 다시 시작해준다.
+        try{ if (_b2SelectedPlayer && typeof _b2ScheduleImageSwap === 'function') _b2ScheduleImageSwap(_b2SelectedPlayer.name); }catch(e){}
       } else {
+        window._b2PlayersDomStash = null;
         window._b2PlayersLastSig = _sig;
         sub.innerHTML = _b2PlayersView();
         _b2BindAutoFitResize();
@@ -897,26 +936,6 @@ function rBoard2(C, T) {
           }catch(e){
             console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
           }
-          // [FIX-IMG-HERO-BLANK-STUCK] 최초 진입 시에도 프록시 요청이 무한정 멈춰서
-          // onerror조차 안 뜨는 경우를 대비해, 슬롯1이 일정 시간 안에 로드 안 되면
-          // 원본 URL로 강제 전환한다 (board2-players-main-display.js의 동일 로직).
-          try{
-            const _watchEl = document.getElementById('b2-main-img-1');
-            if(_watchEl && _watchEl.tagName === 'IMG'){
-              const _origUrl = _watchEl.dataset.orig || '';
-              setTimeout(()=>{
-                try{
-                  if(!_watchEl.isConnected) return;
-                  if(_watchEl.dataset.b2Broken === '1') return;
-                  if(_watchEl.complete && _watchEl.naturalWidth > 0) return;
-                  if(_origUrl && _watchEl.src !== _origUrl){
-                    _watchEl.dataset.b2ErrCount = '1';
-                    _watchEl.src = _origUrl;
-                  }
-                }catch(e){}
-              }, 5000);
-            }
-          }catch(e){}
         }, 0);
         setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
       }

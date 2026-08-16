@@ -431,6 +431,16 @@ function sw(t,el){
     const m=tabModeMap[t];
     if(m)window._recQ[m]='';
   }
+  // [FIX-NO-REFRESH-ON-REENTRY] 프로필탭(board2 players)에서 다른 최상위 탭으로
+  // 이동하기 직전, 지금 떠있는 이미지 DOM을 통째로 떼어내 보관해둔다. 잠시 뒤
+  // render()가 #rcont를 비우면서 이 DOM은 파괴되는데, 다시 프로필탭으로 돌아왔을 때
+  // (선택된 스트리머·사진이 그대로라면) 새로 그리는 대신 이 보관해둔 DOM을 그대로
+  // 복원해서 <img>가 다시 생성/재요청되며 "새로고침"되는 것처럼 보이는 문제를 없앤다.
+  try{
+    if (curTab === 'board2' && t !== 'board2' && typeof window._b2StashPlayersDom === 'function') {
+      window._b2StashPlayersDom();
+    }
+  }catch(e){}
   curTab=t;openDetails={};
   const tabs = [...document.querySelectorAll('.tab')];
   const resolvedEl = (typeof window._resolveTopTabEl === 'function')

@@ -237,27 +237,6 @@ function _b2UpdateMainDisplay(playerName) {
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
-    // [FIX-IMG-HERO-BLANK-STUCK] 프록시 요청이 에러 이벤트도 안 뜨고 그냥 무한정
-    // 멈춰있는(hang) 경우 위 onerror 폴백 자체가 발동하지 않아 화면이 계속 비어있을
-    // 수 있다. 지금 보이는 슬롯1이 일정 시간 안에 로드되지 않으면 프록시를 거치지
-    // 않은 원본 URL로 강제 전환한다.
-    try{
-      const _watchEl = document.getElementById('b2-main-img-1');
-      if(_watchEl && _watchEl.tagName === 'IMG'){
-        const _origUrl = _watchEl.dataset.orig || '';
-        setTimeout(()=>{
-          try{
-            if(!_watchEl.isConnected) return;
-            if(_watchEl.dataset.b2Broken === '1') return;
-            if(_watchEl.complete && _watchEl.naturalWidth > 0) return; // 이미 정상 로드됨
-            if(_origUrl && _watchEl.src !== _origUrl){
-              _watchEl.dataset.b2ErrCount = '1';
-              _watchEl.src = _origUrl;
-            }
-          }catch(e){}
-        }, 5000);
-      }
-    }catch(e){}
     // [FIX] 슬롯1의 onload가 캐시 이미지의 경우 발화 안 할 수 있으므로
     // - photo 없음: 즉시 _b2ScheduleImageSwap 호출
     // - photo 있고 이미 로드 완료(캐시): 즉시 호출
