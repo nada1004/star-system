@@ -383,6 +383,109 @@ function _renderCfgImgSettings(playerName) {
     ` : '<div style="color:var(--gray-l);font-size:var(--fs-sm)">등록된 이미지 없음</div>';
   }
 }
+// [FEATURE-KENBURNS] 히어로 슬라이드쇼 사진에 은은한 줌/팬(켄번즈) 효과를 준다.
+// CSS @keyframes 대신 requestAnimationFrame으로 매 프레임 transform을 직접 갱신하는
+// 이유: 슬롯1/2는 관리자가 지정한 수동 크롭 설정(_b2ApplyImgSettingsToElement가 이미
+// el.style.transform에 심어둔 translate/scale)이 있는데, CSS 애니메이션은 그 인라인
+// transform을 통째로 덮어써 수동 설정이 애니메이션 동안 무시되는 부작용이 있다.
+// rAF로 "기존 transform 문자열 + 켄번즈 변형"을 매 프레임 직접 합성하면 수동 설정을
+// 보존하면서 자연스럽게 얹을 수 있다.
+const _B2_KB_VARIANTS = [
+  { fromS: 1.00, toS: 1.14, fromX: 0, toX: -3, fromY: 0, toY: -2 },
+  { fromS: 1.00, toS: 1.14, fromX: 0, toX:  3, fromY: 0, toY: -2 },
+  { fromS: 1.00, toS: 1.14, fromX: 0, toX: -3, fromY: 0, toY:  2 },
+  { fromS: 1.00, toS: 1.14, fromX: 0, toX:  3, fromY: 0, toY:  2 },
+  { fromS: 1.00, toS: 1.16, fromX: 0, toX:  0, fromY: 0, toY:  0 },
+  { fromS: 1.16, toS: 1.00, fromX: 0, toX:  0, fromY: 0, toY:  0 }
+];
+// el: 애니메이션할 <img>. durationMs: 이 슬롯이 화면에 머무는 총 시간(켄번즈가 이
+// 시간에 걸쳐 서서히 줌/팬 하도록). entry: {x,y,s} — 전환 방향(슬라이드/줌) 진입
+// 시작 위치(없으면 켄번즈 시작 위치에서 바로 시작). loop: 다음 전환이 없는(이미지
+// 1장뿐인) 경우 계속 새 방향으로 이어서 재생할지 여부.
+window._b2StartKenBurns = function(el, durationMs, entry, loop){
+  try{
+    if(!el || el.tagName === 'VIDEO') return;
+    if(el._b2KbCancel){ try{ el._b2KbCancel(); }catch(e){} el._b2KbCancel = null; }
+    if(el.dataset.b2BaseTransform == null){
+      el.dataset.b2BaseTransform = el.style.transform || '';
+    }
+    const base = el.dataset.b2BaseTransform;
+    let idx;
+    do { idx = Math.floor(Math.random() * _B2_KB_VARIANTS.length); }
+    while (_B2_KB_VARIANTS.length > 1 && idx === el._b2KbLastIdx);
+    el._b2KbLastIdx = idx;
+    const v = _B2_KB_VARIANTS[idx];
+    const dur = Math.max(1000, durationMs || 4400);
+    const enterMs = entry ? Math.min(520, Math.max(280, dur * 0.22)) : 0;
+    const eX = entry ? (entry.x || 0) : v.fromX;
+    const eY = entry ? (entry.y || 0) : v.fromY;
+    const eS = entry && entry.s != null ? entry.s : v.fromS;
+    const _now = ()=> (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const start = _now();
+    const easeOut = (t)=> 1 - Math.pow(1 - t, 2);
+    let raf = null;
+    const step = ()=>{
+      if (!el.isConnected) return; // 선수 전환 등으로 DOM에서 제거됐으면 조용히 중단
+      const elapsed = _now() - start;
+      let s, x, y;
+      if (elapsed <= enterMs) {
+        const t = enterMs > 0 ? easeOut(Math.min(1, elapsed / enterMs)) : 1;
+        s = eS + (v.fromS - eS) * t;
+        x = eX + (v.fromX - eX) * t;
+        y = eY + (v.fromY - eY) * t;
+      } else {
+        const t2 = Math.min(1, (elapsed - enterMs) / Math.max(1, dur - enterMs));
+        s = v.fromS + (v.toS - v.fromS) * t2;
+        x = v.fromX + (v.toX - v.fromX) * t2;
+        y = v.fromY + (v.toY - v.fromY) * t2;
+      }
+      try{ el.style.transform = `${base} translate(${x.toFixed(2)}%, ${y.toFixed(2)}%) scale(${s.toFixed(4)})`; }catch(e){}
+      if (elapsed < dur) {
+        raf = requestAnimationFrame(step);
+      } else if (loop) {
+        window._b2StartKenBurns(el, durationMs, null, true);
+      }
+    };
+    raf = requestAnimationFrame(step);
+    el._b2KbCancel = ()=>{ if (raf) cancelAnimationFrame(raf); };
+  }catch(e){}
+};
+window._b2ResetKenBurns = function(el){
+  try{
+    if(!el) return;
+    if(el._b2KbCancel){ try{ el._b2KbCancel(); }catch(e){} el._b2KbCancel = null; }
+    if(el.dataset.b2BaseTransform != null) el.style.transform = el.dataset.b2BaseTransform;
+  }catch(e){}
+};
+// [FEATURE-TRANSITION-VARIETY] 매 전환마다 다른 진입 방향(디졸브/좌우·상하 슬라이드/
+// 줌+디졸브)을 골라 슬라이드쇼가 항상 똑같은 크로스페이드로만 반복되지 않게 한다.
+// 직전과 같은 방향이 연달아 나오지 않도록 한 번 더 뽑는다(mainBox당 상태 보관).
+const _B2_TRANS_TYPES = [
+  { type:'fade',            fade:true,  x:0,    y:0            },
+  { type:'slide-left',      fade:false, x:100,  y:0            },
+  { type:'slide-right',     fade:false, x:-100, y:0            },
+  { type:'slide-up',        fade:false, x:0,    y:70           },
+  { type:'slide-down',      fade:false, x:0,    y:-70          },
+  { type:'zoom-in-fade',    fade:true,  x:0,    y:0,   s:0.90  },
+  { type:'zoom-out-fade',   fade:true,  x:0,    y:0,   s:1.16  },
+  { type:'slide-topleft',   fade:false, x:70,   y:50           },
+  { type:'slide-topright',  fade:false, x:-70,  y:50           },
+  { type:'slide-botleft',   fade:false, x:70,   y:-50          },
+  { type:'slide-botright',  fade:false, x:-70,  y:-50          },
+  { type:'slide-left-fade', fade:true,  x:55,   y:0            },
+  { type:'slide-right-fade',fade:true,  x:-55,  y:0            },
+  { type:'slide-up-fade',   fade:true,  x:0,    y:40           },
+  { type:'slide-down-fade', fade:true,  x:0,    y:-40          }
+];
+window._b2PickTransition = function(mainBox){
+  try{
+    let idx;
+    do { idx = Math.floor(Math.random() * _B2_TRANS_TYPES.length); }
+    while (_B2_TRANS_TYPES.length > 1 && mainBox && idx === mainBox._lastTransIdx);
+    if (mainBox) mainBox._lastTransIdx = idx;
+    return _B2_TRANS_TYPES[idx];
+  }catch(e){ return _B2_TRANS_TYPES[0]; }
+};
 function _b2ClearSwapTimer(mainBox) {
   if (mainBox && mainBox._swapTimer) {
     clearTimeout(mainBox._swapTimer);
@@ -504,17 +607,26 @@ function _b2ScheduleImageSwap(playerName) {
   const _rememberResumeSlot = (slot)=>{
     try{ window._b2SwapResumeState[playerName] = { slot, ts: Date.now() }; }catch(e){}
   };
-  const showOnlySlot = (slot)=>{
+  const showOnlySlot = (slot, kbDurationMs)=>{
     bringToFront(slot);
     for (let s = 1; s <= 10; s++) {
       const el = getEl(s);
       if (!el) continue;
       el.style.opacity = (s === slot) ? '1' : '0';
+      if (s !== slot && typeof window._b2ResetKenBurns === 'function') window._b2ResetKenBurns(el);
     }
     mainBox._swapCurSlot = slot;
     _rememberResumeSlot(slot);
     applyMediaForSlot(slot);
     if (typeof window._b2HideFallbackLetter === 'function') window._b2HideFallbackLetter(mainBox);
+    // [FEATURE-KENBURNS] 현재 보이는 슬롯에 은은한 줌/팬 효과 시작. 등록된 사진이
+    // 1장뿐이라 순환(다음 전환)이 없는 경우엔 계속 새 방향으로 이어지도록 loop.
+    try{
+      const el = getEl(slot);
+      if (el && typeof window._b2StartKenBurns === 'function') {
+        window._b2StartKenBurns(el, kbDurationMs, null, imgList.length < 2);
+      }
+    }catch(e){}
   };
   // [FIX-IMG-BLANK] 등록된 이미지가 전부 깨진(로딩 실패) 상태라면 더는 숨겨진(visibility:hidden)
   // 이미지를 억지로 보여주지 않는다 — 대신 이니셜 플레이스홀더를 띄우고, 잠시 후
@@ -590,7 +702,12 @@ function _b2ScheduleImageSwap(playerName) {
 
   // 모든 이미지 초기화: 이어서 볼 슬롯(없으면 첫 번째 이미지)만 보이게
   const firstSlot = _resumeSlotCandidate || initialLiveList[0].slot;
-  showOnlySlot(firstSlot);
+  // [FEATURE-KENBURNS] 켄번즈 지속시간을 "이 슬롯이 실제로 화면에 머무는 시간"과
+  // 맞추기 위해, 다음 전환까지의 지연시간을 showOnlySlot 호출 전에 미리 계산해둔다.
+  const _firstBaseIdxKB = _findBaseIdx(firstSlot);
+  const _firstToSlotKB = baseOrder[(_firstBaseIdxKB + 1) % baseOrder.length];
+  const _firstKbDuration = baseOrder.length >= 2 ? delayMs(firstSlot, _firstToSlotKB) : undefined;
+  showOnlySlot(firstSlot, _firstKbDuration);
   try{
     const badge = document.getElementById('b2-cur-img-slot');
     if(badge) badge.textContent = '🖼️ 이미지 ' + firstSlot;
@@ -681,11 +798,36 @@ function _b2ScheduleImageSwap(playerName) {
     if (curSlot == null) curSlot = liveImgList[0].slot; // 전부 깨졌으면 안전 폴백
     mainBox._swapCurSlot = curSlot;
     _rememberResumeSlot(curSlot);
-    // 들어오는 이미지를 맨 위로 올리고 페이드인. 나머지(나가는 이미지 포함)는
-    // 그 아래에 그대로 두어(opacity 유지) 자연스럽게 가려지도록 한다.
+    // 들어오는 이미지를 맨 위로 올리고, 매번 다른 방향의 전환 효과(디졸브/좌우·상하
+    // 슬라이드/줌)로 들어오게 한다. 나머지(나가는 이미지 포함)는 그 아래에 그대로
+    // 두어(opacity 유지) 자연스럽게 가려지도록 한다.
     bringToFront(curSlot);
     const curEl = getEl(curSlot);
-    if (curEl) curEl.style.opacity = '1';
+    // [FEATURE-KENBURNS] "다음" 슬롯/지연시간을 여기서 미리 계산해, 이번에 보여줄
+    // 슬롯의 켄번즈(줌/팬) 지속시간을 실제 표시 시간에 맞춘다(아래 _scheduleNextSwap
+    // 호출에도 그대로 재사용).
+    const curBaseIdx = _findBaseIdx(curSlot);
+    const toSlot = baseOrder[(curBaseIdx + 1) % baseOrder.length];
+    const _kbDwellMs = delayMs(curSlot, toSlot);
+    const _trans = (typeof window._b2PickTransition === 'function') ? window._b2PickTransition(mainBox) : null;
+    if (curEl) {
+      if (_trans && !_trans.fade) {
+        // [FEATURE-TRANSITION-VARIETY] 슬라이드형 전환은 페이드 없이 위치만 이동해
+        // 들어오므로, 인라인 opacity 트랜지션을 잠깐 끄고 즉시 1로 올린다(트랜지션이
+        // 걸린 채면 반투명하게 겹쳐 보여 슬라이드 경계가 흐릿해진다).
+        const _prevTr = curEl.style.transition;
+        curEl.style.transition = 'none';
+        curEl.style.opacity = '1';
+        void curEl.offsetWidth;
+        curEl.style.transition = _prevTr || 'opacity 0.4s ease';
+      } else {
+        curEl.style.opacity = '1';
+      }
+      if (typeof window._b2StartKenBurns === 'function') {
+        const _entry = _trans ? { x: _trans.x, y: _trans.y, s: _trans.s } : null;
+        window._b2StartKenBurns(curEl, _kbDwellMs + CROSSFADE_MS, _entry, false);
+      }
+    }
     try{
       const badge = document.getElementById('b2-cur-img-slot');
       if(badge) badge.textContent = '🖼️ 이미지 ' + curSlot;
@@ -717,6 +859,7 @@ function _b2ScheduleImageSwap(playerName) {
         if (slot === curSlot) continue;
         const el = document.getElementById('b2-main-img-' + slot);
         if (!el) continue;
+        if (typeof window._b2ResetKenBurns === 'function') window._b2ResetKenBurns(el);
         const prevTransition = el.style.transition;
         el.style.transition = 'none';
         el.style.opacity = '0';
@@ -726,11 +869,8 @@ function _b2ScheduleImageSwap(playerName) {
     }, CROSSFADE_MS + 40);
 
     // 다음 전환 예약(현재→다음 기준) — 영상 슬롯이면 재생 완료(ended) 시점, 그 외에는
-    // 설정된 전환 시간(초)을 따름.
-    // "다음"도 baseOrder 기준 고정 순서에서 그대로 한 칸 더 (지연 시간 계산용일 뿐,
-    // 실제 다음 전환 대상은 다음 doSwap() 호출 시점에 다시 동일한 방식으로 정해짐).
-    const curBaseIdx = _findBaseIdx(curSlot);
-    const toSlot = baseOrder[(curBaseIdx + 1) % baseOrder.length];
+    // 설정된 전환 시간(초)을 따름. toSlot/지연시간은 위에서 켄번즈 지속시간 계산 때
+    // 이미 구해뒀으므로 그대로 재사용한다.
     _scheduleNextSwap(curSlot, toSlot);
   }
   // [FIX-IMG-RESUME-DELAY] 이어서 재생(resume)할 때 첫 전환까지의 대기시간을
@@ -740,8 +880,8 @@ function _b2ScheduleImageSwap(playerName) {
   // 원래 4번 이미지에 설정된 전환 시간(예: 6초)보다 훨씬 빨리 넘어가 버리는
   // 등 설정과 다른 타이밍으로 넘어가는 원인이었다. 이제 firstSlot 기준으로
   // baseOrder 안에서 실제 "다음 슬롯"을 찾아 그 구간에 맞는 시간을 사용한다.
-  const _firstBaseIdx = _findBaseIdx(firstSlot);
-  const _firstToSlot = baseOrder[(_firstBaseIdx + 1) % baseOrder.length];
+  const _firstBaseIdx = _firstBaseIdxKB;
+  const _firstToSlot = _firstToSlotKB;
   mainBox._swapCurSlot = firstSlot;
   if (baseOrder.length >= 2) {
     _scheduleNextSwap(firstSlot, _firstToSlot);

@@ -155,7 +155,12 @@ function _b2UpdateMainDisplay(playerName) {
       const _vidPreload = (Number(opacity) === 1) ? 'auto' : 'metadata';
       return `<video ${common} src="${src}" preload="${_vidPreload}" muted playsinline${evPart} onerror="${onErrJs}"></video>`;
     }
-    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart} onerror="${onErrJs}">`;
+    // [REMOVED-BLUR-UP] 로딩 중 작은 썸네일을 흐릿하게 먼저 깔아두던 블러업 레이어를
+    // 제거했다(전환 때마다 사진이 흐릿하게 보인다는 피드백). 이제 원본 <img>만 바로
+    // 그려서 로드가 끝나기 전까지는 그냥 투명(opacity 0)한 채로 있다가, 로드가 끝나면
+    // 곧바로 선명하게 나타난다.
+    const _combinedEvPart = onLoadJs ? ` onload="${onLoadJs}"` : '';
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${_combinedEvPart} onerror="${onErrJs}">`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
   // [FEATURE-HERO-NO-IMAGE-REVERTED] 좌측 히어로 이미지를 항상 숨기던 처리를
