@@ -337,8 +337,6 @@ function savePlayer(){
   p.memo            = _strVal('ed-memo');
   p.channelUrl      = _strVal('ed-channel');
   p.oneLiner        = _strVal('ed-oneliner');
-  p.bgmUrl          = _strVal('ed-bgm-url');
-  p.bgmVolume       = p.bgmUrl ? Math.max(0,Math.min(100, parseInt(document.getElementById('ed-bgm-vol')?.value||'50',10)||50)) : undefined;
 
   // 이미지 URL (비어 있으면 undefined)
   p.secondProfileFile = _strVal('ed-photo2');

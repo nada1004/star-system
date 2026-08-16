@@ -32,15 +32,15 @@ function _b2LineupCard3(p, col) {
   const _lc3SecondIsGif = /\.gif(\?|$)/i.test(_lc3SecondRaw);
   const lc3SecondSrc = lc3SecondPhoto ? (_lc3SecondIsGif ? toHttpsUrl(lc3SecondPhoto) : toScaledUrl(lc3SecondPhoto,300)) : '';
   const lc3SecondHtml = lc3SecondPhoto
-    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
   const attrName = (p.name||'').replace(/"/g,'&quot;');
   return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
       ${photo
-        ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
-           <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
+        ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
+           <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
            <div class="b2-lc3-fallback" style="display:none;z-index:1">${raceLetter}</div>`
         : `<div class="b2-lc3-fallback">${raceLetter}</div>`}
       ${lc3SecondHtml}
@@ -115,7 +115,7 @@ function _b2LineupTableRow(p, col) {
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar${_2ndAvatar?' ph-swap':''}">
         ${photo
-          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
+          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
           : `<div class="b2-lc4-fallback">${raceLetter}</div>`}
         ${_2ndAvatar}
       </div>
@@ -158,12 +158,12 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _tierBadgeTxt = (!big && p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   // 배경 blur 레이어
   const _fillBackdrop = photo
-    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
+    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}33 0%,rgba(0,0,0,.18) 100%)"></div>`
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${col}44 0%,${col}1a 100%)"></div>`;
   // 메인 사진 (전체 꽉 채움, 모양 적용 없이 카드 자체 overflow:hidden으로 처리)
   const photoHtml = photo
-    ? `<img class="b2-lineup-card-photo" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+    ? `<img class="b2-lineup-card-photo" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
          <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`
@@ -177,7 +177,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _lcSecondIsGif = /\.gif(\?|$)/i.test(_lcSecondRaw);
   const lcSecondSrc = lcSecondPhoto ? (_lcSecondIsGif ? toHttpsUrl(lcSecondPhoto) : toScaledUrl(lcSecondPhoto,340)) : '';
   const lcSecondHtml = lcSecondPhoto
-    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lcSecondSrc}" data-orig="${toHttpsUrl(lcSecondPhoto)}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lcSecondSrc}" data-orig="${toHttpsUrl(lcSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
     : '';
   // 종족 배지 — 우상단
   const _raceBadge = (p.race && p.race!=='N')

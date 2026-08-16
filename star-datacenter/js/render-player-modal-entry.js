@@ -163,8 +163,6 @@ function _waitForPlayerDetailRenderer(maxMs=2000){
 }
 
 function _doOpenPlayerModal(name, p){
-  // 🎵 스트리머 전용 BGM — 상세 팝업 오픈 시 등록된 BGM 자동 재생
-  try{ if(typeof _plyrBgmStart==='function') _plyrBgmStart(p); }catch(e){}
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
   const em = document.getElementById('emModal');
   const isEditModalOpen = !!(em && getComputedStyle(em).display !== 'none');

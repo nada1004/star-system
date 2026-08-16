@@ -47,8 +47,6 @@ function _b2UpdateMainDisplay(playerName) {
   
   _b2SelectedPlayer = player;
   // localStorage 저장 제거 - 새로고침 시 랜덤 선수 선택을 위해
-  // 🎵 스트리머 전용 BGM — 현황판 프로필탭에서 스트리머 클릭(선택) 시 자동 재생
-  try{ if(typeof _plyrBgmStart==='function') _plyrBgmStart(player); }catch(e){}
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(player.univ) || '#6366f1';
