@@ -727,7 +727,15 @@
   };
 
   // DOM 변경 감시
+  // [FIX-SLIDESHOW-EARLY-SWAP] 전역 틱 타이머는 앱이 처음 켜질 때부터 계속 돌아간다.
+  // 그래서 사용자가 다른 탭들을 몇 초간 보다가 "기록" 탭으로 들어오면, 방금 새로 나타난
+  // 참여자 프로필 패널이 어느 시점에 다음 틱이 걸릴지와 무관하게 얼마 안 있어(길게는
+  // 0~rotateSec초 이내) 바로 다음 사진으로 바뀌어버려 "들어가자마자 사진이 깜빡이며
+  // 바뀐다"처럼 보였다. 새 패널 묶음이 삽입될 때마다(=탭 진입/재렌더 시) 타이머 위상을
+  // 리셋해서, 방금 나타난 카드들은 항상 rotateSec만큼의 온전한 시간을 보장받도록 한다.
+  var _newPanelRestartTimer = null;
   var observer = new MutationObserver(function(mutations){
+    var foundNew = false;
     for(var i=0; i<mutations.length; i++){
       var added = mutations[i].addedNodes;
       for(var j=0; j<added.length; j++){
@@ -735,10 +743,21 @@
         if(node.nodeType !== 1) continue;
         if(node.hasAttribute && node.hasAttribute('data-rsp-slides')){
           _initPanel(node);
+          foundNew = true;
         } else if(node.querySelectorAll){
+          var before = node.querySelectorAll('[data-rsp-slides="1"]').length;
           _scanAndInit(node);
+          if(before > 0) foundNew = true;
         }
       }
+    }
+    if(foundNew){
+      // 같은 렌더 배치에서 여러 번 발생할 수 있어 짧게 묶어서 한 번만 재시작한다.
+      if(_newPanelRestartTimer) clearTimeout(_newPanelRestartTimer);
+      _newPanelRestartTimer = setTimeout(function(){
+        _newPanelRestartTimer = null;
+        _startGlobalTimer();
+      }, 50);
     }
   });
 
