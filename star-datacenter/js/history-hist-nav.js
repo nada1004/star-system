@@ -18,7 +18,7 @@ function rHist(C,T){
   const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
   const _proTourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
 
-  const tabDefs=[
+  let tabDefs=[
     {id:'all',      grp:'종합',   lbl:'전체 통합'},
     {id:'psearch',  grp:'종합',   lbl:'스트리머별 검색'},
     {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
@@ -56,6 +56,15 @@ function rHist(C,T){
       tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext3','🌐 외부3'):'🌐 외부3')});
     }
   }catch(e){}
+  // (설정) 🧷 탭/모드 표시 관리에서 hist.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
+  if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
+    tabDefs = window.TabVis.filterDefs(tabDefs, 'hist.sub');
+    if(!tabDefs.length) tabDefs = [{id:'all', grp:'종합', lbl:'전체 통합', disp:'전체 통합'}];
+    const _histSubVisible = tabDefs.some(t=>t.id===histSub)
+      || (String(histSub||'').startsWith('tiertour-') && tabDefs.some(t=>t.id==='tiertour'))
+      || (String(histSub||'').startsWith('tourney-') && tabDefs.some(t=>t.id==='tourney'));
+    if(!_histSubVisible) histSub = tabDefs[0].id;
+  }
   // (버그픽스, 2026-08-10) 티어대회 하위탭(tiertour-gen/-league/-bkt)은 tabDefs에 별도 등록돼 있지
   // 않아 그룹(대회) 인식이 깨지던 문제 → 'tiertour'로 정규화해서 찾는다
   // (요청, 2026-08-12) 대회 탭 하위탭(tourney-gen/-league/-bkt)도 동일하게 'tourney'로 정규화

@@ -58,7 +58,11 @@ function _b2LiveSetSort(mode) {
 }
 
 function _b2LiveSetViewMode(mode) {
-  _b2LiveViewMode = mode === 'theater' ? 'theater' : 'card';
+  let _next = mode === 'theater' ? 'theater' : 'card';
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.live.mode.' + _next)) {
+    _next = window.TabVis.visible('b2.live.mode.card') ? 'card' : 'theater';
+  }
+  _b2LiveViewMode = _next;
   try{ localStorage.setItem('su_b2_live_viewmode', _b2LiveViewMode); }catch(e){}
   // 재생 중인 스트리머가 있는데 목록이 드릴다운 안 된 상태로 시청형에 진입하면,
   // 해당 스트리머의 소속 대학으로 자동 드릴다운해 목록에서 바로 보이게 한다.
@@ -307,6 +311,10 @@ function _b2LiveClickCover(el, id) {
 }
 
 function _b2LiveView() {
+  if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('b2.live.mode.' + _b2LiveViewMode)) {
+    _b2LiveViewMode = window.TabVis.visible('b2.live.mode.card') ? 'card' : 'theater';
+    try{ localStorage.setItem('su_b2_live_viewmode', _b2LiveViewMode); }catch(e){}
+  }
   // SOOP 채널 등록된 스트리머만 추출 (대학 소속이거나 무소속탭에 있는 멤버만 — 'YB' 표기만 제외)
   const soopPlayers = (typeof players !== 'undefined' ? players : []).filter(p => {
     if (p.hidden || p.retired || p.hideFromBoard) return false;
@@ -361,10 +369,10 @@ function _b2LiveView() {
     </style>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <div style="display:flex;gap:3px;align-items:center;background:var(--surface);padding:3px;border-radius:20px;border:1.5px solid var(--border2)">
-        <button type="button" onclick="_b2LiveSetViewMode('card')" aria-pressed="${_b2LiveViewMode==='card'}"
-          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='card'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='card'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='card'?'var(--text)':'var(--text3)'}">🖼️ 카드형</button>
-        <button type="button" onclick="_b2LiveSetViewMode('theater')" aria-pressed="${_b2LiveViewMode==='theater'}"
-          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='theater'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='theater'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='theater'?'var(--text)':'var(--text3)'}">🎬 시청형</button>
+        ${(!window.TabVis || typeof window.TabVis.visible !== 'function' || window.TabVis.visible('b2.live.mode.card')) ? `<button type="button" onclick="_b2LiveSetViewMode('card')" aria-pressed="${_b2LiveViewMode==='card'}"
+          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='card'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='card'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='card'?'var(--text)':'var(--text3)'}">🖼️ 카드형</button>` : ''}
+        ${(!window.TabVis || typeof window.TabVis.visible !== 'function' || window.TabVis.visible('b2.live.mode.theater')) ? `<button type="button" onclick="_b2LiveSetViewMode('theater')" aria-pressed="${_b2LiveViewMode==='theater'}"
+          style="padding:6px 13px;border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:var(--fs-base);white-space:nowrap;background:${_b2LiveViewMode==='theater'?'var(--white)':'transparent'};box-shadow:${_b2LiveViewMode==='theater'?'0 2px 6px rgba(15,23,42,.12)':'none'};color:${_b2LiveViewMode==='theater'?'var(--text)':'var(--text3)'}">🎬 시청형</button>` : ''}
       </div>
       <div style="position:relative">
         <select id="b2-live-univ-sel" class="b2-toolbar-select"

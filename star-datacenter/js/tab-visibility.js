@@ -17,7 +17,12 @@
   const TREE = [
     { key: 'main.total', label: '📋 스트리머', kind: 'tab', children: [
         { key: 'total.mode.gallery', label: '🪪 카드형 보기', kind: 'mode' },
-        { key: 'total.mode.focus', label: '🧾 상세형 보기', kind: 'mode' },
+        {
+          key: 'total.mode.focus', label: '🧾 상세형 보기', kind: 'mode', children: [
+            { key: 'total.mode.focus.hero', label: '🖼️ 기본형', kind: 'mode' },
+            { key: 'total.mode.focus.photo', label: '📋 포토형', kind: 'mode' },
+          ]
+        },
         { key: 'total.mode.table', label: '☰ 리스트형 보기', kind: 'mode' },
         { key: 'total.mode.simple', label: '✨ 심플형 보기', kind: 'mode' },
         { key: 'total.mode.designskin', label: '🎨 디자인/레이아웃/UI 스킨', kind: 'mode' },
@@ -26,7 +31,12 @@
     {
       key: 'main.board2', label: '📊 현황판', kind: 'tab', children: [
         { key: 'b2.weekly', label: '📅 브리핑', kind: 'sub' },
-        { key: 'b2.live', label: '📺 라이브', kind: 'sub' },
+        {
+          key: 'b2.live', label: '📺 라이브', kind: 'sub', children: [
+            { key: 'b2.live.mode.card', label: '🖼️ 카드형', kind: 'mode' },
+            { key: 'b2.live.mode.theater', label: '🎬 시청형', kind: 'mode' },
+          ]
+        },
         {
           key: 'b2.lineup', label: '🎽 라인업', kind: 'sub', children: [
             { key: 'b2.lineup.mode.default', label: '🖼️ 기본 카드 모드', kind: 'mode' },
@@ -42,7 +52,13 @@
           ]
         },
         { key: 'b2.femco', label: '🧩 펨코', kind: 'sub' },
-        { key: 'b2.free', label: '🚶 무소속', kind: 'sub' },
+        {
+          key: 'b2.free', label: '🚶 무소속', kind: 'sub', children: [
+            { key: 'b2.free.mode.default', label: '🖼️ 기본', kind: 'mode' },
+            { key: 'b2.free.mode.stat', label: '📊 통계카드', kind: 'mode' },
+            { key: 'b2.free.mode.table', label: '🗂️ 테이블', kind: 'mode' },
+          ]
+        },
         { key: 'b2.players', label: '프로필 보기', kind: 'sub' },
         { key: 'b2.ranking', label: '🥇 랭킹', kind: 'sub' },
         { key: 'b2.heatmap', label: '🗺️ 히트맵', kind: 'sub' },
@@ -59,13 +75,46 @@
         { key: 'tier.mode.compact', label: '📝 컴팩트 뷰', kind: 'mode' },
       ]
     },
-    // 대전기록/대회/프로리그대회 보기모드(기본/그리드/컴팩트/방송형 등)는
+    // 대전기록/대회/프로리그대회 "보기모드"(기본/그리드/컴팩트/방송형 등)는
     // 아래 _cfgTabVisSectionHTML()의 "🎛️ 대전기록/대회/프로리그대회 보기모드" 표에서
     // mode.<탭id>.<모드id> 키로 이미 전부 관리되므로 여기서는 중복 등록하지 않음.
-    { key: 'main.hist', label: '🗂️ 대전 기록', kind: 'tab' },
+    // 여기 children은 대전기록/대회 탭 "내부 서브탭 네비게이션" 자체를 관리한다(history-hist-nav.js/competition-core.js).
+    {
+      key: 'main.hist', label: '🗂️ 대전 기록', kind: 'tab', children: [
+        { kind: 'divider', label: '종합' },
+        { key: 'hist.sub.all', label: '전체 통합', kind: 'sub' },
+        { key: 'hist.sub.psearch', label: '스트리머별 검색', kind: 'sub' },
+        { kind: 'divider', label: '개인' },
+        { key: 'hist.sub.ind', label: '🎮 개인전', kind: 'sub' },
+        { key: 'hist.sub.gj', label: '⚔️ 끝장전', kind: 'sub' },
+        { kind: 'divider', label: '팀경기' },
+        { key: 'hist.sub.civil', label: '⚔️ 시빌워', kind: 'sub' },
+        { key: 'hist.sub.mini', label: '⚡ 미니대전', kind: 'sub' },
+        { key: 'hist.sub.univm', label: '🏟️ 대학대전', kind: 'sub' },
+        { key: 'hist.sub.ck', label: '🤝 대학CK', kind: 'sub' },
+        { kind: 'divider', label: '대회' },
+        { key: 'hist.sub.tourney', label: '🎖️ 대회(토너먼트)', kind: 'sub' },
+        { key: 'hist.sub.tiertour', label: '🎯 티어대회', kind: 'sub' },
+        { kind: 'divider', label: '프로리그' },
+        { key: 'hist.sub.pro', label: '🏅 프로리그 일반', kind: 'sub' },
+        { key: 'hist.sub.progj', label: '⚔️ 프로리그 끝장전', kind: 'sub' },
+        { key: 'hist.sub.procomp', label: '🏆 프로리그 대회 기록', kind: 'sub' },
+      ]
+    },
     { key: 'main.ind', label: '⚔️ 개인전/끝장전', kind: 'tab' },
     { key: 'main.univm', label: '🏟️ 대학전', kind: 'tab' },
-    { key: 'main.comp', label: '🏆 대회/티어', kind: 'tab' },
+    {
+      key: 'main.comp', label: '🏆 대회/티어', kind: 'tab', children: [
+        { key: 'comp.sub.normal', label: '🎮 일반', kind: 'sub' },
+        { key: 'comp.sub.league', label: '📅 조별리그 일정', kind: 'sub' },
+        { key: 'comp.sub.grprank', label: '📊 조별 순위', kind: 'sub' },
+        { key: 'comp.sub.tour', label: '🗂️ 대진표', kind: 'sub' },
+        { key: 'comp.sub.tourschedule', label: '📋 대진표 기록', kind: 'sub' },
+        { key: 'comp.sub.comprank', label: '🏅 개인 순위', kind: 'sub' },
+        { key: 'comp.sub.compbrief', label: '📰 대회 브리핑', kind: 'sub' },
+        { key: 'comp.sub.tiertour', label: '🎯 티어대회(티어대회 선택 시)', kind: 'sub' },
+      ]
+    },
     { key: 'main.pro', label: '🥇 프로리그', kind: 'tab' },
     {
       key: 'main.stats', label: '📈 통계', kind: 'tab', children: [
