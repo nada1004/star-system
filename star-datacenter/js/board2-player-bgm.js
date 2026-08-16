@@ -70,7 +70,7 @@ function _b2PlayerBgmEnsurePlayer() {
         },
         onStateChange: (e) => {
           // 곡이 짧아서 화면을 보는 동안 먼저 끝나면 처음부터 반복 재생
-          if (e.data === 0) { try { _b2PlayerBgmPlayer.seekTo(0); _b2PlayerBgmPlayer.playVideo(); } catch (e2) {} }
+          if (e.data === 0 && _b2PlayerBgmActive && _b2PlayerBgmIsProfileView()) { try { _b2PlayerBgmPlayer.seekTo(0); _b2PlayerBgmPlayer.playVideo(); } catch (e2) {} }
         }
       }
     });
@@ -101,7 +101,7 @@ function _b2PlayerBgmPlayNow(vid) {
   if (_b2PlayerBgmKickTimer) { clearInterval(_b2PlayerBgmKickTimer); _b2PlayerBgmKickTimer = null; }
   let tries = 0;
   _b2PlayerBgmKickTimer = setInterval(() => {
-    if (!_b2PlayerBgmActive || !_b2PlayerBgmPlayer) {
+    if (!_b2PlayerBgmActive || !_b2PlayerBgmIsProfileView() || !_b2PlayerBgmPlayer) {
       clearInterval(_b2PlayerBgmKickTimer); _b2PlayerBgmKickTimer = null; return;
     }
     let st = -1;
@@ -118,8 +118,18 @@ function _b2PlayerBgmPlayNow(vid) {
 // 프로필탭에서 스트리머를 선택(프로필 보기)했을 때 호출 — 그 선수에게 등록된
 // 주제곡 링크가 있으면 재생하고, 없으면 이전 곡을 정지만 한다. 다른 스트리머를
 // 누르면 이 함수가 다시 호출되며 자연히 이전 곡은 정지되고 새 곡이 재생된다.
+function _b2PlayerBgmIsProfileView() {
+  try {
+    return typeof curTab !== 'undefined' && curTab === 'board2' &&
+      typeof _b2View !== 'undefined' && _b2View === 'players';
+  } catch (e) { return false; }
+}
+
 function _b2PlayerBgmStart(playerName) {
   try {
+    // 현황판의 프로필 보기에서만 스트리머 주제곡을 허용한다. 비동기 API 준비 중
+    // 다른 탭으로 이동한 경우에도 아래 콜백의 동일한 가드가 늦은 재생을 막는다.
+    if (!_b2PlayerBgmIsProfileView()) { _b2PlayerBgmStop(); return; }
     _b2PlayerBgmCurName = playerName || '';
     const list = (typeof players !== 'undefined') ? players : [];
     const p = list.find(x => x.name === playerName);
@@ -129,7 +139,7 @@ function _b2PlayerBgmStart(playerName) {
     _b2PlayerBgmActive = true;
     _b2PlayerBgmEnsurePlayer().then(() => {
       // 그 사이 다른 스트리머로 또 바뀌었으면 지금 로드하려던 곡은 재생하지 않는다.
-      if (!_b2PlayerBgmActive || _b2PlayerBgmCurName !== playerName) return;
+      if (!_b2PlayerBgmActive || !_b2PlayerBgmIsProfileView() || _b2PlayerBgmCurName !== playerName) return;
       if (_b2PlayerBgmReady) { _b2PlayerBgmPlayNow(vid); }
       else { _b2PlayerBgmPendingVid = vid; }
     });
@@ -140,6 +150,7 @@ function _b2PlayerBgmStart(playerName) {
 function _b2PlayerBgmStop() {
   _b2PlayerBgmActive = false;
   _b2PlayerBgmPendingVid = null;
+  _b2PlayerBgmCurName = '';
   if (_b2PlayerBgmKickTimer) { clearInterval(_b2PlayerBgmKickTimer); _b2PlayerBgmKickTimer = null; }
   try { if (_b2PlayerBgmPlayer) _b2PlayerBgmPlayer.stopVideo(); } catch (e) {}
   _b2PlayerBgmSyncControls();
