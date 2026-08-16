@@ -289,7 +289,18 @@ async function _flushRemoteCloudSave(reason){
   if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
   if(!localStorage.getItem('su_gh_token')){
     try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
-    _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+    // [FIX-NO-TOKEN] 매 저장마다 경고 토스트가 깜빡거리지 않도록, 세션당 1회만
+    // 친절한 안내를 보여주고 이후엔 조용한 "저장됨"으로 대체한다. 경고 아이콘(⚠️)도 제거.
+    try{
+      if(!sessionStorage.getItem('su_no_gh_token_hinted')){
+        sessionStorage.setItem('su_no_gh_token_hinted', '1');
+        _setCloudStatusMsg('💾 로컬에 저장됨 — GitHub 동기화는 설정탭에서 토큰 등록 시 활성화', '#16a34a');
+      }else{
+        _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+      }
+    }catch(e){
+      _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+    }
     return false;
   }
   if(navigator.onLine === false){
@@ -446,7 +457,13 @@ async function save(){
   if(!scheduled){
     try{
       if((typeof isLoggedIn !== 'undefined' && isLoggedIn) && !localStorage.getItem('su_gh_token')){
-        _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+        // [FIX-NO-TOKEN] 깜빡임 방지: 위와 동일하게 세션 1회 안내 후 조용히.
+        if(!sessionStorage.getItem('su_no_gh_token_hinted')){
+          sessionStorage.setItem('su_no_gh_token_hinted', '1');
+          _setCloudStatusMsg('💾 로컬에 저장됨 — GitHub 동기화는 설정탭에서 토큰 등록 시 활성화', '#16a34a');
+        }else{
+          _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+        }
       }else{
         _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
       }
