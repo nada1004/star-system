@@ -19,13 +19,8 @@ function _b2UpdateMainDisplay(playerName) {
   // 원본이 처음부터 새로 다운로드되며 "화면이 잠깐 비었다가 뚝 끊기듯 나타나는"
   // 현상의 원인이었다. 또한 photo/secondProfileFile(슬롯1~2)만 미리 받고 3~10번
   // (예: 새로 추가한 스트리머용 3번째 이미지)은 아예 미리 받지 않아서 그 슬롯이
-  // 처음 순환될 때 항상 콜드 로딩이었다.
-  // [FIX-IMG-HERO-SCALED] 그런데 여기서 "실제로 표시되는 원본"을 toHttpsUrl()로만
-  // 미리 받다 보니, 원본 사진이 수백KB~수MB인 경우 좌측 메인(히어로) 이미지가 늦게
-  // 뜨는 원인이 됐다. 그리드/호버팝업 등 다른 화면은 전부 images.weserv.nl 리사이즈
-  // 프록시(toScaledUrl/toThumbUrl)를 쓰는데 이 히어로 슬라이드쇼만 원본을 그대로 썼음.
-  // 이제 표시(_b2MainMediaHTML)와 프리웜이 항상 "같은" toScaledUrl() 결과를 쓰도록
-  // 통일해서, 리사이즈된(훨씬 가벼운) 이미지를 프리웜 → 즉시 캐시 히트로 표시한다.
+  // 처음 순환될 때 항상 콜드 로딩이었다. 이제 실제로 표시되는 원본 URL 그대로,
+  // 등록된 모든 이미지 슬롯(1~10, 동영상 제외)을 미리 받아둔다.
   try{
     const _b2PrewarmIsVideo = (u)=>{
       const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
@@ -39,7 +34,7 @@ function _b2UpdateMainDisplay(playerName) {
     _b2PrewarmSlots.forEach(rawUrl=>{
       const u = _normMediaUrl(rawUrl);
       if(!u || _b2PrewarmIsVideo(u)) return;
-      const src = (typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u);
+      const src = toHttpsUrl(u);
       if(!src) return;
       window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
       if(window._b2PrewarmedFullUrls.has(src)) return;
@@ -90,10 +85,8 @@ function _b2UpdateMainDisplay(playerName) {
   const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
     const url = String(rawUrl||'').trim();
     if(!url) return '';
+    const src = toHttpsUrl(url);
     const isVid = _b2IsVideoUrl(url);
-    // [FIX-IMG-HERO-SCALED] 비디오는 그대로, 사진은 원본 대신 리사이즈 프록시로 —
-    // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
-    const src = isVid ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';

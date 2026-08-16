@@ -653,14 +653,10 @@ function _b2PlayersView() {
   const _p10pos = _b2PosPct(_b2SelectedPlayer.photo10PosUse, _b2SelectedPlayer.photo10PosX, _b2SelectedPlayer.photo10PosY);
   try{
     // [FIX-IMG-SWAP-PREWARM] 우측 그리드 썸네일은 기존처럼 썸네일 프록시로 미리 받고,
-    // 좌측 메인 슬라이드쇼(선수 탭 최초 진입 시 표시되는 선수)의 이미지도 실제 표시에
-    // 쓰이는 URL 그대로 미리 받아야 전환 시 콜드 로딩으로 인한
+    // 좌측 메인 슬라이드쇼(선수 탭 최초 진입 시 표시되는 선수)의 이미지는 실제 표시에
+    // 쓰이는 원본 URL(toHttpsUrl) 그대로 미리 받아야 전환 시 콜드 로딩으로 인한
     // "화면이 비었다가 뚝 끊기듯 나타나는" 현상이 없다 (board2-players-main-display.js의
     // _b2UpdateMainDisplay와 동일한 수정).
-    // [FIX-IMG-HERO-SCALED] 예전엔 여기서 toHttpsUrl(원본)을 그대로 프리웜해서,
-    // 원본 사진이 수백KB~수MB인 경우 프로필탭 좌측 히어로 이미지가 늦게 뜨는 원인이
-    // 됐다. 아래 _b2MainMediaHTML과 동일하게 리사이즈 프록시(toScaledUrl)를 써서
-    // "프리웜 URL === 실제 표시 URL"을 유지하면서도 훨씬 가벼운 이미지를 받는다.
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls(tierFilteredPlayers.map(p=>p.photo).filter(Boolean), 24);
     }
@@ -676,7 +672,7 @@ function _b2PlayersView() {
     ].forEach(rawUrl=>{
       const u = _normMediaUrl(rawUrl);
       if(!u || _b2InitPrewarmIsVideo(u)) return;
-      const src = (typeof toScaledUrl==='function') ? toScaledUrl(u, 960) : toHttpsUrl(u);
+      const src = toHttpsUrl(u);
       if(!src) return;
       window._b2PrewarmedFullUrls = window._b2PrewarmedFullUrls || new Set();
       if(window._b2PrewarmedFullUrls.has(src)) return;
@@ -694,10 +690,8 @@ function _b2PlayersView() {
   const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
     const url = String(rawUrl||'').trim();
     if(!url) return '';
+    const src = toHttpsUrl(url);
     const isVid = _b2IsVideoUrl(url);
-    // [FIX-IMG-HERO-SCALED] 비디오는 그대로, 사진은 원본 대신 리사이즈 프록시로 —
-    // 위 프리웜 루프와 동일한 toScaledUrl(u,960)을 써야 프리웜 캐시가 그대로 적중한다.
-    const src = isVid ? toHttpsUrl(url) : ((typeof toScaledUrl==='function') ? toScaledUrl(url, 960) : toHttpsUrl(url));
     const z = opt && opt.z != null ? opt.z : slot;
     const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
     const style = opt && opt.style ? opt.style : '';
