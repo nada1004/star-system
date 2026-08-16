@@ -885,8 +885,6 @@ function rBoard2(C, T) {
         window._b2PlayersLastSig = _sig;
         sub.innerHTML = _b2PlayersView();
         _b2BindAutoFitResize();
-        // 🎵 스트리머 전용 BGM — 프로필탭 진입/필터변경으로 선택된 스트리머가 바뀌면 재생
-        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
         setTimeout(() => {
           try{
             if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {

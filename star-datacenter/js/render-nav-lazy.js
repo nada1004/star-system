@@ -378,11 +378,12 @@ const _TAB_ENTER = {
   hist:     () => { histSub = histSub || 'race'; }, // [FIX-5]
   stats:    () => { window._statsTabEntered = true; }, // [FIX-12]
   total:    () => { totalSearch = ''; },
-  // [FIX-NO-REFRESH-ON-REENTRY] 예전엔 보드2 탭에 "새로 들어올 때"마다 _b2SelectedPlayer를
-  // null로 초기화해서 좌측 메인 스트리머를 새로 랜덤 추첨하고 이미지 박스를 통째로 다시 그렸음.
-  // 이 때문에 다른 탭에 갔다가 프로필탭으로 돌아올 때마다 이미지가 "새로고침"되는 것처럼
-  // 보이는 문제가 있어, 재진입 시 선택된 스트리머/셔플 캐시를 그대로 유지하도록 변경.
-  board2:   () => {},
+  // [FIX-RANDOM-ENTRY] 프로필(이미지)탭에 "새로 들어올 때"마다 좌측 메인에 뜨는 대학 소속
+  // 스트리머와 우측 그리드 순서를 새로 랜덤 추첨한다. 예전엔 _b2SelectedPlayer/셔플 캐시가
+  // 세션 내내 유지돼서 탭을 나갔다 다시 들어와도 항상 같은 스트리머만 고정으로 보였음.
+  // (탭 안에서 대학/종족/티어 필터만 바꾸는 것은 sw()를 타지 않으므로 여기서 초기화되지 않고,
+  //  그 경우엔 기존처럼 화면이 계속 유지된다.)
+  board2:   () => { window._b2SelectedPlayer = null; window._b2ShuffleKey = null; window._b2ShuffledNames = null; },
 };
 // comp/tiertour는 _mergedCompSub도 초기화
 _TAB_ENTER._compFallback = () => { _mergedCompSub = _mergedCompSub || 'comp'; };
@@ -410,15 +411,6 @@ function sw(t,el){
     if(t !== curTab && window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))){
       window.SUTTS.stop();
     }
-  }catch(e){}
-
-  // 🎵 스트리머 전용 BGM — 스트리머 상세 팝업(#playerModal)이나 현황판(board2) 프로필탭을
-  // 보고 있다가 다른 최상위 탭으로 이동하면 재생 중이던 스트리머 BGM을 무조건 정지한다.
-  // (이전엔 팝업이 열려 있는 상태로 탭을 이동하면 "그 팝업 자체의 BGM"이라며 정지하지
-  //  않았고, curTab이 board2가 아닐 때도 정지 체크 자체를 건너뛰어 다른 탭에서 팝업을
-  //  열어둔 채 이동하면 BGM이 계속 재생되는 버그가 있었음)
-  try{
-    if(t !== curTab && typeof _plyrBgmStop === 'function') _plyrBgmStop();
   }catch(e){}
 
   // [FIX-14] TAB_ENTER 맵 실행

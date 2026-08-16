@@ -94,7 +94,6 @@ window.openEP=function(name){
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-header-sec')">헤더배경</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-card-sec')">공유카드</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-score-sec')">승패</button>
-      <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-bgm-sec')">BGM</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-memo-sec')">메모</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-alias-sec')">별명</button>
     </div>
@@ -607,20 +606,6 @@ window.openEP=function(name){
       </label>
     </div>
     <!-- (요청사항) 크루 소속 항목 제거 -->
-    <div id="ep-bgm-sec" class="ep-adv-section" style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🎵 스트리머 전용 BGM</div>
-      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">유튜브 링크</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <input type="text" id="ed-bgm-url" value="${(p.bgmUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
-        <button type="button" class="btn btn-w btn-sm" title="새 창에서 링크 열기" onclick="const v=(document.getElementById('ed-bgm-url')?.value||'').trim();if(v)window.open(v,'_blank');else alert('먼저 링크를 입력하세요.');">🔗 열기</button>
-      </div>
-      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">BGM 볼륨</label>
-      <div style="display:flex;align-items:center;gap:8px">
-        <input type="range" id="ed-bgm-vol" min="0" max="100" step="5" value="${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-bgm-vol-val').textContent=this.value">
-        <span id="ed-bgm-vol-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:24px;text-align:right;font-weight:700">${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}</span>
-      </div>
-      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">저장하면 스트리머 상세 팝업과 현황판 프로필탭에서 이 스트리머를 볼 때 자동으로 배경음악이 재생됩니다.</div>
-    </div>
     <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
       <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2);margin-bottom:8px">선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:var(--fs-sm);border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--white);resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
