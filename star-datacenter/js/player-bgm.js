@@ -57,10 +57,23 @@ function _plyrBgmEnsurePlayer() {
     }
     _plyrBgmPlayer = new YT.Player('plyrBgmHost', {
       width: '1', height: '1', videoId: '',
-      playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
+      // [FIX-BGM-AUTOPLAY] autoplay:0으로 두면 일부 브라우저가 생성된 iframe에
+      // autoplay 권한(allow="autoplay")을 아예 부여하지 않아서, 이후 코드에서
+      // playVideo()를 직접 호출해도 재생이 시작되지 않는 경우가 있었다.
+      // autoplay:1로 두고 실제로는 loadVideoById 시점에 곡을 지정하므로 빈 플레이어
+      // 상태에서 자동재생이 발생하진 않는다 — 다만 iframe에 올바른 autoplay 권한이
+      // 부여되도록 하기 위한 설정이다.
+      playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 },
       events: {
         onReady: () => {
           _plyrBgmReady = true;
+          // [FIX-BGM-AUTOPLAY] 일부 브라우저는 iframe에 allow="autoplay" 속성이
+          // 없으면 muted 상태에서도 재생을 막는다. YT.Player가 만든 iframe에
+          // 명시적으로 권한을 부여해 재생이 막히지 않게 한다.
+          try {
+            const ifr = (_plyrBgmPlayer.getIframe && _plyrBgmPlayer.getIframe()) || document.querySelector('#plyrBgmHost iframe');
+            if (ifr) ifr.setAttribute('allow', 'autoplay; encrypted-media');
+          } catch (e) {}
           _plyrBgmApplyVol();
           if (_plyrBgmPendingVid) {
             const vid = _plyrBgmPendingVid;
@@ -98,6 +111,11 @@ function _plyrBgmPlayNow(vid) {
     p.loadVideoById(vid);
     if (p.playVideo) p.playVideo();
   } catch (e) {}
+  // [FIX-BGM-AUTOPLAY] 브라우저의 자동재생 정책이 유독 엄격해서 muted 상태로도
+  // 재생이 시작되지 않는 경우(제스처 없이 열린 팝업 등)를 대비한 최종 안전장치.
+  // 사용자가 상세 팝업 안에서 아무 곳이나 한 번 클릭/터치하면 그 제스처를 이용해
+  // 즉시 재생+볼륨 복구를 강제로 시도한다. 이미 재생 중이면 아무 효과 없음.
+  try { _plyrBgmArmGestureUnlock(); } catch (e) {}
   if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
   let tries = 0;
   _plyrBgmKickTimer = setInterval(() => {
@@ -113,6 +131,34 @@ function _plyrBgmPlayNow(vid) {
     if (++tries > 20) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return; }
     try { _plyrBgmPlayer.playVideo(); } catch (e) {}
   }, 300);
+}
+
+// [FIX-BGM-AUTOPLAY] 자동재생이 브라우저 정책으로 막힌 경우를 위한 1회성
+// 사용자 제스처 언락. 문서 아무 곳이나 클릭/터치/키 입력이 들어오면 그 순간의
+// 제스처 컨텍스트를 이용해 재생을 강제로 다시 시도한다. 한 번 성공하면 스스로
+// 해제되고, 재생 세션이 바뀌면(_plyrBgmStop) 다음 시작 때 다시 걸린다.
+let _plyrBgmGestureArmed = false;
+function _plyrBgmArmGestureUnlock() {
+  if (_plyrBgmGestureArmed) return;
+  _plyrBgmGestureArmed = true;
+  const tryUnlock = () => {
+    try {
+      if (!_plyrBgmActive || !_plyrBgmPlayer) return;
+      let st = -1;
+      try { st = _plyrBgmPlayer.getPlayerState(); } catch (e) {}
+      if (st !== 1) {
+        try { _plyrBgmPlayer.playVideo(); } catch (e) {}
+      }
+      _plyrBgmApplyVol();
+    } catch (e) {}
+  };
+  const events = ['pointerdown', 'click', 'touchstart', 'keydown'];
+  const handler = () => {
+    tryUnlock();
+    events.forEach(ev => document.removeEventListener(ev, handler, true));
+    _plyrBgmGestureArmed = false;
+  };
+  events.forEach(ev => document.addEventListener(ev, handler, { capture: true, once: true, passive: true }));
 }
 
 // 스트리머 상세 팝업이 열리거나 현황판 프로필탭에서 스트리머를 선택했을 때 호출.
@@ -148,6 +194,7 @@ function _plyrBgmStop() {
   _plyrBgmPendingVid = null;
   if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
   try { if (_plyrBgmPlayer) _plyrBgmPlayer.stopVideo(); } catch (e) {}
+  _plyrBgmGestureArmed = false;
 }
 
 // 스트리머 상세 팝업이 닫혔을 때 호출 — 현황판 프로필탭에 선택된 스트리머가 있고

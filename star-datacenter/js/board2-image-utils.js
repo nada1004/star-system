@@ -210,6 +210,39 @@ function _b2ApplyImgSettingsToElement(el, settings) {
   el.style.objectPosition = settings.manualCenter ? 'center center' : 'center';
   el.style.filter = `brightness(${(settings.brightness || 100) / 100})`;
   el.style.transform = _b2GetImgTransform(settings);
+  // [FIX-IMG-HERO-BLANK] 안전 클램프를 거쳤어도 특정 컨테이너 크기/비율 조합에서는
+  // 여전히 이미지가 눈에 보이는 영역 밖으로 밀려날 수 있다. 적용 직후 실제로 화면에
+  // 겹치는지 확인해서, 만약 완전히 벗어났다면 그 기기(pc/tb/mb)의 설정을 기본값으로
+  // 되돌리고 다시 적용한다 — "PC에서만(또는 특정 환경에서만) 좌측 이미지가 안 보이는"
+  // 현상이 재발해도 화면이 스스로 복구되게 하기 위함.
+  try{
+    requestAnimationFrame(() => {
+      try{
+        if (!el.isConnected) return;
+        const box = el.parentElement;
+        if (!box) return;
+        const elRect = el.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        if (!boxRect.width || !boxRect.height) return;
+        const overlapW = Math.max(0, Math.min(elRect.right, boxRect.right) - Math.max(elRect.left, boxRect.left));
+        const overlapH = Math.max(0, Math.min(elRect.bottom, boxRect.bottom) - Math.max(elRect.top, boxRect.top));
+        const overlapArea = overlapW * overlapH;
+        const boxArea = boxRect.width * boxRect.height;
+        if (boxArea > 0 && (overlapArea / boxArea) < 0.15 && !el.dataset.b2AutoRecovered) {
+          el.dataset.b2AutoRecovered = '1';
+          const dk = _b2DeviceKey();
+          const slotKey = (el.id === 'b2-main-img-2') ? 'secondary' : 'primary';
+          _b2GlobalImgSettings.__byDevice[dk][slotKey] = _b2DefaultSingleImgSettings();
+          _b2SaveImgSettings();
+          const fixed = _b2GlobalImgSettings.__byDevice[dk][slotKey];
+          el.style.objectFit = fixed.fit || 'cover';
+          el.style.objectPosition = 'center';
+          el.style.filter = `brightness(${(fixed.brightness || 100) / 100})`;
+          el.style.transform = _b2GetImgTransform(fixed);
+        }
+      }catch(e){}
+    });
+  }catch(e){}
   if(_b2IsAutoFitEligible(settings)){
     const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
     _b2LoadImgMeta(el.currentSrc || el.getAttribute('src') || '', (meta)=>{
