@@ -2,6 +2,84 @@
    보드2 - 선수 목록 메인 뷰 렌더러 (board2-players.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// [FIX-NO-GRID-REFRESH] 우측 그리드의 카드 1장을 그리는 로직을 별도 함수로 분리.
+// _b2PlayersView() 전체 렌더와, 저장 후 카드 1장만 갱신하는 _b2UpdatePlayerCard()가
+// 이 함수를 함께 재사용해서, "카드 1개만 바뀌었는데 그리드 전체가 다시 그려지며
+// 모든 사진이 새로고침되는" 문제 없이 항상 동일한 마크업을 보장한다.
+function _b2PlayersCardHTML(p, hexToRgba) {
+  hexToRgba = hexToRgba || ((h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;});
+  const encodedPlayerName = encodeURIComponent(String(p.name || ''));
+  const playerColor = gc(p.univ) || '#6366f1';
+  const playerTheme = {
+    bg: hexToRgba(playerColor, 0.1),
+    border: playerColor
+  };
+  const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
+  const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+  const raceTxt  = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '';
+  const gridUnivIcon = (() => {
+    const uCfg = univCfg.find(x => x.name === p.univ) || {};
+    return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
+  })();
+  // 우측 호버 스크럽 미리보기용 두번째 프로필 이미지 (PC 전용, 동영상 제외)
+  const _gridSecondRaw = String(p.secondProfileFile || '').trim();
+  const _gridSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_gridSecondRaw);
+  const gridSecondPhoto = (_gridSecondRaw && !_gridSecondIsVideo) ? _gridSecondRaw : '';
+  const _gridSecondIsGif = /\.gif(\?|$)/i.test(_gridSecondRaw);
+  // gif는 toScaledUrl(webp 변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+  const gridSecondSrc = gridSecondPhoto ? (_gridSecondIsGif ? toHttpsUrl(gridSecondPhoto) : toScaledUrl(gridSecondPhoto,260)) : '';
+
+  return `
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
+        ${p.photo
+          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" loading="eager" fetchpriority="high" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+             <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+        }
+        ${gridSecondPhoto
+          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+          : ''
+        }
+        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
+        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
+          <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
+            ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
+            <span style="color:rgba(255,255,255,.85);font-size:var(--fs-base);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
+            ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
+            <span style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.95)">${p.univ||'무소속'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+}
+
+// [FIX-NO-GRID-REFRESH] 프로필 저장 후 "이 선수 카드 1장"만 그리드에서 교체한다.
+// 기존에는 저장할 때마다 #b2-content 전체(=그리드의 모든 <img>)를 innerHTML로
+// 다시 만들어서, 방금 수정한 선수뿐 아니라 화면에 있던 다른 모든 스트리머의 사진까지
+// 브라우저가 새로 요청/디코딩하며 "전체가 새로고침되는" 것처럼 보였다.
+// 이제는 해당 선수의 카드 엘리먼트만 찾아 outerHTML을 교체해서 나머지 카드는
+// DOM에 전혀 손대지 않는다(=이미지 재요청 없음).
+function _b2UpdatePlayerCard(playerName) {
+  try {
+    const p = players.find(x => x.name === playerName);
+    if (!p) return false;
+    const key = encodeURIComponent(String(playerName || ''));
+    const cardEl = document.querySelector(`.b2-players-card[data-player-key="${key}"]`);
+    if (!cardEl) return false;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = _b2PlayersCardHTML(p);
+    const newCard = wrap.firstElementChild;
+    if (!newCard) return false;
+    cardEl.replaceWith(newCard);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+try{ window._b2UpdatePlayerCard = _b2UpdatePlayerCard; }catch(e){}
+
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
   const visPlayers = players.filter(p => {
@@ -826,52 +904,7 @@ function _b2PlayersView() {
   `;
 
   _gridShow.forEach(p => {
-    const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
-    const encodedPlayerName = encodeURIComponent(String(p.name || ''));
-    const playerColor = gc(p.univ) || '#6366f1';
-    const playerTheme = {
-      bg: hexToRgba(playerColor, 0.1),
-      border: playerColor
-    };
-    const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
-    const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-    const raceTxt  = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '';
-    const gridUnivIcon = (() => {
-      const uCfg = univCfg.find(x => x.name === p.univ) || {};
-      return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
-    })();
-    // 우측 호버 스크럽 미리보기용 두번째 프로필 이미지 (PC 전용, 동영상 제외)
-    const _gridSecondRaw = String(p.secondProfileFile || '').trim();
-    const _gridSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_gridSecondRaw);
-    const gridSecondPhoto = (_gridSecondRaw && !_gridSecondIsVideo) ? _gridSecondRaw : '';
-    const _gridSecondIsGif = /\.gif(\?|$)/i.test(_gridSecondRaw);
-    // gif는 toScaledUrl(webp 변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
-    const gridSecondSrc = gridSecondPhoto ? (_gridSecondIsGif ? toHttpsUrl(gridSecondPhoto) : toScaledUrl(gridSecondPhoto,260)) : '';
-
-    h += `
-      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
-        ${p.photo
-          ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" loading="eager" fetchpriority="high" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
-             <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
-          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
-        }
-        ${gridSecondPhoto
-          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="eager" fetchpriority="high" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
-          : ''
-        }
-        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
-          <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
-            ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
-            <span style="color:rgba(255,255,255,.85);font-size:var(--fs-base);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
-            ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
-            <span style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.95)">${p.univ||'무소속'}</span>
-          </div>
-        </div>
-      </div>
-    `;
+    h += _b2PlayersCardHTML(p, hexToRgba);
   });
 
   h += `

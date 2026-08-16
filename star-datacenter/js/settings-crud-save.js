@@ -440,7 +440,27 @@ function savePlayer(){
   
   // (요청사항) 크루 자동 전환 로직 제거
   
-  render();
+  // [FIX-NO-GRID-REFRESH] 예전에는 여기서 항상 render()로 현재 탭 전체를 다시 그렸는데,
+  // 스트리머탭(board2 players)이 열려있는 상태로 상세 팝업 → 수정 → 저장을 하면
+  // 그리드에 있던 다른 모든 스트리머 카드의 <img>까지 새로 생성되며 "탭 전체가
+  // 새로고침"되는 것처럼 보였다. 스트리머탭이 열려 있을 때는 전체 렌더 대신
+  // 수정한 선수의 카드 1장만 교체하고, 그 외의 탭에서는 기존처럼 전체를 다시 그린다.
+  const _onB2PlayersTab = (typeof curTab !== 'undefined' && curTab === 'board2'
+    && typeof _b2View !== 'undefined' && _b2View === 'players'
+    && !!document.getElementById('b2-content'));
+  if (_onB2PlayersTab) {
+    const _cardUpdated = (typeof window._b2UpdatePlayerCard === 'function') ? window._b2UpdatePlayerCard(p.name) : false;
+    if (!_cardUpdated && typeof _b2PlayersView === 'function') {
+      // 카드를 못 찾은 경우(필터에 걸려 화면에 없었던 등)에만 안전하게 그리드만 다시 그림
+      const _b2ContentEl = document.getElementById('b2-content');
+      if (_b2ContentEl) {
+        _b2ContentEl.innerHTML = _b2PlayersView();
+        try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
+      }
+    }
+  } else {
+    render();
+  }
   try{
     const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
     // [FIX-NO-REFRESH-ON-SAVE] 화면에 실제 영향을 주는 미디어 필드가 하나도 안 바뀌었으면

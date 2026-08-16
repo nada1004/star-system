@@ -106,6 +106,19 @@ function _b2GetImgSettings(playerName, slot) {
       if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
       if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
       if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
+      // [FIX-IMG-HERO-BLANK] 좌측 메인(히어로) 이미지의 확대/이동 설정은 선수별이
+      // 아니라 기기(pc/tb/mb)별 전역 설정이라, 화살표 버튼을 여러 번 눌러
+      // offsetX/offsetY가 한없이 누적되면(또는 손상된 값이 들어오면) 이미지 전체가
+      // 박스 밖으로 밀려나 "PC에서만 좌측 이미지가 안 보이는" 현상이 모든 선수에게
+      // 똑같이 나타난다. 저장된 값을 불러올 때마다 안전 범위로 되돌려서
+      // (이미 망가진 기존 설정도) 자동으로 복구되게 한다.
+      const _numOr = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+      const clampedScale = Math.max(50, Math.min(220, _numOr(s.scale, 100)));
+      const clampedOffX = Math.max(-240, Math.min(240, _numOr(s.offsetX, 0)));
+      const clampedOffY = Math.max(-240, Math.min(240, _numOr(s.offsetY, 0)));
+      if (clampedScale !== s.scale) s.scale = clampedScale;
+      if (clampedOffX !== s.offsetX) s.offsetX = clampedOffX;
+      if (clampedOffY !== s.offsetY) s.offsetY = clampedOffY;
     }
   }catch(e){
     console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
@@ -934,6 +947,11 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   }
   const numVal = parseInt(val, 10);
   s[key] = isNaN(numVal) ? val : numVal;
+  // [FIX-IMG-HERO-BLANK] 슬라이더/입력값이 비정상적으로 크거나 작아도 이미지가
+  // 박스 밖으로 완전히 밀려나거나 사라지지 않도록 안전 범위로 고정.
+  if (key === 'scale') s.scale = Math.max(50, Math.min(220, s.scale));
+  if (key === 'offsetX') s.offsetX = Math.max(-240, Math.min(240, s.offsetX));
+  if (key === 'offsetY') s.offsetY = Math.max(-240, Math.min(240, s.offsetY));
   s.zoom = s.scale;
   s.fill = s.fit;
   s.posX = s.offsetX;
@@ -964,8 +982,10 @@ window._b2MoveImg = function(playerName, slot, dx, dy) {
   const s = _b2GetImgSettings(playerName, slot);
   s.autoAdjust = false;
   s.manualCenter = false;
-  s.offsetX += dx;
-  s.offsetY += dy;
+  // [FIX-IMG-HERO-BLANK] 이동 버튼을 계속 누르면 offsetX/Y가 한없이 누적되어
+  // 이미지가 박스 밖으로 완전히 밀려나 안 보이게 될 수 있었다. 안전 범위로 제한.
+  s.offsetX = Math.max(-240, Math.min(240, s.offsetX + dx));
+  s.offsetY = Math.max(-240, Math.min(240, s.offsetY + dy));
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
