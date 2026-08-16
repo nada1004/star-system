@@ -110,6 +110,15 @@ function _renderCfgB2TransSection(){
     : [{key:'fade',label:'디졸브(페이드)'}];
   const enabledMap = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_trans_enabled')||'null') || {}; }catch(e){ return {}; } })();
   const cinemaOn = (localStorage.getItem('su_b2_cinema_mode') ?? '1') !== '0';
+  const cineFx = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_cine_fx')||'null') || {}; }catch(e){ return {}; } })();
+  const fxOn = (k, def)=> (cineFx[k] !== undefined ? !!cineFx[k] : def);
+  const _fxRow = (key, label, def)=>{
+    const on = fxOn(key, def);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 4px">
+      <input type="checkbox" data-cinefx-key="${key}" ${on?'checked':''} style="width:15px;height:15px" onchange="_cfgB2ToggleCineFx('${key}',this.checked)">
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">${label}</span>
+    </label>`;
+  };
   const rows = types.map(t=>{
     const on = enabledMap[t.key] !== false;
     return `<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border)">
@@ -123,6 +132,14 @@ function _renderCfgB2TransSection(){
       🎬 시네마틱 모드
     </label>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:12px">전환을 느긋한 속도로 늘리고, 줌 폭을 줄여 영화처럼 차분하게 흘러가게 합니다. (라인업탭 소개연출의 레터박스/비네트에도 함께 적용)</div>
+    <div style="padding:10px 12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.16);border-radius:var(--r);margin-bottom:12px">
+      <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:4px">🎥 프로필탭 히어로 화면 효과</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:6px">시네마틱 모드가 켜져 있을 때만 히어로 사진 위에 표시됩니다.</div>
+      ${_fxRow('letterbox', '🎞️ 레터박스(상하 검은 띠)', true)}
+      ${_fxRow('vignette', '🌑 비네트(가장자리 음영)', true)}
+      ${_fxRow('grade', '🎨 시네마틱 색감 보정', true)}
+      ${_fxRow('grain', '🎬 필름 그레인(노이즈)', false)}
+    </div>
     <hr style="border:none;border-top:1px dashed var(--border2);margin:0 0 10px">
     <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:4px">전환 효과 켜기/끄기</div>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">체크된 효과 중에서만 매번 랜덤으로 골라 사용합니다. (전부 끄면 자동으로 전체 사용)</div>
@@ -137,6 +154,14 @@ window._cfgB2ToggleTransEffect = function(key, checked){
     const map = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_trans_enabled')||'null') || {}; }catch(e){ return {}; } })();
     map[key] = !!checked;
     localStorage.setItem('su_b2_trans_enabled', JSON.stringify(map));
+  }catch(e){}
+};
+window._cfgB2ToggleCineFx = function(key, checked){
+  try{
+    const map = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_cine_fx')||'null') || {}; }catch(e){ return {}; } })();
+    map[key] = !!checked;
+    localStorage.setItem('su_b2_cine_fx', JSON.stringify(map));
+    if(typeof render==='function') render();
   }catch(e){}
 };
 window._cfgB2ResetTransEffects = function(){

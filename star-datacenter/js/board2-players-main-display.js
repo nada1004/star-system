@@ -2,6 +2,44 @@
    보드2 - 메인 디스플레이 갱신 (board2-players.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+// [FEATURE-CINEMATIC-FX] 필름 그레인 애니메이션용 키프레임을 한 번만 주입한다.
+(function _b2CineFxStyleInit(){
+  try{
+    if(document.getElementById('b2-cine-fx-style')) return;
+    const s = document.createElement('style');
+    s.id = 'b2-cine-fx-style';
+    s.textContent = '@keyframes b2CineGrain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,2%)}100%{transform:translate(0,0)}}';
+    document.head.appendChild(s);
+  }catch(e){}
+})();
+// 히어로 슬라이드쇼(프로필탭)에 씌우는 "영화같은" 오버레이 4종 — 레터박스/비네트/
+// 색감 보정/필름 그레인. 시네마틱 모드가 꺼져 있으면 전부 표시하지 않는다.
+// 각 효과는 설정탭(🎞️ 이미지탭 슬라이드쇼 효과)에서 개별로 켜고 끌 수 있다.
+function _b2BuildCineOverlayHTML(){
+  try{
+    const cineOn = (typeof window._b2CinemaModeOn === 'function') ? window._b2CinemaModeOn() : true;
+    if(!cineOn) return '';
+    const fx = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_cine_fx')||'null') || {}; }catch(e){ return {}; } })();
+    const on = (k, def)=> (fx[k] !== undefined ? !!fx[k] : def);
+    let html = '';
+    if(on('letterbox', true)){
+      html += `<div class="b2-cine-letterbox" style="position:absolute;left:0;top:0;width:100%;height:7%;min-height:14px;background:linear-gradient(180deg,#000,rgba(0,0,0,.85));z-index:55;pointer-events:none"></div>`;
+      html += `<div class="b2-cine-letterbox" style="position:absolute;left:0;bottom:0;width:100%;height:7%;min-height:14px;background:linear-gradient(0deg,#000,rgba(0,0,0,.85));z-index:55;pointer-events:none"></div>`;
+    }
+    if(on('vignette', true)){
+      html += `<div style="position:absolute;inset:0;z-index:54;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.42) 100%)"></div>`;
+    }
+    if(on('grade', true)){
+      // 은은한 티일&오렌지 계열 색감 보정 — 영화 색보정 느낌
+      html += `<div style="position:absolute;inset:0;z-index:53;pointer-events:none;mix-blend-mode:overlay;opacity:.35;background:linear-gradient(160deg,rgba(255,150,60,.16) 0%,rgba(0,0,0,0) 45%,rgba(30,80,140,.18) 100%)"></div>`;
+    }
+    if(on('grain', false)){
+      html += `<div style="position:absolute;inset:-10%;width:120%;height:120%;z-index:56;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/></filter><rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/></svg>');background-size:120px 120px;animation:b2CineGrain .5s steps(2) infinite"></div>`;
+    }
+    return html;
+  }catch(e){ return ''; }
+}
+
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
@@ -246,6 +284,7 @@ function _b2UpdateMainDisplay(playerName) {
       ${_slot8}
       ${_slot9}
       ${_slot10}
+      ${_b2BuildCineOverlayHTML()}
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
