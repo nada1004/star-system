@@ -48,6 +48,7 @@ window.cm = function(id) {
         }
       }
       if(id === 'histDetModal') window._lastHistDetailState = null;
+      if(id === 'playerModal'){ try{ if(typeof _plyrBgmResumeProfileTab==='function') _plyrBgmResumeProfileTab(); }catch(e2){} }
       if(typeof window._syncTabUrlFromState === 'function') window._syncTabUrlFromState('replace');
     }catch(e){}
   }

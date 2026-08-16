@@ -106,6 +106,19 @@ function _b2GetImgSettings(playerName, slot) {
       if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
       if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
       if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
+      // [FIX-IMG-HERO-BLANK] 좌측 메인(히어로) 이미지의 확대/이동 설정은 선수별이
+      // 아니라 기기(pc/tb/mb)별 전역 설정이라, 화살표 버튼을 여러 번 눌러
+      // offsetX/offsetY가 한없이 누적되면(또는 손상된 값이 들어오면) 이미지 전체가
+      // 박스 밖으로 밀려나 "PC에서만 좌측 이미지가 안 보이는" 현상이 모든 선수에게
+      // 똑같이 나타난다. 저장된 값을 불러올 때마다 안전 범위로 되돌려서
+      // (이미 망가진 기존 설정도) 자동으로 복구되게 한다.
+      const _numOr = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+      const clampedScale = Math.max(50, Math.min(220, _numOr(s.scale, 100)));
+      const clampedOffX = Math.max(-240, Math.min(240, _numOr(s.offsetX, 0)));
+      const clampedOffY = Math.max(-240, Math.min(240, _numOr(s.offsetY, 0)));
+      if (clampedScale !== s.scale) s.scale = clampedScale;
+      if (clampedOffX !== s.offsetX) s.offsetX = clampedOffX;
+      if (clampedOffY !== s.offsetY) s.offsetY = clampedOffY;
     }
   }catch(e){
     console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
@@ -197,6 +210,39 @@ function _b2ApplyImgSettingsToElement(el, settings) {
   el.style.objectPosition = settings.manualCenter ? 'center center' : 'center';
   el.style.filter = `brightness(${(settings.brightness || 100) / 100})`;
   el.style.transform = _b2GetImgTransform(settings);
+  // [FIX-IMG-HERO-BLANK] 안전 클램프를 거쳤어도 특정 컨테이너 크기/비율 조합에서는
+  // 여전히 이미지가 눈에 보이는 영역 밖으로 밀려날 수 있다. 적용 직후 실제로 화면에
+  // 겹치는지 확인해서, 만약 완전히 벗어났다면 그 기기(pc/tb/mb)의 설정을 기본값으로
+  // 되돌리고 다시 적용한다 — "PC에서만(또는 특정 환경에서만) 좌측 이미지가 안 보이는"
+  // 현상이 재발해도 화면이 스스로 복구되게 하기 위함.
+  try{
+    requestAnimationFrame(() => {
+      try{
+        if (!el.isConnected) return;
+        const box = el.parentElement;
+        if (!box) return;
+        const elRect = el.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        if (!boxRect.width || !boxRect.height) return;
+        const overlapW = Math.max(0, Math.min(elRect.right, boxRect.right) - Math.max(elRect.left, boxRect.left));
+        const overlapH = Math.max(0, Math.min(elRect.bottom, boxRect.bottom) - Math.max(elRect.top, boxRect.top));
+        const overlapArea = overlapW * overlapH;
+        const boxArea = boxRect.width * boxRect.height;
+        if (boxArea > 0 && (overlapArea / boxArea) < 0.15 && !el.dataset.b2AutoRecovered) {
+          el.dataset.b2AutoRecovered = '1';
+          const dk = _b2DeviceKey();
+          const slotKey = (el.id === 'b2-main-img-2') ? 'secondary' : 'primary';
+          _b2GlobalImgSettings.__byDevice[dk][slotKey] = _b2DefaultSingleImgSettings();
+          _b2SaveImgSettings();
+          const fixed = _b2GlobalImgSettings.__byDevice[dk][slotKey];
+          el.style.objectFit = fixed.fit || 'cover';
+          el.style.objectPosition = 'center';
+          el.style.filter = `brightness(${(fixed.brightness || 100) / 100})`;
+          el.style.transform = _b2GetImgTransform(fixed);
+        }
+      }catch(e){}
+    });
+  }catch(e){}
   if(_b2IsAutoFitEligible(settings)){
     const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
     _b2LoadImgMeta(el.currentSrc || el.getAttribute('src') || '', (meta)=>{
@@ -934,6 +980,11 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   }
   const numVal = parseInt(val, 10);
   s[key] = isNaN(numVal) ? val : numVal;
+  // [FIX-IMG-HERO-BLANK] 슬라이더/입력값이 비정상적으로 크거나 작아도 이미지가
+  // 박스 밖으로 완전히 밀려나거나 사라지지 않도록 안전 범위로 고정.
+  if (key === 'scale') s.scale = Math.max(50, Math.min(220, s.scale));
+  if (key === 'offsetX') s.offsetX = Math.max(-240, Math.min(240, s.offsetX));
+  if (key === 'offsetY') s.offsetY = Math.max(-240, Math.min(240, s.offsetY));
   s.zoom = s.scale;
   s.fill = s.fit;
   s.posX = s.offsetX;
@@ -964,8 +1015,10 @@ window._b2MoveImg = function(playerName, slot, dx, dy) {
   const s = _b2GetImgSettings(playerName, slot);
   s.autoAdjust = false;
   s.manualCenter = false;
-  s.offsetX += dx;
-  s.offsetY += dy;
+  // [FIX-IMG-HERO-BLANK] 이동 버튼을 계속 누르면 offsetX/Y가 한없이 누적되어
+  // 이미지가 박스 밖으로 완전히 밀려나 안 보이게 될 수 있었다. 안전 범위로 제한.
+  s.offsetX = Math.max(-240, Math.min(240, s.offsetX + dx));
+  s.offsetY = Math.max(-240, Math.min(240, s.offsetY + dy));
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
