@@ -620,14 +620,20 @@ function _b2LineupShowHoverTip(card, name, col) {
     // 다른 화면(현황판 카드, 랭킹, 미니게임 등)은 전부 이 폴백을 쓰는데 호버팝업만 빠져 있어서
     // "카드엔 사진이 보이는데 호버팝업엔 안 보이는" 현상이 발생했다.
     const photoRaw = String(p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '').trim();
-    const photoIsGif = /\.gif(\?|$)/i.test(photoRaw);
-    const photoUrl = photoRaw ? (photoIsGif ? toHttpsUrl(photoRaw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : photoRaw)) : '';
+    // [FIX-HOVERTIP-GIF-HOTLINK] (2026-08-17) GIF는 움직이는 걸 살리려고 프록시(images.weserv.nl)를
+    // 건너뛰고 원본 URL을 직접 불러오게 해뒀는데, 그 원본이 핫링크 차단(Discord CDN 등)이 걸려있으면
+    // 이 팝업에서만 로드가 실패해서 사진 대신 이니셜만 보였다. 다른 화면(getPlayerPhotoHTML)은 GIF든
+    // 아니든 항상 프록시를 거치므로 그쪽에서는 정상적으로 보였던 것 — 동일하게 항상 프록시를 거치도록
+    // 통일한다(애니메이션은 정지 이미지가 되지만, 최소한 사진 자체가 안 보이는 것보다 낫다).
+    const photoUrl = photoRaw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : toHttpsUrl(photoRaw)) : '';
     const photo2Raw = String(p.secondProfileFile || '').trim();
-    const photo2IsGif = /\.gif(\?|$)/i.test(photo2Raw);
-    const photo2Url = photo2Raw ? (photo2IsGif ? toHttpsUrl(photo2Raw) : (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : photo2Raw)) : '';
+    const photo2Url = photo2Raw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : toHttpsUrl(photo2Raw)) : '';
     const hasPhoto2 = !!photo2Url;
+    const _photoOrigAttr = photoRaw ? ` data-orig="${toHttpsUrl(photoRaw).replace(/"/g,'&quot;')}"` : '';
+    // 썸네일 프록시가 실패하면(드물게 원본이 프록시가 처리 못 하는 포맷/크기인 경우) 원본 URL로
+    // 한 번 더 시도해보고, 그마저 실패하면 그때 이니셜로 대체한다.
     const photoHtml = photoUrl
-      ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
+      ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}"${_photoOrigAttr} loading="eager" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex';}"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
       : `<div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">${raceLetter}</div>`;
     // 프로필 이미지2가 있으면 살짝 겹쳐서 자동 크로스페이드(라인업 카드 자체는 좌우 스크럽 방식이지만,
     // 팝업은 pointer-events:none이라 마우스 위치를 못 받으므로 자동 전환 애니메이션으로 대체)
