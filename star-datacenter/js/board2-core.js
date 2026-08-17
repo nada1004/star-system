@@ -874,6 +874,11 @@ function rBoard2(C, T) {
       // 라인업 "소개 연출"(_b2LineupPlayIntroShow)은 SUTTS와 별개의 상태값으로 돌아가므로
       // 위 SUTTS 정지만으로는 멈추지 않음 — 서브뷰가 바뀌면 별도로 확실히 정지시켜준다.
       try{ if (typeof _b2LineupStopIntroShow === 'function') _b2LineupStopIntroShow(); }catch(e){}
+      // 🎵 스트리머 전용 BGM — 프로필탭('players')에서 다른 서브뷰(대학별/펨코/라인업 등)로
+      // 이동하면 재생 중이던 BGM을 정지한다. 예전엔 최상위 탭(sw())을 완전히 벗어날 때만
+      // 정지시켜서, board2 탭 안에서 프로필뷰 → 다른 서브뷰로만 이동하는 경우엔 BGM이
+      // 계속 재생되는 문제가 있었음.
+      try{ if (window._b2LastRenderedView === 'players' && _b2View !== 'players' && typeof _plyrBgmStop === 'function') _plyrBgmStop(); }catch(e){}
     }
     window._b2LastRenderedView = _b2View;
     if (_b2View === 'univ') {
