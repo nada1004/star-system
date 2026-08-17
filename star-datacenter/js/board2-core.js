@@ -939,6 +939,23 @@ function rBoard2(C, T) {
             console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
           }
         }, 0);
+        // [FIX-IMG-SWAP-NOSTART] 슬라이드쇼 시작은 원래 대표 이미지 <img>의 onload
+        // 속성(_b2SwapStartOnce)에만 의존했다. 그런데 그 이미지가 브라우저 캐시에
+        // 이미 있는 상태로 innerHTML을 통해 삽입되면, 엔진/타이밍에 따라 onload가
+        // 아예 발생하지 않는 경우가 있다(잘 알려진 브라우저 특성). 이 경우 슬라이드쇼가
+        // 시작조차 되지 않고 대표 이미지(보통 1번)에서 영구히 멈춰 있었다 —
+        // "가끔 2·3번까지 갔다가 다시 1번으로", "전환이 갑자기 빨라진다"는 증상은
+        // 대부분 이렇게 한 번 멈췄던 재생이 다른 트리거(설정 저장, 탭 재진입 등)로
+        // 뒤늦게 재시작되며 타이머가 어긋나 보이는 결과였다. onload가 정상 발생했으면
+        // 이미 _swapGen이 설정돼 있으므로 아래 안전장치는 조용히 아무 것도 안 한다.
+        setTimeout(() => {
+          try{
+            const _mb = document.getElementById('b2-players-main-box');
+            if (_mb && !_mb._swapGen && _b2SelectedPlayer && typeof _b2ScheduleImageSwap === 'function') {
+              _b2ScheduleImageSwap(_b2SelectedPlayer.name);
+            }
+          }catch(e){}
+        }, 220);
         setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
       }
     } else if (_b2View === 'lineup') {

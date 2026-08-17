@@ -534,6 +534,19 @@ function _b2ScheduleImageSwap(playerName) {
   // 복원한다.
   const mainBox = document.getElementById('b2-players-main-box');
   if (!mainBox) return;
+  // [FIX-IMG-SWAP-DEBOUNCE] 같은 선수에 대해 아주 짧은 간격(300ms)으로 이 함수가
+  // 중복 호출되면(예: onload 트리거와 안전장치 타이머가 겹치거나, 설정 저장이
+  // 연달아 여러 번 발생하는 경우) 매번 스케줄을 처음부터 다시 세우면서 "지금
+  // 보여주고 있던 이미지가 얼마나 됐는지"가 계속 리셋된다. 그러면 어떤 이미지는
+  // 설정보다 훨씬 오래 머물고, 그 뒤로 밀린 전환들이 한꺼번에 몰아서 넘어가며
+  // "갑자기 빨라진 것"처럼 보이는 원인이 된다. 같은 선수로의 중복 호출은 조용히
+  // 무시하고 이미 진행 중인 스케줄을 그대로 둔다.
+  const _now = Date.now();
+  if (mainBox._swapLastPlayer === playerName && mainBox._swapLastAt && (_now - mainBox._swapLastAt) < 300) {
+    return;
+  }
+  mainBox._swapLastPlayer = playerName;
+  mainBox._swapLastAt = _now;
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
   const _myGen = mainBox._swapGen;
