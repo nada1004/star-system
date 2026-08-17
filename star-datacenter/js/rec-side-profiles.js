@@ -301,9 +301,8 @@
     var nameLblColor = playerWon ? col : 'var(--gray-l)';
     var nameLblGlow  = playerWon ? '0 0 8px '+col+'77' : 'none';
     var shortName = pName ? (pName.length>6 ? pName.slice(0,6)+'…' : pName) : '';
-    var nameLbl = shortName
-      ? '<div class="rsp-namelbl" style="color:'+nameLblColor+';text-shadow:'+nameLblGlow+';">'+shortName.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
-      : '';
+    // (요청, 2026-08-17) 기록 카드 프로필 이미지 옆에 뜨던 스트리머 이름 라벨 제거
+    var nameLbl = '';
 
     // 박스 크기: 링 + 여백 포함
     var boxW = sizePx + ringSize*2 + 6;
