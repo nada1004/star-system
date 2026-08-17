@@ -239,21 +239,38 @@ function _b2SummaryView() {
   const tierCts = {};
   tieredVis.forEach(p => { const t=p.tier||'미정'; tierCts[t]=(tierCts[t]||0)+1; });
 
-  // 이번주 활동 인원 & 통산 승률
+  // 이번주 / 지난주 날짜 범위 (지난주 대비 증감 표시용)
   const { fromN: thisFromN, toN: thisToN } = _b2ThisWeekRange();
   const dateNum = _b2DateNum;
+  const _nowD = new Date();
+  const _day = _nowD.getDay();
+  const _thisMon = new Date(_nowD); _thisMon.setHours(0,0,0,0); _thisMon.setDate(_nowD.getDate()+(_day===0?-6:1-_day));
+  const _lastMon = new Date(_thisMon); _lastMon.setDate(_thisMon.getDate()-7);
+  const _lastSun = new Date(_thisMon); _lastSun.setDate(_thisMon.getDate()-1); _lastSun.setHours(23,59,59,999);
+  const _fmtN = d => parseInt(d.toISOString().slice(0,10).replace(/-/g,''));
+  const lastFromN = _fmtN(_lastMon), lastToN = _fmtN(_lastSun);
 
-  let totalW=0, totalL=0, weekActive=new Set();
+  // 통산 전적 & 이번주/지난주 활동·전적
+  let totalW=0, totalL=0, weekW=0, weekL=0;
+  const weekActive=new Set(), lastWeekActive=new Set();
   tieredVis.forEach(p => {
     (Array.isArray(p.history)?p.history:[]).forEach(h => {
       if (h.result==='승') totalW++;
       else if (h.result==='패') totalL++;
       const d = dateNum(h.date||h.d||'');
-      if (d>=thisFromN && d<=thisToN) weekActive.add(p.name);
+      if (d>=thisFromN && d<=thisToN) {
+        weekActive.add(p.name);
+        if (h.result==='승') weekW++; else if (h.result==='패') weekL++;
+      } else if (d>=lastFromN && d<=lastToN) {
+        lastWeekActive.add(p.name);
+      }
     });
   });
   const totalG = totalW+totalL;
   const totalWr = totalG>0 ? Math.round(totalW/totalG*100) : null;
+  const weekDiff = weekActive.size - lastWeekActive.size;
+  const weekTrendTxt = weekDiff===0 ? '지난주와 동일' : `${weekDiff>0?'▲':'▼'} 지난주 대비 ${Math.abs(weekDiff)}명`;
+  const weekTrendColor = weekDiff===0 ? 'var(--text3)' : (weekDiff>0 ? '#16a34a' : '#dc2626');
 
   // 최근 합류 선수 (history 첫 경기 기준 최근 30일)
   const now = new Date();
@@ -305,16 +322,12 @@ function _b2SummaryView() {
   };
 
   let h = `<style>
-    .b2s-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:16px}
+    .b2s-hero{padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:16px}
     .b2s-hero-title{font-size:26px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
     .b2s-hero-desc{margin-top:6px;font-size:var(--fs-base);line-height:1.65;color:var(--text3);max-width:720px}
-    .b2s-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .b2s-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
     .b2s-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:var(--fs-sm);font-weight:800;color:var(--text2)}
-    .b2s-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(100%,360px)}
-    .b2s-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}
-    .b2s-hero-stat-label{font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
-    .b2s-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
-    .b2s-hero-stat-sub{margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}
+    .b2s-hero-badge--trend{border-color:${weekTrendColor}44}
     .b2s-grid7 { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:16px; }
     @media(max-width:700px){ .b2s-grid7{ grid-template-columns:repeat(4,1fr); } }
     @media(max-width:420px){ .b2s-grid7{ grid-template-columns:repeat(2,1fr); } }
@@ -324,28 +337,27 @@ function _b2SummaryView() {
     .b2s-kpi-lbl { font-size:var(--fs-caption); font-weight:700; margin-top:3px; opacity:.75; }
     .b2s-kpi-sub { font-size:10px; opacity:.6; margin-top:1px; }
     .b2s-kpi-glow { position:absolute;inset:0;opacity:.08;pointer-events:none; }
-    .b2s-2col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
-    @media(max-width:780px){ .b2s-2col{ grid-template-columns:1fr 1fr; } }
-    @media(max-width:520px){ .b2s-2col{ grid-template-columns:1fr; } }
+    .b2s-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    @media(max-width:640px){ .b2s-2col{ grid-template-columns:1fr; } }
     .b2s-panel { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96)); border:1px solid rgba(148,163,184,.16); border-radius:20px; padding:16px; box-shadow:0 16px 28px rgba(15,23,42,.04); }
     .b2s-panel-title { font-size:var(--fs-base); font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-    .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:5px 0; }
+    .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:6px 4px; border-radius:10px; cursor:pointer; transition:background .12s; }
+    .b2s-univ-row:hover { background:var(--surface); }
     .b2s-univ-row + .b2s-univ-row { border-top:1px solid var(--border2); }
     .b2s-bar-track { flex:1; height:12px; border-radius:6px; overflow:hidden; background:var(--border2); display:flex; }
     .b2s-tier-chip { display:inline-flex; flex-direction:column; align-items:center; padding:8px 10px; border-radius:14px; min-width:54px; box-shadow:0 10px 16px rgba(15,23,42,.04); }
     .b2s-top-univ { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-    .b2s-univ-card { border-radius:var(--r2); padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; box-shadow:0 12px 18px rgba(15,23,42,.04); }
+    .b2s-univ-card { border-radius:var(--r2); padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:pointer; box-shadow:0 12px 18px rgba(15,23,42,.04); }
     .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,.08); }
-    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:var(--fs-caption);font-weight:700;color:var(--text2);margin:2px; }
-    @media(max-width:900px){ .b2s-hero{flex-direction:column}.b2s-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
+    .b2s-new-player { display:inline-flex;align-items:center;gap:5px;padding:4px 9px 4px 4px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:var(--fs-caption);font-weight:700;color:var(--text2);margin:2px;cursor:pointer;transition:transform .12s,box-shadow .12s; }
+    .b2s-new-player:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(15,23,42,.1); }
+    .b2s-new-player-avatar { width:20px;height:20px;border-radius:50%;flex-shrink:0;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff; }
+    .b2s-new-player-avatar img { width:100%;height:100%;object-fit:cover; }
     @media(max-width:640px){
       .b2s-hero{padding:18px 16px;border-radius:22px}
       .b2s-hero-title{font-size:22px}
-      /* 모바일: 배지 줄에 이미 같은 정보가 요약돼 있으므로 중복되는 히어로 통계 카드는 숨김 */
-      .b2s-hero-stats{display:none!important}
     }
     body.dark .b2s-hero,
-    body.dark .b2s-hero-stat,
     body.dark .b2s-hero-badge,
     body.dark .b2s-kpi,
     body.dark .b2s-panel {
@@ -353,51 +365,35 @@ function _b2SummaryView() {
       border-color:#334155 !important;
       box-shadow:0 12px 22px rgba(0,0,0,.20) !important;
     }
+    body.dark .b2s-univ-row:hover { background:rgba(148,163,184,.08); }
     body.dark .b2s-univ-row + .b2s-univ-row { border-top-color:#334155; }
     body.dark .b2s-bar-track { background:#334155; }
     body.dark .b2s-univ-card { background:rgba(15,23,42,.55); }
     body.dark .b2s-new-player { background:rgba(15,23,42,.6); border-color:#334155; color:#cbd5e1; }
   </style>`;
 
-  // KPI 7개 (통산승률 + 이번주 활동 추가)
+  // KPI 7개 (이번주 활동은 주간 전적 + 지난주 대비 증감으로 표시)
   const kpis = [
     { num: vis.length,           lbl: '전체 선수', col:'#3b82f6', icon:'👥' },
     { num: univList.length,      lbl: '활동 대학', col:'#10b981', icon:'🏫' },
     { num: raceCts.P,            lbl: '프로토스',  col:'#7c3aed', icon:'🔮' },
     { num: raceCts.T,            lbl: '테란',      col:'#0284c7', icon:'⚔️' },
     { num: raceCts.Z,            lbl: '저그',      col:'#059669', icon:'🦎' },
-    { num: weekActive.size,      lbl: '이번주 활동', col:'#f59e0b', icon:'🔥', sub:`${totalW}승 ${totalL}패` },
-    { num: totalWr!==null?`${totalWr}%`:'-', lbl:'통산 승률', col:'#ec4899', icon:'📊', sub:`${totalG.toLocaleString()}전` },
+    { num: weekActive.size,      lbl: '이번주 활동', col:'#f59e0b', icon:'🔥',
+      sub:`${weekW}승 ${weekL}패 · <span style="color:${weekTrendColor}">${weekTrendTxt}</span>` },
+    { num: totalWr!==null?`${totalWr}%`:'-', lbl:'통산 승률', col:'#ec4899', icon:'📊', sub:`${totalG.toLocaleString()}전 기준` },
   ];
 
   h += `<section class="b2s-hero">
-    <div>
-      <div style="font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Summary Dashboard</div>
-      <div class="b2s-hero-title">현황판 요약</div>
-      <div class="b2s-hero-desc">전체 인원, 활동 대학, 종족 분포, 최근 유입과 대학별 구성을 한 화면에서 빠르게 훑을 수 있도록 정리한 요약 화면입니다.</div>
-      <div class="b2s-hero-badges">
-        <span class="b2s-hero-badge">표시 선수 ${vis.length}명</span>
-        <span class="b2s-hero-badge">일반 ${tieredVis.length}명</span>
-        <span class="b2s-hero-badge">직책 ${roledVis.length}명</span>
-        <span class="b2s-hero-badge">최근 30일 신규 ${newPlayers.length}명</span>
-      </div>
-    </div>
-    <div class="b2s-hero-stats">
-      <div class="b2s-hero-stat">
-        <div class="b2s-hero-stat-label">활동 대학</div>
-        <div class="b2s-hero-stat-value">${univList.length}</div>
-        <div class="b2s-hero-stat-sub">무소속 제외 기준</div>
-      </div>
-      <div class="b2s-hero-stat">
-        <div class="b2s-hero-stat-label">이번주 활동</div>
-        <div class="b2s-hero-stat-value">${weekActive.size}</div>
-        <div class="b2s-hero-stat-sub">${totalW}승 ${totalL}패 누적</div>
-      </div>
-      <div class="b2s-hero-stat">
-        <div class="b2s-hero-stat-label">통산 승률</div>
-        <div class="b2s-hero-stat-value">${totalWr!==null?`${totalWr}%`:'-'}</div>
-        <div class="b2s-hero-stat-sub">${totalG.toLocaleString()}전 기준</div>
-      </div>
+    <div style="font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Summary Dashboard</div>
+    <div class="b2s-hero-title">현황판 요약</div>
+    <div class="b2s-hero-desc">전체 인원, 활동 대학, 종족 분포, 최근 유입과 대학별 구성을 한 화면에서 빠르게 훑을 수 있도록 정리한 요약 화면입니다.</div>
+    <div class="b2s-hero-badges">
+      <span class="b2s-hero-badge">표시 선수 ${vis.length}명</span>
+      <span class="b2s-hero-badge">일반 ${tieredVis.length}명</span>
+      <span class="b2s-hero-badge">직책 ${roledVis.length}명</span>
+      <span class="b2s-hero-badge">최근 30일 신규 ${newPlayers.length}명</span>
+      <span class="b2s-hero-badge b2s-hero-badge--trend">🔥 이번주 활동 ${weekActive.size}명 · <span style="color:${weekTrendColor}">${weekTrendTxt}</span></span>
     </div>
   </section>`;
 
@@ -412,7 +408,7 @@ function _b2SummaryView() {
     </div>`).join('')}
   </div>`;
 
-  // 종족 비율 + 티어 분포
+  // 종족 비율 + 티어 분포 (대학별 미니 순위는 아래 "대학별 인원 현황"과 중복이라 통합, 여기선 제외)
   h += `<div class="b2s-2col">
     <div class="b2s-panel">
       <div class="b2s-panel-title">🎮 종족 비율
@@ -451,28 +447,9 @@ function _b2SummaryView() {
         }).join('')}
       </div>
     </div>
-    <div class="b2s-panel">
-      <div class="b2s-panel-title">🏫 대학별 현황
-        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
-      </div>
-      ${univStats.slice(0,10).map((u,i)=>{
-        const barW=Math.round(u.count/maxCount*100);
-        return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border2)">
-          <span style="font-size:10px;font-weight:900;color:var(--text3);width:16px;text-align:center">${i+1}</span>
-          <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
-          <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--border2);display:flex">
-            <div style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed"></div>
-            <div style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7"></div>
-            <div style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669"></div>
-          </div>
-          <span style="font-size:var(--fs-caption);font-weight:900;color:${u.color};min-width:20px;text-align:right">${u.count}</span>
-        </div>`;
-      }).join('')}
-      ${univStats.length>10?`<div style="text-align:center;color:var(--text3);font-size:var(--fs-caption);margin-top:6px">외 ${univStats.length-10}개 대학</div>`:''}
-    </div>
   </div>`;
 
-  // 최근 합류 선수
+  // 최근 합류 선수 (프로필 사진 + 클릭·호버로 선수 카드 확인 가능)
   if (newPlayers.length > 0) {
     h += `<div class="b2s-panel" style="margin-bottom:14px">
       <div class="b2s-panel-title">🆕 최근 30일 첫 경기 선수
@@ -484,9 +461,18 @@ function _b2SummaryView() {
           const tc=typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
           const tt=typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
           const rIco=p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
-          const hist=Array.isArray(p.history)?p.history:[];
-          const firstD=hist.length?String(Math.min(...hist.map(h2=>parseInt(String(h2.date||h2.d||'').replace(/[-\.]/g,''))||Infinity))).replace(/(\d{4})(\d{2})(\d{2})/,'$1.$2.$3'):'';
-          return `<span class="b2s-new-player" style="border-color:${col}44;background:${col}0d">
+          const safeName=(p.name||'').replace(/'/g,"\\'");
+          const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,32):p.photo) : '';
+          const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+          const initials = (p.name||'?').slice(0,1);
+          const avatarHtml = photo
+            ? `<span class="b2s-new-player-avatar" style="background:${col}33"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
+            : `<span class="b2s-new-player-avatar" style="background:${col}">${initials}</span>`;
+          return `<span class="b2s-new-player" style="border-color:${col}44;background:${col}0d"
+            onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
+            onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
+            onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
+            ${avatarHtml}
             <span style="color:${col};font-weight:900">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</span>
             ${rIco?`<span style="font-size:10px">${rIco}</span>`:''}
             ${p.tier?`<span style="font-size:9px;padding:1px 4px;border-radius:4px;background:${tc};color:${tt}">${p.tier}</span>`:''}
@@ -497,7 +483,7 @@ function _b2SummaryView() {
     </div>`;
   }
 
-  // 대학별 인원 현황
+  // 대학별 인원 현황 (요약탭에서 대학 데이터를 보여주는 유일한 섹션 — 메달 카드 + 전체 리스트, 클릭 시 대학 상세로 이동)
   h += `<div class="b2s-panel" style="margin-bottom:14px">
     <div class="b2s-panel-title">🏫 대학별 인원 현황
       <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
@@ -508,7 +494,8 @@ function _b2SummaryView() {
         const pP=u.count>0?Math.round(u.races.P/u.count*100):0;
         const pT=u.count>0?Math.round(u.races.T/u.count*100):0;
         const pZ=u.count>0?Math.round(u.races.Z/u.count*100):0;
-        return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d">
+        const safeUnivName=String(u.name||'').replace(/'/g,"\\'");
+        return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeUnivName}')" title="${u.name} 상세 보기">
           <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
             <span style="font-size:14px">${medal}</span>
             <span style="font-size:var(--fs-sm);font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
@@ -527,10 +514,11 @@ function _b2SummaryView() {
         </div>`;
       }).join('')}
     </div>
-    <div style="border-top:1px solid var(--border2);padding-top:10px">
+    <div style="border-top:1px solid var(--border2);padding-top:6px">
       ${univStats.slice(0,20).map(u=>{
         const barW=Math.round(u.count/maxCount*100);
-        return `<div class="b2s-univ-row">
+        const safeUnivName=String(u.name||'').replace(/'/g,"\\'");
+        return `<div class="b2s-univ-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeUnivName}')" title="${u.name} 상세 보기">
           <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div class="b2s-bar-track">
             <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
