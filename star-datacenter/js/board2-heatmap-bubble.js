@@ -44,6 +44,42 @@ function _b2HeatmapGrandClick(el){
     if(typeof _b2HeatmapShowGrandPopup === 'function') _b2HeatmapShowGrandPopup(uid);
   }catch(e){}
 }
+// 팝업 상단(헤더) 공통 빌더 — 아바타 + 이름/티어 + 승률을 세로로 쌓아
+// 우상단 닫기(X) 버튼과 절대 겹치지 않도록 설계
+function _b2HmAvatarHTML(univName, avatarColor, avatarLabel){
+  const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+  const cfg = univName ? (Array.isArray(window.univCfg) ? window.univCfg : (typeof univCfg!=='undefined'?univCfg:[])).find(x=>x && x.name===univName) : null;
+  const logoUrl = cfg ? (cfg.icon || cfg.img || '') : '';
+  if (logoUrl) {
+    const safeUrl = (typeof toHttpsUrl==='function') ? toHttpsUrl(logoUrl) : logoUrl;
+    const safeUrlA = (typeof escAttr==='function') ? escAttr(safeUrl) : String(safeUrl||'');
+    return '<div class="b2hm2-header-avatar b2hm2-header-avatar--logo">'
+      + '<img src="'+safeUrlA+'" alt="" style="width:96%;height:96%;object-fit:contain" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:900;color:'+avatarColor+';background:linear-gradient(145deg,'+avatarColor+'22,'+avatarColor+'11)">'+escH(avatarLabel||'')+'</span>'
+      + '</div>';
+  }
+  return '<div class="b2hm2-header-avatar" style="background:linear-gradient(145deg,'+avatarColor+','+avatarColor+'99)">'+escH(avatarLabel||'')+'</div>';
+}
+function _b2HmHeaderHTML(opts){
+  const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+  const { avatarColor, avatarLabel, univName, title, tierText, tierBg, tierFg, wr, tw, tl, wrc } = opts || {};
+  let html = '<div class="b2hm2-header-row">';
+  html += _b2HmAvatarHTML(univName, avatarColor, avatarLabel);
+  html += '<div class="b2hm2-header-info">';
+  html += '<div class="b2hm2-header-title">';
+  if (title) html += '<span class="b2hm2-header-name">'+escH(title)+'</span>';
+  if (tierText) html += '<span class="b2hm2-header-tierbadge" style="background:'+(tierBg||avatarColor)+';color:'+(tierFg||'#fff')+'">'+escH(tierText)+'</span>';
+  html += '</div>';
+  html += '<div class="b2hm2-header-wr">';
+  if (wr!==null && wr!==undefined) {
+    html += '<span class="b2hm2-header-wr-pct" style="color:'+wrc+'">'+wr+'%</span>';
+    html += '<span class="b2hm2-header-wr-rec">'+tw+'승 '+tl+'패</span>';
+  } else {
+    html += '<span class="b2hm2-header-wr-rec">기록 없음</span>';
+  }
+  html += '</div></div></div>';
+  return html;
+}
 function _b2HeatmapShowPopup(uid, univName, tier, color){
   try{
     const popup  = document.getElementById(uid + '-popup');
@@ -74,30 +110,26 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
     }));
     const tierCol = (typeof getTierBtnColor==='function'&&tier)?getTierBtnColor(tier):'#64748b';
     const tierTc  = (typeof getTierBtnTextColor==='function'&&tier)?(getTierBtnTextColor(tier)||'#fff'):'#fff';
-    if(header) header.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
-        '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
-        '<span style="font-size:var(--fs-sm);padding:3px 10px;border-radius:20px;background:'+tierCol+';color:'+tierTc+';font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
-        '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
-        '</div>' +
-      '</div>';
+    if(header) header.innerHTML = _b2HmHeaderHTML({
+      avatarColor: color, avatarLabel: (univName||'?').slice(0,1), univName,
+      title: univName, tierText: tier, tierBg: tierCol, tierFg: tierTc,
+      wr, tw, tl, wrc
+    });
     let bodyHtml = '';
     bodyHtml += '<div class="b2hm2-stat-row">' +
       '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
-        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+color+'">'+members.length+'</div>' +
+        '<div class="b2hm2-stat-lbl">총 인원</div>' +
       '</div>';
     if (tg>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
-        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+wrc+'">'+wr+'%</div>' +
+        '<div class="b2hm2-stat-lbl">'+tw+'승 '+tl+'패</div>' +
       '</div>';
     if (ww+wl>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
-        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
-        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div class="b2hm2-stat-lbl" style="color:#c2410c">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
     bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
@@ -116,7 +148,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       const _2ndHm1 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
       const initials = String(p && p.name || '?').slice(0,1);
       const safeNameAttr = escA(p && p.name || '');
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="_b2LineupCardHoverLeave();openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')" onmouseenter="_b2LineupCardHoverEnter(event,this,\''+safeNameAttr.replace(/'/g,"\\'")+'\',\''+color+'\')" onmouseleave="_b2LineupCardHoverLeave()">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm1?'ph-swap':'')+'" style="position:relative;display:block">'
           + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
@@ -162,29 +194,25 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
         else if(h && h.result==='패') wl++;
       }
     }));
-    if(header) header.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
-        '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
-        '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
-        '</div>' +
-      '</div>';
+    if(header) header.innerHTML = _b2HmHeaderHTML({
+      avatarColor: color, avatarLabel: (univName||'?').slice(0,1), univName,
+      title: univName, wr, tw, tl, wrc
+    });
     let bodyHtml = '';
     bodyHtml += '<div class="b2hm2-stat-row">' +
       '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
-        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+color+'">'+members.length+'</div>' +
+        '<div class="b2hm2-stat-lbl">총 인원</div>' +
       '</div>';
     if (tg>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
-        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+wrc+'">'+wr+'%</div>' +
+        '<div class="b2hm2-stat-lbl">'+tw+'승 '+tl+'패</div>' +
       '</div>';
     if (ww+wl>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
-        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
-        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div class="b2hm2-stat-lbl" style="color:#c2410c">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
     bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
@@ -209,7 +237,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       const safeNameAttr2 = escA(p && p.name || '');
       const tierCol2 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
       const tierTxt2 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="_b2LineupCardHoverLeave();openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')" onmouseenter="_b2LineupCardHoverEnter(event,this,\''+safeNameAttr2.replace(/'/g,"\\'")+'\',\''+pColor+'\')" onmouseleave="_b2LineupCardHoverLeave()">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm2?'ph-swap':'')+'" style="position:relative;display:block">'
           + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
@@ -259,28 +287,25 @@ function _b2HeatmapShowTierPopup(uid, tier, color){
         else if(h && h.result==='패') wl++;
       }
     }));
-    if(header) header.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<span style="font-size:var(--fs-sm);padding:3px 10px;border-radius:20px;background:'+color+';color:#fff;font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
-        '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
-        '</div>' +
-      '</div>';
+    if(header) header.innerHTML = _b2HmHeaderHTML({
+      avatarColor: color, avatarLabel: tier,
+      title: tier+' 티어 전체', wr, tw, tl, wrc
+    });
     let bodyHtml = '';
     bodyHtml += '<div class="b2hm2-stat-row">' +
       '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
-        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+color+'">'+members.length+'</div>' +
+        '<div class="b2hm2-stat-lbl">총 인원</div>' +
       '</div>';
     if (tg>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
-        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+wrc+'">'+wr+'%</div>' +
+        '<div class="b2hm2-stat-lbl">'+tw+'승 '+tl+'패</div>' +
       '</div>';
     if (ww+wl>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
-        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
-        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div class="b2hm2-stat-lbl" style="color:#c2410c">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
     bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
@@ -308,7 +333,7 @@ function _b2HeatmapShowTierPopup(uid, tier, color){
       const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
       const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
       const safeNameAttr = escA(p && p.name || '');
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="_b2LineupCardHoverLeave();openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')" onmouseenter="_b2LineupCardHoverEnter(event,this,\''+safeNameAttr.replace(/'/g,"\\'")+'\',\''+pColor+'\')" onmouseleave="_b2LineupCardHoverLeave()">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm3?'ph-swap':'')+'" style="position:relative;display:block">'
           + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
@@ -358,29 +383,25 @@ function _b2HeatmapShowGrandPopup(uid){
         else if(h && h.result==='패') wl++;
       }
     }));
-    if(header) header.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
-        '<span style="font-size:16px;font-weight:900;color:'+color+';">전체 합계</span>' +
-        '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
-        '</div>' +
-      '</div>';
+    if(header) header.innerHTML = _b2HmHeaderHTML({
+      avatarColor: color, avatarLabel: '🏆',
+      title: '전체 합계', wr, tw, tl, wrc
+    });
     let bodyHtml = '';
     bodyHtml += '<div class="b2hm2-stat-row">' +
       '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
-        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+color+'">'+members.length+'</div>' +
+        '<div class="b2hm2-stat-lbl">총 인원</div>' +
       '</div>';
     if (tg>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
-        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
-        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:'+wrc+'">'+wr+'%</div>' +
+        '<div class="b2hm2-stat-lbl">'+tw+'승 '+tl+'패</div>' +
       '</div>';
     if (ww+wl>0) bodyHtml +=
       '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
-        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
-        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+        '<div class="b2hm2-stat-val" style="color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div class="b2hm2-stat-lbl" style="color:#c2410c">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
     bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
@@ -411,7 +432,7 @@ function _b2HeatmapShowGrandPopup(uid){
       const safeNameAttr = escA(p && p.name || '');
       const tierCol3 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
       const tierTxt3 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="_b2LineupCardHoverLeave();openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')" onmouseenter="_b2LineupCardHoverEnter(event,this,\''+safeNameAttr.replace(/'/g,"\\'")+'\',\''+pColor+'\')" onmouseleave="_b2LineupCardHoverLeave()">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm4?'ph-swap':'')+'" style="position:relative;display:block">'
           + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
@@ -557,12 +578,22 @@ function _b2HeatmapView() {
     .b2hm2-tbl td { border-radius:8px;text-align:center;font-size:var(--fs-caption);font-weight:800;padding:6px 4px;min-width:44px;cursor:pointer;position:relative;transition:none }
     .b2hm2-popup { display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px) }
     .b2hm2-popup.show { display:flex }
-    .b2hm2-popup-inner { background:var(--white);border-radius:22px;padding:0;max-width:400px;width:92%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);position:relative;animation:b2hmIn .22s cubic-bezier(.34,1.56,.64,1) }
-    .b2hm2-popup-header { padding:18px 20px 14px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface) }
+    .b2hm2-popup-inner { background:color-mix(in srgb, var(--white) 82%, transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-radius:22px;padding:0;max-width:400px;width:92%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);position:relative;animation:b2hmIn .22s cubic-bezier(.34,1.56,.64,1) }
+    .b2hm2-popup-header { position:relative;padding:20px 48px 16px 18px;border-bottom:1px solid var(--border2);flex-shrink:0;background:transparent }
     .b2hm2-popup-body { padding:16px 20px 20px;overflow-y:auto;flex:1 }
     @keyframes b2hmIn { from{opacity:0;transform:scale(.88) translateY(16px)} to{opacity:1;transform:none} }
-    .b2hm2-popup-close { position:absolute;top:14px;right:16px;background:var(--border2);border:none;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2 }
-    .b2hm2-popup-close:hover { background:var(--text1);color:#fff }
+    .b2hm2-popup-close { position:absolute;top:14px;right:14px;background:var(--white);border:1px solid var(--border2);width:30px;height:30px;border-radius:50%;font-size:13px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all .18s;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.1) }
+    .b2hm2-popup-close:hover { background:var(--text1);color:#fff;border-color:var(--text1);transform:rotate(90deg) }
+    .b2hm2-header-row { display:flex;align-items:center;gap:11px }
+    .b2hm2-header-avatar { width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 3px 8px rgba(0,0,0,.14) }
+    .b2hm2-header-avatar--logo { background:transparent;box-shadow:none;width:64px;height:64px;border-radius:16px }
+    .b2hm2-header-info { flex:1;min-width:0 }
+    .b2hm2-header-title { display:flex;align-items:center;gap:6px;flex-wrap:wrap;line-height:1.3 }
+    .b2hm2-header-name { font-size:16px;font-weight:900;color:var(--text1);letter-spacing:-.2px }
+    .b2hm2-header-tierbadge { font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.2px }
+    .b2hm2-header-wr { margin-top:3px;display:flex;align-items:baseline;gap:6px }
+    .b2hm2-header-wr-pct { font-size:14px;font-weight:900 }
+    .b2hm2-header-wr-rec { font-size:10.5px;color:var(--text3);font-weight:700 }
     .b2hm2-pcard { display:flex;flex-direction:column;align-items:center;gap:0;padding:0;border-radius:14px;border:1.5px solid transparent;text-align:center;transition:all .18s;cursor:pointer;overflow:hidden;position:relative }
     .b2hm2-pcard:hover { border-color:var(--border2);box-shadow:0 4px 16px rgba(0,0,0,.14);transform:translateY(-2px) scale(1.03) }
     .b2hm2-pcard-photo { width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;flex-shrink:0;display:block }
@@ -570,8 +601,11 @@ function _b2HeatmapView() {
     .b2hm2-pcard-info { position:absolute;bottom:0;left:0;right:0;padding:18px 6px 7px;background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;flex-direction:column;gap:2px;align-items:center }
     .b2hm2-pcard-name { font-size:var(--fs-caption);font-weight:900;line-height:1.2;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5) }
     .b2hm2-pcard-sub { font-size:10px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center }
-    .b2hm2-stat-row { display:flex;gap:8px;margin-bottom:12px }
-    .b2hm2-stat-box { flex:1;padding:10px 8px;border-radius:12px;text-align:center;border:1.5px solid transparent }
+    .b2hm2-stat-row { display:flex;gap:6px;margin:12px 0 10px }
+    .b2hm2-stat-box { flex:1;padding:7px 6px;border-radius:11px;text-align:center;border:1.5px solid transparent;transition:transform .15s ease;min-width:0 }
+    .b2hm2-stat-box:hover { transform:translateY(-1px) }
+    .b2hm2-stat-box .b2hm2-stat-val { font-size:15px;font-weight:900;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+    .b2hm2-stat-box .b2hm2-stat-lbl { font-size:9px;font-weight:700;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
     .b2hm2-week-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;font-size:var(--fs-caption);font-weight:800;color:#c2410c;margin-bottom:12px }
     .b2hm2-tbl td:hover { filter:none;box-shadow:none; }
     .b2hm2-tbl tr:hover td { filter:none; box-shadow:none; }

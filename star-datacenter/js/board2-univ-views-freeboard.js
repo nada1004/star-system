@@ -387,7 +387,7 @@ function _b2FreeView() {
     const _fl = (text, isRole) => `<span style="font-size:var(--fs-sm);font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:var(--r2) 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
 
     roledFree.forEach(p => {
-      h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
+      h += _frow(_fl(p.role||'', true), _b2NameTag(p, defCol, true));
     });
     orderedTierKeys.forEach(tier => {
       const group = tierGroups[tier];

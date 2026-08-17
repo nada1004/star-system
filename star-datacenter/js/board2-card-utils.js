@@ -8,7 +8,7 @@ function _b2NameTag(p, accentCol, showTier) {
     <div style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
-      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:6px;flex:1">
+      <div onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${accentCol}')" onmouseleave="_b2LineupCardHoverLeave()" style="display:flex;align-items:center;gap:6px;flex:1">
       ${_b2Avatar(p, crewCol||accentCol, 58)}
       <span style="font-weight:700;font-size:var(--fs-lg);color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}

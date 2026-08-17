@@ -122,7 +122,8 @@ window.openHeatmapDayPopup = function(dateStr, gameCount){
         const tierColor = (typeof getTierBtnColor==='function'&&p.tier)?getTierBtnColor(p.tier):'#64748b';
         const tierTxt = (typeof getTierBtnTextColor==='function'&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
 
-        return `<div class="hm-player-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')">
+        const _safeHmName = (p.name||'').replace(/'/g,"\\'");
+        return `<div class="hm-player-card" onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${_safeHmName}')" onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${_safeHmName}','${uc}')" onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
           ${imgHtml}
           <div class="hm-player-name">${p.name||'-'}</div>
           <div class="hm-player-sub">
