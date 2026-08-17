@@ -72,8 +72,28 @@ function _loadScriptOnce(src){
 }
 window._loadScriptOnce = window._loadScriptOnce || _loadScriptOnce;
 
+// html2canvas(1.4.1) 내부에서 border-radius 계산 시 부동소수점 오차 등으로
+// 아주 작은 음수 반지름(예: -0.0000001)이 나와 ctx.arc()에 그대로 전달되면
+// "IndexSizeError: Negative radius" 로 캡처 전체가 죽는 알려진 버그가 있다.
+// html2canvas가 로드된 직후 CanvasRenderingContext2D.arc를 1회만 패치해서
+// 음수 반지름을 0으로 클램프한다 (모든 캔버스 사용처에 공통 적용되지만,
+// 정상적인 radius는 절대 음수가 될 수 없으므로 부작용 없음).
+function _patchNegativeRadiusArc(){
+  try{
+    if(window._arcNegRadiusPatched) return;
+    const proto = CanvasRenderingContext2D.prototype;
+    const _origArc = proto.arc;
+    proto.arc = function(x, y, radius, startAngle, endAngle, counterclockwise){
+      if(typeof radius === 'number' && radius < 0) radius = 0;
+      return _origArc.call(this, x, y, radius, startAngle, endAngle, counterclockwise);
+    };
+    window._arcNegRadiusPatched = true;
+  }catch(e){}
+}
+
 window.ensureHtml2Canvas = window.ensureHtml2Canvas || function(){
-  return window._loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  return window._loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
+    .then(function(r){ _patchNegativeRadiusArc(); return r; });
 };
 window.ensureChartJS = window.ensureChartJS || function(){
   return window._loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js');
