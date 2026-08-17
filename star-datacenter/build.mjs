@@ -116,6 +116,7 @@ const CORE_FILES = [
   'js/settings-player-detail.js',
   'js/settings-univ-detail.js',
   'js/render-lazy-utils.js',
+  'js/tab-dom-stash.js',
   'js/render-core.js',
   'js/render-nav-lazy.js',
   'js/render-iconify-ui.js',

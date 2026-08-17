@@ -1273,7 +1273,7 @@ function rTier(C,T){
   h+=`</div></div>`;
   }
 
-  C.innerHTML=`<div class="tier-shell">
+  C.innerHTML=`<div id="tier-tab-root" class="tier-shell">
     <section class="tier-hero">
       <div class="tier-hero-copy">
         <div class="tier-hero-kicker">Tier Ranking</div>
@@ -1293,3 +1293,38 @@ function rTier(C,T){
   </div>`;
   _syncTpSelectedCards();
 }
+
+/* [FIX-NO-REFRESH-ON-REENTRY] (2026-08-17) rTotal과 동일한 이유로 티어 순위표 탭도
+   화면에 영향을 주는 값이 안 바뀌었으면 새로 그리지 않고 재사용하기 위한 시그니처.
+   (단, "최근 경기" 등 line 591 부근의 별도 조기 반환 표는 이 스태시 대상에 포함하지
+   않는다 — 그 경우엔 매번 새로 그린다) */
+function _computeTierSig(){
+  try{
+    const list = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+    const parts = list.map(p => [
+      p&&p.name, p&&p.tier, p&&p.race, p&&p.univ, p&&p.gender, p&&p.role,
+      p&&p.photo, p&&p.secondProfileFile, p&&p.win, p&&p.loss, p&&p.points, p&&p.elo,
+      p&&p.hidden, p&&p.retired
+    ].join('~')).join('|');
+    const univParts = (typeof univCfg !== 'undefined' && Array.isArray(univCfg))
+      ? univCfg.map(u=>[u&&u.name, u&&u.color, u&&u.hidden, u&&u.dissolved].join('~')).join('|')
+      : '';
+    const typeSetSig = (window._tierTypeSet && window._tierTypeSet.size) ? Array.from(window._tierTypeSet).sort().join(',') : '';
+    const _fUniv = (typeof fUniv!=='undefined') ? fUniv : window.fUniv;
+    const _fTier = (typeof fTier!=='undefined') ? fTier : window.fTier;
+    return [
+      tierRankMode, _fUniv, _fTier,
+      window._tierGenderFilter||'', window._tierRaceFilter||'',
+      window._tierHideNoRecord?'1':'0', typeSetSig,
+      window._tierDatePreset||'', window._tierDateFrom||'', window._tierDateTo||'',
+      window._tierMinGames||0, window._tierViewMode||'', window._tierRankSelMap||'',
+      window._tierFilterOpen?'1':'0', window._tierTypeFilterOpen?'1':'0',
+      window._recentRaceFilter||'', window._recentTierFilter||'', window._recentPage||0,
+      (typeof isLoggedIn!=='undefined'&&isLoggedIn)?'1':'0',
+      (typeof isSubAdmin!=='undefined'&&isSubAdmin)?'1':'0',
+      univParts, parts
+    ].join('###');
+  }catch(e){ return ''; }
+}
+
+try{ window._computeTierSig = _computeTierSig; }catch(e){}

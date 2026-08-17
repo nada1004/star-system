@@ -239,7 +239,7 @@ function rTotal(C,T){
 
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
-    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+    C.innerHTML=`<div id="streamer-tab-root" class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
       ${_renderTopChrome('카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.', true)}
       <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
     </div>`;
@@ -252,7 +252,7 @@ function rTotal(C,T){
     return;
   }
   if(totalViewMode==='focus'){
-    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+    C.innerHTML=`<div id="streamer-tab-root" class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
       ${_renderTopChrome('상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.', false)}
       ${_buildFocusView(_rankMap)}
     </div>`;
@@ -264,7 +264,7 @@ function rTotal(C,T){
     return;
   }
   if(totalViewMode==='simple'){
-    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+    C.innerHTML=`<div id="streamer-tab-root" class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
       ${_renderTopChrome('심플형은 불필요한 여백과 장식을 덜어내고 순위·이름·티어·승률만 한 줄로 빠르게 훑어볼 수 있도록 구성했습니다.', false)}
       <div class="streamer-content-card">${_buildSimpleView(_rankMap)}</div>
     </div>`;
@@ -489,7 +489,7 @@ function rTotal(C,T){
   }
   tableHTML+=`</tbody></table></div></div>`;
 
-  C.innerHTML = `<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+  C.innerHTML = `<div id="streamer-tab-root" class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
     ${_renderTopChrome('대학별 구성을 유지하면서도 검색, 필터, 순위를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.', false)}
     ${tableHTML}
   </div>`;
@@ -501,4 +501,50 @@ function rTotal(C,T){
   const si=C.querySelector('#total-search');
   if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
 }
+
+/* [FIX-NO-REFRESH-ON-REENTRY] (2026-08-17) 다른 탭에 갔다가 스트리머(전체) 탭으로
+   돌아오거나 배경 동기화로 render()가 다시 호출될 때, 화면에 실제 영향을 주는 값이
+   하나도 안 바뀌었으면 새로 그리지 않고 떼어뒀던 DOM(사진 포함)을 그대로 재사용한다.
+   render-core.js의 _tdsStashIfPresent/_tdsTryRestore가 이 시그니처를 비교한다. */
+function _computeTotalSig(){
+  try{
+    const list = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+    const parts = list.map(p => [
+      p&&p.name, p&&p.tier, p&&p.race, p&&p.univ, p&&p.gender, p&&p.role,
+      p&&p.photo, p&&p.secondProfileFile, p&&p.win, p&&p.loss, p&&p.points, p&&p.elo,
+      p&&p.hidden, p&&p.retired
+    ].join('~')).join('|');
+    const univParts = (typeof univCfg !== 'undefined' && Array.isArray(univCfg))
+      ? univCfg.map(u=>[u&&u.name, u&&u.color, u&&u.hidden, u&&u.dissolved].join('~')).join('|')
+      : '';
+    const sel = (typeof _bulkEditSelected !== 'undefined' && _bulkEditSelected && _bulkEditSelected.size)
+      ? Array.from(_bulkEditSelected).sort().join(',') : '';
+    return [
+      totalViewMode, totalGenderFilter, totalRaceFilter, totalHideNoRecord?'1':'0',
+      totalFocusPlayer, totalFocusDetailStyle, totalSearch||'',
+      (typeof _bulkEditMode!=='undefined'&&_bulkEditMode)?'1':'0', sel,
+      (typeof isLoggedIn!=='undefined'&&isLoggedIn)?'1':'0',
+      (typeof isSubAdmin!=='undefined'&&isSubAdmin)?'1':'0',
+      (typeof window._streamerTabDesignMode !== 'undefined') ? window._streamerTabDesignMode : (localStorage.getItem('su_streamer_tab_design_mode')||''),
+      localStorage.getItem('su_streamer_tab_layout_mode')||'',
+      localStorage.getItem('su_streamer_tab_ui_mode')||'',
+      univParts, parts
+    ].join('###');
+  }catch(e){ return ''; }
+}
+
+// 스태시 복원 후에는 rTotal()이 다시 실행되지 않으므로, 원래 rTotal() 끝에서 하던
+// 검색창 포커스 복원만 별도로 해준다(사진 재렌더는 필요 없음 — DOM을 그대로 재사용했으므로).
+function _totalAfterRestore(){
+  try{
+    const C = document.getElementById('rcont');
+    const si = C && C.querySelector('#total-search');
+    if(si && totalSearch){ si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
+  }catch(e){}
+}
+
+try{
+  window._computeTotalSig = _computeTotalSig;
+  window._totalAfterRestore = _totalAfterRestore;
+}catch(e){}
 
