@@ -24,6 +24,26 @@ function _b2HeatmapTotalClick(el){
     if(typeof _b2HeatmapShowAllPopup === 'function') _b2HeatmapShowAllPopup(uid, univName, color);
   }catch(e){}
 }
+function _b2HeatmapTierClick(el){
+  try{
+    if(!el || !el.dataset) return;
+    const uid = el.dataset.hmUid || '';
+    const tier = el.dataset.hmTier || '';
+    const color = el.dataset.hmColor || '#64748b';
+    if(!uid || !tier) return;
+    _b2HeatmapCloseAll();
+    if(typeof _b2HeatmapShowTierPopup === 'function') _b2HeatmapShowTierPopup(uid, tier, color);
+  }catch(e){}
+}
+function _b2HeatmapGrandClick(el){
+  try{
+    if(!el || !el.dataset) return;
+    const uid = el.dataset.hmUid || '';
+    if(!uid) return;
+    _b2HeatmapCloseAll();
+    if(typeof _b2HeatmapShowGrandPopup === 'function') _b2HeatmapShowGrandPopup(uid);
+  }catch(e){}
+}
 function _b2HeatmapShowPopup(uid, univName, tier, color){
   try{
     const popup  = document.getElementById(uid + '-popup');
@@ -189,7 +209,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       const safeNameAttr2 = escA(p && p.name || '');
       const tierCol2 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
       const tierTxt2 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<span class="'+(_2ndHm2?'ph-swap':'')+'" style="position:relative;display:block">'
           + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
@@ -202,6 +222,208 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       if (p&&p.tier) bodyHtml += '<span style="font-size:9px;font-weight:900;background:'+tierCol2+';color:'+tierTxt2+';border-radius:4px;padding:1px 5px;margin-bottom:2px;line-height:1.6">'+escH(p.tier)+'</span>';
       bodyHtml += '<div class="b2hm2-pcard-name">'+escH(p && p.name || '')+'</div>';
       bodyHtml += '<div class="b2hm2-pcard-sub">'+(rIco?'<span>'+rIco+'</span>':'')+(pwr!==null?'<span style="color:'+pc+';font-weight:900">'+pwr+'%</span>':'')+'</div>';
+      bodyHtml += '</div>';
+      bodyHtml += '</div>';
+    });
+    bodyHtml += '</div>';
+    body.innerHTML = bodyHtml;
+    popup.classList.add('show');
+  }catch(e){}
+}
+function _b2HeatmapShowTierPopup(uid, tier, color){
+  try{
+    const popup  = document.getElementById(uid + '-popup');
+    const header = document.getElementById(uid + '-popup-header');
+    const body   = document.getElementById(uid + '-popup-body');
+    if(!popup || !body) return;
+    const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+    const escA = (typeof escAttr === 'function') ? escAttr : (s)=>String(s||'');
+    const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
+    const members = (Array.isArray(window.players) ? window.players : []).filter(p=>{
+      const pu = String((p && p.univ) || '').trim();
+      const pt = String((p && p.tier) || '미정');
+      return pt === tier && !(p && (p.hidden || p.retired || p.hideFromBoard)) && !_dissSet.has(pu);
+    });
+    if(!members.length) return;
+    let tw=0,tl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') tw++; else if(h && h.result==='패') tl++; }));
+    const tg=tw+tl, wr=tg>0?Math.round(tw/tg*100):null;
+    const wrc=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const { fromN, toN } = _b2ThisWeekRange();
+    const dNum = _b2DateNum;
+    let ww=0,wl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{
+      const d=dNum(h && (h.date||h.d||''));
+      if(d>=fromN && d<=toN){
+        if(h && h.result==='승') ww++;
+        else if(h && h.result==='패') wl++;
+      }
+    }));
+    if(header) header.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span style="font-size:var(--fs-sm);padding:3px 10px;border-radius:20px;background:'+color+';color:#fff;font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
+        '<div style="margin-left:auto;text-align:right">' +
+          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
+        '</div>' +
+      '</div>';
+    let bodyHtml = '';
+    bodyHtml += '<div class="b2hm2-stat-row">' +
+      '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
+        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+      '</div>';
+    if (tg>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
+        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+      '</div>';
+    if (ww+wl>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
+        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+      '</div>';
+    bodyHtml += '</div>';
+    bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+      '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
+      members.length+'명' +
+      '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
+    bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
+    members.sort((a,b)=>{
+      const ua=String(a && a.univ||''), ub=String(b && b.univ||'');
+      const uc=ua.localeCompare(ub,'ko',{sensitivity:'base'});
+      if (uc!==0) return uc;
+      return (String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'});
+    }).forEach(p=>{
+      const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
+      const _isGif3 = p && p.photo ? /\.gif(\?|$)/i.test(String(p.photo)) : false;
+      const rawPhoto = p && p.photo ? (_isGif3 ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo)) : '';
+      const rawPhotoOrig = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const safePhoto = rawPhoto ? escA(rawPhoto) : '';
+      const safePhotoOrig = rawPhotoOrig ? escA(rawPhotoOrig) : '';
+      const _2ndHm3 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
+      const initials = String(p && p.name || '?').slice(0,1);
+      const pColor = (typeof gc === 'function' ? gc(p && p.univ) : null) || color;
+      let pw=0,pl=0;
+      (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
+      const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
+      const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
+      const safeNameAttr = escA(p && p.name || '');
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      if (safePhoto) {
+        bodyHtml += '<span class="'+(_2ndHm3?'ph-swap':'')+'" style="position:relative;display:block">'
+          + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>'
+          + _2ndHm3 + '</span>';
+      } else {
+        bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>';
+      }
+      bodyHtml += '<div class="b2hm2-pcard-info">';
+      bodyHtml += '<span style="font-size:9px;font-weight:900;background:'+pColor+';color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;line-height:1.6">'+escH(p && p.univ || '')+'</span>';
+      bodyHtml += '<div class="b2hm2-pcard-name">'+(rIco?'<span>'+rIco+'</span> ':'')+escH(p && p.name || '')+'</div>';
+      bodyHtml += '<div class="b2hm2-pcard-sub">'+(pwr!==null?'<span style="color:'+pc+';font-weight:900">'+pwr+'%</span>':'')+'</div>';
+      bodyHtml += '</div>';
+      bodyHtml += '</div>';
+    });
+    bodyHtml += '</div>';
+    body.innerHTML = bodyHtml;
+    popup.classList.add('show');
+  }catch(e){}
+}
+function _b2HeatmapShowGrandPopup(uid){
+  try{
+    const popup  = document.getElementById(uid + '-popup');
+    const header = document.getElementById(uid + '-popup-header');
+    const body   = document.getElementById(uid + '-popup-body');
+    if(!popup || !body) return;
+    const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+    const escA = (typeof escAttr === 'function') ? escAttr : (s)=>String(s||'');
+    const color = '#3b82f6';
+    const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
+    const members = (Array.isArray(window.players) ? window.players : []).filter(p=>{
+      const pu = String((p && p.univ) || '').trim();
+      return !(p && (p.hidden || p.retired || p.hideFromBoard)) && !_dissSet.has(pu);
+    });
+    if(!members.length) return;
+    let tw=0,tl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') tw++; else if(h && h.result==='패') tl++; }));
+    const tg=tw+tl, wr=tg>0?Math.round(tw/tg*100):null;
+    const wrc=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const { fromN, toN } = _b2ThisWeekRange();
+    const dNum = _b2DateNum;
+    let ww=0,wl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{
+      const d=dNum(h && (h.date||h.d||''));
+      if(d>=fromN && d<=toN){
+        if(h && h.result==='승') ww++;
+        else if(h && h.result==='패') wl++;
+      }
+    }));
+    if(header) header.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
+        '<span style="font-size:16px;font-weight:900;color:'+color+';">전체 합계</span>' +
+        '<div style="margin-left:auto;text-align:right">' +
+          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
+        '</div>' +
+      '</div>';
+    let bodyHtml = '';
+    bodyHtml += '<div class="b2hm2-stat-row">' +
+      '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
+        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+      '</div>';
+    if (tg>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
+        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+      '</div>';
+    if (ww+wl>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
+        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+      '</div>';
+    bodyHtml += '</div>';
+    bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+      '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
+      members.length+'명' +
+      '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
+    bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
+    const TIERS_LOCAL2 = typeof TIERS !== 'undefined' ? TIERS : [];
+    members.sort((a,b)=>{
+      const ia=TIERS_LOCAL2.indexOf(a && a.tier||''), ib=TIERS_LOCAL2.indexOf(b && b.tier||'');
+      const ta=ia>=0?ia:999, tb=ib>=0?ib:999;
+      if (ta!==tb) return ta-tb;
+      return (String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'});
+    }).forEach(p=>{
+      const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
+      const _isGif4 = p && p.photo ? /\.gif(\?|$)/i.test(String(p.photo)) : false;
+      const rawPhoto = p && p.photo ? (_isGif4 ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo)) : '';
+      const rawPhotoOrig = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const safePhoto = rawPhoto ? escA(rawPhoto) : '';
+      const safePhotoOrig = rawPhotoOrig ? escA(rawPhotoOrig) : '';
+      const _2ndHm4 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
+      const initials = String(p && p.name || '?').slice(0,1);
+      const pColor = (typeof gc === 'function' ? gc(p && p.univ) : null) || color;
+      let pw=0,pl=0;
+      (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
+      const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
+      const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
+      const safeNameAttr = escA(p && p.name || '');
+      const tierCol3 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
+      const tierTxt3 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      if (safePhoto) {
+        bodyHtml += '<span class="'+(_2ndHm4?'ph-swap':'')+'" style="position:relative;display:block">'
+          + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>'
+          + _2ndHm4 + '</span>';
+      } else {
+        bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>';
+      }
+      bodyHtml += '<div class="b2hm2-pcard-info">';
+      if (p&&p.tier) bodyHtml += '<span style="font-size:9px;font-weight:900;background:'+tierCol3+';color:'+tierTxt3+';border-radius:4px;padding:1px 5px;margin-bottom:2px;line-height:1.6">'+escH(p.tier)+'</span>';
+      bodyHtml += '<div class="b2hm2-pcard-name">'+(rIco?'<span>'+rIco+'</span> ':'')+escH(p && p.name || '')+'</div>';
+      bodyHtml += '<div class="b2hm2-pcard-sub">'+escH(p && p.univ || '')+' '+(pwr!==null?'<span style="color:'+pc+';font-weight:900">'+pwr+'%</span>':'')+'</div>';
       bodyHtml += '</div>';
       bodyHtml += '</div>';
     });
@@ -397,12 +619,13 @@ function _b2HeatmapView() {
       const tcol  = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
       const tot   = tierTotals[t];
       const sub   = mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-';
-      return `<th class="col-head"><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      const _au2 = (typeof escAttr==='function') ? escAttr : (s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<th class="col-head" style="cursor:pointer" data-hm-uid="${hmUid}" data-hm-tier="${_au2(t)}" data-hm-color="${_au2(col)}" onclick="_b2HeatmapTierClick(this)"><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
         <span style="padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</span>
         <span style="font-size:9px;font-weight:700;color:var(--text3)">${sub}</span>
       </div></th>`;
     }).join('')}
-    <th class="col-head" style="border-left:2px solid var(--border2)">합계</th>
+    <th class="col-head" style="border-left:2px solid var(--border2);cursor:pointer" data-hm-uid="${hmUid}" onclick="_b2HeatmapGrandClick(this)">합계</th>
   </tr></thead><tbody>`;
 
   // 데이터 행
@@ -452,12 +675,14 @@ function _b2HeatmapView() {
     ${sortedTiers.map(t=>{
       const tot=tierTotals[t];
       const val=mode==='count'?tot.count:tot.wr??0;
-      return `<td style="background:var(--surface);font-weight:900;color:var(--text2)">
+      const colT = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+      const _au3 = (typeof escAttr==='function') ? escAttr : (s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<td style="background:var(--surface);font-weight:900;color:var(--text2);cursor:pointer" data-hm-uid="${hmUid}" data-hm-tier="${_au3(t)}" data-hm-color="${_au3(colT)}" onclick="_b2HeatmapTierClick(this)">
         <div>${mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-'}</div>
         <div style="font-size:9px;color:var(--text3)">${tot.wins}승${tot.losses}패</div>
       </td>`;
     }).join('')}
-    <td class="total-cell" style="background:var(--surface) !important;font-weight:900;color:var(--text1)">
+    <td class="total-cell" style="background:var(--surface) !important;font-weight:900;color:var(--text1);cursor:pointer" data-hm-uid="${hmUid}" onclick="_b2HeatmapGrandClick(this)">
       <div>${mode==='count'?`${vis.length}명`:grandWr!==null?`${grandWr}%`:'-'}</div>
       <div style="font-size:9px;color:var(--text3)">${grandW}승${grandL}패</div>
     </td>
