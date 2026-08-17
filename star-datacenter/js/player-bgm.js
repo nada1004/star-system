@@ -220,13 +220,17 @@ function _plyrBgmArmGestureUnlock() {
 }
 
 // 스트리머 상세 팝업이 열리거나 현황판 프로필탭에서 스트리머를 선택했을 때 호출.
-// 등록된 BGM 링크가 없으면 재생 중이던 것을 정지한다.
-function _plyrBgmStart(player) {
+// context: 'popup'(상세 팝업) | 'profile'(현황판 프로필탭). 스트리머별로 재생 위치를
+// 제한해뒀으면(p.bgmScope) 그 위치가 아닐 때는 재생하지 않는다.
+// 등록된 BGM 링크가 없거나 이 컨텍스트에서 재생하지 않도록 설정돼 있으면 정지한다.
+function _plyrBgmStart(player, context) {
   try {
     const name = player ? String(player.name || '') : '';
-    const vid = player ? _plyrBgmExtractId(player.bgmUrl) : '';
+    let vid = player ? _plyrBgmExtractId(player.bgmUrl) : '';
+    const scope = player ? String(player.bgmScope || 'both') : 'both';
+    if (vid && context && scope !== 'both' && scope !== context) vid = ''; // 이 위치에서는 재생 안 함
     if (!vid) {
-      // 이 스트리머는 BGM이 없음 — 재생 중이던 다른 스트리머 BGM만 정지
+      // 이 스트리머는 BGM이 없음(또는 이 위치에서 재생 안 함) — 재생 중이던 다른 스트리머 BGM만 정지
       _plyrBgmStop();
       return;
     }
@@ -263,7 +267,7 @@ function _plyrBgmResumeProfileTab() {
   try {
     const sel = (typeof _b2SelectedPlayer !== 'undefined') ? _b2SelectedPlayer : null;
     const b2Visible = !!(typeof curTab !== 'undefined' && curTab === 'board2' && typeof _b2View !== 'undefined' && _b2View === 'players');
-    if (sel && b2Visible) { _plyrBgmStart(sel); }
+    if (sel && b2Visible) { _plyrBgmStart(sel, 'profile'); }
     else { _plyrBgmStop(); }
   } catch (e) { try { _plyrBgmStop(); } catch (e2) {} }
 }

@@ -360,6 +360,8 @@ function savePlayer(){
   p.oneLiner        = _strVal('ed-oneliner');
   p.bgmUrl          = _strVal('ed-bgm-url');
   p.bgmVolume       = p.bgmUrl ? Math.max(0,Math.min(100, parseInt(document.getElementById('ed-bgm-vol')?.value||'50',10)||50)) : undefined;
+  // 재생 위치: both(기본)|profile(현황판 프로필탭만)|popup(상세 팝업만)
+  { const _sv = document.getElementById('ed-bgm-scope')?.value || 'both'; p.bgmScope = (p.bgmUrl && _sv !== 'both') ? _sv : undefined; }
 
   // 이미지 URL (비어 있으면 undefined)
   p.secondProfileFile = _strVal('ed-photo2');

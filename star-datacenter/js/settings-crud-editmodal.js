@@ -619,7 +619,13 @@ window.openEP=function(name){
         <input type="range" id="ed-bgm-vol" min="0" max="100" step="5" value="${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-bgm-vol-val').textContent=this.value">
         <span id="ed-bgm-vol-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:24px;text-align:right;font-weight:700">${Number.isFinite(parseInt(p.bgmVolume,10))?Math.max(0,Math.min(100,parseInt(p.bgmVolume,10))):50}</span>
       </div>
-      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">저장하면 스트리머 상세 팝업과 현황판 프로필탭에서 이 스트리머를 볼 때 자동으로 배경음악이 재생됩니다.</div>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin:10px 0 4px">재생 위치</label>
+      <select id="ed-bgm-scope" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
+        <option value="both" ${(!p.bgmScope||p.bgmScope==='both')?'selected':''}>🔀 둘 다 (상세 팝업 + 프로필탭)</option>
+        <option value="profile" ${p.bgmScope==='profile'?'selected':''}>📊 현황판 프로필탭에서만</option>
+        <option value="popup" ${p.bgmScope==='popup'?'selected':''}>🪟 스트리머 상세 팝업에서만</option>
+      </select>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">저장하면 선택한 위치에서 이 스트리머를 볼 때 자동으로 배경음악이 재생됩니다.</div>
     </div>
     <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
       <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2);margin-bottom:8px">선수 메모</div>

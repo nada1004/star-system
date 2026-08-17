@@ -917,7 +917,7 @@ function rBoard2(C, T) {
         window._b2PlayersDomStash = null;
         window._b2PlayersLastSig = _sig;
         _b2BindAutoFitResize();
-        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
+        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer, 'profile'); }catch(e){}
         // [FEATURE-HERO-NO-IMAGE-REVERTED] 탭 재진입으로 스태시된 DOM을 복원할 때
         // 정지해둔 슬라이드쇼 타이머를 다시 시작한다.
         try{ if(_b2SelectedPlayer && typeof _b2ScheduleImageSwap==='function') _b2ScheduleImageSwap(_b2SelectedPlayer.name); }catch(e){}
@@ -927,7 +927,7 @@ function rBoard2(C, T) {
         sub.innerHTML = _b2PlayersView();
         _b2BindAutoFitResize();
         // 🎵 스트리머 전용 BGM — 프로필탭 진입/필터변경으로 선택된 스트리머가 바뀌면 재생
-        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer); }catch(e){}
+        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer, 'profile'); }catch(e){}
         setTimeout(() => {
           try{
             if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
