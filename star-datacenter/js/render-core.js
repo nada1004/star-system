@@ -30,36 +30,13 @@ function _renderImpl(){
   // 보관해두면, 화면에 실제 영향을 주는 값이 안 바뀌었을 때 board2-core.js의
   // 복원 로직이 새로 그리지 않고 그대로 재사용한다.
   try{ if (typeof window._b2StashPlayersDom === 'function') window._b2StashPlayersDom(); }catch(e){}
-  // [FIX-NO-REFRESH-ON-REENTRY] 스트리머(전체)/티어 순위표 탭도 동일한 이유로 다른 탭에
-  // 갔다가 돌아오거나 배경 동기화로 render()가 다시 호출될 때마다 프로필 사진이 전부
-  // 새로 그려지며 깜빡였다. 파괴 직전에 떼어 보관해두고, 화면에 영향을 주는 값이 그대로면
-  // 아래 case에서 새로 그리지 않고 재사용한다.
-  try{ if (typeof window._tdsStashIfPresent === 'function' && typeof window._computeTotalSig === 'function') window._tdsStashIfPresent('total', 'streamer-tab-root', C, window._computeTotalSig); }catch(e){}
-  try{ if (typeof window._tdsStashIfPresent === 'function' && typeof window._computeTierSig === 'function') window._tdsStashIfPresent('tier', 'tier-tab-root', C, window._computeTierSig); }catch(e){}
   C.innerHTML='';
   window._compListCache={};
   window._histTourneyCache={};
   window._b2LcHoverStatCache={};
   switch(curTab){
-    case 'total':
-      if(typeof rTotal!=='function'){ C.innerHTML='<div class="empty-state">전체 순위를 불러올 수 없습니다.</div>'; break; }
-      if(typeof window._tdsTryRestore==='function' && typeof window._computeTotalSig==='function' && window._tdsTryRestore('total', C, window._computeTotalSig)){
-        T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
-        try{ if(typeof window._totalAfterRestore==='function') window._totalAfterRestore(); }catch(e){}
-      } else {
-        try{ if(typeof window._tdsInvalidate==='function') window._tdsInvalidate('total'); }catch(e){}
-        rTotal(C,T);
-      }
-      break;
-    case 'tier':
-      if(typeof rTier!=='function'){ C.innerHTML='<div class="empty-state">티어 순위표를 불러올 수 없습니다.</div>'; break; }
-      if(typeof window._tdsTryRestore==='function' && typeof window._computeTierSig==='function' && window._tdsTryRestore('tier', C, window._computeTierSig)){
-        T.innerText='📊 티어 순위표';
-      } else {
-        try{ if(typeof window._tdsInvalidate==='function') window._tdsInvalidate('tier'); }catch(e){}
-        rTier(C,T);
-      }
-      break;
+    case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   else C.innerHTML='<div class="empty-state">전체 순위를 불러올 수 없습니다.</div>'; break;
+    case 'tier':    if(typeof rTier==='function')    rTier(C,T);    else C.innerHTML='<div class="empty-state">티어 순위표를 불러올 수 없습니다.</div>'; break;
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    else C.innerHTML='<div class="empty-state">대전 기록을 불러올 수 없습니다.</div>'; break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
