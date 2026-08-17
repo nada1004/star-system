@@ -213,6 +213,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-player-report-sections.js?v=20260817-mvprival2');
   await _loadScriptOnce('js/stats-player-report-entry.js?v=20260817-mvprival2');
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
+  await _loadScriptOnce('js/stats-univ-report.js?v=20260817-ureport1');
 }
 // (버그픽스, 2026-08-14) 이 함수가 _ensureStatsLoaded와 완전히 동일한 파일 목록을
 // 별도로 하드코딩하고 있어서, 번들 빌드(build.mjs의 patchLazyUtils)가 _ensureStatsLoaded만

@@ -364,6 +364,7 @@ const LAZY_CHUNKS = {
     'js/stats-player-report-sections.js',
     'js/stats-player-report-entry.js',
     'js/stats-player-report-canvas.js',
+    'js/stats-univ-report.js',
   ],
   'lazy-roulette.js': [
     'js/wheel.js',

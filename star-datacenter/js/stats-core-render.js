@@ -15,7 +15,7 @@ function rStats(C,T){
   // 통계탭 서브탭(스트리머 리포트 등)이 바뀌면 재생 중이던 음성듣기(TTS)를 정지.
   // (SUTTS는 싱글톤이라 stop() 호출 시 speak() 때 등록해둔 onEnd 정리 콜백이 그대로 실행됨)
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','univwinbar','period','preport','sharecard']);
+  const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','univwinbar','period','preport','ureport','sharecard']);
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
     || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('stats'));
@@ -72,6 +72,7 @@ function rStats(C,T){
     ]},
     {label:'🔍 리포트',tabs:[
       {id:'preport',lbl:'📺 스트리머 리포트'},
+      {id:'ureport',lbl:'🏛️ 대학 리포트'},
       {id:'sharecard',lbl:'🎴 공유 카드'},
       ...(_li?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
@@ -307,6 +308,23 @@ function rStats(C,T){
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] preport load fail', e); }catch(_){} }
+        })();
+      }catch(e){}
+    }
+  }
+  else if(window.statsSub==='ureport'){
+    if(typeof window.statsUnivReportHTML==='function'){
+      h+=_safeRender(window.statsUnivReportHTML, '대학 리포트');
+    }else{
+      h+=`<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">대학 리포트를 불러오는 중...</div></div>`;
+      try{
+        (async()=>{
+          try{
+            if(typeof window._loadScriptOnce==='function'){
+              await window._loadScriptOnce('js/stats-univ-report.js?v=20260817-ureport1');
+            }
+            if(typeof render==='function') render(true);
+          }catch(e){ try{ console.error('[lazy] ureport load fail', e); }catch(_){} }
         })();
       }catch(e){}
     }

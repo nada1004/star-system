@@ -155,6 +155,7 @@
         // ── 🔍 리포트 ──
         { kind: 'divider', label: '🔍 리포트' },
         { key: 'stats.preport', label: '📺 스트리머 리포트', kind: 'sub' },
+        { key: 'stats.ureport', label: '🏛️ 대학 리포트', kind: 'sub' },
         { key: 'stats.sharecard', label: '🎴 공유 카드', kind: 'sub' },
         { key: 'stats.csvexport', label: '📥 CSV 내보내기', kind: 'sub' },
       ]
