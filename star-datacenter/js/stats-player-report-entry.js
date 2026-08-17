@@ -47,6 +47,11 @@ function statsPlayerReportHTML(){
 
   h += `<div class="ssec" id="pr-sec-info"><div class="pr-sec-head"><h4>📋 기본 정보</h4></div>${_prInfoGridHTML(p)}</div>`;
 
+  // MVP 기록(주간/월간 성적 MVP + 이달의 인기투표 MVP) — 상세 팝업과 동일한 섹션 재사용
+  try{ if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(false); }catch(e){}
+  { const _prMvpHtml = (typeof buildPlayerMvpHistoryHTML === 'function') ? buildPlayerMvpHistoryHTML(p) : '';
+    if (_prMvpHtml) h += `<div class="ssec" id="pr-sec-mvp">${_prMvpHtml}</div>`; }
+
   h += `<div class="pr-period-bar">
     ${['30','90','season','all'].map(pk=>`<button class="pr-period-btn ${period===pk?'on':''}" onclick="window._prPeriod='${pk}';render()">${periodLabelMap[pk]}</button>`).join('')}
   </div>`;
@@ -84,6 +89,18 @@ function statsPlayerReportHTML(){
 }
 
 /* ─── 🔊 스트리머 리포트 음성듣기(TTS) ─── */
+/* 쉼표로 이어진 긴 문장을 절 단위로 쪼개서 큐에 넣는 헬퍼.
+   한 문장을 통째로 하나의 발화(utterance)로 읽으면 쉼표 부분에서 숨 쉴 틈 없이
+   쭉 이어져 기계적으로 들린다. 절 사이는 짧게(140ms), 문장이 완전히 끝나는
+   마지막 절 뒤는 평소 간격(기본 220ms)을 둬서 다음 문장과 자연스럽게 구분되게 한다. */
+function _prPushSpoken(queue, text){
+  if(!text) return;
+  const parts = String(text).split(/,\s+/).map(s=>s.trim()).filter(Boolean);
+  parts.forEach((part, i)=>{
+    const isLast = (i === parts.length - 1);
+    queue.push(isLast ? {text: part} : {text: part, gapMs: 140});
+  });
+}
 function _prBuildSpeakQueue(){
   const p = window._prName ? (players||[]).find(x=>x && x.name===window._prName) : null;
   if(!p) return [];
@@ -98,45 +115,60 @@ function _prBuildSpeakQueue(){
   const mapStats = _prMapStats(histPeriod);
 
   const queue = [];
-  queue.push({text:`${p.name} 스트리머 리포트를 읽어드리겠습니다.`});
+  const _spName = (window.SUTTS && window.SUTTS.speakName) ? window.SUTTS.speakName(p) : p.name;
+  queue.push({text:`${_spName} 스트리머 리포트를 읽어드리겠습니다.`});
 
   // 기본 정보
   const univTxt = p.univ ? `${p.univ} 소속, ` : '';
   const raceTxt = RACE_KO[p.race] ? `종족은 ${RACE_KO[p.race]}, ` : '';
   const _tierSpeakKo = p.tier ? ((window.SUTTS && window.SUTTS.tierLabel) ? window.SUTTS.tierLabel(p.tier) : p.tier) : '';
   const tierTxt = p.tier ? `티어는 ${_tierSpeakKo}입니다.` : '기본 정보가 등록되어 있지 않습니다.';
-  queue.push({text: `${univTxt}${raceTxt}${tierTxt}`});
+  _prPushSpoken(queue, `${univTxt}${raceTxt}${tierTxt}`);
   try{
     const rankInfo = (typeof _prTierRank==='function') ? _prTierRank(p) : null;
     if(rankInfo && rankInfo.rank){
-      queue.push({text:`같은 티어 안에서 현재 랭킹은 ${rankInfo.rank}위, 전체 ${rankInfo.total}명 중입니다.`});
+      _prPushSpoken(queue, `같은 티어 안에서 현재 랭킹은 ${rankInfo.rank}위, 전체 ${rankInfo.total}명 중입니다.`);
     }
   }catch(e){}
   {
     const w=p.win||0, l=p.loss||0, tot=w+l;
     const wr = tot? Math.round(w/tot*100):0;
-    queue.push({text: tot ? `통산 전적은 ${tot}전 ${w}승 ${l}패, 승률 ${wr}%입니다.` : `아직 등록된 통산 전적이 없습니다.`});
+    if(tot) _prPushSpoken(queue, `통산 전적은 ${tot}전 ${w}승 ${l}패, 승률 ${wr}%입니다.`);
+    else queue.push({text:`아직 등록된 통산 전적이 없습니다.`});
   }
 
   // 기간별 승률
   if(stats.tot){
-    queue.push({text:`${periodLabel} 기준 전체 승률은 ${stats.wr}%, ${stats.w}승 ${stats.l}패입니다.`});
+    _prPushSpoken(queue, `${periodLabel} 기준 전체 승률은 ${stats.wr}%, ${stats.w}승 ${stats.l}패입니다.`);
     ['T','P','Z'].forEach(r=>{
       const rv = stats.rv[r]; const t=rv.w+rv.l;
       if(t>0){
         const wr = Math.round(rv.w/t*100);
-        queue.push({text:`${RACE_KO[r]}전은 ${rv.w}승 ${rv.l}패, 승률 ${wr}%입니다.`});
+        _prPushSpoken(queue, `${RACE_KO[r]}전은 ${rv.w}승 ${rv.l}패, 승률 ${wr}%입니다.`);
       }
     });
   } else {
     queue.push({text:`${periodLabel} 기간에는 기록된 경기가 없습니다.`});
   }
 
+  // MVP 기록 (주간/월간 성적 MVP + 이달의 인기투표 MVP)
+  try{
+    const mvpStats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null;
+    if(mvpStats && (mvpStats.weekCount || mvpStats.monthCount || mvpStats.popularCount)){
+      const parts=[];
+      if(mvpStats.weekCount) parts.push(`주간 MVP ${mvpStats.weekCount}회`);
+      if(mvpStats.monthCount) parts.push(`월간 MVP ${mvpStats.monthCount}회`);
+      if(mvpStats.popularCount) parts.push(`이달의 인기투표 MVP ${mvpStats.popularCount}회`);
+      queue.push({text:`MVP 기록입니다.`, gapMs:140});
+      _prPushSpoken(queue, `${parts.join(', ')} 수상했습니다.`);
+    }
+  }catch(e){}
+
   // 맵별 성적 (표본 많은 순 상위 3개)
   if(mapStats.length){
-    queue.push({text:`맵별 성적입니다.`});
+    queue.push({text:`맵별 성적입니다.`, gapMs:140});
     mapStats.slice(0,3).forEach(m=>{
-      queue.push({text:`${m.map} 맵에서 ${m.w}승 ${m.l}패, 승률 ${m.wr}%입니다.`});
+      _prPushSpoken(queue, `${m.map} 맵에서 ${m.w}승 ${m.l}패, 승률 ${m.wr}%입니다.`);
     });
   }
 
@@ -144,8 +176,8 @@ function _prBuildSpeakQueue(){
   try{
     const insightRows = (typeof _prKeyInsightsRows==='function') ? _prKeyInsightsRows(stats, mapStats, histPeriod) : [];
     if(insightRows.length){
-      queue.push({text:`핵심 분석 결과입니다.`});
-      insightRows.forEach(r=>{ if(r && r.plain) queue.push({text:r.plain}); });
+      queue.push({text:`핵심 분석 결과입니다.`, gapMs:140});
+      insightRows.forEach(r=>{ if(r && r.plain) _prPushSpoken(queue, r.plain); });
     }
   }catch(e){}
 
@@ -154,13 +186,13 @@ function _prBuildSpeakQueue(){
     if(typeof _prAiCommentSentences==='function'){
       const {sentences} = _prAiCommentSentences(p, histPeriod, stats, periodLabel);
       if(sentences && sentences.length){
-        queue.push({text:`종합 코멘트입니다.`});
-        sentences.forEach(s=>queue.push({text:s}));
+        queue.push({text:`종합 코멘트입니다.`, gapMs:140});
+        sentences.forEach(s=>_prPushSpoken(queue, (_spName && _spName!==p.name) ? s.split(p.name).join(_spName) : s));
       }
     }
   }catch(e){}
 
-  queue.push({text:`이상으로 ${p.name} 스트리머 리포트를 마칩니다.`});
+  queue.push({text:`이상으로 ${_spName} 스트리머 리포트를 마칩니다.`});
   return queue;
 }
 function _prSpeakBtnLabel(){
@@ -188,6 +220,7 @@ try{
 function _prSectionNavHTML(){
   const items=[
     ['pr-sec-info','📋 기본정보'],
+    ['pr-sec-mvp','🏆 MVP'],
     ['pr-sec-winrate','🎮 승률'],
     ['pr-sec-map','🗺️ 맵'],
     ['pr-sec-insights','📈 핵심분석'],

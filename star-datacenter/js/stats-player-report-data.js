@@ -502,6 +502,35 @@ function _prKeyInsightsRows(stats, mapStats, histForStreak){
         html:`최고 연패: <b>${streaks.lose.n}연패</b> (${escHTML(streaks.lose.from)} ~ ${escHTML(streaks.lose.to)})`,
         plain:`최다 연패는 ${streaks.lose.n}연패로, ${streaks.lose.from}부터 ${streaks.lose.to}까지 이어졌습니다.`});
     }
+    // 라이벌: 가장 많이 이긴 상대 / 가장 많이 진 상대(천적) — 최소 2번 이상 붙어본 상대만 대상
+    const rivalMap = {};
+    histForStreak.forEach(h=>{
+      if(!h || (h.result!=='승' && h.result!=='패')) return;
+      const opp = String(h.opp||'').trim();
+      if(!opp) return;
+      if(!rivalMap[opp]) rivalMap[opp] = {w:0,l:0};
+      if(h.result==='승') rivalMap[opp].w++; else rivalMap[opp].l++;
+    });
+    const rivalEntries = Object.entries(rivalMap)
+      .map(([name,v])=>({name, w:v.w, l:v.l, tot:v.w+v.l}))
+      .filter(e=>e.tot>=2);
+    if(rivalEntries.length){
+      const mostBeaten = rivalEntries.filter(e=>e.w>0).sort((a,b)=>(b.w-a.w)||(b.tot-a.tot))[0];
+      const mostLostTo = rivalEntries.filter(e=>e.l>0).sort((a,b)=>(b.l-a.l)||(b.tot-a.tot))[0];
+      // 음성으로 읽을 때는 상대 닉네임도 pronounceAs/언더바·이모지 정리를 거친 이름을 쓴다
+      // (화면 표시용 html에는 원래 닉네임 그대로 둔다)
+      const _spName2 = (n)=> (window.SUTTS && window.SUTTS.speakName) ? window.SUTTS.speakName(n) : n;
+      if(mostBeaten){
+        rows.push({icon:'😎', tone:'good',
+          html:`가장 많이 이긴 상대: <b>${escHTML(mostBeaten.name)}</b> ${mostBeaten.w}승 ${mostBeaten.l}패`,
+          plain:`가장 많이 이긴 상대는 ${_spName2(mostBeaten.name)}로, ${mostBeaten.w}승 ${mostBeaten.l}패를 기록했습니다.`});
+      }
+      if(mostLostTo){
+        rows.push({icon:'😰', tone:'bad',
+          html:`가장 많이 진 상대(천적): <b>${escHTML(mostLostTo.name)}</b> ${mostLostTo.w}승 ${mostLostTo.l}패`,
+          plain:`가장 많이 진 상대는 ${_spName2(mostLostTo.name)}로, ${mostLostTo.w}승 ${mostLostTo.l}패를 기록했습니다.`});
+      }
+    }
   }
   return rows;
 }

@@ -731,16 +731,7 @@ var _b2LineupSpeakViaCard = false;
 //    이모지를 제거해서 최대한 자연스럽게 읽히도록 정리한다.
 function _b2LineupSpeakName(p) {
   try {
-    const custom = String((p && p.pronounceAs) || '').trim();
-    if (custom) return custom;
-    let n = String((p && p.name) || '').trim();
-    if (!n) return '이름 미상';
-    n = n
-      .replace(/[_\-]+/g, ' ')
-      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    return n || (p && p.name) || '이름 미상';
+    return (window.SUTTS && window.SUTTS.speakName) ? window.SUTTS.speakName(p) : ((p && p.name) || '이름 미상');
   } catch(e) { return (p && p.name) || '이름 미상'; }
 }
 

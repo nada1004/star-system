@@ -187,12 +187,12 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-univ-compare.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report-data.js?v=20260802-mapfix3');
+  await _loadScriptOnce('js/stats-player-report-data.js?v=20260817-mvprival2');
   await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
   await _loadScriptOnce('js/stats-level-rank.js?v=20260802-lvlrank1');
-  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
-  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
-  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260817-mvprival2');
+  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260817-mvprival2');
+  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
 }
 // (버그픽스, 2026-08-14) 이 함수가 _ensureStatsLoaded와 완전히 동일한 파일 목록을
 // 별도로 하드코딩하고 있어서, 번들 빌드(build.mjs의 patchLazyUtils)가 _ensureStatsLoaded만

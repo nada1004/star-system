@@ -304,6 +304,7 @@ const BOARD_FILES = [
   'js/board2-live-view.js',
   'js/board2-heatmap-bubble.js',
   'js/board2-briefing-data.js',
+  'js/board2-briefing-mvp-vote.js',
   'js/board2-briefing-state.js',
   'js/board2-briefing-view.js',
   'js/board2-briefing-tts.js',

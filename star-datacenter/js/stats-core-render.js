@@ -300,10 +300,10 @@ function rStats(C,T){
         (async()=>{
           try{
             if(typeof window._loadScriptOnce==='function'){
-              await window._loadScriptOnce('js/stats-player-report-data.js?v=20260802-mapfix3');
-              await window._loadScriptOnce('js/stats-player-report-sections.js?v=20260730-split3');
-              await window._loadScriptOnce('js/stats-player-report-entry.js?v=20260730-split3');
-              await window._loadScriptOnce('js/stats-player-report-canvas.js?v=20260730-split3');
+              await window._loadScriptOnce('js/stats-player-report-data.js?v=20260817-mvprival2');
+              await window._loadScriptOnce('js/stats-player-report-sections.js?v=20260817-mvprival2');
+              await window._loadScriptOnce('js/stats-player-report-entry.js?v=20260817-mvprival2');
+              await window._loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] preport load fail', e); }catch(_){} }

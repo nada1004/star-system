@@ -852,6 +852,12 @@ function _b2WeeklyBriefingView() {
             ${_renderMonthlyAceCards(monthlyUnivAces)}
           </div>
         </article>
+        ${preset==='thisMonth' ? `<article class="b2w2-highlight-card">
+          <div class="b2w2-highlight-kicker">Popularity Vote</div>
+          <div class="b2w2-highlight-title">🗳️ 이달의 인기 MVP</div>
+          <div class="b2w2-highlight-desc">위 대학별 에이스들 중에서 이번 달 마음에 드는 스트리머에게 투표해보세요. 여러 명에게 동시에 투표할 수 있고, 언제든 다시 눌러 취소할 수 있습니다.</div>
+          ${(typeof window._b2RenderMvpVoteSection === 'function') ? window._b2RenderMvpVoteSection((typeof window._b2MvpVoteMonthKey === 'function' ? window._b2MvpVoteMonthKey(dateFrom) : dateFrom.slice(0,7)), monthlyUnivAces) : ''}
+        </article>` : ''}
       </section>`;
     }
 

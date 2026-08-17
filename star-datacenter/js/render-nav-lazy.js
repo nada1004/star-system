@@ -535,11 +535,11 @@ async function _ensureGlobalSearchReady(){
   await _loadScriptOnce('js/stats-univ-compare.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
-  await _loadScriptOnce('js/stats-player-report-data.js?v=20260802-mapfix3');
+  await _loadScriptOnce('js/stats-player-report-data.js?v=20260817-mvprival2');
   await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
-  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260802-lvl1');
-  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260802-lvl2');
-  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260802-lvl1');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260817-mvprival2');
+  await _loadScriptOnce('js/stats-player-report-entry.js?v=20260817-mvprival2');
+  await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
     return typeof window.onGlobalSearch === 'function' && window.onGlobalSearch !== _lazyOnGlobalSearch;
   }catch(e){
     console.error('[lazy] global search load fail', e);

@@ -500,10 +500,10 @@ function _b2SyncMvpHistory(preset, dateFrom, dateTo, mvpStat) {
   if (arr.length > 500) arr.splice(0, arr.length - 500);
   _b2MvpHistorySave(arr);
 }
-// 특정 선수의 MVP 수상 이력 조회 (주간/월간 횟수 + 시점별 소속 목록, 최신순)
+// 특정 선수의 MVP 수상 이력 조회 (주간/월간/인기투표 횟수 + 시점별 소속 목록, 최신순)
 function _b2GetPlayerMvpStats(playerName) {
   const nm = String(playerName || '').trim();
-  if (!nm) return { weekCount: 0, monthCount: 0, entries: [] };
+  if (!nm) return { weekCount: 0, monthCount: 0, popularCount: 0, entries: [] };
   const raw = _b2MvpHistoryLoad()
     .filter(e => e && String(e.name || '').trim() === nm);
   // 방어적 중복 제거: 저장 로직이 바뀌기 전에 쌓인 레코드나 여러 경로에서 동시에
@@ -519,6 +519,7 @@ function _b2GetPlayerMvpStats(playerName) {
   return {
     weekCount: mine.filter(e => e.type === 'week').length,
     monthCount: mine.filter(e => e.type === 'month').length,
+    popularCount: mine.filter(e => e.type === 'popular').length,
     entries: mine
   };
 }
@@ -606,12 +607,14 @@ function _b2EnsureMvpHistoryFresh(force){
     });
     monthRanges.forEach(r => {
       validKeys.add(`month:${r.from}`);
+      validKeys.add(`popular:${r.from}`);
       const stats = _b2WeeklyUnivStats(vis, r.from, r.to, univList);
       const mvp = _b2WeeklyMVP(stats);
       _b2SyncMvpHistory('month', r.from, r.to, mvp);
     });
     _b2PruneStaleMvpHistory(validKeys);
     _b2MvpHistoryFreshAt = now;
+    try { _b2EnsurePopularMvpHistoryFresh(); } catch (e) {}
   }catch(e){}
 }
 try {
@@ -623,6 +626,58 @@ try {
   window._b2MvpHistoryLoad = _b2MvpHistoryLoad;
   window._b2SyncMvpHistory = _b2SyncMvpHistory;
   window._b2GetPlayerMvpStats = _b2GetPlayerMvpStats;
+} catch (e) {}
+
+// ─── 이달의 인기 MVP(투표) 수상 기록 ──────────────────────────
+// 브리핑탭 투표(js/board2-briefing-mvp-vote.js)에서 쌓인 표를 바탕으로, "이미 끝난"
+// 달의 최다 득표자를 그 달의 "인기 MVP"로 확정해 기존 MVP 이력(_B2_MVP_HISTORY_KEY)에
+// type:'popular'로 함께 저장한다. 진행 중인 이번 달은 아직 투표가 끝나지 않았으므로
+// 확정하지 않는다(매일 득표가 바뀔 수 있어서, 확정된 달만 기록에 남긴다).
+function _b2SyncPopularMvpHistory(monthFrom, monthTo, winnerName, winnerUniv, votes) {
+  const key = `popular:${monthFrom}`;
+  const arr = _b2MvpHistoryLoad();
+  const idx = arr.findIndex(e => e && e.key === key);
+  if (!winnerName) {
+    if (idx >= 0) { arr.splice(idx, 1); _b2MvpHistorySave(arr); }
+    return;
+  }
+  const entry = {
+    key, type: 'popular', from: monthFrom, to: monthTo,
+    name: String(winnerName || '').trim(),
+    univ: String(winnerUniv || '').trim() || '무소속',
+    votes: votes || 0,
+    updatedAt: Date.now()
+  };
+  if (idx >= 0) arr[idx] = entry; else arr.push(entry);
+  if (arr.length > 500) arr.splice(0, arr.length - 500);
+  _b2MvpHistorySave(arr);
+}
+function _b2EnsurePopularMvpHistoryFresh() {
+  try {
+    if (typeof voteData === 'undefined' || !voteData) return;
+    if (typeof _b2GenAllMonthRanges !== 'function' || typeof _b2FmtLocalYMD !== 'function') return;
+    const monthRanges = _b2GenAllMonthRanges(_B2_MVP_SEASON_START);
+    const today = _b2FmtLocalYMD(new Date());
+    const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+    monthRanges.forEach(r => {
+      if (r.to === today) return; // 진행 중인 이번 달은 아직 확정하지 않음(투표 계속 바뀔 수 있음)
+      const monthKey = r.from.slice(0, 7);
+      const counts = voteData['mvp_' + monthKey];
+      if (!counts || typeof counts !== 'object') { _b2SyncPopularMvpHistory(r.from, r.to, null); return; }
+      let winner = null, winnerVotes = 0;
+      Object.entries(counts).forEach(([name, n]) => {
+        const v = Number(n) || 0;
+        if (v > winnerVotes) { winner = name; winnerVotes = v; }
+      });
+      if (!winner || winnerVotes <= 0) { _b2SyncPopularMvpHistory(r.from, r.to, null); return; }
+      const p = _pl.find(x => x && String(x.name || '').trim() === winner);
+      _b2SyncPopularMvpHistory(r.from, r.to, winner, p ? p.univ : '', winnerVotes);
+    });
+  } catch (e) {}
+}
+try {
+  window._b2SyncPopularMvpHistory = _b2SyncPopularMvpHistory;
+  window._b2EnsurePopularMvpHistoryFresh = _b2EnsurePopularMvpHistoryFresh;
 } catch (e) {}
 
 // ─── MVP 아카이브 리스트 렌더 (브리핑 탭의 'MVP 아카이브' 모드에서 사용) ──

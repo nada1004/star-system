@@ -132,18 +132,22 @@ function _buildMvpHistoryBodyHTML(entries, page){
   const fmtRange = (from,to)=>`${String(from||'').slice(0,10).replace(/-/g,'.')} ~ ${String(to||'').slice(0,10).replace(/-/g,'.')}`;
   const rows = pageEntries.map(e=>{
     const isMonth = e.type==='month';
-    const badge = isMonth ? '월간' : '주간';
-    const badgeBg = isMonth ? '#ede9fe' : '#fef9c3';
-    const badgeCol = isMonth ? '#6d28d9' : '#b45309';
-    const inProgress = (typeof _b2FmtLocalYMD === 'function') && _pxMvpEntryInProgress(e);
+    const isPopular = e.type==='popular';
+    const badge = isPopular ? '🗳️ 인기투표' : (isMonth ? '월간' : '주간');
+    const badgeBg = isPopular ? '#fce7f3' : (isMonth ? '#ede9fe' : '#fef9c3');
+    const badgeCol = isPopular ? '#be185d' : (isMonth ? '#6d28d9' : '#b45309');
+    const inProgress = !isPopular && (typeof _b2FmtLocalYMD === 'function') && _pxMvpEntryInProgress(e);
     const progressTag = inProgress
       ? `<span style="font-size:9px;font-weight:900;padding:1px 6px;border-radius:999px;background:#dcfce7;color:#15803d;white-space:nowrap;flex-shrink:0">진행중</span>`
       : '';
+    const votesTag = isPopular && e.votes
+      ? `<span style="font-size:9px;font-weight:900;padding:1px 6px;border-radius:999px;background:#fce7f3;color:#be185d;white-space:nowrap;flex-shrink:0">${e.votes}표</span>`
+      : '';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.14)">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
-        <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge} MVP</span>
+        <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge}${isPopular?'':' MVP'}</span>
         <span style="font-size:var(--fs-caption);color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtRange(e.from,e.to)}</span>
-        ${progressTag}
+        ${progressTag}${votesTag}
       </div>
       <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);white-space:nowrap;flex-shrink:0">${e.univ||'무소속'}</span>
     </div>`;
@@ -159,7 +163,7 @@ function buildPlayerMvpHistoryHTML(player){
   const p = player;
   if(!p || !p.name) return '';
   const stats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null;
-  if(!stats || (!stats.weekCount && !stats.monthCount)) return '';
+  if(!stats || (!stats.weekCount && !stats.monthCount && !stats.popularCount)) return '';
   const safeName=(typeof escJS==='function') ? escJS(p.name) : String(p.name||'').replace(/'/g,"\\'");
   return `<details class="su-sec su-sec--details" style="--su-sec-accent:#f59e0b" open>
     <summary>MVP 기록 <small>(총 ${stats.entries.length}회)</small></summary>

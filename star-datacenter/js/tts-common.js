@@ -57,6 +57,16 @@
     return t.replace(/\s*\bvs\.?\b\s*/gi, ' 대 ');
   }
 
+  // ── "N연승"/"N연패" → 한자어 숫자로 명확히 낭독 (예: "7연승" → "칠연승") ──
+  // 브라우저 TTS가 숫자만 보고 순우리말/한자어 중 하나를 임의로 골라 읽다 보니
+  // "칠연승"이라고 읽어야 할 걸 "일곱연승"처럼 어색하게 읽는 경우가 있어, 숫자를
+  // 한자어 표기로 직접 바꿔서 넘긴다.
+  function _convertStreaks(t){
+    return t.replace(/(\d{1,3})\s*(연승|연패)/g, function(_, n, w){
+      return _koSino(n) + w;
+    });
+  }
+
   // ── 티어 코드(G/K/JA/J/S) → 낭독용 한글 표기 ──
   // 화면에는 'G'/'K'/'JA'/'J'/'S' 알파벳 그대로 표시하지만, 음성으로는 알파벳을
   // 그대로 읽으면 어색하므로("지", "케이" 등) 실제 티어 명칭으로 바꿔 읽어준다.
@@ -102,6 +112,42 @@
     return s;
   }
 
+  // ── 스트리머/선수 이름 낭독 정리 ──
+  // 화면 표시(name)는 그대로 두고 "음성으로 읽을 때"만 정리한다. 영문/숫자 조합
+  // 닉네임이나 특이한 표기가 TTS로 이상하게 읽히는 문제(첫 글자가 씹히거나 이름
+  // 전체를 엉뚱하게 읽는 등)를 완화하기 위한 공용 유틸.
+  // 1) 선수 정보에 pronounceAs(발음 표기)가 등록돼 있으면 최우선 사용
+  // 2) 없으면 언더바/대시("_","-")를 공백으로 바꾸고 이모지를 제거해서 최대한
+  //    자연스럽게 읽히도록 정리한다.
+  // 문자열(상대 선수 이름 등)만 넘어오면 window.players에서 같은 이름을 찾아
+  // pronounceAs를 적용한다 — 본인뿐 아니라 "핵심 분석"의 상대 전적 등에서도 쓰기 위함.
+  function speakName(nameOrPlayer){
+    try{
+      var p = null;
+      if (nameOrPlayer && typeof nameOrPlayer === 'object') {
+        p = nameOrPlayer;
+      } else {
+        var nm = String(nameOrPlayer == null ? '' : nameOrPlayer).trim();
+        if (!nm) return '이름 미상';
+        try{
+          var list = (typeof players !== 'undefined' ? players : (window.players || []));
+          p = (list || []).find(function(x){ return x && x.name === nm; }) || null;
+        }catch(e){ p = null; }
+        if (!p) p = { name: nm };
+      }
+      var custom = String((p && p.pronounceAs) || '').trim();
+      if (custom) return custom;
+      var n = String((p && p.name) || '').trim();
+      if (!n) return '이름 미상';
+      n = n
+        .replace(/[_\-]+/g, ' ')
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return n || (p && p.name) || '이름 미상';
+    }catch(e){ return (nameOrPlayer && nameOrPlayer.name) || String(nameOrPlayer || '이름 미상'); }
+  }
+
   function sanitize(t){
     var s = String(t == null ? '' : t)
       .replace(/<[^>]*>/g, ' ')
@@ -118,8 +164,15 @@
     s = _convertDates(s);
     s = _convertVs(s);
     s = _convertScores(s);
+    s = _convertStreaks(s);
     s = _convertPercent(s);
     s = applyPronunciationFix(s);
+    // 날짜/점수/퍼센트 변환이 다 끝난 뒤에도 남아있는 "."과 ","은 실제 숫자 표기(날짜,
+    // 소수점 등)가 아니라 그냥 문장부호다. 항목 하나하나가 이미 별도 발화(큐 아이템)로
+    // 나뉘어 있어 문장 끝에 마침표가 없어도 자연스럽게 끊기고, 문장 중간의 쉼표도 단어
+    // 사이 공백만으로 충분히 끊겨 들린다. 일부 음성엔진이 마침표/쉼표를 "쩜"/"점"이라고
+    // 그대로 읽어버리는 문제를 막기 위해 여기서 제거한다(숫자 사이의 소수점은 보존).
+    s = s.replace(/[.,](?!\d)/g, ' ');
     return s.replace(/\s+/g, ' ').trim();
   }
 
@@ -146,7 +199,12 @@
     try{ if (typeof _opts.onItem === 'function') _opts.onItem(item, _idx - 1); }catch(e){}
     if (!text) { speakNext(); return; }
     try{
-      var utter = new SpeechSynthesisUtterance(text);
+      // 일부 브라우저(특히 Chrome)는 speak() 직후 엔진이 아직 준비되지 않은 상태에서
+      // 바로 발화를 시작해, 단어의 첫 글자(가끔 첫 음절)가 통째로 씹혀서 안 들리는
+      // 버그가 있다. 실제로 읽을 텍스트 앞에 사람 귀에 들리지 않는 짧은 무음 구간
+      // (좁은 공백)을 붙여서, 엔진이 "씹어먹는" 부분이 실제 내용이 아니라 이 무음
+      // 구간이 되도록 완충한다.
+      var utter = new SpeechSynthesisUtterance('\u200B ' + text);
       utter.lang = 'ko-KR';
       var v = pickKoVoice();
       if (v) utter.voice = v;
@@ -164,7 +222,10 @@
         advanced = true;
         try{ clearTimeout(_watchdog); }catch(e){}
         // 문장 사이에 짧은 숨 고르기 텀을 둬서 뚝뚝 끊기지 않고 자연스럽게 이어지도록 함
-        var gap = (_opts.gapMs != null ? _opts.gapMs : 220);
+        // 큐 아이템 자체에 gapMs가 지정돼 있으면 그걸 우선한다(예: 한 문장 안에서 쉼표로
+        // 끊어 읽는 절 사이는 짧게, 문장이 완전히 끝난 뒤는 길게 — 억양/호흡이 더 자연스러워짐)
+        var itemGap = (item && typeof item === 'object' && item.gapMs != null) ? item.gapMs : null;
+        var gap = (itemGap != null ? itemGap : (_opts.gapMs != null ? _opts.gapMs : 220));
         if (gap > 0) setTimeout(speakNext, gap); else speakNext();
       };
       utter.onend = advanceOnce;
@@ -173,6 +234,13 @@
       _watchdog = setTimeout(advanceOnce, Math.max(4000, text.length * 280));
       try{ window.speechSynthesis.resume(); }catch(e){}
       window.speechSynthesis.speak(utter);
+      // Chrome계 브라우저의 "첫 글자 씹힘" 버그에 대한 추가 완충: speak() 직후
+      // pause()→resume()을 곧바로 걸어주면 엔진이 실제로 오디오를 내보내기 시작하기
+      // 전에 한 번 깨어나면서 초반 클리핑이 줄어드는 경우가 많다(널리 알려진 우회법).
+      try{
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }catch(e){}
     }catch(e){
       try{ console.warn('[TTS] speak 실패', e); }catch(e2){}
       speakNext();
@@ -268,6 +336,7 @@
     isPaused: function(){ return _paused; },
     sanitize: sanitize,
     tierLabel: tierSpeakLabel,
+    speakName: speakName,
     // 발음 교정 사전에 항목 추가/덮어쓰기 (예: window.SUTTS.addPronunciationFix({'닉네임':'교정표기'}))
     addPronunciationFix: addPronunciationFix
   };
