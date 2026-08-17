@@ -284,6 +284,32 @@ async function init(){
   applyLoginState();
   try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
   render();
+  // [FIX-IMG-FLICKER-ALLTABS] (요청, 2026-08-17) 탭을 이동할 때마다 목록이 통째로 다시
+  // 그려지면서 사진 <img>가 새로 생성되는데, 아직 한 번도 표시되지 않은 스트리머의 사진은
+  // 브라우저가 아직 다운로드조차 안 한 상태라 처음 그 탭에 들어갈 때 빈 박스로 보였다가
+  // 나타난다. 앱이 켜지고 초기 화면이 그려진 뒤, 우선순위 낮게(브라우저가 한가할 때)
+  // 등록된 모든 스트리머의 썸네일을 미리 한 번씩 요청해 브라우저 캐시에 데워둔다.
+  // 이렇게 해두면 이후 어떤 탭으로 이동해도 이미 캐시에 있는 사진이라 decoding="sync"와
+  // 맞물려 빈 화면 없이 바로 표시된다.
+  try{
+    const _prewarmAllPlayerPhotos = ()=>{
+      try{
+        if(typeof prewarmImageUrls !== 'function') return;
+        const list = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+        const urls = [];
+        list.forEach(p=>{
+          if(p && p.photo) urls.push(p.photo);
+          if(p && p.secondProfileFile) urls.push(p.secondProfileFile);
+        });
+        if(urls.length) prewarmImageUrls(urls, 400, 96);
+      }catch(e){}
+    };
+    if(typeof requestIdleCallback === 'function'){
+      requestIdleCallback(_prewarmAllPlayerPhotos, { timeout: 4000 });
+    }else{
+      setTimeout(_prewarmAllPlayerPhotos, 1500);
+    }
+  }catch(e){}
   // (요청사항) 주기적으로 설정 신호 확인(다른 기기 변경 반영)
   try{
     if(!window._settingsAutoPullTimer && window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
