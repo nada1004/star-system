@@ -316,7 +316,7 @@ function _b2PlayersView() {
         backdrop-filter: blur(10px);
         border-radius:var(--r2);
         padding: 12px;
-        z-index: 10;
+        z-index: 60;
         width: min(320px, calc(100% - 32px));
         max-height: calc(100% - 120px);
         overflow-y: auto;

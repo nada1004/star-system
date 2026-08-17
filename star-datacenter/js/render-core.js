@@ -4,6 +4,12 @@ function _renderImpl(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
+  // [FIX-CFG-SCROLL] 설정탭에서 토글 하나, 슬라이더 하나만 바꿔도 render()가 호출되며
+  // 설정 화면 전체가 처음부터 다시 그려진다. 그때마다 페이지 스크롤이 맨 위로 튕겨서,
+  // 아래쪽 항목을 만지던 사용자는 그 항목을 다시 찾아 스크롤해 들어가야 했다("설정
+  // 메뉴가 새로고침돼서 다시 켜야 한다"는 불편함의 원인). 다시 그리기 직전 스크롤
+  // 위치를 기억해뒀다가, 새 내용이 완전히 그려지고 레이아웃이 잡힌 뒤 그대로 복원한다.
+  const _cfgScrollRestore = (typeof curTab !== 'undefined' && curTab === 'cfg') ? (window.scrollY || window.pageYOffset || 0) : null;
   // 최상위 탭이 바뀌면(버튼 클릭/뒤로가기·앞으로가기/로그인·로그아웃/기록에서 탭 점프 등
   // 경로에 관계없이) 재생 중이던 TTS(라인업/브리핑/리포트 등)를 정지.
   // SUTTS는 싱글톤이라 stop()이 speak() 때 등록해둔 onEnd 정리 콜백을 그대로 실행해주므로
@@ -95,6 +101,12 @@ function _renderImpl(){
   if(!window.__scaleSettingsApplied){
     window.__scaleSettingsApplied = true;
     try{ window._applyScaleSettings && window._applyScaleSettings(); }catch(e){}
+  }
+  // [FIX-CFG-SCROLL] 위에서 기억해둔 스크롤 위치를 복원. rCfg 내부에서 details 패널
+  // 재펼침(_cfgSyncGrpOpenState) 등이 setTimeout(0)으로 한 번 더 레이아웃을 바꾸므로,
+  // 그 이후에 실행되도록 살짝 지연을 준다.
+  if (_cfgScrollRestore != null) {
+    setTimeout(()=>{ window.scrollTo(0, _cfgScrollRestore); }, 30);
   }
   injectUnivIcons(C);
   try{

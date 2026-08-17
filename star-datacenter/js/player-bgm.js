@@ -22,29 +22,16 @@ var _plyrBgmCurrentVid = '';
 var _plyrBgmUserOff = false;
 try { _plyrBgmUserOff = localStorage.getItem('su_plyr_bgm_off') === '1'; } catch (e) {}
 
+// [REMOVED-BGM-TOGGLE-BTN] 우측 하단 떠있는 🎵/🔇 토글 버튼 요청으로 제거.
+// BGM 재생/음소거/볼륨/자동재생 로직 자체는 그대로 유지하고, 화면에 뜨는
+// 버튼만 없앤다(더 이상 생성/표시하지 않음).
 function _plyrBgmToggleBtnEnsure() {
-  let btn = document.getElementById('plyrBgmToggleBtn');
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'plyrBgmToggleBtn';
-    btn.type = 'button';
-    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;width:42px;height:42px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.78);color:#fff;font-size:17px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(15,23,42,.28);backdrop-filter:blur(6px);transition:opacity .15s,transform .12s;padding:0';
-    btn.onmousedown = () => { btn.style.transform = 'scale(.92)'; };
-    btn.onmouseup = btn.onmouseleave = () => { btn.style.transform = 'scale(1)'; };
-    btn.onclick = (ev) => { ev.stopPropagation(); _plyrBgmToggleUser(); };
-    document.body.appendChild(btn);
-  }
-  return btn;
+  try{ const old = document.getElementById('plyrBgmToggleBtn'); if (old) old.remove(); }catch(e){}
+  return null;
 }
 
 function _plyrBgmToggleBtnSync() {
-  const btn = document.getElementById('plyrBgmToggleBtn');
-  if (!btn) return;
-  btn.style.display = _plyrBgmActive ? 'flex' : 'none';
-  btn.textContent = _plyrBgmUserOff ? '🔇' : '🎵';
-  btn.style.opacity = _plyrBgmUserOff ? '.55' : '1';
-  btn.title = (_plyrBgmUserOff ? '스트리머 BGM 꺼짐 (클릭하여 켜기)' : '스트리머 BGM 켜짐 (클릭하여 끄기)') +
-    (_plyrBgmCurrentName ? ' — ' + _plyrBgmCurrentName : '');
+  // 버튼을 더 이상 만들지 않으므로 할 일이 없음
 }
 
 function _plyrBgmToggleUser() {

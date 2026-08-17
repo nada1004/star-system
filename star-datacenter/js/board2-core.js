@@ -910,7 +910,12 @@ function rBoard2(C, T) {
       // 복원한다. <img>가 다시 생성되지 않으므로 재요청/재디코딩 없이 즉시 보인다.
       const _stash = window._b2PlayersDomStash;
       if (_alreadyBuilt && window._b2PlayersLastSig === _sig) {
-        // 아무것도 바뀌지 않음 — 기존 DOM(및 진행 중인 슬라이드쇼 타이머) 유지
+        // 아무것도 바뀌지 않음 — 기존 DOM(및 진행 중인 슬라이드쇼 타이머)은 그대로 유지.
+        // 다만 BGM은 예전엔 여기서 전혀 재시도하지 않아서, 최초 자동재생이 브라우저
+        // 정책 등으로 한 번 막히면 그 뒤로는 이 선수를 계속 보고 있어도 다시 시도할
+        // 기회가 없었다. _plyrBgmStart 자체가 "이미 같은 곡 재생 중이면 아무 것도
+        // 안 함" 가드를 갖고 있어 호출해도 안전하므로, 여기서도 한 번 더 시도한다.
+        try{ if(_b2SelectedPlayer && typeof _plyrBgmStart==='function') _plyrBgmStart(_b2SelectedPlayer, 'profile'); }catch(e){}
       } else if (!_alreadyBuilt && _stash && _stash.sig === _sig && _stash.node) {
         sub.innerHTML = '';
         sub.appendChild(_stash.node);

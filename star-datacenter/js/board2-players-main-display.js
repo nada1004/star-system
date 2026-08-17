@@ -272,6 +272,11 @@ function _b2UpdateMainDisplay(playerName) {
   const hasSecondary = _hasMediaUrl2(player.secondProfileFile);
   
   if (mainBox) {
+    // [FIX-IMG-SWAP-NOSTART] 아래 onload(_b2SwapStartOnce)가 캐시된 이미지 특성상
+    // 발생하지 않을 수 있어, 재시작 여부를 확인할 기준값을 미리 남겨둔다.
+    // mainBox 자체는 재사용되는 같은 DOM 노드라 _swapGen이 이전 세션 값을 그대로
+    // 들고 있으므로, "0보다 큰지"가 아니라 "이 시점 이후로 값이 바뀌었는지"로 판단한다.
+    const _swapGenBeforeRebuild = mainBox._swapGen || 0;
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
       ${_slot1}
@@ -288,7 +293,7 @@ function _b2UpdateMainDisplay(playerName) {
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
-      ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
+      ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none;position:absolute;top:60px;right:16px;left:16px;max-width:340px;max-height:calc(100% - 80px);overflow-y:auto;z-index:calc(var(--z-fixed) - 1);background:rgba(15,23,42,.88);backdrop-filter:blur(12px);border-radius:14px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14)">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
         ${_b2BuildImageControlGroup(safeName, 'primary', '이미지 1', hasPrimary)}
         ${_b2BuildImageControlGroup(safeName, 'secondary', '이미지 2', hasSecondary)}
@@ -311,6 +316,17 @@ function _b2UpdateMainDisplay(playerName) {
         ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:var(--fs-sm);font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
       </div>
     `;
+    // [FIX-IMG-SWAP-NOSTART] onload가 (캐시 등으로) 발생하지 않아 슬라이드쇼가
+    // 시작/재시작되지 않았으면 여기서 직접 시작시킨다. 정상적으로 시작됐으면
+    // _swapGen이 이미 바뀌어 있으므로 조용히 아무 것도 하지 않는다.
+    setTimeout(() => {
+      try{
+        const _mb = document.getElementById('b2-players-main-box');
+        if (_mb && (_mb._swapGen || 0) === _swapGenBeforeRebuild && typeof _b2ScheduleImageSwap === 'function') {
+          _b2ScheduleImageSwap(playerName);
+        }
+      }catch(e){}
+    }, 220);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
     // [FEATURE-HERO-NO-IMAGE] 위에서 _hasMediaUrl2가 항상 false라 슬롯1~10 모두
