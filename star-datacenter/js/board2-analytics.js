@@ -239,6 +239,16 @@ function _b2SummaryView() {
   const tierCts = {};
   tieredVis.forEach(p => { const t=p.tier||'미정'; tierCts[t]=(tierCts[t]||0)+1; });
 
+  // 종족별 통산 승률 (인원 비율과 별개로 실제 승률 비교용)
+  const raceRecord = {P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}};
+  tieredVis.forEach(p => {
+    if (!(p.race in raceRecord)) return;
+    (Array.isArray(p.history)?p.history:[]).forEach(h => {
+      if (h.result==='승') raceRecord[p.race].w++;
+      else if (h.result==='패') raceRecord[p.race].l++;
+    });
+  });
+
   // 이번주 / 지난주 날짜 범위 (지난주 대비 증감 표시용)
   const { fromN: thisFromN, toN: thisToN } = _b2ThisWeekRange();
   const dateNum = _b2DateNum;
@@ -287,15 +297,69 @@ function _b2SummaryView() {
     return fb - fa;
   }).slice(0, 8);
 
-  // 대학별 스탯
+  // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용)
+  const playerAgg = tieredVis.map(p => {
+    const decided = (Array.isArray(p.history)?p.history:[]).filter(h => h && (h.result==='승'||h.result==='패'));
+    const sortedDesc = [...decided].sort((a,b) => dateNum(b.date||b.d||'') - dateNum(a.date||a.d||''));
+    let streak = 0;
+    for (const h of sortedDesc) { if (h.result==='승') streak++; else break; }
+    const win = decided.filter(h=>h.result==='승').length;
+    const loss = decided.length - win;
+    const wr = decided.length ? Math.round(win/decided.length*100) : null;
+    return { p, win, loss, games: decided.length, wr, streak };
+  });
+  const topWinners = playerAgg.filter(x=>x.win>0)
+    .sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1))
+    .slice(0, 8);
+  const topStreaks = playerAgg.filter(x=>x.streak>=3)
+    .sort((a,b) => b.streak - a.streak)
+    .slice(0, 6);
+
+  // 최근 7일 일별 활동량 (경기 수)
+  const last7Days = [];
+  for (let i=6;i>=0;i--) {
+    const d = new Date(_nowD); d.setDate(_nowD.getDate()-i); d.setHours(0,0,0,0);
+    last7Days.push({ dn:_fmtN(d), label:`${d.getMonth()+1}/${d.getDate()}`, isToday:i===0, count:0 });
+  }
+  const last7Map = new Map(last7Days.map(x=>[x.dn, x]));
+  tieredVis.forEach(p => {
+    (Array.isArray(p.history)?p.history:[]).forEach(h => {
+      if (!h || (h.result!=='승' && h.result!=='패')) return;
+      const row = last7Map.get(dateNum(h.date||h.d||''));
+      if (row) row.count++;
+    });
+  });
+  const last7Max = Math.max(1, ...last7Days.map(x=>x.count));
+
+  // 대학별 스탯 (인원/종족/티어 구성 + 통산 승/패)
   const univStats = univList.map(u => {
     const members = tieredVis.filter(p => String(p?.univ||'').trim()===String(u.name||'').trim());
     const rCts={P:0,T:0,Z:0};
     members.forEach(p=>{if(p.race in rCts)rCts[p.race]++;});
     const tierDist={};
     members.forEach(p=>{const t=p.tier||'미정';tierDist[t]=(tierDist[t]||0)+1;});
-    return {name:u.name,color:gc(u.name),count:members.length,races:rCts,tiers:tierDist};
+    let uw=0, ul=0;
+    members.forEach(p=>(Array.isArray(p.history)?p.history:[]).forEach(h=>{ if(h.result==='승')uw++; else if(h.result==='패')ul++; }));
+    const ug=uw+ul;
+    return {name:u.name,color:gc(u.name),count:members.length,races:rCts,tiers:tierDist,wins:uw,losses:ul,games:ug,wr:ug>0?Math.round(uw/ug*100):null};
   }).filter(u=>u.count>0).sort((a,b)=>b.count-a.count);
+
+  // 🏅 대학 랭킹 (다승 기준 — 승률만 있으면 소수 경기로 순위가 왜곡될 수 있어 총 승수 기준으로 변경)
+  const univWinRank = univStats.filter(u=>u.wins>0)
+    .slice()
+    .sort((a,b) => b.wins-a.wins || (b.wr??-1)-(a.wr??-1))
+    .slice(0, 8);
+
+  // 🥇 이번주 MVP (이번주 승수 1위)
+  const weeklyAgg = tieredVis.map(p => {
+    let ww=0, wl=0;
+    (Array.isArray(p.history)?p.history:[]).forEach(h => {
+      const d = dateNum(h.date||h.d||'');
+      if (d>=thisFromN && d<=thisToN) { if(h.result==='승')ww++; else if(h.result==='패')wl++; }
+    });
+    return { p, w:ww, l:wl };
+  }).filter(x=>x.w>0).sort((a,b)=>b.w-a.w || a.l-b.l);
+  const weeklyMvp = weeklyAgg[0] || null;
 
   const maxCount = univStats.length>0?univStats[0].count:1;
   const orderedTiers = (typeof TIERS!=='undefined'?TIERS:[]).filter(t=>tierCts[t]);
@@ -353,6 +417,30 @@ function _b2SummaryView() {
     .b2s-new-player:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(15,23,42,.1); }
     .b2s-new-player-avatar { width:20px;height:20px;border-radius:50%;flex-shrink:0;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff; }
     .b2s-new-player-avatar img { width:100%;height:100%;object-fit:cover; }
+    .b2s-winner-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+    .b2s-winner-card { border-radius:var(--r2); padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; cursor:pointer; transition:transform .12s,box-shadow .12s; box-shadow:0 12px 18px rgba(15,23,42,.04); }
+    .b2s-winner-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,.08); }
+    .b2s-winner-card-top { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+    .b2s-winner-rank { font-size:15px; flex-shrink:0; width:20px; text-align:center; font-weight:900; color:var(--text3); }
+    .b2s-winner-avatar { width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;box-shadow:0 3px 8px rgba(15,23,42,.14); }
+    .b2s-winner-avatar img { width:100%;height:100%;object-fit:cover; }
+    .b2s-streak-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px 14px; }
+    @media(max-width:640px){ .b2s-streak-grid{ grid-template-columns:1fr; } }
+    .b2s-streak-row { display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:12px;cursor:pointer;transition:background .12s,transform .12s; }
+    .b2s-streak-row:hover { background:var(--surface); transform:translateX(2px); }
+    .b2s-streak-row--top { background:linear-gradient(90deg,rgba(245,158,11,.12),transparent 65%); }
+    .b2s-streak-rank { width:22px;flex-shrink:0;text-align:center;font-size:13px;font-weight:900;color:var(--text3); }
+    .b2s-streak-avatar { width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;box-shadow:0 3px 8px rgba(15,23,42,.14); }
+    .b2s-streak-avatar img { width:100%;height:100%;object-fit:cover; }
+    .b2s-streak-bar-track { flex:1; height:9px; border-radius:5px; overflow:hidden; background:var(--border2); margin:0 4px; min-width:40px; }
+    .b2s-streak-bar-fill { height:100%; border-radius:5px; transition:width .6s ease; }
+    .b2s-streak-badge { display:inline-flex;align-items:center;gap:3px;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:900;color:#fff;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.14);flex-shrink:0; }
+    .b2s-trend-wrap { display:flex;align-items:flex-end;gap:6px;height:96px;padding-top:6px; }
+    .b2s-trend-col { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px; }
+    .b2s-trend-bar { width:100%;max-width:30px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#60a5fa,#3b82f6);transition:height .5s ease;min-height:3px; }
+    .b2s-trend-bar.today { background:linear-gradient(180deg,#fbbf24,#f59e0b); }
+    .b2s-trend-lbl { font-size:9px;font-weight:800;color:var(--text3); }
+    .b2s-trend-num { font-size:10px;font-weight:900;color:var(--text2); }
     @media(max-width:640px){
       .b2s-hero{padding:18px 16px;border-radius:22px}
       .b2s-hero-title{font-size:22px}
@@ -369,7 +457,11 @@ function _b2SummaryView() {
     body.dark .b2s-univ-row + .b2s-univ-row { border-top-color:#334155; }
     body.dark .b2s-bar-track { background:#334155; }
     body.dark .b2s-univ-card { background:rgba(15,23,42,.55); }
+    body.dark .b2s-winner-card { background:rgba(15,23,42,.55); }
     body.dark .b2s-new-player { background:rgba(15,23,42,.6); border-color:#334155; color:#cbd5e1; }
+    body.dark .b2s-streak-row:hover { background:rgba(148,163,184,.08); }
+    body.dark .b2s-streak-bar-track { background:#334155; }
+    body.dark .b2s-streak-row--top { background:linear-gradient(90deg,rgba(245,158,11,.18),transparent 65%); }
   </style>`;
 
   // KPI 7개 (이번주 활동은 주간 전적 + 지난주 대비 증감으로 표시)
@@ -394,6 +486,7 @@ function _b2SummaryView() {
       <span class="b2s-hero-badge">직책 ${roledVis.length}명</span>
       <span class="b2s-hero-badge">최근 30일 신규 ${newPlayers.length}명</span>
       <span class="b2s-hero-badge b2s-hero-badge--trend">🔥 이번주 활동 ${weekActive.size}명 · <span style="color:${weekTrendColor}">${weekTrendTxt}</span></span>
+      ${weeklyMvp ? `<span class="b2s-hero-badge" style="cursor:pointer" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${(weeklyMvp.p.name||'').replace(/'/g,"\\'")}')">🥇 이번주 MVP <b style="color:${gc(String(weeklyMvp.p?.univ||''))||'#64748b'}">${(typeof window.escHTML==='function'?window.escHTML(weeklyMvp.p.name):String(weeklyMvp.p.name||''))}</b> ${weeklyMvp.w}승${weeklyMvp.l?` ${weeklyMvp.l}패`:''}</span>` : ''}
     </div>
   </section>`;
 
@@ -449,39 +542,153 @@ function _b2SummaryView() {
     </div>
   </div>`;
 
-  // 최근 합류 선수 (프로필 사진 + 클릭·호버로 선수 카드 확인 가능)
-  if (newPlayers.length > 0) {
+  // ⚔️ 종족별 승률 — "종족 비율"은 인원수 기준이라, 실제 승률은 따로 비교할 수 있게 추가
+  h += `<div class="b2s-panel" style="margin-bottom:14px">
+    <div class="b2s-panel-title">⚔️ 종족별 승률
+      <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">통산 기준</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}].map(({r,c,l})=>{
+        const rec=raceRecord[r]; const g=rec.w+rec.l; const wr=g>0?Math.round(rec.w/g*100):null;
+        const wrCol = wr===null?'#94a3b8':wr>=55?'#10b981':wr>=45?'#f59e0b':'#ef4444';
+        return `<div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+            <span style="font-size:var(--fs-caption);font-weight:800;color:${c}">${l}</span>
+            <span style="font-size:var(--fs-caption);font-weight:900;color:${wrCol}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
+          </div>
+          <div style="height:9px;border-radius:5px;background:var(--border2);overflow:hidden">
+            <div style="width:${wr??0}%;height:100%;background:${wrCol};border-radius:5px;transition:width .8s ease"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // 🏆 통산 다승 TOP — 승수 많은 선수 (요청으로 "최근 30일 첫 경기" 대신 노출)
+  if (topWinners.length > 0) {
     h += `<div class="b2s-panel" style="margin-bottom:14px">
-      <div class="b2s-panel-title">🆕 최근 30일 첫 경기 선수
-        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${newPlayers.length}명</span>
+      <div class="b2s-panel-title">🏆 통산 다승 TOP
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">전체 ${playerAgg.filter(x=>x.games>0).length}명 중</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px">
-        ${newPlayers.map(p=>{
+      <div class="b2s-winner-grid">
+        ${topWinners.map((x,i)=>{
+          const p=x.p;
           const col=gc(String(p?.univ||''))||'#64748b';
-          const tc=typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
-          const tt=typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
           const rIco=p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
+          const medal = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
           const safeName=(p.name||'').replace(/'/g,"\\'");
-          const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,32):p.photo) : '';
+          const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,44):p.photo) : '';
           const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
           const initials = (p.name||'?').slice(0,1);
+          const wrCol = x.wr===null?'#94a3b8':x.wr>=60?'#10b981':x.wr>=40?'#f59e0b':'#ef4444';
           const avatarHtml = photo
-            ? `<span class="b2s-new-player-avatar" style="background:${col}33"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
-            : `<span class="b2s-new-player-avatar" style="background:${col}">${initials}</span>`;
-          return `<span class="b2s-new-player" style="border-color:${col}44;background:${col}0d"
+            ? `<span class="b2s-winner-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
+            : `<span class="b2s-winner-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
+          return `<div class="b2s-winner-card" style="border-color:${col}44;background:${col}0d"
             onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
             onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
             onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
-            ${avatarHtml}
-            <span style="color:${col};font-weight:900">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</span>
-            ${rIco?`<span style="font-size:10px">${rIco}</span>`:''}
-            ${p.tier?`<span style="font-size:9px;padding:1px 4px;border-radius:4px;background:${tc};color:${tt}">${p.tier}</span>`:''}
-            <span style="font-size:9px;color:var(--text3)">${(typeof window.escHTML==='function'?window.escHTML(p.univ||''):String(p.univ||''))}</span>
-          </span>`;
+            <div class="b2s-winner-card-top">
+              <span class="b2s-winner-rank">${medal}</span>
+              ${avatarHtml}
+              <div style="min-width:0;flex:1">
+                <div style="font-size:var(--fs-sm);font-weight:900;color:${col};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}${rIco?` <span style="font-size:10px">${rIco}</span>`:''}</div>
+                <div style="font-size:9px;font-weight:700;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span style="font-size:10px;font-weight:800;color:var(--text2)">${x.win}승 ${x.loss}패</span>
+              <span style="font-size:12px;font-weight:900;color:${wrCol}">${x.wr}%</span>
+            </div>
+            <div style="height:6px;border-radius:3px;background:var(--border2);overflow:hidden">
+              <div style="width:${x.wr}%;height:100%;background:${wrCol};border-radius:3px;transition:width .6s ease"></div>
+            </div>
+          </div>`;
         }).join('')}
       </div>
     </div>`;
   }
+
+  // 🔥 연승 리더 (3연승 이상)
+  if (topStreaks.length > 0) {
+    const maxStreak = topStreaks[0].streak || 1;
+    h += `<div class="b2s-panel" style="margin-bottom:14px">
+      <div class="b2s-panel-title">🔥 연승 리더
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">3연승 이상</span>
+      </div>
+      <div class="b2s-streak-grid">
+      ${topStreaks.map((x,i)=>{
+        const p=x.p;
+        const col=gc(String(p?.univ||''))||'#64748b';
+        const safeName=(p.name||'').replace(/'/g,"\\'");
+        const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,32):p.photo) : '';
+        const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+        const initials = (p.name||'?').slice(0,1);
+        const avatarHtml = photo
+          ? `<span class="b2s-streak-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
+          : `<span class="b2s-streak-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
+        const t = Math.min(1, x.streak/Math.max(maxStreak,1));
+        const hue = Math.round(38 - t*20); // 9연승에 가까울수록 붉은 계열, 3연승에 가까울수록 노란-주황
+        const badgeBg = `linear-gradient(135deg,hsl(${hue} 92% 56%),hsl(${Math.max(hue-16,0)} 85% 46%))`;
+        const rankDisplay = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
+        return `<div class="b2s-streak-row${i===0?' b2s-streak-row--top':''}"
+          onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
+          onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
+          onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
+          <span class="b2s-streak-rank">${rankDisplay}</span>
+          ${avatarHtml}
+          <span style="min-width:0;flex-shrink:0">
+            <div style="font-size:var(--fs-caption);font-weight:900;color:${col};max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</div>
+            <div style="font-size:9px;font-weight:700;color:var(--text3);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
+          </span>
+          <div class="b2s-streak-bar-track">
+            <div class="b2s-streak-bar-fill" style="width:${Math.round(t*100)}%;background:${badgeBg}"></div>
+          </div>
+          <span class="b2s-streak-badge" style="background:${badgeBg}">🔥 ${x.streak}연승</span>
+        </div>`;
+      }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 📈 최근 7일 활동 추이 (일별 경기 수)
+  h += `<div class="b2s-panel" style="margin-bottom:14px">
+    <div class="b2s-panel-title">📈 최근 7일 활동 추이
+      <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">일별 경기 수</span>
+    </div>
+    <div class="b2s-trend-wrap">
+      ${last7Days.map(d=>{
+        const hPct = Math.max(4, Math.round(d.count/last7Max*100));
+        return `<div class="b2s-trend-col" title="${d.label}: ${d.count}경기">
+          <span class="b2s-trend-num">${d.count}</span>
+          <div class="b2s-trend-bar${d.isToday?' today':''}" style="height:${hPct}%"></div>
+          <span class="b2s-trend-lbl">${d.isToday?'오늘':d.label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // 🏅 대학 랭킹 (다승) — "대학별 인원 현황"은 규모 기준이라, 실제 전적(승수) 기준 순위를 별도로 제공
+  h += `<div class="b2s-panel" style="margin-bottom:14px">
+    <div class="b2s-panel-title">🏅 대학 랭킹 (다승)
+      <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">통산 승수 기준</span>
+    </div>
+    ${univWinRank.length ? univWinRank.map((u,i)=>{
+      const wrCol = u.wr===null?'#94a3b8':u.wr>=55?'#10b981':u.wr>=45?'#f59e0b':'#ef4444';
+      const medal = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
+      const barPct = univWinRank[0].wins>0 ? Math.round(u.wins/univWinRank[0].wins*100) : 0;
+      const safeUnivName = String(u.name||'').replace(/'/g,"\\'");
+      return `<div class="b2s-univ-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeUnivName}')" title="${u.name} 상세 보기">
+        <span style="width:20px;flex-shrink:0;text-align:center;font-size:12px;font-weight:900;color:var(--text3)">${medal}</span>
+        <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:64px;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+        <div class="b2s-bar-track">
+          <div style="width:${barPct}%;height:100%;background:${u.color};transition:width .6s ease"></div>
+        </div>
+        <span style="font-size:var(--fs-caption);font-weight:900;color:${u.color};min-width:44px;text-align:right">${u.wins}승</span>
+        <span style="font-size:9px;color:${wrCol};font-weight:800;min-width:50px;text-align:right">${u.losses}패 · ${u.wr!==null?u.wr+'%':'-'}</span>
+      </div>`;
+    }).join('') : `<div style="text-align:center;color:var(--text3);font-size:var(--fs-caption);padding:14px 0">아직 전적이 쌓인 대학이 없습니다</div>`}
+  </div>`;
 
   // 대학별 인원 현황 (요약탭에서 대학 데이터를 보여주는 유일한 섹션 — 메달 카드 + 전체 리스트, 클릭 시 대학 상세로 이동)
   h += `<div class="b2s-panel" style="margin-bottom:14px">

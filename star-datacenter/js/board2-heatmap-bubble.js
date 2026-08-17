@@ -809,7 +809,7 @@ function _b2BubbleView() {
   return `<style>
     #${uid}-wrap { position:relative; }
     #${uid}-canvas { display:block; width:100%; cursor:pointer; border-radius:12px; }
-    #${uid}-tooltip { position:absolute; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:14px; padding:14px 16px; box-shadow:0 8px 32px #0003; transition:opacity .15s ease; min-width:180px; z-index:var(--z-dropdown,100); }
+    #${uid}-tooltip { position:absolute; pointer-events:none; opacity:0; background:color-mix(in srgb, var(--white) 90%, transparent); backdrop-filter:blur(14px) saturate(1.3); -webkit-backdrop-filter:blur(14px) saturate(1.3); border:1px solid var(--border2); border-radius:16px; padding:13px 14px 11px; box-shadow:0 14px 36px rgba(15,23,42,.16); transition:opacity .15s ease,transform .15s ease; transform:translateY(4px); min-width:210px; max-width:230px; z-index:var(--z-dropdown,100); }
     #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center; }
     .${uid}-sort-btn, .${uid}-pie-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:var(--fs-sm); font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
     .${uid}-sort-btn.on, .${uid}-pie-btn.on { background:var(--text1); color:var(--white); border-color:var(--text1); }
@@ -1002,20 +1002,39 @@ function _b2BubbleView() {
     function showTooltip(b, mx, my) {
       const pct=n=>b.total>0?Math.round(n/b.total*100):0;
       const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
+      const logoSrc = b.icon ? (typeof toHttpsUrl==='function'?toHttpsUrl(b.icon):b.icon) : '';
+      const logoHtml = logoSrc
+        ? \`<div style="width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><img src="\${logoSrc}" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 5px \${b.color}55)" onerror="this.parentNode.style.display='none'"></div>\`
+        : \`<div style="width:36px;height:36px;flex-shrink:0;border-radius:11px;background:linear-gradient(160deg,\${b.color},\${b.color}aa);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 10px \${b.color}40">🌐</div>\`;
       ttip.innerHTML=\`
-        <div style="font-weight:900;font-size:var(--fs-base);color:\${b.color};margin-bottom:6px">\${b.name}</div>
-        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
-        \${b.wr!==null?'<div style="font-size:var(--fs-sm);font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
-        \${b.topTier?'<div style="font-size:var(--fs-caption);margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
-        <div style="font-size:10px;color:#94a3b8;margin-top:6px">클릭(탭) → 상세 정보</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+          \${logoHtml}
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:900;font-size:var(--fs-md);color:\${b.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${b.name}</div>
+            \${b.topTier?'<span style="display:inline-flex;margin-top:2px;padding:1px 7px;border-radius:999px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:9px;font-weight:900">TOP '+b.topTier+'</span>':''}
+          </div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <div style="flex:1;min-width:0;text-align:center;padding:6px 3px;border-radius:10px;background:\${b.color}14">
+            <div style="font-size:13px;font-weight:900;color:\${b.color}">\${b.total}</div>
+            <div style="font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap">총원</div>
+          </div>
+          <div style="flex:1;min-width:0;text-align:center;padding:6px 3px;border-radius:10px;background:#fff7ed">
+            <div style="font-size:13px;font-weight:900;color:#c2410c">\${b.weekActive}</div>
+            <div style="font-size:9px;font-weight:700;color:#c2410c;white-space:nowrap">활성</div>
+          </div>
+          \${b.wr!==null?'<div style="flex:1;min-width:0;text-align:center;padding:6px 3px;border-radius:10px;background:'+wrCol+'16"><div style="font-size:13px;font-weight:900;color:'+wrCol+'">'+b.wr+'%</div><div style="font-size:9px;font-weight:700;color:'+wrCol+';white-space:nowrap">승률</div></div>':''}
+        </div>
+        \${b.wr!==null?'<div style="font-size:10px;color:var(--text3);text-align:center;font-weight:700;margin-top:6px">'+b.wins+'승 '+b.losses+'패</div>':''}
+        <div style="font-size:9px;color:#94a3b8;font-weight:700;text-align:center;margin-top:8px;padding-top:7px;border-top:1px dashed var(--border2)">클릭(탭) → 상세 정보</div>
       \`;
       const wrap=canvas.parentElement.getBoundingClientRect();
       let left=mx+14,top=my+14;
-      if(left+180>wrap.width)left=mx-190;
-      if(top+140>wrap.height)top=my-140;
-      ttip.style.left=left+'px'; ttip.style.top=top+'px'; ttip.style.opacity='1';
+      if(left+230>wrap.width)left=mx-240;
+      if(top+180>wrap.height)top=my-180;
+      ttip.style.left=left+'px'; ttip.style.top=top+'px'; ttip.style.opacity='1'; ttip.style.transform='translateY(0)';
     }
-    function hideTooltip(){ ttip.style.opacity='0'; }
+    function hideTooltip(){ ttip.style.opacity='0'; ttip.style.transform='translateY(4px)'; }
 
     function memberCardsHTML(univName, color) {
       try{
