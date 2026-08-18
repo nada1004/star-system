@@ -137,6 +137,63 @@ window.cfgResetAppFontScalePct = function(){
   try{ if(typeof window.cfgTouchPrefsSync === 'function') window.cfgTouchPrefsSync(); }catch(e){}
 };
 
+// ─────────────────────────────────────────────────────────────
+// 🖱️ 라인업 호버 팝업 스타일 — 설정 탭 미리보기
+// 실제 팝업(js/board2-univ-views-lineup.js의 _b2LineupShowHoverTip)과 같은
+// CSS 클래스(#b2-lc-hovertip / .hvstyle-*)를 그대로 재사용해서 예시 데이터로 렌더링한다.
+// ─────────────────────────────────────────────────────────────
+window.cfgPreviewLcHoverStyle = function(style){
+  try{
+    const wrap = document.getElementById('cfg-lc-hover-preview-wrap');
+    if(!wrap) return;
+    const ALL = ['default','glass','minimal','neon','compact','gradient','soft','outline','retro','cyber','paper','poster','badge','ticket'];
+    const FORCE_DARK = ['neon','gradient','cyber'];
+    const st = ALL.includes(style) ? style : 'default';
+    const isLight = !((document.body && document.body.classList && document.body.classList.contains('dark')) ||
+      (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('dark')));
+    const col = '#2563eb'; // 예시용 대학 색상
+    const colDark = (typeof window._darkenHex === 'function') ? window._darkenHex(col, 0.35) : '#1d4ed8';
+    let bg, borderCol;
+    if(st === 'glass'){ bg = isLight ? `${col}22` : `${col}33`; borderCol = `${col}55`; }
+    else if(st === 'neon'){ bg = 'rgba(8,10,20,.92)'; borderCol = col; }
+    else if(st === 'minimal'){ bg = isLight ? '#ffffff' : '#111827'; borderCol = isLight ? '#e5e7eb' : '#374151'; }
+    else if(st === 'gradient'){ bg = `linear-gradient(135deg, ${col}, ${colDark})`; borderCol = 'rgba(255,255,255,.22)'; }
+    else if(st === 'soft'){ bg = isLight ? '#ffffff' : '#1e293b'; borderCol = 'transparent'; }
+    else if(st === 'outline'){ bg = isLight ? 'rgba(255,255,255,.94)' : 'rgba(15,23,42,.9)'; borderCol = col; }
+    else if(st === 'retro'){ bg = isLight ? '#fffdf6' : '#1a1a2e'; borderCol = isLight ? '#0f172a' : '#f4f4f5'; }
+    else if(st === 'cyber'){ bg = 'linear-gradient(160deg, rgba(9,6,22,.96), rgba(6,20,26,.96))'; borderCol = '#22d3ee'; }
+    else if(st === 'paper'){ bg = isLight ? '#faf6ea' : '#2b2620'; borderCol = isLight ? '#dcd0ac' : '#4a4030'; }
+    else if(st === 'poster'){ bg = isLight ? '#ffffff' : '#0f172a'; borderCol = isLight ? '#e5e7eb' : 'rgba(255,255,255,.1)'; }
+    else if(st === 'badge'){ bg = isLight ? '#eaf1ff' : 'rgba(37,99,235,.22)'; borderCol = isLight ? `${col}3d` : 'transparent'; }
+    else if(st === 'ticket'){ bg = isLight ? '#fffdf9' : '#1c1917'; borderCol = isLight ? `${col}55` : `${col}66`; }
+    else { bg = isLight ? '#eaf1ff' : 'rgba(37,99,235,.22)'; borderCol = isLight ? `${col}3d` : 'transparent'; }
+    const lightCls = FORCE_DARK.includes(st) ? '' : (isLight ? ' light' : '');
+    const gaugeTrack = isLight ? 'rgba(15,23,42,.12)' : 'rgba(255,255,255,.16)';
+    wrap.innerHTML = `<div id="b2-lc-hovertip" class="on hvstyle-${st}${lightCls}" style="position:static;transform:none;background:${bg};border-color:${borderCol};--b2lc-glow:${col}">
+      <div class="b2-lc-hovertip-body">
+        <div class="b2-lc-hovertip-top">
+          <div class="b2-lc-hovertip-photowrap"><div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">T</div></div>
+          <div class="b2-lc-hovertip-content">
+            <div class="b2-lc-hovertip-name">스트리머이름</div>
+            <div class="b2-lc-hovertip-tier"><span class="b2-lc-hovertip-tier-dot" style="background:${col}"></span>1티어</div>
+            <div class="b2-lc-hovertip-30d">
+              <div class="b2-lc-hovertip-30d-gauge" style="background:conic-gradient(#f87171 216deg, ${gaugeTrack} 0)">
+                <div class="b2-lc-hovertip-30d-gauge-inner">60%</div>
+              </div>
+              <div class="b2-lc-hovertip-30d-text">최근 30일<br><span class="w">6승</span> <span class="l">4패</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="b2-lc-hovertip-section">
+          <div class="b2-lc-hovertip-title">최근 전적</div>
+          <div class="b2-lc-hovertip-dots"><span class="b2-lc-hovertip-dot w">W</span><span class="b2-lc-hovertip-dot w">W</span><span class="b2-lc-hovertip-dot l">L</span></div>
+          <div class="b2-lc-hovertip-row"><span class="b2-lc-hovertip-res w">승</span><span class="b2-lc-hovertip-opp">vs 상대선수</span><span class="b2-lc-hovertip-date">08.17</span></div>
+        </div>
+      </div>
+    </div>`;
+  }catch(e){}
+};
+
 // font-family 선택 드롭다운 → font-family 입력칸에 반영 후 저장
 window.cfgApplyFontFamilyChoice = function(val){
   try{

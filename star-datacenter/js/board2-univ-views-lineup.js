@@ -501,7 +501,75 @@ function _b2LineupView() {
     '#b2-lc-hovertip.light .b2-lc-hovertip-race-games{color:rgba(15,23,42,.45)}',
     '#b2-lc-hovertip.light .b2-lc-hovertip-row{color:rgba(15,23,42,.88)}',
     '#b2-lc-hovertip.light .b2-lc-hovertip-date{color:rgba(15,23,42,.45)}',
-    '#b2-lc-hovertip.light .b2-lc-hovertip-empty{color:rgba(15,23,42,.6)}'
+    '#b2-lc-hovertip.light .b2-lc-hovertip-empty{color:rgba(15,23,42,.6)}',
+    /* 🖱️ 호버 팝업 스타일 모드 (설정 탭 > 🧩 현황판/펨코 > 🖱️ 라인업 호버 팝업 스타일에서 선택) */
+    '#b2-lc-hovertip.hvstyle-glass{backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);box-shadow:0 20px 45px rgba(2,6,23,.35),inset 0 1px 0 rgba(255,255,255,.15)}',
+    '#b2-lc-hovertip.hvstyle-glass.light{box-shadow:0 20px 45px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.5)}',
+    '#b2-lc-hovertip.hvstyle-minimal{border-radius:10px;box-shadow:0 6px 20px rgba(2,6,23,.18);backdrop-filter:none;-webkit-backdrop-filter:none}',
+    '#b2-lc-hovertip.hvstyle-minimal .b2-lc-hovertip-30d-gauge-inner{box-shadow:none}',
+    '#b2-lc-hovertip.hvstyle-neon{border-width:1.5px;border-radius:16px;box-shadow:0 0 0 1px var(--b2lc-glow,rgba(96,165,250,.6)),0 18px 42px rgba(2,6,23,.55),0 0 26px 2px var(--b2lc-glow,rgba(96,165,250,.4))}',
+    '#b2-lc-hovertip.hvstyle-neon .b2-lc-hovertip-name{text-shadow:0 0 10px var(--b2lc-glow,rgba(96,165,250,.6))}',
+    '#b2-lc-hovertip.hvstyle-compact{padding:9px 10px;min-width:230px;max-width:258px;border-radius:12px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-photowrap{width:62px;height:82px;border-radius:9px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-top{gap:8px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-30d-gauge{width:36px;height:36px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-30d-gauge-inner{font-size:9px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-section{margin-top:7px;padding-top:6px}',
+    '#b2-lc-hovertip.hvstyle-compact .b2-lc-hovertip-trend-svg{height:30px}',
+    /* 그라디언트 — 팀 컬러 대각선 그라디언트, 항상 밝은 글자 */
+    '#b2-lc-hovertip.hvstyle-gradient{border-width:1px;box-shadow:0 18px 40px rgba(2,6,23,.4)}',
+    '#b2-lc-hovertip.hvstyle-gradient .b2-lc-hovertip-photowrap{background:rgba(255,255,255,.16)}',
+    '#b2-lc-hovertip.hvstyle-gradient .b2-lc-hovertip-section{border-top-color:rgba(255,255,255,.22)}',
+    /* 소프트카드 — 테두리 없이 큼직한 라운드 + 은은한 그림자만 */
+    '#b2-lc-hovertip.hvstyle-soft{border-radius:20px;border-width:0;box-shadow:0 14px 34px rgba(2,6,23,.16)}',
+    '#b2-lc-hovertip.hvstyle-soft.light{box-shadow:0 14px 34px rgba(15,23,42,.12)}',
+    '#b2-lc-hovertip.hvstyle-soft .b2-lc-hovertip-30d-gauge-inner{box-shadow:none}',
+    /* 아웃라인 — 배경은 거의 투명, 팀 컬러 테두리로만 강조 */
+    '#b2-lc-hovertip.hvstyle-outline{border-width:2px;border-radius:12px;box-shadow:0 10px 26px rgba(2,6,23,.2);backdrop-filter:blur(4px)}',
+    '#b2-lc-hovertip.hvstyle-outline.light{box-shadow:0 10px 26px rgba(15,23,42,.14)}',
+    /* 레트로 — 두꺼운 실선 테두리 + 오프셋 하드섀도우(네오브루탈리즘) */
+    '#b2-lc-hovertip.hvstyle-retro{border-width:2.5px;border-radius:8px;box-shadow:6px 6px 0 var(--b2lc-glow,#64748b);transition:opacity .15s ease}',
+    '#b2-lc-hovertip.hvstyle-retro .b2-lc-hovertip-photowrap{border-radius:4px}',
+    '#b2-lc-hovertip.hvstyle-retro .b2-lc-hovertip-30d-gauge-inner{border-radius:4px}',
+    /* 사이버펑크 — 어두운 배경 + 시안 테두리/글로우, 항상 밝은 글자 */
+    '#b2-lc-hovertip.hvstyle-cyber{border-width:1.5px;border-radius:10px;box-shadow:0 0 0 1px rgba(34,211,238,.35),0 18px 42px rgba(2,6,23,.6),0 0 30px 2px rgba(34,211,238,.28),0 0 30px 6px rgba(217,70,239,.12)}',
+    '#b2-lc-hovertip.hvstyle-cyber .b2-lc-hovertip-name{color:#67e8f9;text-shadow:0 0 12px rgba(34,211,238,.65)}',
+    '#b2-lc-hovertip.hvstyle-cyber .b2-lc-hovertip-title{color:rgba(217,70,239,.85)}',
+    '#b2-lc-hovertip.hvstyle-cyber .b2-lc-hovertip-section{border-top-color:rgba(34,211,238,.22)}',
+    /* 페이퍼(매거진) — 크림/세피아 톤 종이 질감 느낌, 얇은 갈색 테두리 */
+    '#b2-lc-hovertip.hvstyle-paper{border-radius:6px;box-shadow:0 10px 26px rgba(41,30,10,.16);letter-spacing:.1px}',
+    '#b2-lc-hovertip.hvstyle-paper .b2-lc-hovertip-title{letter-spacing:.12em}',
+    '#b2-lc-hovertip.hvstyle-paper.light .b2-lc-hovertip-name{color:#3f3116}',
+    '#b2-lc-hovertip.hvstyle-paper.light{color:#4a3b1e}',
+    '#b2-lc-hovertip.hvstyle-paper.light .b2-lc-hovertip-title{color:rgba(74,59,30,.62)}',
+    '#b2-lc-hovertip.hvstyle-paper.light .b2-lc-hovertip-tier{color:rgba(74,59,30,.7)}',
+    '#b2-lc-hovertip.hvstyle-paper.light .b2-lc-hovertip-section{border-top-color:rgba(74,59,30,.18)}',
+    '#b2-lc-hovertip.hvstyle-paper:not(.light) .b2-lc-hovertip-name{color:#f3ead2}',
+    '#b2-lc-hovertip.hvstyle-paper:not(.light){color:#e7dcc0}',
+    /* 포스터형 — 사진을 상단 전체폭 배너로, 이름/티어/게이지는 그 아래 가운데 정렬 (색상 재활용이 아니라 레이아웃 자체가 다른 스타일) */
+    '#b2-lc-hovertip.hvstyle-poster{padding:0;border-radius:16px;overflow:hidden}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-body{padding-bottom:12px}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-top{flex-direction:column;align-items:center;gap:0}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-photowrap{width:100%;height:128px;border-radius:0;margin-bottom:10px}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-content{width:100%;padding:0 14px;display:flex;flex-direction:column;align-items:center;text-align:center}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-name{font-size:16px}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-tier{justify-content:center}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-30d{justify-content:center}',
+    '#b2-lc-hovertip.hvstyle-poster .b2-lc-hovertip-section{margin-left:14px;margin-right:14px}',
+    /* 배지형 — 세로 인물사진 대신 원형 아바타(ID카드 느낌), 이름을 크게 강조 */
+    '#b2-lc-hovertip.hvstyle-badge{border-radius:18px}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-top{align-items:center}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-photowrap{width:56px;height:56px;border-radius:50%;border:2px solid var(--b2lc-glow,#64748b);flex-shrink:0}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-fallback{font-size:20px}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-name{font-size:16px;font-weight:900}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-30d-gauge{width:40px;height:40px}',
+    '#b2-lc-hovertip.hvstyle-badge .b2-lc-hovertip-30d-gauge-inner{font-size:10px}',
+    /* 티켓형 — 점선 절취선 + 펀치홀 느낌의 노치 장식(승차권/입장권 컨셉) */
+    '#b2-lc-hovertip.hvstyle-ticket{border-style:dashed;border-width:2px;border-radius:14px 14px 4px 4px}',
+    '#b2-lc-hovertip.hvstyle-ticket .b2-lc-hovertip-section{border-top-style:dashed;border-top-width:2px;position:relative}',
+    '#b2-lc-hovertip.hvstyle-ticket .b2-lc-hovertip-section::before,#b2-lc-hovertip.hvstyle-ticket .b2-lc-hovertip-section::after{content:"";position:absolute;top:-8px;width:12px;height:12px;border-radius:50%;background:var(--b2lc-glow,#64748b);opacity:.32}',
+    '#b2-lc-hovertip.hvstyle-ticket .b2-lc-hovertip-section::before{left:-2px}',
+    '#b2-lc-hovertip.hvstyle-ticket .b2-lc-hovertip-section::after{right:-2px}'
   ].join('');
 
   document.head.appendChild(s);
@@ -620,6 +688,20 @@ function _b2LcGetHoverStats(p) {
   return stats;
 }
 
+// 🖱️ 라인업 호버 팝업 스타일 모드 — 설정 탭(su_b2lc_hovertip_style)에서 선택한 값
+// default=기본(팀컬러 반영) / glass=글래스모피즘 / minimal=미니멀 / neon=네온·e스포츠 / compact=컴팩트
+// gradient=그라디언트 / soft=소프트카드 / outline=아웃라인 / retro=레트로 / cyber=사이버펑크 / paper=페이퍼(매거진)
+// poster=포스터형(사진 배너+중앙정렬) / badge=배지형(원형 아바타) / ticket=티켓형(점선 절취선+노치)
+const _B2LC_HOVERTIP_STYLES = ['default', 'glass', 'minimal', 'neon', 'compact', 'gradient', 'soft', 'outline', 'retro', 'cyber', 'paper', 'poster', 'badge', 'ticket'];
+// 위 목록 중 항상 어두운 배경 + 밝은 글자를 쓰는(라이트모드 여부와 무관한) 스타일
+const _B2LC_HOVERTIP_FORCE_DARK = ['neon', 'gradient', 'cyber'];
+function _b2LcHoverTipStyle() {
+  try {
+    const v = localStorage.getItem('su_b2lc_hovertip_style');
+    return _B2LC_HOVERTIP_STYLES.includes(v) ? v : 'default';
+  } catch (e) { return 'default'; }
+}
+
 // 팝업이 밝은(연한) 배경인지 여부 — 다크모드가 아니면 대학색상의 연한 배경을 쓰므로 true
 function _b2LcHoverTipIsLight() {
   try {
@@ -644,9 +726,54 @@ function _b2LineupShowHoverTip(card, name, col) {
     const _tipCol = col || '#64748b';
     const _tipIsLight = _b2LcHoverTipIsLight();
     const _tipBg = (typeof _b2PastelBg === 'function') ? _b2PastelBg(_tipCol, _tipIsLight ? 0.16 : 0.22) : (_tipIsLight ? '#fff' : 'rgba(15,23,42,.96)');
-    tip.style.background = _tipBg;
-    tip.style.borderColor = _tipIsLight ? `${_tipCol}3d` : 'transparent';
-    tip.classList.toggle('light', _tipIsLight);
+    const _tipColDark = (typeof _darkenHex === 'function') ? _darkenHex(_tipCol, 0.35) : _tipCol;
+    const _hvStyle = _b2LcHoverTipStyle();
+    tip.classList.remove(..._B2LC_HOVERTIP_STYLES.map(s => 'hvstyle-' + s));
+    tip.classList.add('hvstyle-' + _hvStyle);
+    tip.style.setProperty('--b2lc-glow', _tipCol);
+    if (_hvStyle === 'glass') {
+      tip.style.background = _tipIsLight ? `${_tipCol}22` : `${_tipCol}33`;
+      tip.style.borderColor = `${_tipCol}55`;
+    } else if (_hvStyle === 'neon') {
+      tip.style.background = 'rgba(8,10,20,.92)';
+      tip.style.borderColor = _tipCol;
+    } else if (_hvStyle === 'minimal') {
+      tip.style.background = _tipIsLight ? '#ffffff' : '#111827';
+      tip.style.borderColor = _tipIsLight ? '#e5e7eb' : '#374151';
+    } else if (_hvStyle === 'gradient') {
+      tip.style.background = `linear-gradient(135deg, ${_tipCol}, ${_tipColDark})`;
+      tip.style.borderColor = 'rgba(255,255,255,.22)';
+    } else if (_hvStyle === 'soft') {
+      tip.style.background = _tipIsLight ? '#ffffff' : '#1e293b';
+      tip.style.borderColor = 'transparent';
+    } else if (_hvStyle === 'outline') {
+      tip.style.background = _tipIsLight ? 'rgba(255,255,255,.94)' : 'rgba(15,23,42,.9)';
+      tip.style.borderColor = _tipCol;
+    } else if (_hvStyle === 'retro') {
+      tip.style.background = _tipIsLight ? '#fffdf6' : '#1a1a2e';
+      tip.style.borderColor = _tipIsLight ? '#0f172a' : '#f4f4f5';
+    } else if (_hvStyle === 'cyber') {
+      tip.style.background = 'linear-gradient(160deg, rgba(9,6,22,.96), rgba(6,20,26,.96))';
+      tip.style.borderColor = '#22d3ee';
+    } else if (_hvStyle === 'paper') {
+      tip.style.background = _tipIsLight ? '#faf6ea' : '#2b2620';
+      tip.style.borderColor = _tipIsLight ? '#dcd0ac' : '#4a4030';
+    } else if (_hvStyle === 'poster') {
+      tip.style.background = _tipIsLight ? '#ffffff' : '#0f172a';
+      tip.style.borderColor = _tipIsLight ? '#e5e7eb' : 'rgba(255,255,255,.1)';
+    } else if (_hvStyle === 'badge') {
+      tip.style.background = _tipBg;
+      tip.style.borderColor = _tipIsLight ? `${_tipCol}3d` : 'transparent';
+    } else if (_hvStyle === 'ticket') {
+      tip.style.background = _tipIsLight ? '#fffdf9' : '#1c1917';
+      tip.style.borderColor = _tipIsLight ? `${_tipCol}55` : `${_tipCol}66`;
+    } else {
+      // default, compact — 기존 대학색상 파스텔 배경 유지
+      tip.style.background = _tipBg;
+      tip.style.borderColor = _tipIsLight ? `${_tipCol}3d` : 'transparent';
+    }
+    // 강제 다크 스타일(네온/그라디언트/사이버)은 항상 밝은 글자색(light 클래스 제거) 유지
+    tip.classList.toggle('light', _B2LC_HOVERTIP_FORCE_DARK.includes(_hvStyle) ? false : _tipIsLight);
 
     const raceLetter = (p.race && p.race !== 'N') ? p.race : '?';
     // p.photo가 비어있어도 window.playerPhotos(레거시/클라우드 동기화 맵)에 사진이 있을 수 있음.

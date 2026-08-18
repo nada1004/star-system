@@ -1,6 +1,6 @@
 // settings-render.js에서 분리됨 (설정 탭 렌더링 — 메뉴정리/이미지설정/경기상세/스트리머·대학상세디자인/FAB/현황판칩/구현황판/브리핑효과)
 function _cfgSecGroup4(ctx){
-  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
+  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
   return `${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">카테고리 이동 + 섹션 순서 변경을 직접 정리할 수 있습니다. 변경 즉시 저장되며 새로고침 없이 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
@@ -504,6 +504,35 @@ function _cfgSecGroup4(ctx){
       </div>
       <button class="btn btn-w btn-xs" style="align-self:flex-start"
         onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');render()">↩️ 기본값으로 초기화</button>
+    </div>
+  </details>
+  ${_scfgD('lineuphover','🖱️ 라인업 호버 팝업 스타일')}
+    <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">현황판 › 라인업 탭에서 스트리머 카드에 마우스를 올렸을 때 뜨는 정보 팝업(사진·티어·최근전적)의 디자인 모드를 고릅니다. 다음 호버부터 바로 적용됩니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">팝업 스타일 모드</label>
+        <select id="cfg-lc-hover-style" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_b2lc_hovertip_style',this.value);if(typeof cfgPreviewLcHoverStyle==='function')cfgPreviewLcHoverStyle(this.value);render()">
+          <option value="default" ${_lcHoverStyle==='default'?'selected':''}>기본 (팀 컬러 반영, 자동 라이트/다크)</option>
+          <option value="glass" ${_lcHoverStyle==='glass'?'selected':''}>글래스모피즘 (반투명 블러 유리질감)</option>
+          <option value="minimal" ${_lcHoverStyle==='minimal'?'selected':''}>미니멀 (깔끔한 단색 카드)</option>
+          <option value="neon" ${_lcHoverStyle==='neon'?'selected':''}>네온 / e스포츠 (진한 배경 + 컬러 글로우)</option>
+          <option value="compact" ${_lcHoverStyle==='compact'?'selected':''}>컴팩트 (작고 간결하게)</option>
+          <option value="gradient" ${_lcHoverStyle==='gradient'?'selected':''}>그라디언트 (팀 컬러 대각선 그라디언트)</option>
+          <option value="soft" ${_lcHoverStyle==='soft'?'selected':''}>소프트카드 (테두리 없이 은은한 그림자)</option>
+          <option value="outline" ${_lcHoverStyle==='outline'?'selected':''}>아웃라인 (투명 배경 + 컬러 테두리 강조)</option>
+          <option value="retro" ${_lcHoverStyle==='retro'?'selected':''}>레트로 (두꺼운 테두리 + 오프셋 섀도우)</option>
+          <option value="cyber" ${_lcHoverStyle==='cyber'?'selected':''}>사이버펑크 (시안·마젠타 네온 글로우)</option>
+          <option value="paper" ${_lcHoverStyle==='paper'?'selected':''}>페이퍼 (세피아 톤 매거진 느낌)</option>
+          <option value="poster" ${_lcHoverStyle==='poster'?'selected':''}>🆕 포스터형 (사진 전체폭 배너 + 중앙정렬)</option>
+          <option value="badge" ${_lcHoverStyle==='badge'?'selected':''}>🆕 배지형 (원형 아바타 ID카드 느낌)</option>
+          <option value="ticket" ${_lcHoverStyle==='ticket'?'selected':''}>🆕 티켓형 (점선 절취선 + 펀치홀 장식)</option>
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">색상은 카드/대학 고유 색상을 그대로 활용하며, 스타일 모드는 배경 질감·테두리·크기만 바꿉니다.</div>
+      </div>
+      <div style="font-size:var(--fs-caption);color:var(--blue);font-weight:700">✓ 아래는 예시 미리보기입니다 (실제 팝업은 사진·전적 데이터가 함께 표시됩니다)</div>
+      <div id="cfg-lc-hover-preview-wrap" style="display:flex;justify-content:center;padding:10px;background:repeating-conic-gradient(var(--border) 0% 25%,transparent 0% 50%) 50%/16px 16px;border-radius:12px"></div>
+      <button class="btn btn-w btn-xs" style="align-self:flex-start" onclick="localStorage.removeItem('su_b2lc_hovertip_style');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
   </div>
