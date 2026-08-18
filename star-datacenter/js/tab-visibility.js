@@ -171,7 +171,7 @@
         { key: 'roulette.ppopgi', label: '🎁 뽑기', kind: 'sub' },
         { key: 'roulette.teamsplit', label: '👥 팀나누기', kind: 'sub' },
         { key: 'roulette.bracket', label: '🏆 대진표', kind: 'sub' },
-        { key: 'roulette.marble', label: '🔮 마블룰렛', kind: 'sub' },
+        { key: 'roulette.marble', label: '🔮 핀볼룰렛', kind: 'sub' },
         // ── 🎮 미니게임 ──
         { kind: 'divider', label: '🎮 미니게임' },
         { key: 'roulette.teammatch', label: '🧩 소속매칭', kind: 'sub' },

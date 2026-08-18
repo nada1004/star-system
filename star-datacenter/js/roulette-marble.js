@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   룰렛 - 마블 룰렛 (roulette.js 에서 분리, 2026-07-30)
+   룰렛 - 핀볼 룰렛 (구 마블 룰렛, roulette.js 에서 분리, 2026-07-30)
    - lazygyu/roulette(물리 기반 마블 룰렛)을 roulette-app/ 에 정적 빌드로 배치하고
      roulette-gc-panel.js 에서 iframe(#mb-root)으로 임베드해서 사용합니다.
    - GitHub Pages 등 서브경로 배포에서도 깨지지 않도록 전부 "상대경로"로 참조합니다
@@ -36,11 +36,11 @@ function _mbShowError(root, url, reasonText) {
   root.innerHTML = ''
     + '<div style="height:100%;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#0b0f1a;color:#e2e8f0">'
     + '<div style="font-size:34px">⚠️</div>'
-    + '<div style="font-size:16px;font-weight:800">마블룰렛을 불러오지 못했습니다</div>'
+    + '<div style="font-size:16px;font-weight:800">핀볼룰렛을 불러오지 못했습니다</div>'
     + '<div style="font-size:13px;line-height:1.7;color:#94a3b8;max-width:440px">'
     +   '<code style="color:#fbbf24">' + url + '</code> 경로를 확인할 수 없습니다.<br>'
     +   _rEscHTML(reasonText) + '<br><br>'
-    +   '<code style="color:#93c5fd">roulette-app/</code> 폴더(빌드된 마블룰렛 정적 파일)가 '
+    +   '<code style="color:#93c5fd">roulette-app/</code> 폴더(빌드된 핀볼룰렛 정적 파일)가 '
     +   '이 페이지와 같은 위치에 실제로 배포되어 있는지 확인해 주세요.'
     + '</div>'
     + '<button onclick="_mbInit()" style="margin-top:6px;padding:9px 20px;border-radius:999px;border:none;background:linear-gradient(135deg,#818cf8,#8b5cf6);color:#fff;font-weight:800;font-size:13px;cursor:pointer">🔄 다시 확인</button>'

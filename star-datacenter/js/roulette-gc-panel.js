@@ -165,7 +165,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     ppopgi: { kicker:'LUCKY DRAW', icon:'🎁', accent:'linear-gradient(135deg,#fb7185,#f43f5e)', title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
     teamsplit: { kicker:'LUCKY DRAW', icon:'👥', accent:'linear-gradient(135deg,#38bdf8,#6366f1)', title:'팀 나누기', desc:'참가자를 원하는 팀 수만큼 랜덤으로 균등하게 나눕니다.', badge1:'2~8팀 지원', badge2:'균등 분배' },
     bracket: { kicker:'LUCKY DRAW', icon:'🏆', accent:'linear-gradient(135deg,#f59e0b,#ef4444)', title:'대진표 뽑기', desc:'참가자를 랜덤으로 섞어 1라운드 대진을 만들어줍니다.', badge1:'랜덤 매칭', badge2:'부전승 자동 처리' },
-    marble: { kicker:'LUCKY DRAW', icon:'🔮', accent:'linear-gradient(135deg,#818cf8,#8b5cf6)', title:'마블룰렛', desc:'이름을 넣고 구슬을 굴려서 순위를 가리는 물리 시뮬레이션 룰렛입니다.', badge1:'실시간 물리엔진', badge2:'맵/스킬 지원' },
+    marble: { kicker:'LUCKY DRAW', icon:'🔮', accent:'linear-gradient(135deg,#818cf8,#8b5cf6)', title:'핀볼룰렛', desc:'이름을 넣고 구슬을 굴려서 순위를 가리는 물리 시뮬레이션 룰렛입니다.', badge1:'실시간 물리엔진', badge2:'맵/스킬 지원' },
     teammatch: { kicker:'PUZZLE GAME', icon:'🧩', accent:'linear-gradient(135deg,#fb7185,#ec4899)', title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
@@ -246,7 +246,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 </div>`;
   }
 
-  // 🔮 마블룰렛 탭: 별도 레이아웃 (lazygyu/roulette 물리엔진을 iframe으로 임베드)
+  // 🔮 핀볼룰렛 탭: 별도 레이아웃 (lazygyu/roulette 물리엔진을 iframe으로 임베드)
   if (isMarble) {
     const _mbH = Math.max(560, Math.min(860, Math.round(avH)));
     return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
@@ -254,7 +254,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div class="gc-stage-card" style="padding:0;overflow:hidden">
     <div id="mb-root" style="width:100%;height:${_mbH}px;min-height:520px">
-      <iframe src="roulette-app/index.html" title="마블룰렛" allow="autoplay; fullscreen" referrerpolicy="no-referrer"
+      <iframe src="roulette-app/index.html" title="핀볼룰렛" allow="autoplay; fullscreen" referrerpolicy="no-referrer"
         style="width:100%;height:100%;border:0;display:block;background:#0b0f1a"></iframe>
     </div>
   </div>
