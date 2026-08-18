@@ -1,5 +1,38 @@
 // board2-univ-views.js에서 분리됨 (라인업 포스터(STARTING XI) 카드/테이블/뷰 + 캡처/저장 유틸) — 원본 라인 2102-2489
 
+// 라인업 카드 상태 뱃지 — 호버 없이 카드에 항상 노출되는 🔥연승중/📉연패중/🆕신입 표시.
+// 기준은 요약탭 연승 리더(3연승 이상)·최근 합류(첫 경기 30일 이내)와 동일하게 맞춤.
+// 우선순위: 신입 > 연승(3+) > 연패(3+) — 하나만 표시.
+function _b2LineupComputeStatus(p) {
+  try {
+    const histAll = (typeof _tpHistAllForPlayer === 'function') ? (_tpHistAllForPlayer(p) || []) : (Array.isArray(p?.history) ? p.history : []);
+    const decided = (histAll || []).filter(h => h && (h.result === '승' || h.result === '패'));
+    if (!decided.length) return null;
+    const dnum = (typeof _tpDateNum === 'function') ? _tpDateNum : (() => 0);
+    const cutoff30 = (typeof _tpDaysAgoNum === 'function') ? _tpDaysAgoNum(30) : 0;
+    const firstNum = Math.min(...decided.map(h => dnum(h && h.date)).filter(n => n > 0));
+    if (cutoff30 && firstNum && firstNum >= cutoff30) return { icon: '🆕', label: '신입', bg: '#0891b2' };
+    const sortedDesc = [...decided].sort((a, b) => dnum(b && b.date) - dnum(a && a.date));
+    const want = sortedDesc[0].result;
+    let streak = 0;
+    for (const h of sortedDesc) { if (h.result === want) streak++; else break; }
+    if (streak < 3) return null;
+    return want === '승'
+      ? { icon: '🔥', label: `${streak}연승`, bg: '#dc2626' }
+      : { icon: '📉', label: `${streak}연패`, bg: '#475569' };
+  } catch (e) { return null; }
+}
+function _b2LineupStatusBadgeHtml(p, posStyle) {
+  const st = _b2LineupComputeStatus(p);
+  if (!st) return '';
+  return `<div style="position:absolute;${posStyle||'top:8px;right:8px'};z-index:3;pointer-events:none;background:${st.bg};color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.32);white-space:nowrap;letter-spacing:.01em">${st.icon} ${st.label}</div>`;
+}
+function _b2LineupStatusBadgeChip(p) {
+  const st = _b2LineupComputeStatus(p);
+  if (!st) return '';
+  return `<span class="b2-lc4-chip" style="background:${st.bg};margin-left:6px">${st.icon} ${st.label}</span>`;
+}
+
 function _b2LineupCard3(p, col) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
@@ -38,6 +71,7 @@ function _b2LineupCard3(p, col) {
   return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
+      ${_b2LineupStatusBadgeHtml(p)}
       ${photo
         ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
            <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
@@ -120,6 +154,7 @@ function _b2LineupTableRow(p, col) {
         ${_2ndAvatar}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
+      ${_b2LineupStatusBadgeChip(p)}
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="margin-left:6px;width:22px;height:22px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;line-height:1;cursor:pointer;padding:0">🔊</button>
     </div></td>
     <td>${p.role || '일반'}</td>
@@ -183,6 +218,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _raceBadge = (p.race && p.race!=='N')
     ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:var(--fs-sm);font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
     : '';
+  const _statusBadge = _b2LineupStatusBadgeHtml(p, `top:${(p.race && p.race!=='N') ? 42 : 10}px;right:10px`);
   const _nameBar = `
     <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:12px 14px 13px">
       ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:var(--fs-base);padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
@@ -199,6 +235,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
         ${photoHtml}
         ${lcSecondHtml}
         ${_raceBadge}
+        ${_statusBadge}
         ${_nameBar}
       </div>
     </div>`;

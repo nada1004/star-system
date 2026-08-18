@@ -134,11 +134,9 @@
         { key: 'stats.playervs', label: '⚔️ 스트리머 비교', kind: 'sub' },
         // ── 🏛️ 대학 ──
         { kind: 'divider', label: '🏛️ 대학' },
-        { key: 'stats.radar', label: '🕸️ 대학 레이더', kind: 'sub' },
+        { key: 'stats.radar', label: 'ℹ️ 정보', kind: 'sub' },
         { key: 'stats.univcompare', label: '⚔️ 대학비교', kind: 'sub' },
-        { key: 'stats.univmatrix', label: '🏛️ 대학 매트릭스', kind: 'sub' },
-        { key: 'stats.univmatrix2', label: '🏛️ 대학 매트릭스+', kind: 'sub' },
-        { key: 'stats.univwinbar', label: '📊 대학별 승률', kind: 'sub' },
+        { key: 'stats.univmatrix2', label: '🏛️ 대학 매트릭스', kind: 'sub' },
         { key: 'stats.univstat', label: '🏛️ 대학별 기록', kind: 'sub' },
         { key: 'stats.univrank', label: '🏛️ 대학별 포인트', kind: 'sub' },
         // ── 📊 경기 ──

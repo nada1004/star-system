@@ -15,7 +15,7 @@ function rStats(C,T){
   // 통계탭 서브탭(스트리머 리포트 등)이 바뀌면 재생 중이던 음성듣기(TTS)를 정지.
   // (SUTTS는 싱글톤이라 stop() 호출 시 speak() 때 등록해둔 onEnd 정리 콜백이 그대로 실행됨)
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','univwinbar','period','preport','ureport','sharecard']);
+  const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','period','preport','ureport','sharecard']);
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
     || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('stats'));
@@ -51,11 +51,9 @@ function rStats(C,T){
       {id:'playervs',lbl:'⚔️ 스트리머 비교'},
     ]},
     {label:'🏛️ 대학',tabs:[
-      {id:'radar',lbl:'🕸️ 대학 레이더'},
+      {id:'radar',lbl:'ℹ️ 정보'},
       {id:'univcompare',lbl:'⚔️ 대학비교'},
-      {id:'univmatrix',lbl:'🏛️ 대학 매트릭스'},
-      {id:'univmatrix2',lbl:'🏛️ 대학 매트릭스+'},
-      {id:'univwinbar',lbl:'📊 대학별 승률'},
+      {id:'univmatrix2',lbl:'🏛️ 대학 매트릭스'},
       {id:'univstat',lbl:'🏛️ 대학별 기록'},
       {id:'univrank',lbl:'🏛️ 대학별 포인트'},
     ]},
@@ -236,7 +234,7 @@ function rStats(C,T){
   } // end if(_statsFilterOpen)
   h+=`</div>`;
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
-  const _CACHEABLE=['overview','records','streakhist','period','mismatch','univmatrix'];
+  const _CACHEABLE=['overview','records','streakhist','period','mismatch','univmatrix2'];
   function _cached(sub, fn){
     if(!_CACHEABLE.includes(sub)) return fn();
     const c=_scGet(sub);
@@ -264,7 +262,7 @@ function rStats(C,T){
   else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
   else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이번 주/달 MVP');
   else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
-  else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '대학 레이더');
+  else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '정보');
   else if(window.statsSub==='univcompare') h+=_safeRender(statsUnivCompareHTML, '대학비교');
   else if(window.statsSub==='period') h+=_safeRender(()=>_cached('period', statsPeriodAnalysisHTML), '주간/월간 분석');
   else if(window.statsSub==='mismatch')h+=_safeRender(()=>_cached('mismatch', statsMismatchHTML), '미스매치');
@@ -289,7 +287,6 @@ function rStats(C,T){
     }
   }
   else if(window.statsSub==='race')     h+=_safeRender(()=>`<div class="ssec">${typeof raceSummaryHTML==='function'?raceSummaryHTML():''}</div>`, '종족 승률');
-  else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
   else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
   else if(window.statsSub==='csvexport')h+=_safeRender(statsCsvExportHTML, 'CSV 내보내기');
   else if(window.statsSub==='preport'){
@@ -334,9 +331,8 @@ function rStats(C,T){
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
   else if(window.statsSub==='streakhist')h+=_safeRender(()=>_cached('streakhist', statsStreakHistHTML), '연속 기록 히스토리');
   else if(window.statsSub==='tiermatch') h+=_safeRender(()=>_cached('tiermatch', statsTierMatchHTML), '티어별 승률(팀전)');
-  else if(window.statsSub==='univmatrix2')h+=_safeRender(()=>_cached('univmatrix2', statsUnivMatrix2HTML), '대학 매트릭스+');
+  else if(window.statsSub==='univmatrix2')h+=_safeRender(()=>_cached('univmatrix2', statsUnivMatrix2HTML), '대학 매트릭스');
   else if(window.statsSub==='playervs')  h+=_safeRender(statsPlayerVsHTML, '스트리머 비교');
-  else if(window.statsSub==='univwinbar') h+=_safeRender(statsUnivWinBarHTML, '대학별 승률');
   else if(window.statsSub==='univstat')  h+=_safeRender(()=>`<div class="ssec">${rHistUnivStat()}</div>`, '대학별 기록');
   else if(window.statsSub==='univrank')  h+=_safeRender(()=>`<div class="ssec"><h4 style="margin-bottom:10px">🏛️ 대학별 포인트 순위</h4>${typeof rUnivBodyHTML==='function'?rUnivBodyHTML():''}</div>`, '대학별 포인트');
   h+=`</div>`;
@@ -344,9 +340,7 @@ function rStats(C,T){
   // 서브탭별 후처리
   if(window.statsSub==='elo')         initEloChart();
   else if(window.statsSub==='growth') initGrowthChart();
-  else if(window.statsSub==='radar')  initRadarChart();
   else if(window.statsSub==='racetrend') initRaceTrendChart();
-  else if(window.statsSub==='univwinbar') initUnivWinBarChart();
 }
 
 /* ─── 공통 유틸 ─── */

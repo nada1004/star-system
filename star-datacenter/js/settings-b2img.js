@@ -233,6 +233,8 @@ function _scfgToggle(id,el){
       window._renderCfgUdSection();
     }
     if(el && el.open && id==='profileshape' && typeof window._renderCfgProfileShapeSection==='function'){
+      // 섹션을 열 때마다(펼칠 때마다) 미리보기 스트리머 사진을 새로 무작위 선택
+      try{ window._cfgShapePreviewPick = null; }catch(e){}
       window._renderCfgProfileShapeSection();
     }
     if(el && el.open && id==='uisize' && typeof window._renderCfgUiSizeSection==='function'){

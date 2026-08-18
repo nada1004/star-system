@@ -264,13 +264,6 @@ var statsMapRankHTML = (typeof window.statsMapRankHTML==='function')
   : (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:13px">맵별 특화 분석을 불러오지 못했습니다.</div></div>');
 
 /* ══════════════════════════════════════
-   D. 대학 간 상대전적 매트릭스
-══════════════════════════════════════ */
-var statsUnivMatrixHTML = (typeof window.statsUnivMatrixHTML==='function')
-  ? window.statsUnivMatrixHTML
-  : (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:13px">대학 매트릭스를 불러오지 못했습니다.</div></div>');
-
-/* ══════════════════════════════════════
    E. 종족 픽률 트렌드
 ══════════════════════════════════════ */
 if(typeof window._raceTrendMonths!=='number') window._raceTrendMonths=12;

@@ -91,33 +91,75 @@
     const tb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_tb')||'96',10)||96; }catch(e){ return 96; } })();
     const mb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_mb')||'92',10)||92; }catch(e){ return 92; } })();
 
+    const _isSports = v => ['thunder','versus','esports','trophy','crown','target','fist','arena','medal','saber','blast'].includes(v);
+    const _isExtra = v => ['puzzle','ribbon-banner','envelope','spark','tag-corner','wave-bottom'].includes(v);
+    const _curShape = _SHAPE_OPTIONS.find(s=>s.v===shape) || _SHAPE_OPTIONS[0];
+    // [UI개선] 실제 스트리머 목록/카드에서 이 모양이 어떻게 보이는지 바로 확인할 수 있도록
+    // 작은 목업 미리보기(칩 리스트형 + 상세 카드형)를 상단에 배치. "설정만 하고 실제 반영
+    // 모습은 다른 탭에 가야 확인 가능"했던 문제를 완화한다.
+    const _mockAvatar = (size, ring) => `<div style="width:${size}px;height:${size}px;flex-shrink:0;background:linear-gradient(135deg,#f472b6,#a78bfa);${_curShape.preview};box-shadow:0 2px 8px rgba(0,0,0,.12)${ring?`, 0 0 0 2px var(--white), 0 0 0 4px ${ring}`:''};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:${Math.round(size*0.4)}px">S</div>`;
+    const previewHTML = `
+      <div style="padding:16px;border-radius:18px;background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(124,58,237,.06));border:1px solid rgba(236,72,153,.18);margin-bottom:16px">
+        <div style="font-size:11px;font-weight:900;color:#a855f7;letter-spacing:.02em;margin-bottom:10px">👁️ 실제 적용 미리보기 <span style="font-weight:700;color:var(--gray-l)">— 아래에서 모양을 바꾸면 여기가 바로 갱신됩니다</span></div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;background:var(--white);border:1px solid var(--border);box-shadow:0 4px 10px rgba(0,0,0,.05)">
+            ${_mockAvatar(28)}
+            <span style="font-size:12px;font-weight:800;color:var(--text2)">목록 칩 (28px)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--white);border:1px solid var(--border);box-shadow:0 4px 10px rgba(0,0,0,.05)">
+            ${_mockAvatar(44,'#ec489955')}
+            <div>
+              <div style="font-size:13px;font-weight:900;color:var(--text1)">스타대전 선수 카드</div>
+              <div style="font-size:10.5px;color:var(--gray-l);font-weight:700">경기 상세/현황판 등 (44px)</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border-radius:16px;background:var(--white);border:1px solid var(--border);box-shadow:0 4px 10px rgba(0,0,0,.05)">
+            ${_mockAvatar(64,'#7c3aed55')}
+            <span style="font-size:10.5px;color:var(--gray-l);font-weight:700">상세 팝업 (64px)</span>
+          </div>
+        </div>
+      </div>`;
+    const _shapeGridHTML = list => `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
+      ${list.map(s=>{
+        const sel = shape===s.v;
+        const isSports = _isSports(s.v);
+        const sampleBg = 'linear-gradient(135deg,#f472b6,#a78bfa)';
+        return `<button type="button" class="profile-shape-btn" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){};try{setTimeout(function(){var el=document.getElementById('profile-shape-thumb');if(el){el.classList.remove('profile-shape-spin');void el.offsetWidth;el.classList.add('profile-shape-spin');}},60);}catch(e){}" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:18px;border:${sel?'2.5px solid #ec4899':isSports?'1.5px solid #7c3aed':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#fdf2f8,#f5f3ff)':isSports?'linear-gradient(135deg,#fdf4ff,#f5f3ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 4px #ec489922, 0 4px 0 0 #f9a8d4':'none'};transform:${sel?'translateY(-2px) scale(1.04)':'none'};transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, border-color .18s ease, background .18s ease">
+          ${sel?`<span style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(190,24,93,.4);animation:profileShapeCheckPop .35s cubic-bezier(.34,1.56,.64,1)">✓</span>`:''}
+          <div ${sel?'id="profile-shape-thumb" class="profile-shape-spin"':''} style="width:52px;height:52px;background:${sampleBg};${s.preview};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)${sel?', 0 0 0 3px #fff, 0 0 0 5px #ec4899':''}"></div>
+          <span style="font-size:12px;font-weight:900;color:${sel?'#db2777':'var(--text2)'}">${s.label}</span>
+          <span style="font-size:9px;color:var(--gray-l);font-weight:700;text-align:center;line-height:1.3">${s.desc}</span>
+        </button>`;
+      }).join('')}
+    </div>`;
+    const _basicShapes = _SHAPE_OPTIONS.filter(s=>!_isSports(s.v)&&!_isExtra(s.v));
+    const _sportsShapes = _SHAPE_OPTIONS.filter(s=>_isSports(s.v));
+    const _extraShapes = _SHAPE_OPTIONS.filter(s=>_isExtra(s.v));
+
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
+        ${previewHTML}
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (52가지)</div>
-          <div style="margin-bottom:8px;padding:4px 10px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:8px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:900;color:#a5b4fc">⚔️ 스포츠 대결 NEW</span>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:900;color:var(--text2)">📐 모양 (${_SHAPE_OPTIONS.length}가지)</div>
+            <div style="font-size:11px;color:var(--gray-l)">현재 선택: <b style="color:#db2777">${_curShape.icon} ${_curShape.label}</b></div>
+          </div>
+          <div style="margin-bottom:14px;font-size:10px;color:var(--gray-l);font-weight:700">💡 퍼즐·스파클·컷코너처럼 디테일이 많은 모양은 작은 칩/리스트(28~32px)에서는 단순화되어 보입니다. 상세 페이지처럼 큰 영역에서 가장 잘 보입니다.</div>
+
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px">⭕ 기본 모양 <span style="font-size:9.5px;font-weight:700;color:var(--gray-l)">(${_basicShapes.length}가지)</span></div>
+          ${_shapeGridHTML(_basicShapes)}
+
+          <div style="margin-top:18px;margin-bottom:8px;padding:5px 12px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:10px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10.5px;font-weight:900;color:#a5b4fc">⚔️ 스포츠 대결</span>
             <span style="font-size:10px;color:#c7d2fe">번개·VS방패·e스포츠·트로피·왕관·타겟·주먹·아레나·메달·세이버·블라스트</span>
           </div>
-          <div style="margin-bottom:8px;padding:4px 10px;background:linear-gradient(135deg,#0f766e,#155e75);border-radius:8px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:900;color:#a5f3fc">🎉 추가 모양 NEW</span>
+          ${_shapeGridHTML(_sportsShapes)}
+
+          <div style="margin-top:18px;margin-bottom:8px;padding:5px 12px;background:linear-gradient(135deg,#0f766e,#155e75);border-radius:10px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10.5px;font-weight:900;color:#a5f3fc">🎉 추가 모양</span>
             <span style="font-size:10px;color:#cffafe">퍼즐·리본배너·봉투형·스파클·컷코너·바텀웨이브</span>
           </div>
-          <div style="margin-bottom:10px;font-size:10px;color:var(--gray-l);font-weight:700">💡 퍼즐·스파클·컷코너처럼 디테일이 많은 모양은 작은 칩/리스트(28~32px)에서는 단순화되어 보입니다. 상세 페이지처럼 큰 영역에서 가장 잘 보입니다.</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
-            ${_SHAPE_OPTIONS.map(s=>{
-              const sel = shape===s.v;
-              const isSports = ['thunder','versus','esports','trophy','crown','target','fist','arena','medal','saber','blast'].includes(s.v);
-              const sampleBg = 'linear-gradient(135deg,#f472b6,#a78bfa)';
-              return `<button type="button" class="profile-shape-btn" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){};try{setTimeout(function(){var el=document.getElementById('profile-shape-thumb');if(el){el.classList.remove('profile-shape-spin');void el.offsetWidth;el.classList.add('profile-shape-spin');}},60);}catch(e){}" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:18px;border:${sel?'2.5px solid #ec4899':isSports?'1.5px solid #7c3aed':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#fdf2f8,#f5f3ff)':isSports?'linear-gradient(135deg,#fdf4ff,#f5f3ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 4px #ec489922, 0 4px 0 0 #f9a8d4':'none'};transform:${sel?'translateY(-2px) scale(1.04)':'none'};transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, border-color .18s ease, background .18s ease">
-                ${sel?`<span style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(190,24,93,.4);animation:profileShapeCheckPop .35s cubic-bezier(.34,1.56,.64,1)">✓</span>`:''}
-                <div ${sel?'id="profile-shape-thumb" class="profile-shape-spin"':''} style="width:52px;height:52px;background:${sampleBg};${s.preview};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)${sel?', 0 0 0 3px #fff, 0 0 0 5px #ec4899':''}"></div>
-                <span style="font-size:12px;font-weight:900;color:${sel?'#db2777':'var(--text2)'}">${s.label}</span>
-                <span style="font-size:9px;color:var(--gray-l);font-weight:700;text-align:center;line-height:1.3">${s.desc}</span>
-              </button>`;
-            }).join('')}
-          </div>
-          <div style="font-size:11px;color:var(--gray-l);margin-top:8px">현재: <b>${(_SHAPE_OPTIONS.find(s=>s.v===shape)||_SHAPE_OPTIONS[0]).label}</b></div>
+          ${_shapeGridHTML(_extraShapes)}
         </div>
         <div>
           <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">📏 크기 배율 (탭/팝업 공통)</div>

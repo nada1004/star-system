@@ -331,7 +331,6 @@ const LAZY_CHUNKS = {
     'js/stats-heatmap-renderer.js',
     'js/stats-maprank-renderer.js',
     'js/stats-promo-sim-renderer.js',
-    'js/stats-univmatrix-renderer.js',
     'js/stats-advanced-renderers.js',
     'js/stats-export-utils.js',
     'js/sharecard-runtime.js',

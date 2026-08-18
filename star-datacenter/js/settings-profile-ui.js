@@ -110,6 +110,33 @@ function _resetProfileShapeAll(){
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ if(typeof _renderCfgProfileShapeSection==='function') _renderCfgProfileShapeSection(); }catch(e){}
 }
+// [FIX-PROFILESHAPE-3] 모양 미리보기 스와치를 단색 그라디언트 대신 실제 흑카데미 소속
+// 스트리머 프로필 사진으로 보여주고, 마우스를 올리면(hover) 두번째 프로필 사진이
+// 나타나도록 한다(다른 화면의 .ph-swap 미리보기 기능을 그대로 재사용).
+// 같은 렌더 사이클 안에서 모양 버튼마다 다른 사진이 깜빡이지 않도록, 한번 뽑은 사진 쌍은
+// 설정탭이 다시 열리기 전까지 window._cfgShapePreviewPick 에 고정해서 재사용한다.
+function _getCfgShapePreviewPhotos(){
+  try{
+    const arr = Array.isArray(window.players) ? window.players : [];
+    const photoMap = (window.playerPhotos && typeof window.playerPhotos==='object') ? window.playerPhotos : {};
+    const pool = arr
+      .filter(p=>p && String(p.univ||'').trim()==='흑카데미')
+      .map(p=>({ name:p.name, photo:(p.photo || photoMap[p.name] || ''), second:(p.secondProfileFile || '') }))
+      .filter(p=>p.photo);
+    if(!pool.length) return null;
+    const cached = window._cfgShapePreviewPick;
+    const stillValid = cached && pool.some(x=>x.photo===cached.first);
+    const primary = stillValid ? pool.find(x=>x.photo===cached.first) : pool[Math.floor(Math.random()*pool.length)];
+    let secondPhoto = primary.second;
+    if(!secondPhoto){
+      const others = pool.filter(x=>x.photo!==primary.photo);
+      if(others.length) secondPhoto = others[Math.floor(Math.random()*others.length)].photo;
+    }
+    const pick = { first: primary.photo, second: secondPhoto || '' };
+    window._cfgShapePreviewPick = pick;
+    return pick;
+  }catch(e){ return null; }
+}
 function _renderCfgProfileShapeSection(){
   const body = document.getElementById('cfg-profileshape-body');
   if(!body) return;
@@ -124,11 +151,21 @@ function _renderCfgProfileShapeSection(){
     const clip = _PROFILE_SHAPE_CLIP[key];
     return `border-radius:${radius};${clip?`clip-path:${clip};`:''}`;
   };
+  const _preview = _getCfgShapePreviewPhotos();
+  const swatchThumb=(key)=>{
+    if(_preview && _preview.first){
+      const src = (typeof toThumbUrl==='function') ? toThumbUrl(_preview.first, 56) : _preview.first;
+      const img = `<img src="${src}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.25'">`;
+      const img2 = (_preview.second && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(_preview.second) : '';
+      return `<span class="ph-swap" style="position:relative;display:block;width:28px;height:28px;overflow:hidden;${swatchCss(key)}">${img}${img2}</span>`;
+    }
+    return `<span style="width:28px;height:28px;display:block;background:linear-gradient(135deg,#93c5fd,#6366f1);${swatchCss(key)}"></span>`;
+  };
   const grid = _PROFILE_SHAPES.map(({k,l})=>{
     const sel = k===cur;
     return `<button class="btn btn-xs" onclick="_setGlobalProfileShape('${k}')" title="${l}"
       style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;min-width:56px;border:2px solid ${sel?'var(--blue)':'var(--border2)'};background:${sel?'#eff6ff':'var(--white)'}">
-      <span style="width:28px;height:28px;display:block;background:linear-gradient(135deg,#93c5fd,#6366f1);${swatchCss(k)}"></span>
+      ${swatchThumb(k)}
       <span style="font-size:10px;font-weight:${sel?900:600};color:${sel?'var(--blue)':'var(--text2)'}">${l}</span>
     </button>`;
   }).join('');
@@ -148,7 +185,7 @@ function _renderCfgProfileShapeSection(){
     <div style="display:flex;flex-direction:column;gap:14px">
       <div>
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">📐 모양 선택</div>
-        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">클릭하면 바로 적용됩니다.</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">클릭하면 바로 적용됩니다. ${_preview&&_preview.first?'흑카데미 소속 스트리머 프로필 사진으로 미리보기를 보여드려요 — 사진 위에 마우스를 올리면 다른 사진으로 바뀝니다.':''}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;max-height:280px;overflow-y:auto;padding:2px">${grid}</div>
       </div>
       <div>
@@ -246,4 +283,5 @@ try{
   window._renderCfgUiSizeSection = _renderCfgUiSizeSection;
   window._setProfileScale = _setProfileScale;
   window._resetProfileShapeAll = _resetProfileShapeAll;
+  window._getCfgShapePreviewPhotos = _getCfgShapePreviewPhotos;
 }catch(e){}
