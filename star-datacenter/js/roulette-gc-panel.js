@@ -132,6 +132,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isTeamSplit = _gcTab === 'teamsplit';
   const isBracket = _gcTab === 'bracket';
   const isMarble = _gcTab === 'marble';
+  const isBilliard = _gcTab === 'billiard';
   const isTeamMatch = _gcTab === 'teammatch';
   const isTierMatch = _gcTab === 'tiermatch';
   const isQuiz = _gcTab === 'quiz';
@@ -166,6 +167,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     teamsplit: { kicker:'LUCKY DRAW', icon:'👥', accent:'linear-gradient(135deg,#38bdf8,#6366f1)', title:'팀 나누기', desc:'참가자를 원하는 팀 수만큼 랜덤으로 균등하게 나눕니다.', badge1:'2~8팀 지원', badge2:'균등 분배' },
     bracket: { kicker:'LUCKY DRAW', icon:'🏆', accent:'linear-gradient(135deg,#f59e0b,#ef4444)', title:'대진표 뽑기', desc:'참가자를 랜덤으로 섞어 1라운드 대진을 만들어줍니다.', badge1:'랜덤 매칭', badge2:'부전승 자동 처리' },
     marble: { kicker:'LUCKY DRAW', icon:'🔮', accent:'linear-gradient(135deg,#818cf8,#8b5cf6)', title:'핀볼룰렛', desc:'이름을 넣고 구슬을 굴려서 순위를 가리는 물리 시뮬레이션 룰렛입니다.', badge1:'실시간 물리엔진', badge2:'맵/스킬 지원' },
+    billiard: { kicker:'LUCKY DRAW', icon:'🎱', accent:'linear-gradient(135deg,#16a34a,#065f46)', title:'당구 브레이크', desc:'이름을 넣고 브레이크 샷을 날리면, 공이 흩어지다가 당첨자가 포켓으로 빨려 들어갑니다.', badge1:'충돌 물리엔진', badge2:'가중치 지원' },
     teammatch: { kicker:'PUZZLE GAME', icon:'🧩', accent:'linear-gradient(135deg,#fb7185,#ec4899)', title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
@@ -258,6 +260,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
         style="width:100%;height:100%;border:0;display:block;background:#0b0f1a"></iframe>
     </div>
   </div>
+</div>`;
+  }
+
+  // 🎱 당구 브레이크 탭: 별도 레이아웃 (내용은 billiard-roulette.js가 #bl-root에 채움 — 자체 히어로 카드가 있어 중복 안내문 생략)
+  if (isBilliard) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="bl-root"></div>
 </div>`;
   }
 

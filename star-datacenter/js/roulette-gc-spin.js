@@ -24,6 +24,7 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'othello' && tab !== 'othello' && typeof _otCleanup === 'function') _otCleanup();
   if (_gcTab === 'teamsplit' && tab !== 'teamsplit' && typeof _tsCleanup === 'function') _tsCleanup();
   if (_gcTab === 'bracket' && tab !== 'bracket' && typeof _bkCleanup === 'function') _bkCleanup();
+  if (_gcTab === 'billiard' && tab !== 'billiard' && typeof _blCleanup === 'function') _blCleanup();
   _gcTab = tab;
   if (_GC_TAB_GROUP[tab]) _gcLastTab[_GC_TAB_GROUP[tab]] = tab;
   render();
@@ -55,6 +56,8 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
   } else if (tab === 'bracket') {
     setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
+  } else if (tab === 'billiard') {
+    setTimeout(()=>{ try{ if(typeof _blInit==='function') _blInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }

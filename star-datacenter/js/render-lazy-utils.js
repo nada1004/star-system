@@ -150,6 +150,7 @@ async function _ensureRouletteLoaded(){
     'js/roulette-gc-spin.js?v=20260812-grp2',
     'js/roulette-ladder.js?v=20260730-split10',
     'js/roulette-marble.js?v=20260730-split10',
+    'js/billiard-roulette.js?v=20260818-billiard1',
     'js/team-match-game.js?v=20260728-photofix1',
     'js/tier-match-game.js?v=20260728-photofix1',
     'js/photo-quiz-game.js?v=20260728-photofix1',
