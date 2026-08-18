@@ -25,12 +25,12 @@ function _b2LineupComputeStatus(p) {
 function _b2LineupStatusBadgeHtml(p, posStyle) {
   const st = _b2LineupComputeStatus(p);
   if (!st) return '';
-  return `<div style="position:absolute;${posStyle||'top:8px;right:8px'};z-index:3;pointer-events:none;background:${st.bg};color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.32);white-space:nowrap;letter-spacing:.01em">${st.icon} ${st.label}</div>`;
+  return `<div style="position:absolute;${posStyle||'top:8px;right:8px'};z-index:3;pointer-events:none;background:${st.bg}80;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.32);white-space:nowrap;letter-spacing:.01em;text-shadow:0 1px 2px rgba(0,0,0,.4)">${st.icon} ${st.label}</div>`;
 }
 function _b2LineupStatusBadgeChip(p) {
   const st = _b2LineupComputeStatus(p);
   if (!st) return '';
-  return `<span class="b2-lc4-chip" style="background:${st.bg};margin-left:6px;font-size:8px;padding:1px 6px">${st.icon} ${st.label}</span>`;
+  return `<span class="b2-lc4-chip" style="background:${st.bg}80;margin-left:6px;font-size:8px;padding:1px 6px;text-shadow:0 1px 2px rgba(0,0,0,.4)">${st.icon} ${st.label}</span>`;
 }
 
 function _b2LineupCard3(p, col) {
@@ -71,7 +71,6 @@ function _b2LineupCard3(p, col) {
   return `<div class="b2-lc3" data-b2lc-player="${attrName}" style="--lc-col:${col}" onclick="_b2LineupCardHoverLeave();openPlayerModal('${safeName}')" onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')" onmouseleave="_b2LineupCardHoverLeave()${lc3SecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
     <div class="b2-lc3-photo">
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="position:absolute;top:8px;left:8px;z-index:3;width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(15,23,42,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">🔊</button>
-      ${_b2LineupStatusBadgeHtml(p)}
       ${photo
         ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
            <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="eager" fetchpriority="high" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
@@ -154,7 +153,6 @@ function _b2LineupTableRow(p, col) {
         ${_2ndAvatar}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
-      ${_b2LineupStatusBadgeChip(p)}
       <button class="b2-lineup-tts-btn" title="이 스트리머 음성듣기" onclick="event.stopPropagation();_b2LineupSpeakPlayer('${safeName}')" style="margin-left:6px;width:22px;height:22px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;line-height:1;cursor:pointer;padding:0">🔊</button>
     </div></td>
     <td>${p.role || '일반'}</td>
@@ -218,7 +216,6 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _raceBadge = (p.race && p.race!=='N')
     ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:var(--fs-sm);font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
     : '';
-  const _statusBadge = _b2LineupStatusBadgeHtml(p, `top:${(p.race && p.race!=='N') ? 42 : 10}px;right:10px`);
   const _nameBar = `
     <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:12px 14px 13px">
       ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:var(--fs-base);padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
@@ -235,7 +232,6 @@ function _b2LineupCard(p, col, big, iconUrl) {
         ${photoHtml}
         ${lcSecondHtml}
         ${_raceBadge}
-        ${_statusBadge}
         ${_nameBar}
       </div>
     </div>`;
@@ -694,11 +690,15 @@ function _b2LineupShowHoverTip(card, name, col) {
       ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" data-orig="${photo2FallbackUrl.replace(/"/g,'&quot;')}" loading="eager" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
       : '';
 
-    // ── 이름 / 티어 ──
+    // ── 티어 + 연승/연패/신입 상태 뱃지 ──
     const tierCol = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : '#64748b';
     const tierHtml = p.tier
       ? `<div class="b2-lc-hovertip-tier"><span class="b2-lc-hovertip-tier-dot" style="background:${tierCol}"></span>${_b2TierLabel(p.tier)}</div>`
       : `<div class="b2-lc-hovertip-tier">&nbsp;</div>`;
+    const _hoverSt = _b2LineupComputeStatus(p);
+    const statusHtml = _hoverSt
+      ? ` <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:900;background:${_hoverSt.bg};color:#fff;padding:1px 7px;border-radius:999px;vertical-align:middle">${_hoverSt.icon} ${_hoverSt.label}</div>`
+      : '';
 
     // ── 최근 30일 성적 (도넛 게이지) ──
     const t30 = w30 + l30;
@@ -747,7 +747,7 @@ function _b2LineupShowHoverTip(card, name, col) {
         <div class="b2-lc-hovertip-photowrap">${photoHtml}${photo2Html}</div>
         <div class="b2-lc-hovertip-content">
           <div class="b2-lc-hovertip-name">${p.name || ''}</div>
-          ${tierHtml}
+          ${tierHtml}${statusHtml}
           ${thirtyDayHtml}
         </div>
       </div>
