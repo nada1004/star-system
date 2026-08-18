@@ -620,25 +620,41 @@ function _b2LineupShowHoverTip(card, name, col) {
     // 다른 화면(현황판 카드, 랭킹, 미니게임 등)은 전부 이 폴백을 쓰는데 호버팝업만 빠져 있어서
     // "카드엔 사진이 보이는데 호버팝업엔 안 보이는" 현상이 발생했다.
     const photoRaw = String(p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '').trim();
-    // [FIX-HOVERTIP-GIF-HOTLINK] (2026-08-17) GIF는 움직이는 걸 살리려고 프록시(images.weserv.nl)를
-    // 건너뛰고 원본 URL을 직접 불러오게 해뒀는데, 그 원본이 핫링크 차단(Discord CDN 등)이 걸려있으면
-    // 이 팝업에서만 로드가 실패해서 사진 대신 이니셜만 보였다. 다른 화면(getPlayerPhotoHTML)은 GIF든
-    // 아니든 항상 프록시를 거치므로 그쪽에서는 정상적으로 보였던 것 — 동일하게 항상 프록시를 거치도록
-    // 통일한다(애니메이션은 정지 이미지가 되지만, 최소한 사진 자체가 안 보이는 것보다 낫다).
-    const photoUrl = photoRaw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : toHttpsUrl(photoRaw)) : '';
-    const photo2Raw = String(p.secondProfileFile || '').trim();
-    const photo2Url = photo2Raw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : toHttpsUrl(photo2Raw)) : '';
+    const _photo2RawFull = String(p.secondProfileFile || '').trim();
+    // 두번째 프로필 파일이 동영상(mp4 등)이면 <img> 태그로 못 띄우므로 아예 제외한다
+    // (카드/스크럽 미리보기 등 다른 화면도 동일하게 동영상은 photo2에서 제외해오던 방식).
+    const photo2Raw = (_photo2RawFull && !/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_photo2RawFull)) ? _photo2RawFull : '';
+    // [FIX-HOVERTIP-GIF-PLAY] (2026-08-18) 예전엔(FIX-HOVERTIP-GIF-HOTLINK) GIF 핫링크 차단으로
+    // 사진 자체가 안 보이는 문제를 막으려고 GIF도 무조건 프록시(images.weserv.nl → webp 정지 이미지)를
+    // 거치게 통일했었다. 그런데 그 대가로 GIF가 전부 정지 이미지가 돼버렸다.
+    // 이번엔 "GIF면 원본(움직임)을 우선 시도 → 실패하면 프록시(정지 이미지)로 대체" 방식으로 바꿔서,
+    // 핫링크가 안 막혀있는 대다수 경우엔 애니메이션이 살고, 막혀있는 소수 경우에만 정지 이미지로
+    // 안전하게 대체되도록 한다(=예전처럼 사진 자체가 안 보이는 일은 없음).
+    const _hoverIsGif = (u) => /\.gif(\?|$)/i.test(String(u||'').trim());
+    const photoIsGif = _hoverIsGif(photoRaw);
+    const photo2IsGif = _hoverIsGif(photo2Raw);
+    const photoProxyUrl = photoRaw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photoRaw, 184) : toHttpsUrl(photoRaw)) : '';
+    const photoOrigUrl = photoRaw ? toHttpsUrl(photoRaw) : '';
+    const photoUrl = photoIsGif ? photoOrigUrl : photoProxyUrl;
+    const photoFallbackUrl = photoIsGif ? photoProxyUrl : photoOrigUrl;
+    // [FIX-HOVERTIP-PHOTO2-MISSING] photo2는 실패 시 그냥 remove()만 해서, 프록시가 한 번이라도
+    // 실패하면(대형 GIF, 특이 포맷 등) 두번째 이미지가 통째로 안 보였다. photo1과 동일하게
+    // "1차 실패 시 다른 URL로 한번 더 시도" 폴백을 추가한다.
+    const photo2ProxyUrl = photo2Raw ? (typeof toThumbUrl === 'function' ? toThumbUrl(photo2Raw, 184) : toHttpsUrl(photo2Raw)) : '';
+    const photo2OrigUrl = photo2Raw ? toHttpsUrl(photo2Raw) : '';
+    const photo2Url = photo2IsGif ? photo2OrigUrl : photo2ProxyUrl;
+    const photo2FallbackUrl = photo2IsGif ? photo2ProxyUrl : photo2OrigUrl;
     const hasPhoto2 = !!photo2Url;
-    const _photoOrigAttr = photoRaw ? ` data-orig="${toHttpsUrl(photoRaw).replace(/"/g,'&quot;')}"` : '';
-    // 썸네일 프록시가 실패하면(드물게 원본이 프록시가 처리 못 하는 포맷/크기인 경우) 원본 URL로
-    // 한 번 더 시도해보고, 그마저 실패하면 그때 이니셜로 대체한다.
+    const _photoOrigAttr = photoRaw ? ` data-orig="${photoFallbackUrl.replace(/"/g,'&quot;')}"` : '';
+    // 1차 URL이 실패하면(핫링크 차단 등) 폴백 URL로 한 번 더 시도해보고, 그마저 실패하면
+    // 그때 이니셜로 대체한다.
     const photoHtml = photoUrl
       ? `<img class="b2-lc-hovertip-photo${hasPhoto2 ? ' has2' : ''}" src="${photoUrl}"${_photoOrigAttr} loading="eager" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex';}"><div class="b2-lc-hovertip-fallback" style="display:none">${raceLetter}</div>`
       : `<div class="b2-lc-hovertip-fallback" style="position:static;display:flex;width:100%;height:100%">${raceLetter}</div>`;
     // 프로필 이미지2가 있으면 살짝 겹쳐서 자동 크로스페이드(라인업 카드 자체는 좌우 스크럽 방식이지만,
     // 팝업은 pointer-events:none이라 마우스 위치를 못 받으므로 자동 전환 애니메이션으로 대체)
     const photo2Html = hasPhoto2
-      ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" loading="eager" decoding="async" onerror="this.remove()">`
+      ? `<img class="b2-lc-hovertip-photo2" src="${photo2Url}" data-orig="${photo2FallbackUrl.replace(/"/g,'&quot;')}" loading="eager" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
       : '';
 
     // ── 이름 / 티어 ──
