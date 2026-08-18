@@ -40,7 +40,7 @@ body.dark .univ-insight-bar-track{background:rgba(148,163,184,.18)}
 .univ-roster-card{position:relative;display:flex;align-items:center;gap:11px;padding:10px 12px 10px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(120deg,var(--accent,#64748b)0d,rgba(255,255,255,.96));cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;overflow:hidden}
 .univ-roster-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,#64748b)}
 .univ-roster-card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,23,42,.10);border-color:var(--accent,#64748b)55}
-.univ-roster-avatar{width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--accent,#64748b)55}
+.univ-roster-avatar{width:46px;height:46px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--accent,#64748b)55}
 .univ-roster-avatar img{width:100%;height:100%;object-fit:cover}
 .univ-roster-info{min-width:0;flex:1}
 .univ-roster-name{font-size:13px;font-weight:850;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

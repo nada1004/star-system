@@ -56,7 +56,8 @@ const _GC_ROULETTE_TABS = [
   { id: 'wheel',     icon: '🎡',    label: '휠' },
   { id: 'ppopgi',    icon: '🎁',    label: '뽑기' },
   { id: 'teamsplit', icon: '👥',    label: '팀나누기' },
-  { id: 'bracket',   icon: '🏆',    label: '대진표' }
+  { id: 'bracket',   icon: '🏆',    label: '대진표' },
+  { id: 'marble',    icon: '🔮',    label: '마블룰렛' }
 ];
 const _GC_GAME_TABS = [
   { id: 'teammatch', icon: '🧩',   label: '소속매칭' },

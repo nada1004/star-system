@@ -1,9 +1,12 @@
 /* ══════════════════════════════════════════════════════════════
-   룰렛 - 마블 룰렛 (개발중) (roulette.js 에서 분리, 2026-07-30)
+   룰렛 - 마블 룰렛 (roulette.js 에서 분리, 2026-07-30)
+   - lazygyu/roulette(물리 기반 마블 룰렛)을 /roulette-app/ 에 정적 빌드로 배치하고
+     roulette-gc-panel.js 에서 iframe(#mb-root)으로 임베드해서 사용합니다.
+   - iframe 기반이라 별도의 JS 초기화가 필요 없지만, 과거 버전과의 호출 호환을 위해
+     _mbInit()은 그대로 남겨둡니다(현재는 아무 동작도 하지 않는 no-op).
    ══════════════════════════════════════════════════════════════ */
 
 function _mbInit() {
-  const root = document.getElementById('mb-root');
-  if (!root) return;
-  root.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">마블 룰렛 기능은 현재 개발 중입니다.</div>';
+  // iframe(#mb-root 내부의 /roulette-app/index.html)이 이미 렌더링을 담당하므로
+  // 여기서는 별도로 할 일이 없습니다.
 }

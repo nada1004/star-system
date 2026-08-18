@@ -73,6 +73,8 @@ const MIME = {
   '.ttf':  'font/ttf',
   '.webp': 'image/webp',
   '.txt':  'text/plain; charset=utf-8',
+  '.wasm': 'application/wasm',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
 function getMime(filePath) {

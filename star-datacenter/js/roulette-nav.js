@@ -58,6 +58,7 @@ function rRoulette(C, T) {
     else if (_gcTab === 'othello') { setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'teamsplit') { setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'bracket') { setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'marble') { /* iframe 임베드 — 별도 JS 초기화 불필요 */ }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -105,6 +106,8 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _tsInit==='function') _tsInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'bracket') {
     setTimeout(()=>{ try{ if(typeof _bkInit==='function') _bkInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'marble') {
+    /* iframe 임베드 — 별도 JS 초기화 불필요 */
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
