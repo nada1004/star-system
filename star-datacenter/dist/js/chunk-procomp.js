@@ -728,7 +728,7 @@ function proCompGrpEdit(){const tn=getCurrentProTourney();let h=`<div style="fon
         <select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:var(--fs-caption)"
           onchange="proCompSetGrpRecTarget('${tn.id}',${gi},this.value)">
           <option value="" ${recTarget?"":"selected"}>\uC120\uD0DD</option>
-          <option value="pro" ${recTarget==="pro"?"selected":""}>\uD504\uB85C\uB9AC\uADF8</option>
+          <option value="pro" ${recTarget==="pro"?"selected":""}>\uC870\uBCC4\uB9AC\uADF8</option>
           <option value="stage" ${recTarget==="stage"?"selected":""}>\uB300\uC9C4\uD45C \uAE30\uB85D</option>
           <option value="none" ${recTarget==="none"?"selected":""}>\uBC18\uC601\uC548\uD568</option>
         </select>

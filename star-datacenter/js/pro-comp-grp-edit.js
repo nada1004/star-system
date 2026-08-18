@@ -26,7 +26,7 @@ function proCompGrpEdit() {
         <select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:var(--fs-caption)"
           onchange="proCompSetGrpRecTarget('${tn.id}',${gi},this.value)">
           <option value="" ${!recTarget?'selected':''}>선택</option>
-          <option value="pro" ${recTarget==='pro'?'selected':''}>프로리그</option>
+          <option value="pro" ${recTarget==='pro'?'selected':''}>조별리그</option>
           <option value="stage" ${recTarget==='stage'?'selected':''}>대진표 기록</option>
           <option value="none" ${recTarget==='none'?'selected':''}>반영안함</option>
         </select>

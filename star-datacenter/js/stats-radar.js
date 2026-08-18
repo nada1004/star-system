@@ -202,7 +202,7 @@ function _univInsightBarRow(m, tone){
   const deltaTxt = m.delta===0 ? '리그 평균과 동일' : `리그 평균 대비 ${m.delta>0?'+':''}${m.delta}${m.suffix}`;
   return `<div class="univ-insight-row">
     <div class="univ-insight-row-top">
-      <span class="univ-insight-row-label">${m.icon} ${escHTML(m.label)}</span>
+      <span class="univ-insight-row-label"><span class="univ-insight-icon">${m.icon}</span>${escHTML(m.label)}</span>
       <span class="univ-insight-row-value" style="color:${barColor}">${m.val}${m.suffix}</span>
     </div>
     <div class="univ-insight-bar-track">
@@ -275,8 +275,8 @@ function _univRosterCard(p, col){
   const wr = tot>0 ? Math.round(w/tot*100) : null;
   const tCol = p.tier && typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : col;
   const tTxt = p.tier && typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
-  return `<div class="univ-roster-card" onclick="openPlayerModal('${safeName}')">
-    <div class="univ-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,40,'width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
+  return `<div class="univ-roster-card" style="--accent:${col}" onclick="openPlayerModal('${safeName}')">
+    <div class="univ-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,46,'width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
     <div class="univ-roster-info">
       <div class="univ-roster-name" style="${p.inactive?'opacity:.55':''}">${escHTML(p.name||'')}${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:9px;margin-left:4px">${p.race}</span>`:''}</div>
       <div class="univ-roster-meta">
@@ -317,18 +317,14 @@ function univRosterSectionHTML(selName, accentColor){
 // 실제 값 쪽으로 뻗어나간다. 값이 50%보다 낮으면 왼쪽으로, 높으면 오른쪽으로 자라기 때문에
 // 40~60% 사이처럼 값이 몰려있어도 막대 길이 차이가 한눈에 들어온다.
 function _h2hBarTrackHTML(pct, color){
+  // [UI개선 v4] 중앙 발산형 막대 대신, 왼쪽부터 승률만큼 채워지는 그라데이션 필 바로 변경.
+  // 50% 기준선은 얇은 점선으로 유지해 "평균보다 위/아래"를 계속 가늠할 수 있게 함.
   const p = Math.max(0, Math.min(100, Number(pct)||0));
-  const left = Math.min(50, p);
-  const width = Math.abs(p-50);
-  const dotSide = p>=50 ? `right:-1px` : `left:-1px`;
   const isHex = /^#[0-9a-fA-F]{6}$/.test(String(color||''));
-  const grad = isHex ? `linear-gradient(90deg,${color}b3,${color})` : color;
-  const glow = isHex ? `box-shadow:0 0 0 1px ${color}22,0 2px 6px ${color}4d;` : '';
+  const grad = isHex ? `linear-gradient(90deg,${color}99,${color})` : color;
   return `<div class="univ-h2h-bar-track">
-    <div class="univ-h2h-bar-mid"></div>
-    <div class="univ-h2h-bar-fill" style="left:${left}%;width:${width}%;background:${grad};${glow}">
-      ${width>3?`<span class="univ-h2h-bar-dot" style="${dotSide}"></span>`:''}
-    </div>
+    <div class="univ-h2h-bar-refline"></div>
+    <div class="univ-h2h-bar-fill" style="width:${Math.max(p>0?4:0,p)}%;background:${grad}"></div>
   </div>`;
 }
 function univHeadToHeadAllHTML(selName, rows, accentColor){
@@ -614,7 +610,7 @@ function univTierInsightHTML(selName, rows){
     const rankTxt = m.tone==='down' ? `${m.totalN}개교 중 ${m.rank}위 (하위권)` : (m.tone==='up' ? `${m.totalN}개교 중 ${m.rank}위 (상위권)` : `${m.totalN}개교 중 ${m.rank}위 (중위권)`);
     return `<div class="univ-insight-row">
       <div class="univ-insight-row-top">
-        <span class="univ-insight-row-label">🎯 ${escHTML(m.tier)}</span>
+        <span class="univ-insight-row-label"><span class="univ-insight-icon">🎯</span>${escHTML(m.tier)}</span>
         <span class="univ-insight-row-value" style="color:${barColor}">${m.w}승 ${m.l}패 (${m.wr}%)</span>
       </div>
       <div class="univ-h2h-bar-track">
@@ -652,6 +648,13 @@ function _pickRandomUnivName(list){
     return list[idx].name;
   }catch(e){ return (list && list[0] && list[0].name) || ''; }
 }
+function _radarUnivLogoHTML(name, col){
+  if(!name) return `<span style="font-size:26px">🏛️</span>`;
+  const uCfg = (typeof univCfg!=='undefined'?univCfg:[]).find(u=>u && u.name===name);
+  const iconUrl = (uCfg && (uCfg.icon || uCfg.img)) || (typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[name]:'') || '';
+  const src = iconUrl ? (typeof toHttpsUrl==='function'?toHttpsUrl(iconUrl):iconUrl) : '';
+  return src ? `<img src="${src}" onerror="this.parentNode.innerHTML='🏛️'">` : `<span style="font-size:26px">🏛️</span>`;
+}
 function statsRadarHTML(){
   const _players = Array.isArray(players) ? players : [];
   const {rows:_rows, scoreMap:_allScores} = getSortedRadarRows();
@@ -660,19 +663,30 @@ function statsRadarHTML(){
   const _selectedScores=_allScores[_radarSelUniv] || {tot:0,w:0,l:0};
   const _selectedColor = gc(_radarSelUniv);
   const _totalGames=_rows.reduce((sum,row)=>sum+(row.scores.tot||0),0);
+  const _wrRank = _rows.slice().sort((a,b)=>(b.scores.winrate||0)-(a.scores.winrate||0)).findIndex(r=>r.u.name===_radarSelUniv)+1;
   return`<div style="display:flex;flex-direction:column;gap:16px">
-  <div class="ssec" id="stats-radar-sec">
-    <div class="stats-chart-toolbar">
-      <div>
-        <h4 style="margin:0">🏛️ ${escHTML(_radarSelUniv||'대학')} 정보 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(집계 대학 ${_rows.length}개 · 집계 경기 ${_totalGames})</span></h4>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">${_selectedScores.w||0}승 ${_selectedScores.l||0}패 · 승률 ${_selectedScores.winrate||0}% · 평균 ELO ${_selectedScores.avgElo||0}</div>
+  <div class="radar-hero" id="stats-radar-sec" style="--accent:${_selectedColor}">
+    <div class="radar-hero-top">
+      <div class="radar-hero-id">
+        <div class="radar-hero-logo">${_radarUnivLogoHTML(_radarSelUniv,_selectedColor)}</div>
+        <div style="min-width:0">
+          <div class="radar-hero-eyebrow">🏛️ 대학 정보</div>
+          <div class="radar-hero-name">${escHTML(_radarSelUniv||'대학')}</div>
+        </div>
       </div>
-      <div class="stats-chart-actions no-export">
-        <select id="radar-sel" class="stats-select" onchange="_radarSelUniv=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()">
+      <div class="stats-chart-actions no-export" style="align-items:center">
+        <select id="radar-sel" class="radar-hero-select" onchange="_radarSelUniv=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()">
           ${univs.map(u=>`<option value="${escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
         </select>
         <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
       </div>
+    </div>
+    <div class="radar-hero-chips">
+      <div class="radar-hero-chip"><b>${_selectedScores.w||0}<span style="color:#16a34a">승</span> ${_selectedScores.l||0}<span style="color:#dc2626">패</span></b><span>통산 전적</span></div>
+      <div class="radar-hero-chip"><b>${_selectedScores.winrate||0}%</b><span>승률</span></div>
+      <div class="radar-hero-chip"><b>${_selectedScores.avgElo||0}</b><span>평균 ELO</span></div>
+      <div class="radar-hero-chip"><b>${_wrRank>0?_wrRank+' / '+_rows.length:'-'}</b><span>승률 순위</span></div>
+      <div class="radar-hero-chip"><b>${_totalGames}</b><span>전체 집계 경기</span></div>
     </div>
   </div>
   ${univHeadToHeadAllHTML(_radarSelUniv, _rows, _selectedColor)}

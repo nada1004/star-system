@@ -245,23 +245,24 @@ function statsUnivCompareHTML() {
     s.id = 'svc-style';
     s.textContent = [
       '.svc-wrap{max-width:820px;margin:0 auto}',
-      '.svc-pickbar{display:grid;grid-template-columns:1fr 46px 1fr;gap:10px;align-items:center;margin-bottom:14px}',
-      '.svc-pick{position:relative;border-radius:18px;padding:14px 14px 12px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}',
-      '.svc-pick:hover{transform:translateY(-2px)}',
-      '.svc-pick-logo{width:38px;height:38px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 10px rgba(15,23,42,.12)}',
+      '.svc-pickbar{display:grid;grid-template-columns:1fr 52px 1fr;gap:10px;align-items:center;margin-bottom:14px}',
+      '.svc-pick{position:relative;border-radius:20px;padding:15px 16px 13px;overflow:hidden;cursor:pointer;transition:transform .16s,box-shadow .16s;box-shadow:0 10px 22px rgba(15,23,42,.05)}',
+      '.svc-pick:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(15,23,42,.12)}',
+      '.svc-pick-logo{width:44px;height:44px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 6px 14px rgba(15,23,42,.14)}',
       '.svc-pick-logo img{width:88%;height:88%;object-fit:contain}',
-      '.svc-pick-name{font-size:15px;font-weight:900;line-height:1.2}',
-      '.svc-pick-sub{font-size:10.5px;font-weight:700;color:var(--text3);margin-top:2px}',
+      '.svc-pick-name{font-size:16px;font-weight:950;line-height:1.2;letter-spacing:-.01em}',
+      '.svc-pick-sub{font-size:10.5px;font-weight:800;color:var(--text3);margin-top:3px;letter-spacing:.02em}',
       '.svc-pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none}',
       '.svc-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:950;color:var(--text3)}',
-      '.svc-vs-icon{font-size:20px;line-height:1}',
+      '.svc-vs-icon{font-size:22px;line-height:1;filter:drop-shadow(0 2px 4px rgba(15,23,42,.18))}',
       '.svc-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}',
-      '.svc-hero-col{border-radius:18px;padding:16px 12px;text-align:center;position:relative;overflow:hidden}',
-      '.svc-hero-num{font-size:26px;font-weight:950;line-height:1}',
-      '.svc-hero-lbl{font-size:10.5px;font-weight:700;color:var(--text3);margin-top:4px}',
-      '.svc-hero-wr{font-size:14px;font-weight:900;margin-top:6px;display:inline-block;padding:2px 10px;border-radius:999px}',
-      '.svc-panel{background:var(--white);border:1px solid rgba(148,163,184,.16);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-      '.svc-panel-title{font-size:12.5px;font-weight:900;color:var(--text3);margin-bottom:10px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}',
+      '.svc-hero-col{border-radius:20px;padding:18px 12px;text-align:center;position:relative;overflow:hidden;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+      '.svc-hero-col::after{content:"";position:absolute;inset:auto -20px -20px auto;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.5),transparent 70%);pointer-events:none}',
+      '.svc-hero-num{font-size:30px;font-weight:950;line-height:1;letter-spacing:-.02em}',
+      '.svc-hero-lbl{font-size:10.5px;font-weight:700;color:var(--text3);margin-top:5px}',
+      '.svc-hero-wr{font-size:14px;font-weight:900;margin-top:7px;display:inline-block;padding:3px 12px;border-radius:999px}',
+      '.svc-panel{background:var(--white);border:1px solid rgba(148,163,184,.16);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+      '.svc-panel-title{font-size:13px;font-weight:950;color:var(--text2);margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:-.01em}',
       '.svc-cat-row{display:grid;grid-template-columns:1fr 110px 1fr;gap:8px;align-items:center;padding:8px 0}',
       '.svc-cat-row+.svc-cat-row{border-top:1px dashed var(--border2)}',
       '.svc-cat-lbl{text-align:center;font-size:11px;font-weight:800;color:var(--text2);white-space:nowrap}',
@@ -283,10 +284,10 @@ function statsUnivCompareHTML() {
       '.svc-roster-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}',
       '.svc-roster-search{flex:1;min-width:140px;padding:7px 11px;border-radius:10px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;background:var(--white);color:var(--text1)}',
       '.svc-roster-search:focus{outline:none;border-color:var(--blue)}',
-      '.svc-roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}',
-      '.svc-roster-card{display:flex;flex-direction:column;align-items:center;text-align:center;border-radius:14px;padding:8px 4px 8px;border:1.5px solid transparent;cursor:pointer;transition:transform .14s,box-shadow .14s}',
-      '.svc-roster-card:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(15,23,42,.10)}',
-      '.svc-roster-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;margin-bottom:5px}',
+      '.svc-roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px}',
+      '.svc-roster-card{display:flex;flex-direction:column;align-items:center;text-align:center;border-radius:16px;padding:9px 4px 9px;border:1.5px solid transparent;cursor:pointer;transition:transform .14s,box-shadow .14s}',
+      '.svc-roster-card:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(15,23,42,.12)}',
+      '.svc-roster-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;margin-bottom:6px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--accent,transparent)}',
       '.svc-roster-avatar img{width:100%;height:100%;object-fit:cover}',
       '.svc-roster-name{font-size:11px;font-weight:800;color:var(--text1);max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.svc-roster-tier{font-size:9px;font-weight:900;padding:1px 6px;border-radius:999px;margin-top:3px}',
@@ -310,7 +311,7 @@ function statsUnivCompareHTML() {
     const safeName=(p.name||'').replace(/'/g,"\\'");
     const tCol = p.tier && typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : col;
     const tTxt = p.tier && typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
-    return `<div class="svc-roster-card" style="background:${col}0a" onmouseover="this.style.borderColor='${col}55'" onmouseout="this.style.borderColor='transparent'" onclick="openPlayerModal('${safeName}')">
+    return `<div class="svc-roster-card" style="--accent:${col};background:${col}0a" onmouseover="this.style.borderColor='${col}55'" onmouseout="this.style.borderColor='transparent'" onclick="openPlayerModal('${safeName}')">
       <div class="svc-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,48,'width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
       <div class="svc-roster-name" style="${p.inactive?'opacity:.55':''}">${escHTML(p.name||'')}</div>
       ${p.tier?`<div class="svc-roster-tier" style="background:${tCol};color:${tTxt}">${escHTML(p.tier)}</div>`:(p.role?`<div class="svc-roster-role">${escHTML(p.role)}</div>`:'')}
@@ -348,7 +349,10 @@ function statsUnivCompareHTML() {
   };
 
   let h = `<div class="ssec">
-  <h4 style="margin-bottom:10px">⚔️ 대학비교</h4>
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:10.5px;font-weight:900;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:2px">심화 분석</div>
+    <h4 style="margin:0;font-size:20px;letter-spacing:-.02em">⚔️ 대학비교</h4>
+  </div>
   <div class="svc-wrap">
     <div class="svc-pickbar">
       <div class="svc-pick" style="background:${colA}14;border:2px solid ${colA}55">
