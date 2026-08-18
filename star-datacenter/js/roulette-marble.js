@@ -2,11 +2,43 @@
    룰렛 - 마블 룰렛 (roulette.js 에서 분리, 2026-07-30)
    - lazygyu/roulette(물리 기반 마블 룰렛)을 /roulette-app/ 에 정적 빌드로 배치하고
      roulette-gc-panel.js 에서 iframe(#mb-root)으로 임베드해서 사용합니다.
-   - iframe 기반이라 별도의 JS 초기화가 필요 없지만, 과거 버전과의 호출 호환을 위해
-     _mbInit()은 그대로 남겨둡니다(현재는 아무 동작도 하지 않는 no-op).
+   - iframe이 그냥 404/네트워크 오류로 비어버리면 화면이 "완전히 새까맣게"만 보이고
+     원인을 알 수 없으므로, _mbInit()에서 /roulette-app/index.html 이 실제로
+     서버에 존재/응답하는지 fetch로 한 번 확인해서 문제가 있으면 안내 배너를 띄웁니다.
    ══════════════════════════════════════════════════════════════ */
 
 function _mbInit() {
-  // iframe(#mb-root 내부의 /roulette-app/index.html)이 이미 렌더링을 담당하므로
-  // 여기서는 별도로 할 일이 없습니다.
+  const root = document.getElementById('mb-root');
+  if (!root) return;
+
+  const MB_URL = '/roulette-app/index.html';
+
+  fetch(MB_URL, { method: 'GET', cache: 'no-store' })
+    .then(function (res) {
+      if (!res.ok) {
+        _mbShowError(root, MB_URL, '서버 응답: HTTP ' + res.status
+          + (res.status === 404
+            ? ' (파일을 찾을 수 없음 — roulette-app 폴더가 실제 서버에 배포되지 않았을 가능성이 높습니다)'
+            : ''));
+      }
+      // 200 정상이면 이미 렌더링된 iframe을 그대로 둡니다.
+    })
+    .catch(function (err) {
+      _mbShowError(root, MB_URL, '네트워크 오류: ' + (err && err.message ? err.message : String(err)));
+    });
+}
+
+function _mbShowError(root, url, reasonText) {
+  root.innerHTML = ''
+    + '<div style="height:100%;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#0b0f1a;color:#e2e8f0">'
+    + '<div style="font-size:34px">⚠️</div>'
+    + '<div style="font-size:16px;font-weight:800">마블룰렛을 불러오지 못했습니다</div>'
+    + '<div style="font-size:13px;line-height:1.7;color:#94a3b8;max-width:440px">'
+    +   '<code style="color:#fbbf24">' + url + '</code> 경로를 확인할 수 없습니다.<br>'
+    +   _rEscHTML(reasonText) + '<br><br>'
+    +   '서버에 <code style="color:#93c5fd">roulette-app/</code> 폴더(빌드된 마블룰렛 정적 파일)가 '
+    +   '실제로 배포되어 있는지, 그리고 <code style="color:#93c5fd">server.js</code>가 최신 버전인지 확인해 주세요.'
+    + '</div>'
+    + '<button onclick="_mbInit()" style="margin-top:6px;padding:9px 20px;border-radius:999px;border:none;background:linear-gradient(135deg,#818cf8,#8b5cf6);color:#fff;font-weight:800;font-size:13px;cursor:pointer">🔄 다시 확인</button>'
+    + '</div>';
 }
