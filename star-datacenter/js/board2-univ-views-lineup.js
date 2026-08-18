@@ -1,8 +1,8 @@
 // board2-univ-views.js에서 분리됨 (라인업 포스터(STARTING XI) 카드/테이블/뷰 + 캡처/저장 유틸) — 원본 라인 2102-2489
 
 // 라인업 카드 상태 뱃지 — 호버 없이 카드에 항상 노출되는 🔥연승중/📉연패중/🆕신입 표시.
-// 기준은 요약탭 연승 리더(3연승 이상)·최근 합류(첫 경기 30일 이내)와 동일하게 맞춤.
-// 우선순위: 신입 > 연승(3+) > 연패(3+) — 하나만 표시.
+// 연승/연패 기준은 6연승/6연패 이상부터 표시(요약탭 연승 리더 기준과는 별도), 최근 합류(첫 경기 30일 이내)는 기존과 동일.
+// 우선순위: 신입 > 연승(6+) > 연패(6+) — 하나만 표시.
 function _b2LineupComputeStatus(p) {
   try {
     const histAll = (typeof _tpHistAllForPlayer === 'function') ? (_tpHistAllForPlayer(p) || []) : (Array.isArray(p?.history) ? p.history : []);
@@ -16,7 +16,7 @@ function _b2LineupComputeStatus(p) {
     const want = sortedDesc[0].result;
     let streak = 0;
     for (const h of sortedDesc) { if (h.result === want) streak++; else break; }
-    if (streak < 3) return null;
+    if (streak < 6) return null;
     return want === '승'
       ? { icon: '🔥', label: `${streak}연승`, bg: '#dc2626' }
       : { icon: '📉', label: `${streak}연패`, bg: '#475569' };
