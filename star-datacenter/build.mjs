@@ -375,6 +375,7 @@ const LAZY_CHUNKS = {
     'js/roulette-gc-spin.js',
     'js/roulette-ladder.js',
     'js/roulette-marble.js',
+    'js/billiard-roulette.js',
     'js/team-match-game.js',
     'js/tier-match-game.js',
     'js/photo-quiz-game.js',
