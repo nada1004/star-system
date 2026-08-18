@@ -226,21 +226,21 @@ function _b2RankingView() {
 /* ══════════════════════════════════════
    📊 요약 뷰 v2 — 활동인원·통산승률·신입 추가
 ══════════════════════════════════════ */
-/* ── 🏆 통산 다승 TOP / 🔥 연승 리더 — 성별에 따라 집계에 포함할 기록 종류를 다르게
-   한다(2026-08-18, 요청사항). 두 패널 모두 "선수의 전체 병합 전적(_tpHistAllForPlayer)"에
-   붙은 mode 태그를 기준으로 필터링한다.
-   - 공통 제외: 개인전 / 시빌워 / 끝장전 (남녀 모두 항상 제외)
-   - 여자 포함: 미니대전 / 대학대전 / 대학CK / 일반대회(일반경기·조별리그·대진표) /
-                티어대회(일반·조별리그·대진표 — 코드상 모두 mode:'티어대회' 하나로 기록됨)
-   - 남자 포함: 여자 포함 목록 + 프로리그 일반(mode:'프로리그') / 프로리그 끝장전=중장전
-                (mode:'프로리그끝장전') / 프로리그 대회 조별리그·대진표(mode:'프로리그대회') /
+/* ── 🏆 통산 다승 TOP / 🔥 연승 리더 — 남녀 공통으로 동일한 기록 종류를 집계한다
+   (2026-08-18 최초 도입 시엔 프로리그 계열을 남자만 포함했으나, 이후 요청으로 여자도
+   동일하게 포함하도록 변경). "선수의 전체 병합 전적(_tpHistAllForPlayer)"에 붙은
+   mode 태그를 기준으로 필터링한다.
+   - 공통 제외: 개인전 / 시빌워 / 끝장전 (순수 학생 끝장전만 제외, 남녀 모두 항상 제외)
+   - 공통 포함: 미니대전 / 대학대전 / 대학CK / 일반대회(일반경기·조별리그·대진표) /
+                티어대회(일반·조별리그·대진표 — 코드상 모두 mode:'티어대회' 하나로 기록됨) /
+                프로리그 일반(mode:'프로리그') / 프로리그 끝장전=중장전(mode:'프로리그끝장전') /
+                프로리그 대회 조별리그·대진표(mode:'프로리그대회') /
                 팀전(프로리그 대회 팀전 — proTourneys[].teamMatches, 기존 병합 전적에는
                 빠져있어서 별도로 합산)
    참고: 일반대회/티어대회 각각의 "조별리그"·"대진표 기록"은 코드에서 별도 mode로
    나뉘지 않는 경우가 있어(특히 티어대회, 프로리그대회는 조별리그/대진표를 구분하지
    않고 하나의 mode로 기록됨) 요청하신 세부 항목들을 모두 같은 mode 값으로 묶어 처리함. */
-const _B2_SUMMARY_MODES_FEMALE = ['미니대전','대학대전','대학CK','대회(일반경기)','조별리그','대회','티어대회'];
-const _B2_SUMMARY_MODES_MALE_EXTRA = ['프로리그','프로리그끝장전','프로리그대회'];
+const _B2_SUMMARY_MODES_INCLUDE = ['미니대전','대학대전','대학CK','대회(일반경기)','조별리그','대회','티어대회','프로리그','프로리그끝장전','프로리그대회'];
 const _B2_SUMMARY_MODES_ALWAYS_EXCLUDE = ['개인전','시빌워','끝장전'];
 
 // 프로리그 대회 "팀전"(proTourneys[].teamMatches) — 기존 _tpHistAllForPlayer 병합 파이프라인에는
@@ -262,20 +262,19 @@ function _b2SummaryProTeamMatchesForPlayer(p) {
   return out;
 }
 
-// 선수 1명의 (다승/연승 집계용) 결정된 경기 목록을 성별 규칙에 맞게 필터링해서 반환.
+// 선수 1명의 (다승/연승 집계용) 결정된 경기 목록을 반환 — 남녀 동일 기준 적용.
 function _b2SummaryDecidedGamesForPlayer(p, gender) {
   let hist = [];
   try { hist = (typeof _tpHistAllForPlayer === 'function') ? _tpHistAllForPlayer(p) : (Array.isArray(p?.history) ? p.history : []); }
   catch (e) { hist = Array.isArray(p?.history) ? p.history : []; }
-  const isMale = gender !== 'F';
-  const allowed = new Set(_B2_SUMMARY_MODES_FEMALE.concat(isMale ? _B2_SUMMARY_MODES_MALE_EXTRA : []));
+  const allowed = new Set(_B2_SUMMARY_MODES_INCLUDE);
   let decided = (Array.isArray(hist) ? hist : []).filter(h => {
     if (!h || (h.result !== '승' && h.result !== '패')) return false;
     const mode = String(h.mode || '').trim();
     if (_B2_SUMMARY_MODES_ALWAYS_EXCLUDE.includes(mode)) return false;
     return allowed.has(mode);
   });
-  if (isMale) decided = decided.concat(_b2SummaryProTeamMatchesForPlayer(p));
+  decided = decided.concat(_b2SummaryProTeamMatchesForPlayer(p));
   return decided;
 }
 
@@ -446,8 +445,8 @@ function _b2SummaryView() {
     return fb - fa;
   }).slice(0, 8);
 
-  // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용) — 성별로 포함 기록 종류가 다르므로
-  // 남/여를 따로 집계한다 (자세한 기준은 위 _b2SummaryDecidedGamesForPlayer 주석 참고)
+  // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용) — 포함 기록 종류는 남녀 동일하며
+  // 패널 표시만 남/여로 나눠서 보여준다 (자세한 기준은 위 _b2SummaryDecidedGamesForPlayer 주석 참고)
   // [FIX-ROLE-INCLUDE] (2026-08-18) 요약탭의 다른 통계(대학 랭킹 등)는 "이사장/교수/코치" 같은
   // 직책(role)이 있는 사람을 계속 제외하지만, 🏆 다승 TOP / 🔥 연승 리더 두 패널은 요청에 따라
   // 직책 유무와 상관없이 반영한다 — tieredVis(role 제외됨) 대신 vis(role 필터링 전) 사용.
@@ -795,14 +794,13 @@ function _b2SummaryView() {
     </div>
     <div class="b2s-top-univ" style="margin-bottom:12px">
       ${univStats.slice(0,6).map((u,i)=>{
-        const medal=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'][i]||'';
         const pP=u.count>0?Math.round(u.races.P/u.count*100):0;
         const pT=u.count>0?Math.round(u.races.T/u.count*100):0;
         const pZ=u.count>0?Math.round(u.races.Z/u.count*100):0;
         const safeUnivName=String(u.name||'').replace(/'/g,"\\'");
         return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeUnivName}')" title="${u.name} 상세 보기">
           <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
-            <span style="font-size:14px">${medal}</span>
+            ${typeof gUI==='function'?gUI(u.name,'1.1em'):''}
             <span style="font-size:var(--fs-sm);font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
             <span style="font-size:var(--fs-md);font-weight:900;color:${u.color}">${u.count}</span>
           </div>
@@ -824,7 +822,7 @@ function _b2SummaryView() {
         const barW=Math.round(u.count/maxCount*100);
         const safeUnivName=String(u.name||'').replace(/'/g,"\\'");
         return `<div class="b2s-univ-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeUnivName}')" title="${u.name} 상세 보기">
-          <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+          <span style="display:inline-flex;align-items:center;font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${typeof gUI==='function'?gUI(u.name,'1em'):''}${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div class="b2s-bar-track">
             <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
             <div title="테란 ${u.races.T}" style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7;transition:width .6s ease"></div>
