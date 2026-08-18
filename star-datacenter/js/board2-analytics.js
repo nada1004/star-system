@@ -448,13 +448,17 @@ function _b2SummaryView() {
 
   // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용) — 성별로 포함 기록 종류가 다르므로
   // 남/여를 따로 집계한다 (자세한 기준은 위 _b2SummaryDecidedGamesForPlayer 주석 참고)
-  const playerAggM = tieredVis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryPlayerAggOne(p, 'M'));
-  const playerAggF = tieredVis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryPlayerAggOne(p, 'F'));
-  const playerAgg = playerAggM.concat(playerAggF); // 활동인원 등 기존 통계에서 재사용
+  // [FIX-ROLE-INCLUDE] (2026-08-18) 요약탭의 다른 통계(대학 랭킹 등)는 "이사장/교수/코치" 같은
+  // 직책(role)이 있는 사람을 계속 제외하지만, 🏆 다승 TOP / 🔥 연승 리더 두 패널은 요청에 따라
+  // 직책 유무와 상관없이 반영한다 — tieredVis(role 제외됨) 대신 vis(role 필터링 전) 사용.
+  const playerAggM = vis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryPlayerAggOne(p, 'M'));
+  const playerAggF = vis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryPlayerAggOne(p, 'F'));
+  const playerAgg = tieredVis.map(p => _b2SummaryPlayerAggOne(p, String(p?.gender||'M')==='F' ? 'F' : 'M')); // 활동인원 등 기존 통계에서 재사용(role 제외 기준 유지)
   // 🏆 통산 다승 TOP은 티어 순위표 "다승순"과 기준을 맞춰서(요청, 2026-08-18) 카테고리 필터링 없이
   // p.win/p.loss(전체 매치 누적 카운터) 기준으로 집계한다. 🔥 연승 리더는 기존대로 카테고리 필터링 유지.
-  const totalWinAggM = tieredVis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryTotalWinAggOne(p));
-  const totalWinAggF = tieredVis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryTotalWinAggOne(p));
+  // (역시 role 유무와 상관없이 vis 기준으로 집계)
+  const totalWinAggM = vis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryTotalWinAggOne(p));
+  const totalWinAggF = vis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryTotalWinAggOne(p));
   const topWinnersM = totalWinAggM.filter(x=>x.win>0).sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1)).slice(0, 8);
   const topWinnersF = totalWinAggF.filter(x=>x.win>0).sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1)).slice(0, 8);
   const topStreaksM = playerAggM.filter(x=>x.streak>=3).sort((a,b) => b.streak - a.streak).slice(0, 6);

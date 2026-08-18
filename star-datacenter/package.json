@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "acorn": "^8.18.0",
-    "jsdom": "^29.1.1"
+    "jsdom": "^29.1.1",
+    "lz-string": "^1.5.0"
   },
   "scripts": {
     "build": "node build.mjs",
