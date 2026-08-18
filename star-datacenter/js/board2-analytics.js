@@ -226,6 +226,155 @@ function _b2RankingView() {
 /* ══════════════════════════════════════
    📊 요약 뷰 v2 — 활동인원·통산승률·신입 추가
 ══════════════════════════════════════ */
+/* ── 🏆 통산 다승 TOP / 🔥 연승 리더 — 성별에 따라 집계에 포함할 기록 종류를 다르게
+   한다(2026-08-18, 요청사항). 두 패널 모두 "선수의 전체 병합 전적(_tpHistAllForPlayer)"에
+   붙은 mode 태그를 기준으로 필터링한다.
+   - 공통 제외: 개인전 / 시빌워 / 끝장전 (남녀 모두 항상 제외)
+   - 여자 포함: 미니대전 / 대학대전 / 대학CK / 일반대회(일반경기·조별리그·대진표) /
+                티어대회(일반·조별리그·대진표 — 코드상 모두 mode:'티어대회' 하나로 기록됨)
+   - 남자 포함: 여자 포함 목록 + 프로리그 일반(mode:'프로리그') / 프로리그 끝장전=중장전
+                (mode:'프로리그끝장전') / 프로리그 대회 조별리그·대진표(mode:'프로리그대회') /
+                팀전(프로리그 대회 팀전 — proTourneys[].teamMatches, 기존 병합 전적에는
+                빠져있어서 별도로 합산)
+   참고: 일반대회/티어대회 각각의 "조별리그"·"대진표 기록"은 코드에서 별도 mode로
+   나뉘지 않는 경우가 있어(특히 티어대회, 프로리그대회는 조별리그/대진표를 구분하지
+   않고 하나의 mode로 기록됨) 요청하신 세부 항목들을 모두 같은 mode 값으로 묶어 처리함. */
+const _B2_SUMMARY_MODES_FEMALE = ['미니대전','대학대전','대학CK','대회(일반경기)','조별리그','대회','티어대회'];
+const _B2_SUMMARY_MODES_MALE_EXTRA = ['프로리그','프로리그끝장전','프로리그대회'];
+const _B2_SUMMARY_MODES_ALWAYS_EXCLUDE = ['개인전','시빌워','끝장전'];
+
+// 프로리그 대회 "팀전"(proTourneys[].teamMatches) — 기존 _tpHistAllForPlayer 병합 파이프라인에는
+// 빠져있는 소스라 별도로 긁어온다. 개인 게임 단위(g.wName/g.lName)로 승/패를 센다.
+function _b2SummaryProTeamMatchesForPlayer(p) {
+  const out = [];
+  try {
+    const name = String(p?.name || '');
+    if (!name) return out;
+    (typeof proTourneys !== 'undefined' ? proTourneys : []).forEach(tn => {
+      (tn.teamMatches || []).forEach(tm => {
+        (tm.games || []).forEach(g => {
+          if (!g || (g.wName !== name && g.lName !== name)) return;
+          out.push({ date: tm.d || '', result: g.wName === name ? '승' : '패', mode: '팀전' });
+        });
+      });
+    });
+  } catch (e) {}
+  return out;
+}
+
+// 선수 1명의 (다승/연승 집계용) 결정된 경기 목록을 성별 규칙에 맞게 필터링해서 반환.
+function _b2SummaryDecidedGamesForPlayer(p, gender) {
+  let hist = [];
+  try { hist = (typeof _tpHistAllForPlayer === 'function') ? _tpHistAllForPlayer(p) : (Array.isArray(p?.history) ? p.history : []); }
+  catch (e) { hist = Array.isArray(p?.history) ? p.history : []; }
+  const isMale = gender !== 'F';
+  const allowed = new Set(_B2_SUMMARY_MODES_FEMALE.concat(isMale ? _B2_SUMMARY_MODES_MALE_EXTRA : []));
+  let decided = (Array.isArray(hist) ? hist : []).filter(h => {
+    if (!h || (h.result !== '승' && h.result !== '패')) return false;
+    const mode = String(h.mode || '').trim();
+    if (_B2_SUMMARY_MODES_ALWAYS_EXCLUDE.includes(mode)) return false;
+    return allowed.has(mode);
+  });
+  if (isMale) decided = decided.concat(_b2SummaryProTeamMatchesForPlayer(p));
+  return decided;
+}
+
+// 선수 1명의 승/패/연승 집계 (성별 규칙 적용 — 🔥 연승 리더용)
+function _b2SummaryPlayerAggOne(p, gender) {
+  const decided = _b2SummaryDecidedGamesForPlayer(p, gender);
+  const sortedDesc = [...decided].sort((a, b) => _b2DateNum(b.date || b.d || '') - _b2DateNum(a.date || a.d || ''));
+  let streak = 0;
+  for (const h of sortedDesc) { if (h.result === '승') streak++; else break; }
+  const win = decided.filter(h => h.result === '승').length;
+  const loss = decided.length - win;
+  const wr = decided.length ? Math.round(win / decided.length * 100) : null;
+  return { p, win, loss, games: decided.length, wr, streak };
+}
+// 선수 1명의 "전체" 승/패 집계 (🏆 통산 다승 TOP용) — 티어 순위표 "다승순"과 동일하게
+// 카테고리 필터링 없이 선수 객체에 누적 저장된 p.win/p.loss를 그대로 사용한다.
+// (players-tier-rank.js의 _tierWL 날짜필터 미적용 분기와 동일한 방식, 2026-08-18 요청 반영)
+function _b2SummaryTotalWinAggOne(p) {
+  const win = Number(p && p.win || 0) || 0;
+  const loss = Number(p && p.loss || 0) || 0;
+  const games = win + loss;
+  const wr = games ? Math.round(win / games * 100) : null;
+  return { p, win, loss, games, wr };
+}
+// 🏆 통산 다승 TOP 카드 그리드 HTML (남/여 공용 렌더러)
+function _b2SummaryWinnerGridHTML(list) {
+  return `<div class="b2s-winner-grid">
+    ${list.map((x,i)=>{
+      const p=x.p;
+      const col=gc(String(p?.univ||''))||'#64748b';
+      const rIco=p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
+      const medal = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
+      const safeName=(p.name||'').replace(/'/g,"\\'");
+      const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,44):p.photo) : '';
+      const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const initials = (p.name||'?').slice(0,1);
+      const wrCol = x.wr===null?'#94a3b8':x.wr>=60?'#10b981':x.wr>=40?'#f59e0b':'#ef4444';
+      const avatarHtml = photo
+        ? `<span class="b2s-winner-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
+        : `<span class="b2s-winner-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
+      return `<div class="b2s-winner-card" style="border-color:${col}44;background:${col}0d"
+        onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
+        onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
+        onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
+        <div class="b2s-winner-card-top">
+          <span class="b2s-winner-rank">${medal}</span>
+          ${avatarHtml}
+          <div style="min-width:0;flex:1">
+            <div style="font-size:var(--fs-sm);font-weight:900;color:${col};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}${rIco?` <span style="font-size:10px">${rIco}</span>`:''}</div>
+            <div style="font-size:9px;font-weight:700;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text2)">${x.win}승 ${x.loss}패</span>
+          <span style="font-size:12px;font-weight:900;color:${wrCol}">${x.wr}%</span>
+        </div>
+        <div style="height:6px;border-radius:3px;background:var(--border2);overflow:hidden">
+          <div style="width:${x.wr}%;height:100%;background:${wrCol};border-radius:3px;transition:width .6s ease"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+// 🔥 연승 리더 목록 HTML (남/여 공용 렌더러)
+function _b2SummaryStreakGridHTML(list) {
+  const maxStreak = (list[0] && list[0].streak) || 1;
+  return `<div class="b2s-streak-grid">
+  ${list.map((x,i)=>{
+    const p=x.p;
+    const col=gc(String(p?.univ||''))||'#64748b';
+    const safeName=(p.name||'').replace(/'/g,"\\'");
+    const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,32):p.photo) : '';
+    const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+    const initials = (p.name||'?').slice(0,1);
+    const avatarHtml = photo
+      ? `<span class="b2s-streak-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
+      : `<span class="b2s-streak-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
+    const t = Math.min(1, x.streak/Math.max(maxStreak,1));
+    const hue = Math.round(38 - t*20); // 9연승에 가까울수록 붉은 계열, 3연승에 가까울수록 노란-주황
+    const badgeBg = `linear-gradient(135deg,hsl(${hue} 92% 56%),hsl(${Math.max(hue-16,0)} 85% 46%))`;
+    const rankDisplay = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
+    return `<div class="b2s-streak-row${i===0?' b2s-streak-row--top':''}"
+      onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
+      onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
+      onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
+      <span class="b2s-streak-rank">${rankDisplay}</span>
+      ${avatarHtml}
+      <span style="min-width:0;flex-shrink:0">
+        <div style="font-size:var(--fs-caption);font-weight:900;color:${col};max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--text3);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
+      </span>
+      <div class="b2s-streak-bar-track">
+        <div class="b2s-streak-bar-fill" style="width:${Math.round(t*100)}%;background:${badgeBg}"></div>
+      </div>
+      <span class="b2s-streak-badge" style="background:${badgeBg}">🔥 ${x.streak}연승</span>
+    </div>`;
+  }).join('')}
+  </div>`;
+}
 function _b2SummaryView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
@@ -297,23 +446,19 @@ function _b2SummaryView() {
     return fb - fa;
   }).slice(0, 8);
 
-  // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용)
-  const playerAgg = tieredVis.map(p => {
-    const decided = (Array.isArray(p.history)?p.history:[]).filter(h => h && (h.result==='승'||h.result==='패'));
-    const sortedDesc = [...decided].sort((a,b) => dateNum(b.date||b.d||'') - dateNum(a.date||a.d||''));
-    let streak = 0;
-    for (const h of sortedDesc) { if (h.result==='승') streak++; else break; }
-    const win = decided.filter(h=>h.result==='승').length;
-    const loss = decided.length - win;
-    const wr = decided.length ? Math.round(win/decided.length*100) : null;
-    return { p, win, loss, games: decided.length, wr, streak };
-  });
-  const topWinners = playerAgg.filter(x=>x.win>0)
-    .sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1))
-    .slice(0, 8);
-  const topStreaks = playerAgg.filter(x=>x.streak>=3)
-    .sort((a,b) => b.streak - a.streak)
-    .slice(0, 6);
+  // 선수별 통산 승/패·연승 집계 (다승왕 TOP, 연승 리더용) — 성별로 포함 기록 종류가 다르므로
+  // 남/여를 따로 집계한다 (자세한 기준은 위 _b2SummaryDecidedGamesForPlayer 주석 참고)
+  const playerAggM = tieredVis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryPlayerAggOne(p, 'M'));
+  const playerAggF = tieredVis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryPlayerAggOne(p, 'F'));
+  const playerAgg = playerAggM.concat(playerAggF); // 활동인원 등 기존 통계에서 재사용
+  // 🏆 통산 다승 TOP은 티어 순위표 "다승순"과 기준을 맞춰서(요청, 2026-08-18) 카테고리 필터링 없이
+  // p.win/p.loss(전체 매치 누적 카운터) 기준으로 집계한다. 🔥 연승 리더는 기존대로 카테고리 필터링 유지.
+  const totalWinAggM = tieredVis.filter(p => String(p?.gender||'M')!=='F').map(p => _b2SummaryTotalWinAggOne(p));
+  const totalWinAggF = tieredVis.filter(p => String(p?.gender||'M')==='F').map(p => _b2SummaryTotalWinAggOne(p));
+  const topWinnersM = totalWinAggM.filter(x=>x.win>0).sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1)).slice(0, 8);
+  const topWinnersF = totalWinAggF.filter(x=>x.win>0).sort((a,b) => b.win - a.win || (b.wr??-1) - (a.wr??-1)).slice(0, 8);
+  const topStreaksM = playerAggM.filter(x=>x.streak>=3).sort((a,b) => b.streak - a.streak).slice(0, 6);
+  const topStreaksF = playerAggF.filter(x=>x.streak>=3).sort((a,b) => b.streak - a.streak).slice(0, 6);
 
   // 최근 7일 일별 활동량 (경기 수)
   const last7Days = [];
@@ -564,90 +709,39 @@ function _b2SummaryView() {
     </div>
   </div>`;
 
-  // 🏆 통산 다승 TOP — 승수 많은 선수 (요청으로 "최근 30일 첫 경기" 대신 노출)
-  if (topWinners.length > 0) {
+  // 🏆 통산 다승 TOP — 남/여 별도 집계 (남자: 프로리그·팀전 포함, 여자: 미포함 / 개인전·시빌워·끝장전은 공통 제외)
+  if (topWinnersM.length > 0 || topWinnersF.length > 0) {
     h += `<div class="b2s-panel" style="margin-bottom:14px">
-      <div class="b2s-panel-title">🏆 통산 다승 TOP
-        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">전체 ${playerAgg.filter(x=>x.games>0).length}명 중</span>
-      </div>
-      <div class="b2s-winner-grid">
-        ${topWinners.map((x,i)=>{
-          const p=x.p;
-          const col=gc(String(p?.univ||''))||'#64748b';
-          const rIco=p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
-          const medal = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
-          const safeName=(p.name||'').replace(/'/g,"\\'");
-          const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,44):p.photo) : '';
-          const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
-          const initials = (p.name||'?').slice(0,1);
-          const wrCol = x.wr===null?'#94a3b8':x.wr>=60?'#10b981':x.wr>=40?'#f59e0b':'#ef4444';
-          const avatarHtml = photo
-            ? `<span class="b2s-winner-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
-            : `<span class="b2s-winner-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
-          return `<div class="b2s-winner-card" style="border-color:${col}44;background:${col}0d"
-            onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
-            onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
-            onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
-            <div class="b2s-winner-card-top">
-              <span class="b2s-winner-rank">${medal}</span>
-              ${avatarHtml}
-              <div style="min-width:0;flex:1">
-                <div style="font-size:var(--fs-sm);font-weight:900;color:${col};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}${rIco?` <span style="font-size:10px">${rIco}</span>`:''}</div>
-                <div style="font-size:9px;font-weight:700;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
-              </div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-              <span style="font-size:10px;font-weight:800;color:var(--text2)">${x.win}승 ${x.loss}패</span>
-              <span style="font-size:12px;font-weight:900;color:${wrCol}">${x.wr}%</span>
-            </div>
-            <div style="height:6px;border-radius:3px;background:var(--border2);overflow:hidden">
-              <div style="width:${x.wr}%;height:100%;background:${wrCol};border-radius:3px;transition:width .6s ease"></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="b2s-panel-title">🏆 통산 다승 TOP</div>
+      ${topWinnersM.length > 0 ? `<div style="margin-bottom:${topWinnersF.length>0?'14px':'0'}">
+        <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px">♂ 남자
+          <span style="margin-left:auto;font-weight:600">전체 ${totalWinAggM.filter(x=>x.games>0).length}명 중</span>
+        </div>
+        ${_b2SummaryWinnerGridHTML(topWinnersM)}
+      </div>` : ''}
+      ${topWinnersF.length > 0 ? `<div>
+        <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px">♀ 여자
+          <span style="margin-left:auto;font-weight:600">전체 ${totalWinAggF.filter(x=>x.games>0).length}명 중</span>
+        </div>
+        ${_b2SummaryWinnerGridHTML(topWinnersF)}
+      </div>` : ''}
     </div>`;
   }
 
-  // 🔥 연승 리더 (3연승 이상)
-  if (topStreaks.length > 0) {
-    const maxStreak = topStreaks[0].streak || 1;
+  // 🔥 연승 리더 (3연승 이상) — 남/여 별도 집계 (기준은 다승 TOP과 동일)
+  if (topStreaksM.length > 0 || topStreaksF.length > 0) {
     h += `<div class="b2s-panel" style="margin-bottom:14px">
       <div class="b2s-panel-title">🔥 연승 리더
         <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">3연승 이상</span>
       </div>
-      <div class="b2s-streak-grid">
-      ${topStreaks.map((x,i)=>{
-        const p=x.p;
-        const col=gc(String(p?.univ||''))||'#64748b';
-        const safeName=(p.name||'').replace(/'/g,"\\'");
-        const photo = p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,32):p.photo) : '';
-        const photoOrig = p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
-        const initials = (p.name||'?').slice(0,1);
-        const avatarHtml = photo
-          ? `<span class="b2s-streak-avatar" style="background:${col}33;border:2px solid ${col}66"><img src="${photo}" data-orig="${photoOrig}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none'}"></span>`
-          : `<span class="b2s-streak-avatar" style="background:${col};border:2px solid ${col}">${initials}</span>`;
-        const t = Math.min(1, x.streak/Math.max(maxStreak,1));
-        const hue = Math.round(38 - t*20); // 9연승에 가까울수록 붉은 계열, 3연승에 가까울수록 노란-주황
-        const badgeBg = `linear-gradient(135deg,hsl(${hue} 92% 56%),hsl(${Math.max(hue-16,0)} 85% 46%))`;
-        const rankDisplay = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
-        return `<div class="b2s-streak-row${i===0?' b2s-streak-row--top':''}"
-          onclick="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave();if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')"
-          onmouseenter="if(typeof _b2LineupCardHoverEnter==='function')_b2LineupCardHoverEnter(event,this,'${safeName}','${col}')"
-          onmouseleave="if(typeof _b2LineupCardHoverLeave==='function')_b2LineupCardHoverLeave()">
-          <span class="b2s-streak-rank">${rankDisplay}</span>
-          ${avatarHtml}
-          <span style="min-width:0;flex-shrink:0">
-            <div style="font-size:var(--fs-caption);font-weight:900;color:${col};max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</div>
-            <div style="font-size:9px;font-weight:700;color:var(--text3);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(p.univ||'무소속'):String(p.univ||'무소속'))}</div>
-          </span>
-          <div class="b2s-streak-bar-track">
-            <div class="b2s-streak-bar-fill" style="width:${Math.round(t*100)}%;background:${badgeBg}"></div>
-          </div>
-          <span class="b2s-streak-badge" style="background:${badgeBg}">🔥 ${x.streak}연승</span>
-        </div>`;
-      }).join('')}
-      </div>
+      ${topStreaksM.length > 0 ? `<div style="margin-bottom:${topStreaksF.length>0?'12px':'0'}">
+        <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px">♂ 남자</div>
+        ${_b2SummaryStreakGridHTML(topStreaksM)}
+      </div>` : ''}
+      ${topStreaksF.length > 0 ? `<div>
+        <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px">♀ 여자</div>
+        ${_b2SummaryStreakGridHTML(topStreaksF)}
+      </div>` : ''}
     </div>`;
   }
 
