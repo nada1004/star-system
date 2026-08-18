@@ -25,12 +25,12 @@ function _b2LineupComputeStatus(p) {
 function _b2LineupStatusBadgeHtml(p, posStyle) {
   const st = _b2LineupComputeStatus(p);
   if (!st) return '';
-  return `<div style="position:absolute;${posStyle||'top:8px;right:8px'};z-index:3;pointer-events:none;background:${st.bg};color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.32);white-space:nowrap;letter-spacing:.01em">${st.icon} ${st.label}</div>`;
+  return `<div style="position:absolute;${posStyle||'top:8px;right:8px'};z-index:3;pointer-events:none;background:${st.bg};color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.32);white-space:nowrap;letter-spacing:.01em">${st.icon} ${st.label}</div>`;
 }
 function _b2LineupStatusBadgeChip(p) {
   const st = _b2LineupComputeStatus(p);
   if (!st) return '';
-  return `<span class="b2-lc4-chip" style="background:${st.bg};margin-left:6px">${st.icon} ${st.label}</span>`;
+  return `<span class="b2-lc4-chip" style="background:${st.bg};margin-left:6px;font-size:8px;padding:1px 6px">${st.icon} ${st.label}</span>`;
 }
 
 function _b2LineupCard3(p, col) {
