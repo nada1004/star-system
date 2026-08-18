@@ -32,7 +32,7 @@ function _statsSideUnivs(names){
 }
 function getSortedRadarRows(){
   const _players = Array.isArray(players) ? players : [];
-  const univs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
+  const univs=getAllUnivs().filter(u=>u.name!=='무소속' && _players.some(p=>p.univ===u.name));
   const _allScores=getStatsRadarScores();
   const rows=univs.map(u=>({u, scores:_allScores[u.name] || _radarBaseScore()}));
   const sorter = String(_radarSort||'winrate');
@@ -194,8 +194,8 @@ function _univInsightCompute(selName, scores, rows){
     return {...d, val, min, max, avg, rank, total, pct, delta, hasSpread: max>min};
   });
 }
-function _univInsightBarRow(m, tone){
-  const barColor = tone==='up' ? '#16a34a' : (tone==='down' ? '#dc2626' : '#64748b');
+function _univInsightBarRow(m, tone, accentColor){
+  const acc = accentColor || '#2563eb';
   const pos = m.hasSpread ? Math.round((m.val-m.min)/(m.max-m.min)*100) : 50;
   const avgPos = m.hasSpread ? Math.round((m.avg-m.min)/(m.max-m.min)*100) : 50;
   const rankTxt = tone==='down' ? `${m.total}개교 중 ${m.rank}위 (하위 ${Math.max(1,101-m.pct)}%)` : (tone==='up' ? `${m.total}개교 중 ${m.rank}위 (상위 ${Math.max(1,m.pct)}%)` : `${m.total}개교 중 ${m.rank}위 (중위권)`);
@@ -203,21 +203,22 @@ function _univInsightBarRow(m, tone){
   return `<div class="univ-insight-row">
     <div class="univ-insight-row-top">
       <span class="univ-insight-row-label"><span class="univ-insight-icon">${m.icon}</span>${escHTML(m.label)}</span>
-      <span class="univ-insight-row-value" style="color:${barColor}">${m.val}${m.suffix}</span>
+      <span class="univ-insight-row-value" style="color:${acc}">${m.val}${m.suffix}</span>
     </div>
     <div class="univ-insight-bar-track">
-      <div class="univ-insight-bar-fill" style="width:${Math.max(3,Math.min(100,pos))}%;background:${barColor}"></div>
+      <div class="univ-insight-bar-fill" style="width:${Math.max(3,Math.min(100,pos))}%;background:linear-gradient(90deg,${acc}70,${acc})"></div>
       <div class="univ-insight-bar-avg" style="left:${Math.max(0,Math.min(100,avgPos))}%" title="리그 평균 ${m.avg}${m.suffix}"></div>
     </div>
     <div class="univ-insight-row-sub">${rankTxt}</div>
     <div class="univ-insight-row-sub2">${deltaTxt} (평균 ${m.avg}${m.suffix})</div>
   </div>`;
 }
-function univStrengthWeaknessHTML(selName, scores, allScores, rows){
+function univStrengthWeaknessHTML(selName, scores, allScores, rows, accentColor){
   const total = Array.isArray(rows) ? rows.length : 0;
   if(!selName || total<2){
     return `<div class="ssec"><div class="stats-note-box">🔎 강점/약점 분석은 활동 중인 대학이 2곳 이상일 때 볼 수 있습니다.</div></div>`;
   }
+  const acc = accentColor || '#2563eb';
   const metrics = _univInsightCompute(selName, scores, rows);
   const spread = metrics.filter(m=>m.hasSpread);
   const flat = metrics.filter(m=>!m.hasSpread);
@@ -236,11 +237,11 @@ function univStrengthWeaknessHTML(selName, scores, allScores, rows){
   const _lbls = arr => arr.map(m=>m.label).join(', ');
   let summary;
   if(strengths.length && weaknesses.length){
-    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:#16a34a">${escHTML(_lbls(strengths))}</b> 지표에서 ${strengths.length}개교 중 상위권으로 강세를 보이지만, <b style="color:#dc2626">${escHTML(_lbls(weaknesses))}</b> 쪽은 다른 대학 대비 하위권으로 아쉬운 편입니다.`;
+    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:${acc}">${escHTML(_lbls(strengths))}</b> 지표에서 ${strengths.length}개교 중 상위권으로 강세를 보이지만, <b style="color:${acc}">${escHTML(_lbls(weaknesses))}</b> 쪽은 다른 대학 대비 하위권으로 아쉬운 편입니다.`;
   } else if(strengths.length){
-    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:#16a34a">${escHTML(_lbls(strengths))}</b> 지표에서 뚜렷한 강세를 보이며, 특별한 약점은 드러나지 않습니다.`;
+    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:${acc}">${escHTML(_lbls(strengths))}</b> 지표에서 뚜렷한 강세를 보이며, 특별한 약점은 드러나지 않습니다.`;
   } else if(weaknesses.length){
-    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:#dc2626">${escHTML(_lbls(weaknesses))}</b> 쪽에서 다른 대학 대비 개선 여지가 있습니다.`;
+    summary = `<b>${escHTML(selName)}</b>은(는) <b style="color:${acc}">${escHTML(_lbls(weaknesses))}</b> 쪽에서 다른 대학 대비 개선 여지가 있습니다.`;
   } else {
     summary = `<b>${escHTML(selName)}</b>은(는) 현재 데이터 기준으로 지표 간 편차가 크지 않은, 고르게 균형 잡힌 대학입니다.`;
   }
@@ -249,17 +250,17 @@ function univStrengthWeaknessHTML(selName, scores, allScores, rows){
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">지표 7개(승률·ELO·활동도·포인트·종족 다양성·최고 연승·선수 수) 각각을 전체 대학과 비교해 상위 34%는 강점, 하위 34%는 약점, 나머지는 중위권으로 분류합니다.</div>
     <div class="univ-insight-summary">💬 ${summary}</div>
     <div class="univ-insight-grid univ-insight-grid--3">
-      <div class="univ-insight-col univ-insight-col--up">
-        <div class="univ-insight-col-title univ-insight-col-title--up">💪 강점 <span class="univ-insight-col-count">${strengthsShow.length}개</span></div>
-        ${strengthsShow.length ? strengthsShow.map(m=>_univInsightBarRow(m,'up')).join('') : `<div class="univ-insight-empty">뚜렷한 강점 지표가 없습니다</div>`}
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">💪 강점 <span class="univ-insight-col-count">${strengthsShow.length}개</span></div>
+        ${strengthsShow.length ? strengthsShow.map(m=>_univInsightBarRow(m,'up',acc)).join('') : `<div class="univ-insight-empty">뚜렷한 강점 지표가 없습니다</div>`}
       </div>
-      <div class="univ-insight-col univ-insight-col--neutral">
-        <div class="univ-insight-col-title univ-insight-col-title--neutral">🟰 중위권 <span class="univ-insight-col-count">${neutralShow.length}개</span></div>
-        ${neutralShow.length ? neutralShow.map(m=>_univInsightBarRow(m,'flat')).join('') : `<div class="univ-insight-empty">모든 지표가 강점/약점으로 뚜렷합니다</div>`}
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">🟰 중위권 <span class="univ-insight-col-count">${neutralShow.length}개</span></div>
+        ${neutralShow.length ? neutralShow.map(m=>_univInsightBarRow(m,'flat',acc)).join('') : `<div class="univ-insight-empty">모든 지표가 강점/약점으로 뚜렷합니다</div>`}
       </div>
-      <div class="univ-insight-col univ-insight-col--down">
-        <div class="univ-insight-col-title univ-insight-col-title--down">⚠️ 약점 <span class="univ-insight-col-count">${weaknessesShow.length}개</span></div>
-        ${weaknessesShow.length ? weaknessesShow.map(m=>_univInsightBarRow(m,'down')).join('') : `<div class="univ-insight-empty">뚜렷한 약점 지표가 없습니다</div>`}
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">⚠️ 약점 <span class="univ-insight-col-count">${weaknessesShow.length}개</span></div>
+        ${weaknessesShow.length ? weaknessesShow.map(m=>_univInsightBarRow(m,'down',acc)).join('') : `<div class="univ-insight-empty">뚜렷한 약점 지표가 없습니다</div>`}
       </div>
     </div>
   </div>`;
@@ -276,7 +277,7 @@ function _univRosterCard(p, col){
   const tCol = p.tier && typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : col;
   const tTxt = p.tier && typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   return `<div class="univ-roster-card" style="--accent:${col}" onclick="openPlayerModal('${safeName}')">
-    <div class="univ-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,46,'width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
+    <div class="univ-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,'46px','width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
     <div class="univ-roster-info">
       <div class="univ-roster-name" style="${p.inactive?'opacity:.55':''}">${escHTML(p.name||'')}${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:9px;margin-left:4px">${p.race}</span>`:''}</div>
       <div class="univ-roster-meta">
@@ -340,17 +341,15 @@ function univHeadToHeadAllHTML(selName, rows, accentColor){
   const totalW = played.reduce((s,r)=>s+r.aWins,0), totalL = played.reduce((s,r)=>s+r.bWins,0);
   const totalG = totalW+totalL;
   const totalWr = totalG>0 ? Math.round(totalW/totalG*100) : null;
-  // [UI개선] 승/패 텍스트 한 줄 대신, 통산 성적을 한눈에 보여주는 요약 스탯 스트립 +
-  // 각 행에 순위 번호와 결과 톤(승세/균형/열세)에 따른 은은한 배경색을 추가.
-  const _toneOf = wr => wr===null ? 'flat' : (wr>=60?'up':(wr<=40?'down':'flat'));
-  const _toneBg = { up:'linear-gradient(90deg,rgba(22,163,74,.09),rgba(255,255,255,0))', down:'linear-gradient(90deg,rgba(220,38,38,.08),rgba(255,255,255,0))', flat:'' };
+  // [UI개선 v3] 승/패에 따른 초록·빨강 배경/링 색상을 걷어내고, 선택된 대학의 고유 색상
+  // (accentColor) 하나로 통일 — 요약 링·바·퍼센트 텍스트 전부 같은 색을 공유
   const summaryHTML = totalG>0 ? `<div class="univ-h2h-summary">
-      <div class="univ-h2h-summary-ring" style="--wr:${totalWr};--tone:${totalWr>=50?'#16a34a':'#dc2626'}">
+      <div class="univ-h2h-summary-ring" style="--wr:${totalWr};--tone:${accentColor}">
         <span>${totalWr}%</span>
       </div>
       <div class="univ-h2h-summary-stats">
-        <div class="univ-h2h-summary-stat"><b style="color:#16a34a">${totalW}</b><span>승</span></div>
-        <div class="univ-h2h-summary-stat"><b style="color:#dc2626">${totalL}</b><span>패</span></div>
+        <div class="univ-h2h-summary-stat"><b style="color:${accentColor}">${totalW}</b><span>승</span></div>
+        <div class="univ-h2h-summary-stat"><b style="color:var(--text3)">${totalL}</b><span>패</span></div>
         <div class="univ-h2h-summary-stat"><b>${totalG}</b><span>총 맞대결</span></div>
         <div class="univ-h2h-summary-stat"><b>${played.length}</b><span>상대 대학</span></div>
       </div>
@@ -363,13 +362,12 @@ function univHeadToHeadAllHTML(selName, rows, accentColor){
       ${played.map((r,idx)=>{
         const pct = r.total>0 ? Math.round(r.aWins/r.total*100) : 50;
         const lowSample = r.total<=1;
-        const tone = _toneOf(r.wr);
-        return `<div class="univ-h2h-row${lowSample?' low-sample':''}" style="background:${_toneBg[tone]||''}" onclick="_radarSelUniv='${escJS(r.name)}';render()" title="클릭하면 이 대학의 정보로 이동">
+        return `<div class="univ-h2h-row${lowSample?' low-sample':''}" onclick="_radarSelUniv='${escJS(r.name)}';render()" title="클릭하면 이 대학의 정보로 이동">
           <span class="univ-h2h-rank">${idx+1}</span>
           <span class="ubadge" style="background:${r.col};flex-shrink:0">${escHTML(r.name)}</span>
-          ${_h2hBarTrackHTML(pct, pct>=50?'#16a34a':'#dc2626')}
+          ${_h2hBarTrackHTML(pct, accentColor)}
           <span class="univ-h2h-record">${r.aWins}승 ${r.bWins}패${lowSample?'<span class="univ-h2h-tag">표본 적음</span>':''}</span>
-          <span class="univ-h2h-wr" style="color:${r.wr>=50?'#16a34a':'#dc2626'}">${r.wr}%</span>
+          <span class="univ-h2h-wr" style="color:${accentColor}">${r.wr}%</span>
         </div>`;
       }).join('')}
     </div>` : `<div class="univ-insight-empty">아직 다른 대학과의 맞대결 기록이 없습니다</div>`}
@@ -487,14 +485,12 @@ function univTierRecordHTML(selName, accentColor){
     const r = tierMap[t];
     const wr = r.tot>0 ? Math.round(r.w/r.tot*100) : 0;
     const lowSample = r.tot<=2;
-    const tone = wr>=60?'up':(wr<=40?'down':'flat');
-    const toneBg = tone==='up' ? 'linear-gradient(90deg,rgba(22,163,74,.09),rgba(255,255,255,0))' : (tone==='down' ? 'linear-gradient(90deg,rgba(220,38,38,.08),rgba(255,255,255,0))' : '');
-    return `<div class="univ-h2h-row${lowSample?' low-sample':''}" style="cursor:default;background:${toneBg}">
+    return `<div class="univ-h2h-row${lowSample?' low-sample':''}" style="cursor:default">
       <span class="univ-h2h-rank univ-h2h-rank--tier" style="background:${accentColor}18;color:${accentColor}">${t===bestTier?'👑':'🎯'}</span>
       <span class="ubadge" style="background:${accentColor};flex-shrink:0">${escHTML(t)}</span>
-      ${_h2hBarTrackHTML(wr, wr>=50?'#16a34a':'#dc2626')}
+      ${_h2hBarTrackHTML(wr, accentColor)}
       <span class="univ-h2h-record">${r.w}승 ${r.l}패${lowSample?'<span class="univ-h2h-tag">표본 적음</span>':''}</span>
-      <span class="univ-h2h-wr" style="color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</span>
+      <span class="univ-h2h-wr" style="color:${accentColor}">${wr}%</span>
     </div>`;
   }).join('');
   return `<div class="ssec">
@@ -552,13 +548,12 @@ function univMatchupPredictionHTML(selName, rows, allScores, accentColor){
   // 신뢰도 보통")을 읽기 부담이 적은 짧은 칩 2개(근거·신뢰도)로 압축. 전체 계산 방식 설명은
   // 섹션 상단에 한 번만 안내하고, 행별로는 핵심 차이(근거/신뢰도)만 보여준다.
   const _predRow = p=>{
-    const tone = p.prob>=55 ? '#16a34a' : (p.prob<=45 ? '#dc2626' : '#64748b');
     const basisChip = p.h2hTotal>0 ? `🗓️ 맞대결 ${p.h2hTotal}전` : `🔮 ELO·폼 추정`;
     const cc = _confColor(p.confidence);
     return `<div class="univ-h2h-row" onclick="_radarSelUniv='${escJS(p.name)}';render()" title="클릭하면 이 대학의 정보로 이동">
       <span class="ubadge" style="background:${p.col};flex-shrink:0">${escHTML(p.name)}</span>
-      ${_h2hBarTrackHTML(p.prob, tone)}
-      <span class="univ-h2h-wr" style="color:${tone};min-width:96px;text-align:right">예상승률 ${p.prob}%</span>
+      ${_h2hBarTrackHTML(p.prob, accentColor)}
+      <span class="univ-h2h-wr" style="color:${accentColor};min-width:96px;text-align:right">예상승률 ${p.prob}%</span>
     </div>
     <div class="univ-pred-meta">
       <span class="univ-pred-chip">${basisChip}</span>
@@ -568,12 +563,13 @@ function univMatchupPredictionHTML(selName, rows, allScores, accentColor){
   return `<div class="ssec">
     <h4 style="margin-bottom:4px">🔮 ${escHTML(selName)} 상대 대학별 승부 예측</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">맞대결 기록(있으면 최우선 반영), 평균 ELO 격차, 전체 승률 격차, 최근 20경기 폼을 종합해 예상 승률을 계산한 참고용 추정치입니다. 신뢰도는 맞대결·최근 경기 표본이 많을수록 높아집니다. 실제 결과와 다를 수 있습니다.</div>
-    ${favorable.length ? `<div style="font-weight:900;font-size:12px;color:#16a34a;margin-bottom:4px">😎 유리한 상대 (${favorable.length})</div><div class="univ-h2h-list">${favorable.map(_predRow).join('')}</div>` : ''}
-    ${even.length ? `<div style="font-weight:900;font-size:12px;color:#64748b;margin:10px 0 4px">🟰 백중세 (${even.length})</div><div class="univ-h2h-list">${even.map(_predRow).join('')}</div>` : ''}
-    ${tough.length ? `<div style="font-weight:900;font-size:12px;color:#dc2626;margin:10px 0 4px">⚠️ 까다로운 상대 (${tough.length})</div><div class="univ-h2h-list">${tough.map(_predRow).join('')}</div>` : ''}
+    ${favorable.length ? `<div style="font-weight:900;font-size:12px;color:${accentColor};margin-bottom:4px">😎 유리한 상대 (${favorable.length})</div><div class="univ-h2h-list">${favorable.map(_predRow).join('')}</div>` : ''}
+    ${even.length ? `<div style="font-weight:900;font-size:12px;color:var(--text3);margin:10px 0 4px">🟰 백중세 (${even.length})</div><div class="univ-h2h-list">${even.map(_predRow).join('')}</div>` : ''}
+    ${tough.length ? `<div style="font-weight:900;font-size:12px;color:var(--text3);margin:10px 0 4px">⚠️ 까다로운 상대 (${tough.length})</div><div class="univ-h2h-list">${tough.map(_predRow).join('')}</div>` : ''}
   </div>`;
 }
-function univTierInsightHTML(selName, rows){
+function univTierInsightHTML(selName, rows, accentColor){
+  const acc = accentColor || '#2563eb';
   const total = Array.isArray(rows) ? rows.length : 0;
   if(!selName || total<2) return '';
   const MIN_SAMPLE = 3;
@@ -606,15 +602,14 @@ function univTierInsightHTML(selName, rows){
   const weaknesses = analyzed.filter(m=>m.tone==='down').sort((a,b)=>b.pct-a.pct);
   const flat = analyzed.filter(m=>m.tone==='flat');
   const _row = m=>{
-    const barColor = m.tone==='up' ? '#16a34a' : (m.tone==='down' ? '#dc2626' : '#64748b');
     const rankTxt = m.tone==='down' ? `${m.totalN}개교 중 ${m.rank}위 (하위권)` : (m.tone==='up' ? `${m.totalN}개교 중 ${m.rank}위 (상위권)` : `${m.totalN}개교 중 ${m.rank}위 (중위권)`);
     return `<div class="univ-insight-row">
       <div class="univ-insight-row-top">
         <span class="univ-insight-row-label"><span class="univ-insight-icon">🎯</span>${escHTML(m.tier)}</span>
-        <span class="univ-insight-row-value" style="color:${barColor}">${m.w}승 ${m.l}패 (${m.wr}%)</span>
+        <span class="univ-insight-row-value" style="color:${acc}">${m.w}승 ${m.l}패 (${m.wr}%)</span>
       </div>
       <div class="univ-h2h-bar-track">
-        <div class="univ-h2h-bar-fill" style="width:${m.wr}%;background:${barColor}"></div>
+        <div class="univ-h2h-bar-fill" style="width:${m.wr}%;background:linear-gradient(90deg,${acc}70,${acc})"></div>
       </div>
       <div class="univ-insight-row-sub">${rankTxt} · 이 티어 표본 ${m.tot}경기</div>
     </div>`;
@@ -623,16 +618,16 @@ function univTierInsightHTML(selName, rows){
     <h4 style="margin-bottom:4px">🧭 ${escHTML(selName)} 티어별 강점 &amp; 약점 분석 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(티어당 최소 ${MIN_SAMPLE}경기 이상 대학끼리 비교)</span></h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">각 티어에서의 승률을 그 티어에서 활동한 다른 대학들과 비교해 상위 34%는 강점, 하위 34%는 약점으로 분류합니다.</div>
     <div class="univ-insight-grid univ-insight-grid--3">
-      <div class="univ-insight-col univ-insight-col--up">
-        <div class="univ-insight-col-title univ-insight-col-title--up">💪 강한 티어 <span class="univ-insight-col-count">${strengths.length}개</span></div>
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">💪 강한 티어 <span class="univ-insight-col-count">${strengths.length}개</span></div>
         ${strengths.length ? strengths.map(_row).join('') : `<div class="univ-insight-empty">뚜렷한 강점 티어가 없습니다</div>`}
       </div>
-      <div class="univ-insight-col univ-insight-col--neutral">
-        <div class="univ-insight-col-title univ-insight-col-title--neutral">🟰 중위권 티어 <span class="univ-insight-col-count">${flat.length}개</span></div>
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">🟰 중위권 티어 <span class="univ-insight-col-count">${flat.length}개</span></div>
         ${flat.length ? flat.map(_row).join('') : `<div class="univ-insight-empty">모든 티어가 강점/약점으로 뚜렷합니다</div>`}
       </div>
-      <div class="univ-insight-col univ-insight-col--down">
-        <div class="univ-insight-col-title univ-insight-col-title--down">⚠️ 약한 티어 <span class="univ-insight-col-count">${weaknesses.length}개</span></div>
+      <div class="univ-insight-col" style="--insight-accent:${acc}">
+        <div class="univ-insight-col-title" style="color:${acc}">⚠️ 약한 티어 <span class="univ-insight-col-count">${weaknesses.length}개</span></div>
         ${weaknesses.length ? weaknesses.map(_row).join('') : `<div class="univ-insight-empty">뚜렷한 약점 티어가 없습니다</div>`}
       </div>
     </div>
@@ -659,7 +654,10 @@ function statsRadarHTML(){
   const _players = Array.isArray(players) ? players : [];
   const {rows:_rows, scoreMap:_allScores} = getSortedRadarRows();
   const univs=_rows.map(x=>x.u);
-  if((!_radarSelUniv || !univs.some(u=>u.name===_radarSelUniv)) && univs.length) _radarSelUniv=_pickRandomUnivName(univs);
+  if(!univs.length){
+    return `<div class="ssec"><div class="stats-note-box">🔎 아직 활동 중인 대학이 없습니다. 선수를 대학에 등록하면 이 곳에 표시됩니다.</div></div>`;
+  }
+  if(!_radarSelUniv || !univs.some(u=>u.name===_radarSelUniv)) _radarSelUniv=_pickRandomUnivName(univs);
   const _selectedScores=_allScores[_radarSelUniv] || {tot:0,w:0,l:0};
   const _selectedColor = gc(_radarSelUniv);
   const _totalGames=_rows.reduce((sum,row)=>sum+(row.scores.tot||0),0);
@@ -692,8 +690,8 @@ function statsRadarHTML(){
   ${univHeadToHeadAllHTML(_radarSelUniv, _rows, _selectedColor)}
   ${univTierRecordHTML(_radarSelUniv, _selectedColor)}
   ${univMatchupPredictionHTML(_radarSelUniv, _rows, _allScores, _selectedColor)}
-  ${univStrengthWeaknessHTML(_radarSelUniv, _selectedScores, _allScores, _rows)}
-  ${univTierInsightHTML(_radarSelUniv, _rows)}
+  ${univStrengthWeaknessHTML(_radarSelUniv, _selectedScores, _allScores, _rows, _selectedColor)}
+  ${univTierInsightHTML(_radarSelUniv, _rows, _selectedColor)}
   ${univRosterSectionHTML(_radarSelUniv, _selectedColor)}
   </div>`;
 }
@@ -709,7 +707,7 @@ function initRadarChart(){
   try{const ta=document.createElement('textarea');ta.innerHTML=_radarSelUniv;_radarSelUniv=ta.value;}catch(e){}
   const _players = Array.isArray(players) ? players : [];
   const _univsWithPlayers = new Set(_players.map(p=>p.univ));
-  const allUnivs=getAllUnivs().filter(u=>_univsWithPlayers.has(u.name));
+  const allUnivs=getAllUnivs().filter(u=>u.name!=='무소속' && _univsWithPlayers.has(u.name));
   if((!_radarSelUniv || !allUnivs.some(u=>u.name===_radarSelUniv)) && allUnivs.length) _radarSelUniv = _pickRandomUnivName(allUnivs);
   const _allScores=getStatsRadarScores();
   const _activeNames = Array.from(new Set([_radarSelUniv, ...((Array.isArray(_radarCompareUnivs)?_radarCompareUnivs:[]).filter(name=>name && name!==_radarSelUniv))])).slice(0,5);
@@ -839,7 +837,7 @@ function _statsCvNameTag(p, accentCol, showTier) {
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'"
       onclick="openPlayerModal('${safeName}')">
-      ${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,26,'border-radius:50%;flex-shrink:0'):''}
+      ${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,'26px','border-radius:50%;flex-shrink:0'):''}
       <span style="font-weight:700;font-size:var(--fs-lg);color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${escHTML(p.name||'')}</span>
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}
       ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${escHTML(p.tier)}</span>`:''}

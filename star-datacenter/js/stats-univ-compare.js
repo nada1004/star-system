@@ -312,7 +312,7 @@ function statsUnivCompareHTML() {
     const tCol = p.tier && typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : col;
     const tTxt = p.tier && typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
     return `<div class="svc-roster-card" style="--accent:${col};background:${col}0a" onmouseover="this.style.borderColor='${col}55'" onmouseout="this.style.borderColor='transparent'" onclick="openPlayerModal('${safeName}')">
-      <div class="svc-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,48,'width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
+      <div class="svc-roster-avatar" style="background:${col}">${typeof getPlayerPhotoHTML==='function'?getPlayerPhotoHTML(p.name,'48px','width:100%;height:100%'):escHTML((p.name||'?').slice(0,1))}</div>
       <div class="svc-roster-name" style="${p.inactive?'opacity:.55':''}">${escHTML(p.name||'')}</div>
       ${p.tier?`<div class="svc-roster-tier" style="background:${tCol};color:${tTxt}">${escHTML(p.tier)}</div>`:(p.role?`<div class="svc-roster-role">${escHTML(p.role)}</div>`:'')}
     </div>`;

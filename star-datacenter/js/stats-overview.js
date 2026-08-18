@@ -28,6 +28,7 @@ function statsOverviewHTML(){
     univStats[p.univ].l+=_ul;
   });
   const univRank=Object.entries(univStats)
+    .filter(([name])=>name!=='무소속')
     .map(([name,s])=>({name,w:s.w,l:s.l,color:s.color,rate:s.w+s.l===0?0:Math.round(s.w/(s.w+s.l)*100)}))
     .filter(u=>u.w+u.l>=10)
     .sort((a,b)=>b.w-a.w||b.rate-a.rate);

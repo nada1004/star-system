@@ -262,7 +262,21 @@ function rStats(C,T){
   else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
   else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이번 주/달 MVP');
   else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
-  else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '정보');
+  else if(window.statsSub==='radar'){
+    if(typeof window.statsRadarHTML==='function'){
+      h+=_safeRender(window.statsRadarHTML, '정보');
+    }else{
+      h+=`<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">대학 정보를 불러오는 중...</div></div>`;
+      try{
+        (async()=>{
+          try{
+            if(typeof window._ensureStatsLoaded==='function') await window._ensureStatsLoaded();
+          }catch(e){}
+          if(typeof render==='function') render();
+        })();
+      }catch(e){}
+    }
+  }
   else if(window.statsSub==='univcompare') h+=_safeRender(statsUnivCompareHTML, '대학비교');
   else if(window.statsSub==='period') h+=_safeRender(()=>_cached('period', statsPeriodAnalysisHTML), '주간/월간 분석');
   else if(window.statsSub==='mismatch')h+=_safeRender(()=>_cached('mismatch', statsMismatchHTML), '미스매치');
