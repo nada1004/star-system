@@ -144,8 +144,20 @@ function _plyrBgmApplyVol() {
 function _plyrBgmPlayNow(vid) {
   const p = _plyrBgmPlayer;
   if (!p || !vid) return;
+  // [FIX-BGM-UNMUTE-GESTURE] 예전엔 일단 mute()로 재생을 시작해두고, 뒤이어 도는
+  // setInterval에서 "재생 상태(state===1)가 확인되면" 그제서야 unMute()를 호출했다.
+  // 문제는 브라우저의 소리 있는 자동재생 정책상 unMute()/setVolume() 같은 "음소거
+  // 해제" 호출은 반드시 사용자 제스처(클릭 등) *그 안에서* 일어나야 인정되는데,
+  // setInterval 콜백은 별개의 타이머 태스크라 제스처와 무관하게 취급된다. 그 결과
+  // 스트리머를 클릭해서 선택해도(그 클릭 자체가 정당한 제스처인데도) 소리는 계속
+  // 안 나고, 그 뒤에 아무 데나 한 번 더 눌러야(=진짜 새 클릭 이벤트 안에서 처리되는
+  // _plyrBgmArmGestureUnlock 쪽에서 재시도) 비로소 소리가 나는 문제가 있었음.
+  // 수정: 이 함수가 실제로는 대부분 방금 일어난 클릭(스트리머 선택)의 호출 체인
+  // 안에서 실행되므로, 음소거 후 나중에 푸는 방식 대신 처음부터 정상 볼륨으로
+  // 즉시 재생을 시도한다. 그 클릭이 유효한 제스처라면 바로 소리가 난다.
   try {
-    if (p.mute) p.mute();
+    if (_plyrBgmUserOff) { p.mute && p.mute(); }
+    else { _plyrBgmApplyVol(); }
     p.loadVideoById(vid);
     if (p.playVideo) p.playVideo();
   } catch (e) {}
@@ -156,10 +168,10 @@ function _plyrBgmPlayNow(vid) {
     _plyrBgmToggleBtnSync();
     return;
   }
-  // [FIX-BGM-AUTOPLAY] 브라우저의 자동재생 정책이 유독 엄격해서 muted 상태로도
-  // 재생이 시작되지 않는 경우(제스처 없이 열린 팝업 등)를 대비한 최종 안전장치.
-  // 사용자가 상세 팝업 안에서 아무 곳이나 한 번 클릭/터치하면 그 제스처를 이용해
-  // 즉시 재생+볼륨 복구를 강제로 시도한다. 이미 재생 중이면 아무 효과 없음.
+  // [FIX-BGM-AUTOPLAY] 위 시도가 제스처와 무관한 상황(예: 탭 복귀, 팝업 자동 열림
+  // 등)에서 호출되어 브라우저가 재생 자체를 막은 경우를 대비한 안전장치. 사용자가
+  // 화면 아무 곳이나 한 번 클릭/터치하면 그 제스처를 이용해 즉시 재생+볼륨 복구를
+  // 강제로 시도한다. 이미 재생 중이면 아무 효과 없음.
   try { _plyrBgmArmGestureUnlock(); } catch (e) {}
   if (_plyrBgmKickTimer) { clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; }
   let tries = 0;
@@ -170,6 +182,8 @@ function _plyrBgmPlayNow(vid) {
     let st = -1;
     try { st = _plyrBgmPlayer.getPlayerState(); } catch (e) {}
     if (st === 1) {
+      // 재생은 이미 위에서 정상 볼륨으로 시도했으므로 여기선 상태 재확인만 하고
+      // 혹시 볼륨이 어긋난 경우에 한해 다시 맞춰준다(무음 강제 해제 목적 아님).
       _plyrBgmApplyVol();
       clearInterval(_plyrBgmKickTimer); _plyrBgmKickTimer = null; return;
     }
