@@ -254,7 +254,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div class="gc-stage-card" style="padding:0;overflow:hidden">
     <div id="mb-root" style="width:100%;height:${_mbH}px;min-height:520px">
-      <iframe src="/roulette-app/index.html" title="마블룰렛" allow="autoplay; fullscreen" referrerpolicy="no-referrer"
+      <iframe src="roulette-app/index.html" title="마블룰렛" allow="autoplay; fullscreen" referrerpolicy="no-referrer"
         style="width:100%;height:100%;border:0;display:block;background:#0b0f1a"></iframe>
     </div>
   </div>

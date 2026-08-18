@@ -3,7 +3,7 @@
    - lazygyu/roulette(물리 기반 마블 룰렛)을 /roulette-app/ 에 정적 빌드로 배치하고
      roulette-gc-panel.js 에서 iframe(#mb-root)으로 임베드해서 사용합니다.
    - iframe이 그냥 404/네트워크 오류로 비어버리면 화면이 "완전히 새까맣게"만 보이고
-     원인을 알 수 없으므로, _mbInit()에서 /roulette-app/index.html 이 실제로
+     원인을 알 수 없으므로, _mbInit()에서 roulette-app/index.html 이 실제로
      서버에 존재/응답하는지 fetch로 한 번 확인해서 문제가 있으면 안내 배너를 띄웁니다.
    ══════════════════════════════════════════════════════════════ */
 
@@ -11,7 +11,7 @@ function _mbInit() {
   const root = document.getElementById('mb-root');
   if (!root) return;
 
-  const MB_URL = '/roulette-app/index.html';
+  const MB_URL = 'roulette-app/index.html';
 
   fetch(MB_URL, { method: 'GET', cache: 'no-store' })
     .then(function (res) {
