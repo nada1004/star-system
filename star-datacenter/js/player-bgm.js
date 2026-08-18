@@ -258,3 +258,28 @@ function _plyrBgmResumeProfileTab() {
     else { _plyrBgmStop(); }
   } catch (e) { try { _plyrBgmStop(); } catch (e2) {} }
 }
+
+/* ── 🔥 사전 준비(워밍업), 기능추가 2026-08-18 ──────────────────────────
+   증상: 프로필탭에 처음 들어갔을 때(=탭/버튼 클릭 직후) BGM이 소리 없이
+   재생되거나 아예 안 켜지고, 그 뒤에 아무 버튼(예: 설정)을 한번 더 눌러야
+   비로소 소리가 남.
+   원인: 유튜브 IFrame API 스크립트 로드 + YT.Player 생성이 그 자리에서
+   비동기로 처음 이뤄지는데, 이 초기화가 끝나기까지 걸리는 시간(수백ms~수초)
+   동안 최초 클릭이 만들어준 "사용자 제스처(user activation)" 유효 시간이
+   지나가버려, 뒤늦게 호출되는 playVideo()+unMute()가 브라우저의 소리 있는
+   자동재생 정책에 막힌다. 이후 아무 곳이나 다시 클릭하면 이미 만들어져 있는
+   플레이어에 대해 그 새 클릭 이벤트 안에서 바로 재생을 시도하므로 정상적으로
+   소리가 남 — 즉 "설정" 버튼 자체가 특별한 게 아니라, 플레이어가 이미 준비된
+   상태에서 발생하는 그 어떤 클릭이든 트리거가 된다.
+   대응: 페이지 로드 시점에 아무 영상도 지정하지 않은 채로 미리 IFrame API를
+   불러오고 히든 플레이어를 만들어둔다. 실제 재생 시점엔 이미 준비가 끝나있어
+   loadVideoById + playVideo만 즉시 실행되므로, 최초 클릭(프로필탭 진입 클릭)
+   자체의 제스처 유효 시간 안에 재생이 끝나 소리가 정상적으로 난다. ── */
+try {
+  const _plyrBgmWarmup = () => { try { _plyrBgmEnsurePlayer(); } catch (e) {} };
+  if (document.readyState === 'complete') {
+    setTimeout(_plyrBgmWarmup, 300);
+  } else {
+    window.addEventListener('load', () => { setTimeout(_plyrBgmWarmup, 300); });
+  }
+} catch (e) {}
