@@ -418,13 +418,19 @@ function statsUnivReportHTML(){
         .concat(raceRecord['?'].w+raceRecord['?'].l>0 ? [{r:'?',c:'#64748b',l:'❔ 종족 미정'}] : [])
         .map(({r,c,l})=>{
         const rec=raceRecord[r]; const g=rec.w+rec.l; const wr=g>0?Math.round(rec.w/g*100):null;
-        const rWrCol = wr===null?'#94a3b8':wr>=55?'#10b981':wr>=45?'#f59e0b':'#ef4444';
+        // (수정) 단순 alpha 투명도 대신, 스트리머 리포트(맵별 성적/다승왕/라이벌전)에서
+        // 이미 검증된 HSL 기반 틴트 헬퍼(_prTintByPercent)를 재사용 — hue를 고정한 채
+        // 채도·명도만 승률에 따라 움직여서, alpha blending에서 생기는 탁한 중간톤 없이
+        // "그 종족색의 옅은 버전 ~ 진한 버전"으로 자연스럽게 표현됨.
+        const rWrBarColor = (typeof _prTintByPercent==='function')
+          ? _prTintByPercent(wr===null?1:wr, c, 95).css
+          : ((typeof _urHexToRgba==='function') ? _urHexToRgba(c, wr===null?0.14:0.22+(wr/100)*0.78) : c);
         return `<div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
             <span style="font-size:12px;font-weight:800;color:${c}">${l}</span>
-            <span style="font-size:12px;font-weight:900;color:${rWrCol}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
+            <span style="font-size:12px;font-weight:900;color:${c}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
           </div>
-          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:${rWrCol};border-radius:5px;transition:width .6s ease"></div></div>
+          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:${rWrBarColor};border-radius:5px;transition:width .6s ease,background .3s ease"></div></div>
         </div>`;
       }).join('')}
     </div>

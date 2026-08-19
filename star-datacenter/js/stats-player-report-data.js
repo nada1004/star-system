@@ -431,10 +431,17 @@ function _prRaceBarsHTML(stats){
   let h=`<div>`;
   ['P','T','Z'].forEach(r=>{
     const rv=stats.rv[r]; const tot=rv.w+rv.l; const wr= tot? Math.round(rv.w/tot*100):0;
-    const color=_prRaceColor(r);
+    const baseColor=_prRaceColor(r);
+    // (개선) 종족색을 승률과 무관하게 고정으로 쓰던 것 → 대학 리포트/맵별 성적과 동일하게
+    // 승률이 낮으면 옅게, 높으면 진하게(HSL 틴트) 표현해서 색만 봐도 그 종족을 상대로
+    // 얼마나 강한지 바로 느껴지도록 개선. 배경 명도에 따라 바 안의 글씨색도 같이 맞춤.
+    const tint = (typeof _prTintByPercent==='function') ? _prTintByPercent(tot?wr:1, baseColor, 92) : {css:baseColor, light:40};
+    const fillColor = tint.css;
+    const fillTextColor = (typeof _prTintBarTextColor==='function') ? _prTintBarTextColor(tint.light) : '#fff';
+    const fillTextShadow = fillTextColor==='#fff' ? '0 1px 2px rgba(0,0,0,.45)' : 'none';
     h+=`<div class="pr-bar-row">
       <div class="pr-bar-lbl">${RACE_ICON[r]} ${escHTML(RACE_LABEL[r])}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${tot?Math.max(wr,10):0}%;background:${color}">${tot?_prWrIcon(wr)+' '+wr+'%':'-'}</div></div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${tot?Math.max(wr,10):0}%;background:${fillColor};color:${fillTextColor};text-shadow:${fillTextShadow}">${tot?_prWrIcon(wr)+' '+wr+'%':'-'}</div></div>
       <div class="pr-bar-rec"><span style="color:var(--score-win);font-weight:900">${rv.w}승</span> <span style="color:var(--score-lose);font-weight:900">${rv.l}패</span></div>
     </div>`;
   });
