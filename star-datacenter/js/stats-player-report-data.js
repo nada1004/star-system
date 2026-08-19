@@ -39,6 +39,23 @@ function _prSaveRecent(name){
   }catch(e){}
 }
 
+/* ─── 즐겨찾기(고정) — 자주 보는 스트리머를 상단에 고정 ─── */
+var PR_FAV_KEY = 'su_prReportFav';
+function _prLoadFav(){
+  try{ return JSON.parse(localStorage.getItem(PR_FAV_KEY)||'[]'); }catch(e){ return []; }
+}
+function _prIsFav(name){ return _prLoadFav().includes(name); }
+function _prToggleFav(name){
+  try{
+    let arr = _prLoadFav();
+    if (arr.includes(name)) arr = arr.filter(n=>n!==name);
+    else { arr.unshift(name); arr = arr.slice(0,12); }
+    localStorage.setItem(PR_FAV_KEY, JSON.stringify(arr));
+  }catch(e){}
+  if (typeof render==='function') render();
+}
+try{ window._prToggleFav = _prToggleFav; window._prIsFav = _prIsFav; window._prLoadFav = _prLoadFav; }catch(e){}
+
 /* ─── 스타일 주입 (1회) ─── */
 try{
 (function _prInjectCss(){
@@ -58,6 +75,12 @@ try{
     '.pr-recent-lbl{font-size:11px;color:var(--text2);font-weight:800;display:inline-flex;align-items:center;gap:4px}',
     '.pr-recent-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:999px;background:var(--white);border:1px solid var(--border2);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);transition:.15s}',
     '.pr-recent-chip:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue)}',
+    '.pr-fav-chip{border-color:#f59e0b6b;background:#fffbeb;color:#92400e}',
+    '.pr-fav-chip:hover{background:#fef3c7;border-color:#f59e0b;color:#92400e}',
+    '.pr-mode-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:10px;padding:8px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border)}',
+    '.pr-mode-legend-item{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text2)}',
+    '.pr-mode-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}',
+    'body.dark .pr-mode-legend{background:rgba(15,23,42,.5);border-color:#334155}',
     '.pr-hero{display:flex;align-items:center;gap:20px;padding:22px;border-radius:22px;background:var(--white);border:1px solid var(--border);box-shadow:var(--sh);flex-wrap:wrap;margin-bottom:14px}',
     '.pr-hero-photo{width:124px;height:124px;border-radius:var(--su_profile_radius,22px);overflow:hidden;flex-shrink:0;cursor:pointer;transition:transform .18s,box-shadow .18s}',
     '.pr-hero-photo:hover{transform:translateY(-2px) scale(1.02)}',

@@ -428,6 +428,17 @@ function _prVsCompareHTML(p){
   return h;
 }
 
+/* ─── 모드 뱃지 색상 범례 — 처음 보는 사람도 색이 뭘 뜻하는지 알 수 있도록 ─── */
+function _prModeLegendHTML(){
+  const colors = (typeof _pdRecentModeColors==='function') ? _pdRecentModeColors() : {};
+  const order = ['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','대회','프로리그대회','끝장전','개인전'];
+  const items = order.filter(k=>colors[k]);
+  if (!items.length) return '';
+  return `<div class="pr-mode-legend no-export">
+    ${items.map(k=>`<span class="pr-mode-legend-item"><span class="pr-mode-legend-dot" style="background:${colors[k]}"></span>${escHTML(k)}</span>`).join('')}
+  </div>`;
+}
+
 /* ─── 최근 경기 표 (기존 렌더 함수 재사용 · 읽기 전용) ─── */
 function _prRecentTableHTML(p){
   const hist = _statsAllHist(p).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
@@ -513,6 +524,7 @@ function _prHeroHTML(p){
       </div>
     </div>
     <div class="pr-hero-actions no-export">
+      <button class="pr-btn pr-btn-ghost pr-btn-iconOnly" title="즐겨찾기" onclick="_prToggleFav('${escJS(p.name)}')">${(typeof _prIsFav==='function'&&_prIsFav(p.name))?'⭐':'☆'}<span>즐겨찾기</span></button>
       <button class="pr-btn pr-btn-primary" onclick="openPlayerModal('${escJS(p.name)}')">👤 상세 프로필</button>
       <a class="pr-btn pr-btn-ghost pr-btn-iconOnly" href="${eloBoardUrl}" target="_blank" rel="noopener" title="ELO 보드">📡<span>ELO 보드</span></a>
       <button id="pr-report-speak-btn" class="pr-btn pr-btn-ghost pr-btn-iconOnly" title="리포트 음성으로 듣기" onclick="_prToggleSpeak()">🔊<span>음성듣기</span></button>

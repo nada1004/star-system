@@ -16,6 +16,14 @@ function statsPlayerReportHTML(){
       <div id="pr-search-drop" class="pr-search-drop" style="display:none"></div>
     </div>`;
 
+  const favList = _prLoadFav().filter(n=>n!==window._prName && (players||[]).some(x=>x&&x.name===n));
+  if(favList.length){
+    h += `<div class="pr-recent-wrap">
+      <span class="pr-recent-lbl">⭐ 즐겨찾기</span>
+      ${favList.map(n=>`<span class="pr-recent-chip pr-fav-chip" onclick="_prSelectPlayer('${escJS(n)}')">${escHTML(n)}</span>`).join('')}
+    </div>`;
+  }
+
   const recent = _prLoadRecent().filter(n=>n!==window._prName);
   if(recent.length){
     h += `<div class="pr-recent-wrap">
@@ -82,7 +90,7 @@ function statsPlayerReportHTML(){
   const recentMapStats = _prMapStats(_prExcludeFilter(histAll));
   h += `<div class="ssec" id="pr-sec-mapwl"><div class="pr-sec-head"><h4>🗺️ 맵별 전적 <span class="pr-sec-sub">(클릭하면 아래 최근 경기가 해당 맵으로 필터링됩니다)</span></h4></div>${_prRecentMapWinLossHTML(recentMapStats)}</div>`;
 
-  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기${window._prRecentMapFilter?` · <span style="color:var(--blue)">${escHTML(window._prRecentMapFilter)}</span>`:''}</h4></div>${_prRecentTableHTML(p)}</div>`;
+  h += `<div class="ssec" id="pr-sec-recent"><div class="pr-sec-head"><h4>📋 최근 경기${window._prRecentMapFilter?` · <span style="color:var(--blue)">${escHTML(window._prRecentMapFilter)}</span>`:''}</h4></div>${(typeof _prModeLegendHTML==='function')?_prModeLegendHTML():''}${_prRecentTableHTML(p)}</div>`;
   h += `</div>`;
 
   return h;
