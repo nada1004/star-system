@@ -919,12 +919,12 @@ function statsUnivReportHTML(){
             <td style="width:66px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:none">${escHTML(_urFmtRecentDate(m.date))}</td>
             <td class="ur-recent-mode-cell">${modeBadge}</td>
             <td class="ur-recent-name-cell" style="font-weight:800;color:${col};cursor:pointer" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeMName}')">
-              <span class="ur-recent-inline">${_urRecentAvatarHTML(m.name, m.photo, m.secondProfileFile, col)}<span style="display:inline-flex;align-items:center;gap:3px">${escHTML(m.name)}${myRaceBadge}</span></span>
+              <span class="ur-recent-inline">${_urRecentAvatarHTML(m.name, m.photo, m.secondProfileFile, col)}<span style="display:inline-flex;align-items:center;gap:7px">${escHTML(m.name)}${myRaceBadge}</span></span>
             </td>
             <td style="width:44px;text-align:center"><span class="ur-recent-result ${isWin?'is-win':'is-lose'}">${m.result}</span></td>
             <td class="ur-vs-cell" style="width:34px;text-align:center">${m.opp?`<span class="ur-vs-label">vs</span>`:''}</td>
             <td class="ur-recent-opp-cell" style="color:var(--text2);${m.opp?'cursor:pointer':''}" ${m.opp?`onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeOppName}')"`:''}>
-              <span class="ur-recent-inline">${oppAvatarHtml}<span style="display:inline-flex;align-items:center;gap:3px">${escHTML(m.opp||'-')}${oppRaceBadge}</span></span>
+              <span class="ur-recent-inline">${oppAvatarHtml}<span style="display:inline-flex;align-items:center;gap:7px">${escHTML(m.opp||'-')}${oppRaceBadge}</span></span>
             </td>
             <td style="width:80px;text-align:right">${m.map?`<span class="ur-recent-map" title="이 맵으로 필터링" onclick="window._urRecentMapFilter='${safeMap}';render()">${escHTML(m.map)}</span>`:''}</td>
           </tr>`;
