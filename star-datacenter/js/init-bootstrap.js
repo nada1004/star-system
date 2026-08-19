@@ -252,6 +252,10 @@ async function init(){
   }
   // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
   if(typeof syncTourneyHistory==='function') syncTourneyHistory();
+  // 프로리그 대회 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
+  // [FIX] 기존에는 설정탭의 "전적 동기화" 버튼(proCompSyncHistory)을 눌러야만
+  // 반영되어, 앱 로드 직후에는 프로리그 대회 경기 기록이 안 보이는 문제가 있었음.
+  if(typeof _proCompSyncSilent==='function') _proCompSyncSilent();
   // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
   if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
   // 티어대전 → 티어대회 명칭 마이그레이션
