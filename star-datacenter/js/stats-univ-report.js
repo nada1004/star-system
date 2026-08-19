@@ -902,7 +902,7 @@ function statsUnivReportHTML(){
       <div class="ur-panel-title">📅 최근 경기 <small style="font-weight:700;color:var(--text3);margin-left:4px">${_urRecentSorted.length}경기</small>${_urMapFilterChip}</div>
       ${_urRecentFilterBar}
       ${!_urRecentByMap.length?`<div style="padding:24px;text-align:center;color:var(--gray-l)">선택한 조건에 기록이 없습니다.</div>`:`<table class="ur-recent-table"><thead><tr>
-        <th style="width:66px">날짜</th><th style="width:70px">종류</th><th style="width:150px">스트리머</th><th style="width:40px;text-align:center">결과</th><th style="width:28px;text-align:center">vs</th><th style="width:82px">대학</th><th style="width:150px">상대</th><th style="width:80px;text-align:right">맵</th>
+        <th style="width:66px">날짜</th><th style="width:70px">종류</th><th style="width:150px">스트리머</th><th style="width:40px;text-align:center">결과</th><th style="width:28px;text-align:center">vs</th><th style="width:120px">대학</th><th style="width:150px">상대</th><th style="width:80px;text-align:right">맵</th>
       </tr></thead><tbody>
         ${_urRecentByMap.map(m=>{
           const isWin = m.result==='승';
@@ -913,7 +913,7 @@ function statsUnivReportHTML(){
           const myRaceBadge = m.race ? `<span class="rbadge r${escHTML(m.race)}" style="font-size:9px;padding:1px 5px;flex-shrink:0">${escHTML(m.race)}</span>` : '';
           const oppRaceBadge = m.oppRace ? `<span class="rbadge r${escHTML(m.oppRace)}" style="font-size:9px;padding:1px 5px;flex-shrink:0">${escHTML(m.oppRace)}</span>` : '';
           const oppUnivHtml = (m.oppUniv && m.oppUniv!=='무소속' && typeof gUI==='function')
-            ? `<span style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHTML(m.oppUniv)}" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${String(m.oppUniv).replace(/'/g,"\\'")}')">${gUI(m.oppUniv,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(m.oppUniv,'players','14px'):'14px'))}<span style="overflow:hidden;text-overflow:ellipsis">${escHTML(m.oppUniv)}</span></span>`
+            ? `<span style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:900;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHTML(m.oppUniv)}" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${String(m.oppUniv).replace(/'/g,"\\'")}')">${gUI(m.oppUniv,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(m.oppUniv,'players','22px'):'22px'))}<span style="overflow:hidden;text-overflow:ellipsis">${escHTML(m.oppUniv)}</span></span>`
             : '';
           const modeLbl = (typeof _pdNormalizeRecentModeLabel==='function') ? _pdNormalizeRecentModeLabel(m.mode) : (m.mode||'');
           const modeColor = (typeof _pdRecentModeColors==='function' && modeLbl) ? (_pdRecentModeColors()[modeLbl]||'#6b7280') : '#6b7280';
@@ -926,7 +926,7 @@ function statsUnivReportHTML(){
             </td>
             <td style="width:40px;text-align:center"><span class="ur-recent-result ${isWin?'is-win':'is-lose'}">${m.result}</span></td>
             <td class="ur-vs-cell" style="width:28px;text-align:center">${m.opp?`<span class="ur-vs-label">vs</span>`:''}</td>
-            <td style="width:82px">${oppUnivHtml}</td>
+            <td style="width:120px">${oppUnivHtml}</td>
             <td class="ur-recent-opp-cell" style="color:var(--text2);${m.opp?'cursor:pointer':''}" ${m.opp?`onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeOppName}')"`:''}>
               <span class="ur-recent-inline">${oppAvatarHtml}<span style="display:inline-flex;align-items:center;gap:7px">${escHTML(m.opp||'-')}${oppRaceBadge}</span></span>
             </td>

@@ -327,7 +327,7 @@ function rStats(C,T){
           try{
             if(typeof window._loadScriptOnce==='function'){
               await window._loadScriptOnce('js/stats-player-report-data.js?v=20260817-mvprival2');
-              await window._loadScriptOnce('js/stats-player-report-sections.js?v=20260819-univcol1');
+              await window._loadScriptOnce('js/stats-player-report-sections.js?v=20260819-univcol2');
               await window._loadScriptOnce('js/stats-player-report-entry.js?v=20260817-mvprival2');
               await window._loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
             }
@@ -346,7 +346,7 @@ function rStats(C,T){
         (async()=>{
           try{
             if(typeof window._loadScriptOnce==='function'){
-              await window._loadScriptOnce('js/stats-univ-report.js?v=20260819-univcol1');
+              await window._loadScriptOnce('js/stats-univ-report.js?v=20260819-univcol2');
             }
             if(typeof render==='function') render(true);
           }catch(e){ try{ console.error('[lazy] ureport load fail', e); }catch(_){} }

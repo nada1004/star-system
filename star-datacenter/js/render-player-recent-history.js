@@ -51,7 +51,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   const oppRace=hh.oppRace||oppP?.race||'';
   const oppUniv=oppP?.univ||'';
   const oppUnivHTML = (oppUniv && oppUniv!=='무소속' && typeof gUI==='function')
-    ? `<span style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(oppUniv)}" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${escJS(oppUniv)}')">${gUI(oppUniv,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(oppUniv,'players','14px'):'14px'))}<span style="overflow:hidden;text-overflow:ellipsis">${escHTML(oppUniv)}</span></span>`
+    ? `<span style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:900;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(oppUniv)}" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${escJS(oppUniv)}')">${gUI(oppUniv,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(oppUniv,'players','22px'):'22px'))}<span style="overflow:hidden;text-overflow:ellipsis">${escHTML(oppUniv)}</span></span>`
     : '';
   const canBulkEdit = (isLoggedIn && !hh._readOnly && hi >= 0 && canEditByDate);
   const canEdit = (isLoggedIn && canEditByDate && (((!hh._readOnly) && hi >= 0) || !!hh._editableSource));
@@ -116,7 +116,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
       :isDraw
         ?`<span style="${resultBadgeStyle};background:#94a3b8;color:#fff;border:1px solid #94a3b8">DRAW</span>`
         :`<span style="${resultBadgeStyle};background:var(--score-lose);color:#fff;border:1px solid var(--score-lose)">LOSE</span>`}</td>
-    <td style="width:92px;padding-right:6px">${oppUnivHTML}</td>
+    <td style="width:122px;padding-right:6px">${oppUnivHTML}</td>
     <td style="width:130px;cursor:pointer;font-weight:700;white-space:nowrap" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">${getPlayerPhotoHTML(hh.opp,'18px','pointer-events:none;flex-shrink:0;')}<span style="color:var(--blue);white-space:nowrap">${hh.opp}</span></span></td>
     <td style="width:60px;padding-left:0px"><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
     <td class="ph-col-map" style="width:104px;color:var(--gray-l);font-size:var(--fs-caption);white-space:nowrap">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
@@ -156,7 +156,7 @@ function buildPlayerRecentHistorySectionHTML(opts){
     </div>`;
   h+=seasonBar;
   h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;
-  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:66px">결과</th><th style="width:92px">대학</th><th style="width:130px">상대</th><th style="width:60px;padding-left:0px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th>${manageHeader}</tr></thead><tbody>`;
+  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:66px">결과</th><th style="width:122px">대학</th><th style="width:130px">상대</th><th style="width:60px;padding-left:0px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th>${manageHeader}</tr></thead><tbody>`;
   displayHist.forEach(hh=>{
     h += buildPlayerRecentHistoryRowHTML({
       hh,
