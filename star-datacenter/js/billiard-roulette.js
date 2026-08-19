@@ -48,17 +48,24 @@
     'body.dark .bl-hero-title,body.dark .bl-table-title{color:#f8fafc}',
     'body.dark .bl-hero-desc,body.dark .bl-table-desc{color:#94a3b8}',
     'body.dark .bl-result-card{background:linear-gradient(180deg,rgba(6,78,59,.35),rgba(15,23,42,.9));border-color:rgba(34,197,94,.28)}',
-    '.bl-popup-wrap{position:relative;text-align:center;padding:16px 6px 6px;overflow:hidden}',
-    '.bl-popup-glow{position:absolute;inset:-40px;background:radial-gradient(circle, var(--wc) 0%, transparent 62%);opacity:.32;filter:blur(20px);animation:blGlowPulse 1.7s ease-in-out infinite;pointer-events:none}',
-    '@keyframes blGlowPulse{0%,100%{transform:scale(1);opacity:.26}50%{transform:scale(1.18);opacity:.46}}',
-    '.bl-popup-confetti{position:relative;font-size:22px;letter-spacing:13px;opacity:.9;animation:blConfettiDrop .8s ease-out;margin-bottom:2px}',
-    '@keyframes blConfettiDrop{0%{transform:translateY(-20px);opacity:0}40%{opacity:1}100%{transform:translateY(0);opacity:.9}}',
-    '.bl-popup-ball{position:relative;width:96px;height:96px;border-radius:50%;margin:4px auto 14px;background:radial-gradient(circle at 32% 26%, #fff, var(--wc) 46%, var(--wc));box-shadow:0 16px 32px rgba(0,0,0,.3),inset 0 -8px 12px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;animation:blBallBounceIn .55s cubic-bezier(.34,1.56,.64,1)}',
+    '.bl-popup-wrap{position:relative;text-align:center;padding:0;overflow:hidden}',
+    '.bl-popup-felt{position:relative;margin:2px 4px 14px;padding:22px 14px 20px;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%, #1a7a4a 0%, #0d5c37 55%, #073b24 100%);box-shadow:inset 0 0 0 6px #5c3418,inset 0 0 0 9px rgba(0,0,0,.25),0 14px 26px rgba(0,0,0,.28)}',
+    '.bl-popup-felt::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 8%, rgba(255,255,255,.16), transparent 55%);pointer-events:none}',
+    '.bl-popup-glow{position:absolute;inset:-40px;background:radial-gradient(circle, var(--wc) 0%, transparent 62%);opacity:.4;filter:blur(20px);animation:blGlowPulse 1.7s ease-in-out infinite;pointer-events:none}',
+    '@keyframes blGlowPulse{0%,100%{transform:scale(1);opacity:.32}50%{transform:scale(1.18);opacity:.54}}',
+    '.bl-popup-confetti{position:relative;font-size:20px;letter-spacing:12px;opacity:.95;animation:blConfettiDrop .8s ease-out;margin-bottom:6px}',
+    '@keyframes blConfettiDrop{0%{transform:translateY(-20px);opacity:0}40%{opacity:1}100%{transform:translateY(0);opacity:.95}}',
+    '.bl-popup-ball-shadow{position:relative;width:78px;height:16px;margin:0 auto -14px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.42),transparent 72%);filter:blur(1px)}',
+    '.bl-popup-ball{position:relative;width:92px;height:92px;border-radius:50%;margin:0 auto 4px;background:radial-gradient(circle at 32% 26%, #fff, var(--wc) 46%, var(--wc));box-shadow:0 4px 0 rgba(0,0,0,.18) inset,0 16px 26px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;animation:blBallBounceIn .55s cubic-bezier(.34,1.56,.64,1)}',
     '@keyframes blBallBounceIn{0%{transform:scale(0) rotate(-40deg);opacity:0}55%{transform:scale(1.18) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0)}}',
-    '.bl-popup-ball-label{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#111;padding:2px;text-align:center;line-height:1.15;word-break:keep-all;overflow:hidden}',
-    '.bl-popup-winner-name{font-size:clamp(24px,6vw,34px);font-weight:1000;letter-spacing:-.02em;margin:2px 0 10px;color:var(--text1);text-shadow:0 0 24px var(--wc)}',
-    '.bl-popup-prob-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;background:rgba(120,120,120,.1);font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px}',
-    '.bl-popup-sub{margin-top:2px;font-size:var(--fs-caption);color:var(--text3);font-weight:700}',
+    '.bl-popup-ball-label{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.96);box-shadow:0 1px 3px rgba(0,0,0,.18) inset;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#111;padding:2px;text-align:center;line-height:1.15;word-break:keep-all;overflow:hidden}',
+    '.bl-popup-winner-name{position:relative;font-size:clamp(22px,6vw,32px);font-weight:1000;letter-spacing:-.02em;margin:10px 0 4px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35)}',
+    '.bl-popup-tag{position:relative;display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);font-size:11px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:.02em}',
+    '.bl-popup-info-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}',
+    '.bl-popup-prob-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;background:rgba(120,120,120,.1);font-weight:800;font-size:var(--fs-sm);color:var(--text2)}',
+    '.bl-popup-sub{font-size:var(--fs-caption);color:var(--text3);font-weight:700}',
+    '.bl-popup-actions{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px}',
+    '.bl-popup-link{border:none;background:transparent;color:var(--text3);font-weight:700;font-size:var(--fs-caption);cursor:pointer;padding:2px 4px;text-decoration:underline;text-underline-offset:2px}',
     'body.dark .bl-popup-prob-chip{background:rgba(255,255,255,.08)}',
     '@media (max-width:760px){.bl-hero,.bl-table-meta{flex-direction:column}.bl-badge-row{justify-content:flex-start}.bl-setup-panel,.bl-table-panel{padding-left:14px;padding-right:14px}}',
   ].join('');
@@ -361,7 +368,10 @@ function _blRenderTable(root){
     + '<div class="bl-table-title">🎱 브레이크 진행 중</div>'
     + '<div class="bl-table-desc">공이 흩어지고 마지막까지 지켜보면 당첨자가 포켓으로 들어갑니다.</div>'
     + '</div>'
-    + '<button onclick="_blResetBreak()" class="bl-btn-secondary" style="font-size:var(--fs-sm);padding:7px 14px">🔄 다시하기</button>'
+    + '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'
+    + '<button onclick="_blReplayBreak()" class="bl-btn-secondary" style="font-size:var(--fs-sm);padding:7px 14px">🔄 다시하기</button>'
+    + '<button onclick="_blResetBreak()" class="bl-btn-secondary" style="font-size:var(--fs-caption);padding:5px 10px;opacity:.72;border:none;background:transparent;box-shadow:none">✏️ 참가자 변경</button>'
+    + '</div>'
     + '</div>'
     + '<div class="bl-felt-wrap" id="bl-felt-wrap">'
     + '<canvas id="bl-canvas" style="width:100%;height:auto;display:block"></canvas>'
@@ -390,13 +400,20 @@ function _blDrawTable(){
   ctx.save();
 
   // 피니시 단계 카메라 줌 (당첨 공에 시선 집중)
+  // [개선] 코너 포켓에 가까운 공을 그대로 화면 중앙에 놓고 확대하면
+  // 캔버스 바깥(빈 여백)까지 보이면서 레일 배경만 크게 확대되어 지저분해 보이는
+  // 문제가 있었음. 확대 배율을 낮추고, 카메라 중심이 캔버스 범위를 벗어나지
+  // 않도록 클램프해서 항상 실제로 그려진 영역만 보이도록 함.
   if (_blSt.phase === 'finish' && _blSt.balls[_blSt.winnerBallIdx]) {
     const wb = _blSt.balls[_blSt.winnerBallIdx];
     const p = Math.min(1, (_blSt.finishFrame||0) / _BL_FINISH_FRAMES);
-    const zoom = 1 + 0.55*p;
+    const zoom = 1 + 0.3*p;
+    const hw = w/(2*zoom), hh = h/(2*zoom);
+    const focusX = Math.min(w-hw, Math.max(hw, wb.x));
+    const focusY = Math.min(h-hh, Math.max(hh, wb.y));
     ctx.translate(w/2, h/2);
     ctx.scale(zoom, zoom);
-    ctx.translate(-wb.x, -wb.y);
+    ctx.translate(-focusX, -focusY);
   }
 
   // 레일(테두리)
@@ -444,14 +461,32 @@ function _blDrawTable(){
   ctx.fillStyle = vg;
   ctx.fillRect(_BL_X0-8,_BL_Y0-8,(_BL_X1-_BL_X0)+16,(_BL_Y1-_BL_Y0)+16);
 
-  // 포켓
+  // 포켓 (입체감: 어두운 안쪽 그라데이션 + 상단 하이라이트 림)
   _BL_POCKETS.forEach(function(p){
+    // 바깥 그림자 링(펠트에 파묻힌 느낌)
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,_BL_POCKET_R+3,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.fill();
+    // 안쪽 깊이감 그라데이션
+    const pg = ctx.createRadialGradient(p.x,p.y-2,1, p.x,p.y,_BL_POCKET_R);
+    pg.addColorStop(0,'#1c2431');
+    pg.addColorStop(0.55,'#0b0f1a');
+    pg.addColorStop(1,'#000');
     ctx.beginPath();
     ctx.arc(p.x,p.y,_BL_POCKET_R,0,Math.PI*2);
-    ctx.fillStyle = '#0b0f1a';
+    ctx.fillStyle = pg;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.18)';
-    ctx.lineWidth = 3;
+    // 가죽 림 하이라이트(위쪽만 밝게)
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,_BL_POCKET_R,Math.PI*1.05,Math.PI*1.95);
+    ctx.strokeStyle = 'rgba(255,255,255,.28)';
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,_BL_POCKET_R,Math.PI*0.05,Math.PI*0.95);
+    ctx.strokeStyle = 'rgba(0,0,0,.35)';
+    ctx.lineWidth = 2.4;
     ctx.stroke();
   });
 
@@ -479,17 +514,42 @@ function _blDrawTable(){
   // 이름 볼
   _blSt.balls.forEach(function(b){ if (!b.pocketed) _blDrawBall(ctx, b); });
 
-  // 포켓 흡입 플래시
+  // 포켓 흡입 플래시 (당첨 공 색상으로 링 2겹 + 반짝임)
   (_blSt.flashes||[]).forEach(function(f){
     const p = f.frame / f.maxFrame;
+    const col = f.color || '#FDE047';
     ctx.beginPath();
-    ctx.arc(f.x, f.y, _BL_POCKET_R*(0.6+p*1.1), 0, Math.PI*2);
-    ctx.strokeStyle = 'rgba(253,224,71,' + (1-p) + ')';
-    ctx.lineWidth = 3;
+    ctx.arc(f.x, f.y, _BL_POCKET_R*(0.55+p*1.25), 0, Math.PI*2);
+    ctx.strokeStyle = _blHexAlpha(col, Math.max(0,1-p));
+    ctx.lineWidth = 3.2;
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, _BL_POCKET_R*(0.3+p*0.8), 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,' + Math.max(0,0.85-p) + ')';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    if (p < 0.4) {
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, _BL_POCKET_R*0.5*(1-p/0.4), 0, Math.PI*2);
+      ctx.fillStyle = _blHexAlpha(col, Math.max(0,0.5-p));
+      ctx.fill();
+    }
   });
 
   ctx.restore();
+
+  // 피니시 단계: 화면 가장자리를 은은하게 어둡게 해 줌 카메라가
+  // 갑자기 잘린 것처럼 보이지 않고 당첨 공에 스포트라이트가 비추는 느낌을 줌
+  if (_blSt.phase === 'finish') {
+    const p = Math.min(1, (_blSt.finishFrame||0) / _BL_FINISH_FRAMES);
+    ctx.save();
+    const vg = ctx.createRadialGradient(w/2,h/2, h*0.28, w/2,h/2, h*0.72);
+    vg.addColorStop(0,'rgba(0,0,0,0)');
+    vg.addColorStop(1,'rgba(0,0,0,' + (0.22*p) + ')');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+  }
 }
 
 function _blHexAlpha(hex, a){
@@ -561,30 +621,63 @@ function _blDrawStickFollow(ctx){
 
 function _blDrawBall(ctx, b){
   ctx.save();
+
+  // 바닥 그림자(펠트 위에 떠 있지 않고 놓여있는 느낌)
+  ctx.beginPath();
+  ctx.ellipse(b.x, b.y+b.r*0.62, b.r*0.92, b.r*0.32, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,.24)';
+  ctx.fill();
+
+  // 당첨(가이드) 공: 포켓으로 빨려가는 동안 컬러 후광 펄스
+  if (b.guided) {
+    const pulse = 0.5 + 0.5*Math.sin((_blSt.finishFrame||0) * 0.35);
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r + 6 + pulse*3, 0, Math.PI*2);
+    ctx.strokeStyle = _blHexAlpha(b.color, 0.55 + pulse*0.35);
+    ctx.lineWidth = 3.4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r + 11 + pulse*4, 0, Math.PI*2);
+    ctx.strokeStyle = _blHexAlpha(b.color, 0.18 + pulse*0.14);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
   ctx.beginPath();
   ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-  const grad = ctx.createRadialGradient(b.x-b.r*0.35, b.y-b.r*0.4, b.r*0.15, b.x, b.y, b.r);
+  const grad = ctx.createRadialGradient(b.x-b.r*0.38, b.y-b.r*0.42, b.r*0.08, b.x, b.y, b.r*1.05);
   grad.addColorStop(0, '#ffffff');
-  grad.addColorStop(0.28, b.color);
-  grad.addColorStop(1, b.color);
+  grad.addColorStop(0.22, b.color);
+  grad.addColorStop(0.82, b.color);
+  grad.addColorStop(1, 'rgba(0,0,0,.22)');
   ctx.fillStyle = grad;
   ctx.fill();
-  ctx.lineWidth = 1.4;
-  ctx.strokeStyle = 'rgba(0,0,0,.25)';
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(0,0,0,.3)';
   ctx.stroke();
+  // 작은 반사 하이라이트(광택)
+  ctx.beginPath();
+  ctx.ellipse(b.x-b.r*0.36, b.y-b.r*0.4, b.r*0.28, b.r*0.16, -0.5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.fill();
+
   if (b.name){
     ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r*0.66, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.arc(b.x, b.y, b.r*0.7, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,.94)';
     ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,.12)';
+    ctx.stroke();
     ctx.fillStyle = '#111';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     let label = b.name;
-    let fontPx = 9;
-    if (label.length >= 5) { label = label.slice(0,4); fontPx = 7.5; }
-    else if (label.length === 4) { fontPx = 8; }
-    ctx.font = '700 ' + fontPx + 'px sans-serif';
+    let fontPx = 10.5;
+    if (label.length >= 6) { label = label.slice(0,5); fontPx = 8; }
+    else if (label.length === 5) { fontPx = 8.6; }
+    else if (label.length === 4) { fontPx = 9.4; }
+    ctx.font = '800 ' + fontPx + 'px sans-serif';
     ctx.fillText(label, b.x, b.y+0.5);
   }
   ctx.restore();
@@ -642,7 +735,7 @@ function _blLoop(){
     _blUpdateTrails();
     if (p >= 1) {
       wb.pocketed = true;
-      if (_blSt.flashes) _blSt.flashes.push({x:wb.targetPocket.x, y:wb.targetPocket.y, frame:0, maxFrame:22});
+      if (_blSt.flashes) _blSt.flashes.push({x:wb.targetPocket.x, y:wb.targetPocket.y, frame:0, maxFrame:30, color:wb.color});
       _blFinish();
       return;
     }
@@ -775,14 +868,21 @@ function _blFinish(){
     const winnerEsc = String(winner).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     window._rrShowPopup('🎱 당구 브레이크 결과', ''
       + '<div class="bl-popup-wrap" style="--wc:' + winnerColor + '">'
-      +   '<div class="bl-popup-glow"></div>'
-      +   '<div class="bl-popup-confetti">🎉🎊✨🎊🎉</div>'
-      +   '<div class="bl-popup-ball"><span class="bl-popup-ball-label">' + ballLabel + '</span></div>'
-      +   '<div class="bl-popup-winner-name">' + winnerEsc + '</div>'
-      +   '<span class="bl-popup-prob-chip">🎲 당첨 확률 ' + prob + '%</span>'
-      +   '<div class="bl-popup-sub">전체 ' + _blSt.entries.length + '명 중 당첨!</div>'
-      +   '<div style="display:flex;justify-content:center;gap:8px;margin-top:16px">'
-      +     '<button class="btn btn-b btn-sm" onclick="_blResetBreak();_rrClosePopup && _rrClosePopup()">🔄 다시하기</button>'
+      +   '<div class="bl-popup-felt">'
+      +     '<div class="bl-popup-glow"></div>'
+      +     '<div class="bl-popup-confetti">🎉🎊✨🎊🎉</div>'
+      +     '<div class="bl-popup-ball-shadow"></div>'
+      +     '<div class="bl-popup-ball"><span class="bl-popup-ball-label">' + ballLabel + '</span></div>'
+      +     '<div class="bl-popup-winner-name">' + winnerEsc + '</div>'
+      +     '<span class="bl-popup-tag">🏆 당첨</span>'
+      +   '</div>'
+      +   '<div class="bl-popup-info-row">'
+      +     '<span class="bl-popup-prob-chip">🎲 당첨 확률 ' + prob + '%</span>'
+      +     '<span class="bl-popup-sub">· 전체 ' + _blSt.entries.length + '명 중 당첨</span>'
+      +   '</div>'
+      +   '<div class="bl-popup-actions">'
+      +     '<button class="btn btn-b btn-sm" onclick="_blReplayBreak();_rrClosePopup && _rrClosePopup()">🎱 바로 다시 브레이크!</button>'
+      +     '<button class="bl-popup-link" onclick="_blResetBreak();_rrClosePopup && _rrClosePopup()">✏️ 참가자 변경 후 다시하기</button>'
       +   '</div>'
       + '</div>');
   }
@@ -793,6 +893,13 @@ function _blResetBreak(){
   _blSt = null;
   const root = document.getElementById('bl-root');
   if (root) _blRenderSetup(root, _blInputCache);
+}
+
+// [추가] 설정 화면으로 돌아가지 않고, 같은 참가자 명단으로 바로 재시작
+function _blReplayBreak(){
+  if (_blAnimId) { cancelAnimationFrame(_blAnimId); _blAnimId = null; }
+  _blSt = null;
+  _blBeginBreak();
 }
 
 // ─── 오디오 ──────────────────────────────────────────────────────────────────
