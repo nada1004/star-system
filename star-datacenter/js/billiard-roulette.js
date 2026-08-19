@@ -32,7 +32,8 @@
     '.bl-felt-wrap{position:relative;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 20px 38px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.15)}',
     '.bl-felt-wrap.bl-shake{animation:blShake .32s ease}',
     '@keyframes blShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}',
-    '.bl-status{margin-top:10px;font-size:var(--fs-base);font-weight:700;color:var(--text2);text-align:center;transition:transform .15s}',
+    '.bl-status{margin-top:12px;font-size:var(--fs-base);font-weight:800;color:#fff;text-align:center;display:inline-block;padding:8px 20px;border-radius:999px;background:linear-gradient(135deg,#16a34a,#065f46);box-shadow:0 8px 18px rgba(6,95,70,.28);transition:transform .15s}',
+    '.bl-status-wrap{text-align:center}',
     '.bl-status.bl-pulse{animation:blStatusPulse .4s ease}',
     '@keyframes blStatusPulse{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}',
     '.bl-result-card{background:linear-gradient(135deg,#ECFDF5,#F0FDF4);border:1px solid rgba(21,128,61,.28);border-radius:24px;padding:22px 24px;text-align:center;margin-top:14px;animation:blPopIn .4s cubic-bezier(.175,.885,.32,1.35);box-shadow:0 20px 36px rgba(21,128,61,.14)}',
@@ -47,6 +48,18 @@
     'body.dark .bl-hero-title,body.dark .bl-table-title{color:#f8fafc}',
     'body.dark .bl-hero-desc,body.dark .bl-table-desc{color:#94a3b8}',
     'body.dark .bl-result-card{background:linear-gradient(180deg,rgba(6,78,59,.35),rgba(15,23,42,.9));border-color:rgba(34,197,94,.28)}',
+    '.bl-popup-wrap{position:relative;text-align:center;padding:16px 6px 6px;overflow:hidden}',
+    '.bl-popup-glow{position:absolute;inset:-40px;background:radial-gradient(circle, var(--wc) 0%, transparent 62%);opacity:.32;filter:blur(20px);animation:blGlowPulse 1.7s ease-in-out infinite;pointer-events:none}',
+    '@keyframes blGlowPulse{0%,100%{transform:scale(1);opacity:.26}50%{transform:scale(1.18);opacity:.46}}',
+    '.bl-popup-confetti{position:relative;font-size:22px;letter-spacing:13px;opacity:.9;animation:blConfettiDrop .8s ease-out;margin-bottom:2px}',
+    '@keyframes blConfettiDrop{0%{transform:translateY(-20px);opacity:0}40%{opacity:1}100%{transform:translateY(0);opacity:.9}}',
+    '.bl-popup-ball{position:relative;width:96px;height:96px;border-radius:50%;margin:4px auto 14px;background:radial-gradient(circle at 32% 26%, #fff, var(--wc) 46%, var(--wc));box-shadow:0 16px 32px rgba(0,0,0,.3),inset 0 -8px 12px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;animation:blBallBounceIn .55s cubic-bezier(.34,1.56,.64,1)}',
+    '@keyframes blBallBounceIn{0%{transform:scale(0) rotate(-40deg);opacity:0}55%{transform:scale(1.18) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0)}}',
+    '.bl-popup-ball-label{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#111;padding:2px;text-align:center;line-height:1.15;word-break:keep-all;overflow:hidden}',
+    '.bl-popup-winner-name{font-size:clamp(24px,6vw,34px);font-weight:1000;letter-spacing:-.02em;margin:2px 0 10px;color:var(--text1);text-shadow:0 0 24px var(--wc)}',
+    '.bl-popup-prob-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;background:rgba(120,120,120,.1);font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px}',
+    '.bl-popup-sub{margin-top:2px;font-size:var(--fs-caption);color:var(--text3);font-weight:700}',
+    'body.dark .bl-popup-prob-chip{background:rgba(255,255,255,.08)}',
     '@media (max-width:760px){.bl-hero,.bl-table-meta{flex-direction:column}.bl-badge-row{justify-content:flex-start}.bl-setup-panel,.bl-table-panel{padding-left:14px;padding-right:14px}}',
   ].join('');
   document.head.appendChild(s);
@@ -55,7 +68,7 @@
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 const _BL_W = 800, _BL_H = 420;
 const _BL_X0 = 34, _BL_Y0 = 34, _BL_X1 = 766, _BL_Y1 = 386;
-const _BL_BALL_R = 15;
+const _BL_BALL_R = 16.5;
 const _BL_POCKET_R = 24;
 const _BL_POCKETS = [
   { x:_BL_X0, y:_BL_Y0 }, { x:(_BL_X0+_BL_X1)/2, y:_BL_Y0 }, { x:_BL_X1, y:_BL_Y0 },
@@ -166,10 +179,10 @@ function _blChipsHTML(val){
 }
 
 // ─── 이력 관리 ───────────────────────────────────────────────────────────────
-function _blAddHistory(name){
+function _blAddHistory(name, color){
   const now = new Date();
   const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  _blHistory.unshift({ name: name, time: timeStr });
+  _blHistory.unshift({ name: name, time: timeStr, color: color || '#22c55e' });
   _blHistory = _blHistory.slice(0,15);
   try{ if(typeof MiscStore!=='undefined') MiscStore.set('su_bl_hist', _blHistory); else localStorage.setItem('su_bl_hist', JSON.stringify(_blHistory)); }catch(e){}
 }
@@ -183,8 +196,10 @@ function _blHistHTML(){
   if (!_blHistory.length) return '<div id="bl-hist-box"></div>';
   const rows = _blHistory.slice(0,8).map(function(h,i){
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위';
+    const dot = '<span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:' + (h.color||'#22c55e') + ';border:1.5px solid rgba(0,0,0,.18);flex-shrink:0"></span>';
     return '<div class="bl-hist-item">'
       + '<span style="font-size:var(--fs-md);min-width:26px">' + medal + '</span>'
+      + dot
       + '<span style="font-weight:700;color:var(--text1);flex:1">' + h.name + '</span>'
       + '<span style="font-size:var(--fs-caption);color:var(--text3)">' + h.time + '</span>'
       + '</div>';
@@ -280,7 +295,8 @@ function _blBeginBreak(){
   const apex = balls[0];
   const dx = apex.x-cue.x, dy = apex.y-cue.y;
   const dist = Math.max(1, Math.hypot(dx,dy));
-  const speed = 15.5;
+  // 인원이 적을수록(랙이 작을수록) 브레이크가 밋밋해 보이지 않도록 큐볼 스피드를 높임
+  const speed = 15.5 + Math.max(0, 6 - entries.length) * 1.15;
   const dirX = dx/dist, dirY = dy/dist;
   cue.targetVx = dirX*speed;
   cue.targetVy = dirY*speed + (Math.random()-0.5)*0.6;
@@ -350,7 +366,7 @@ function _blRenderTable(root){
     + '<div class="bl-felt-wrap" id="bl-felt-wrap">'
     + '<canvas id="bl-canvas" style="width:100%;height:auto;display:block"></canvas>'
     + '</div>'
-    + '<div class="bl-status" id="bl-status">🎯 조준 중...</div>'
+    + '<div class="bl-status-wrap"><div class="bl-status" id="bl-status">🎯 조준 중...</div></div>'
     + '</div>'
     + '</div>';
 
@@ -400,6 +416,34 @@ function _blDrawTable(){
   ctx.lineWidth = 2;
   ctx.strokeRect(_BL_X0-8,_BL_Y0-8,(_BL_X1-_BL_X0)+16,(_BL_Y1-_BL_Y0)+16);
 
+  // 레일 다이아몬드 마커 (실제 당구대 느낌)
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  const dmY = [_BL_Y0-16, _BL_Y1+16];
+  for (let i=1;i<=6;i++){
+    const dx = _BL_X0 + (_BL_X1-_BL_X0)*(i/7);
+    dmY.forEach(function(dy){
+      ctx.beginPath();
+      ctx.moveTo(dx,dy-4); ctx.lineTo(dx+4,dy); ctx.lineTo(dx,dy+4); ctx.lineTo(dx-4,dy);
+      ctx.closePath(); ctx.fill();
+    });
+  }
+  const dmX = [_BL_X0-16, _BL_X1+16];
+  for (let i=1;i<=3;i++){
+    const dy = _BL_Y0 + (_BL_Y1-_BL_Y0)*(i/4);
+    dmX.forEach(function(dx){
+      ctx.beginPath();
+      ctx.moveTo(dx,dy-4); ctx.lineTo(dx+4,dy); ctx.lineTo(dx,dy+4); ctx.lineTo(dx-4,dy);
+      ctx.closePath(); ctx.fill();
+    });
+  }
+
+  // 펠트 비네트(입체감)
+  const vg = ctx.createRadialGradient(w/2,h/2, w*0.28, w/2,h/2, w*0.62);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,.22)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(_BL_X0-8,_BL_Y0-8,(_BL_X1-_BL_X0)+16,(_BL_Y1-_BL_Y0)+16);
+
   // 포켓
   _BL_POCKETS.forEach(function(p){
     ctx.beginPath();
@@ -426,6 +470,8 @@ function _blDrawTable(){
 
   // 조준 단계: 큐대 그리기
   if (_blSt.phase === 'aim') _blDrawCueStick(ctx);
+  // 브레이크 직후: 큐대 팔로우스루 잔상
+  if (_blSt.phase === 'break' && _blSt.stickFollow && _blSt.stickFollow.life > 0) _blDrawStickFollow(ctx);
 
   // 큐볼
   if (_blSt.cue && !_blSt.cue.pocketed) _blDrawBall(ctx, _blSt.cue);
@@ -485,6 +531,34 @@ function _blDrawCueStick(ctx){
   ctx.restore();
 }
 
+function _blDrawStickFollow(ctx){
+  const cue = _blSt.cue;
+  const sf = _blSt.stickFollow;
+  const dirX = sf.dirX, dirY = sf.dirY;
+  const alpha = sf.life / sf.maxLife;
+  // 시간이 지날수록 큐대가 뒤로 물러나며 서서히 사라짐
+  const pull = 8 + (1-alpha)*70;
+  const tipX = cue.x - dirX*(cue.r+8+pull);
+  const tipY = cue.y - dirY*(cue.r+8+pull);
+  const buttX = tipX - dirX*_BL_STICK_LEN;
+  const buttY = tipY - dirY*_BL_STICK_LEN;
+
+  ctx.save();
+  ctx.globalAlpha = alpha*0.85;
+  ctx.lineCap = 'round';
+  const grad = ctx.createLinearGradient(buttX,buttY,tipX,tipY);
+  grad.addColorStop(0,'#7c4a24');
+  grad.addColorStop(0.85,'#d2a679');
+  grad.addColorStop(1,'#e5e7eb');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(buttX,buttY);
+  ctx.lineTo(tipX,tipY);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function _blDrawBall(ctx, b){
   ctx.save();
   ctx.beginPath();
@@ -500,14 +574,17 @@ function _blDrawBall(ctx, b){
   ctx.stroke();
   if (b.name){
     ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r*0.62, 0, Math.PI*2);
+    ctx.arc(b.x, b.y, b.r*0.66, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(255,255,255,.92)';
     ctx.fill();
     ctx.fillStyle = '#111';
-    ctx.font = '700 9px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = b.name.length > 3 ? b.name.slice(0,3) : b.name;
+    let label = b.name;
+    let fontPx = 9;
+    if (label.length >= 5) { label = label.slice(0,4); fontPx = 7.5; }
+    else if (label.length === 4) { fontPx = 8; }
+    ctx.font = '700 ' + fontPx + 'px sans-serif';
     ctx.fillText(label, b.x, b.y+0.5);
   }
   ctx.restore();
@@ -524,6 +601,7 @@ function _blLoop(){
       _blSt.cue.vx = _blSt.cue.targetVx;
       _blSt.cue.vy = _blSt.cue.targetVy;
       _blSt.phase = 'break';
+      _blSt.stickFollow = { life: 16, maxLife: 16, dirX: _blSt.cue.dirX, dirY: _blSt.cue.dirY };
       try{ _blPlayBreak(); }catch(e){}
       const felt = document.getElementById('bl-felt-wrap');
       if (felt) { felt.classList.add('bl-shake'); setTimeout(function(){ felt.classList.remove('bl-shake'); }, 340); }
@@ -532,6 +610,7 @@ function _blLoop(){
     for (let s=0;s<_BL_SUBSTEPS;s++) _blStepPhysics();
     _blUpdateTrails();
     _blAdvanceFlashes();
+    if (_blSt.stickFollow && _blSt.stickFollow.life > 0) _blSt.stickFollow.life--;
     const maxSpeed = _blMaxSpeed();
     const winnerStillOnTable = _blSt.winnerBallIdx>=0 && _blSt.balls[_blSt.winnerBallIdx] && !_blSt.balls[_blSt.winnerBallIdx].pocketed;
     const settled = maxSpeed < 0.05;
@@ -677,7 +756,9 @@ function _blFinish(){
   if (_blAnimId) { cancelAnimationFrame(_blAnimId); _blAnimId = null; }
   _blDrawTable();
   const winner = _blSt.winnerName;
-  _blAddHistory(winner);
+  const winnerBall = _blSt.balls[_blSt.winnerBallIdx];
+  const winnerColor = (winnerBall && winnerBall.color) || '#22c55e';
+  _blAddHistory(winner, winnerColor);
   try{ _blPlayWin(); }catch(e){}
   try{ if (typeof _blFireConfetti==='function') _blFireConfetti(); }catch(e){}
 
@@ -685,11 +766,22 @@ function _blFinish(){
   if (status) status.innerHTML = '🏆 <strong>' + winner + '</strong> 당첨!';
 
   if (typeof window._rrShowPopup === 'function') {
+    const winIdx = _blSt.winIdx;
+    const winnerWeight = (_blSt.entries[winIdx] && _blSt.entries[winIdx].weight) || 1;
+    const totalWeight = _blSt.entries.reduce(function(s,e){ return s+e.weight; }, 0) || 1;
+    const prob = Math.round((winnerWeight/totalWeight)*1000)/10;
+    let ballLabel = winner;
+    if (ballLabel.length >= 5) ballLabel = ballLabel.slice(0,4);
+    const winnerEsc = String(winner).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     window._rrShowPopup('🎱 당구 브레이크 결과', ''
-      + '<div style="text-align:center;padding:6px 4px">'
-      +   '<div style="font-size:46px;line-height:1;margin-bottom:10px">🏆</div>'
-      +   '<div style="font-size:24px;font-weight:1000;color:var(--text1)">' + winner + '</div>'
-      +   '<div style="display:flex;justify-content:center;margin-top:14px">'
+      + '<div class="bl-popup-wrap" style="--wc:' + winnerColor + '">'
+      +   '<div class="bl-popup-glow"></div>'
+      +   '<div class="bl-popup-confetti">🎉🎊✨🎊🎉</div>'
+      +   '<div class="bl-popup-ball"><span class="bl-popup-ball-label">' + ballLabel + '</span></div>'
+      +   '<div class="bl-popup-winner-name">' + winnerEsc + '</div>'
+      +   '<span class="bl-popup-prob-chip">🎲 당첨 확률 ' + prob + '%</span>'
+      +   '<div class="bl-popup-sub">전체 ' + _blSt.entries.length + '명 중 당첨!</div>'
+      +   '<div style="display:flex;justify-content:center;gap:8px;margin-top:16px">'
       +     '<button class="btn btn-b btn-sm" onclick="_blResetBreak();_rrClosePopup && _rrClosePopup()">🔄 다시하기</button>'
       +   '</div>'
       + '</div>');
