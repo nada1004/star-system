@@ -96,7 +96,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
     : { deviceKey:(window.innerWidth<=768?'mb':(window.innerWidth<=1024?'tb':'pc')), scale:1, base:{px:5, fs:8, lh:14, rr:3} };
   const badgeScale = badgeMeta.scale;
   const badgeBase = badgeMeta.base;
-  const modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 ${(badgeBase.px*badgeScale).toFixed(2)}px;border-radius:${(badgeBase.rr*badgeScale).toFixed(2)}px;font-size:${(badgeBase.fs*badgeScale).toFixed(2)}px;font-weight:900;line-height:${(badgeBase.lh*badgeScale).toFixed(2)}px;height:${(badgeBase.lh*badgeScale).toFixed(2)}px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle;max-width:100%;flex-shrink:0;letter-spacing:0`;
+  const modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 ${(badgeBase.px*badgeScale).toFixed(2)}px;border-radius:${(badgeBase.rr*badgeScale).toFixed(2)}px;font-size:${(badgeBase.fs*badgeScale).toFixed(2)}px;font-weight:900;line-height:${(badgeBase.lh*badgeScale).toFixed(2)}px;height:${(badgeBase.lh*badgeScale).toFixed(2)}px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;min-width:${Math.max(56, (badgeBase.lh*4*badgeScale)).toFixed(2)}px;max-width:100%;flex-shrink:0;letter-spacing:0`;
   const resultBadgeStyle = `display:inline-flex;align-items:center;justify-content:center;min-width:${Math.max(32, (badgeBase.lh*2.7*badgeScale)).toFixed(2)}px;padding:0 ${Math.max(4, (badgeBase.px*1.7*badgeScale)).toFixed(2)}px;border-radius:${Math.max(8, (badgeBase.rr*4*badgeScale)).toFixed(2)}px;font-size:${(badgeBase.fs*badgeScale).toFixed(2)}px;font-weight:900;line-height:${(badgeBase.lh*badgeScale).toFixed(2)}px;height:${(badgeBase.lh*badgeScale).toFixed(2)}px;white-space:nowrap;letter-spacing:0`;
   const modeCellHTML=modeLbl?(
     navModes.includes(modeLbl)
@@ -105,17 +105,17 @@ function buildPlayerRecentHistoryRowHTML(opts){
   ):'';
   return `<tr class="pd-hist-row ${isWin?'is-win':isDraw?'is-draw':'is-lose'}" style="background:${isWin?'#fef2f2':isDraw?'#f1f5f9':'#f8fafc'}10">
     ${selectCheckboxHTML}
-    <td style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.date}</td>
-    <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>
-    <td style="text-align:center">${isWin
+    <td style="width:86px;padding-right:10px;color:var(--gray-l);font-size:var(--fs-caption)">${hh.date}</td>
+    <td style="width:88px;padding-right:10px;white-space:nowrap;text-align:left">${modeCellHTML}</td>
+    <td style="width:72px;padding-right:10px;text-align:left">${isWin
       ?`<span style="${resultBadgeStyle};background:var(--score-win);color:#fff;border:1px solid var(--score-win)">WIN</span>`
       :isDraw
         ?`<span style="${resultBadgeStyle};background:#94a3b8;color:#fff;border:1px solid #94a3b8">DRAW</span>`
         :`<span style="${resultBadgeStyle};background:var(--score-lose);color:#fff;border:1px solid var(--score-lose)">LOSE</span>`}</td>
-    <td style="cursor:pointer;font-weight:700;white-space:nowrap" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">${getPlayerPhotoHTML(hh.opp,'18px','pointer-events:none;flex-shrink:0;')}<span style="color:var(--blue);white-space:nowrap">${hh.opp}</span></span></td>
-    <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
-    <td class="ph-col-map" style="color:var(--gray-l);font-size:var(--fs-caption);white-space:nowrap">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
-    <td class="ph-col-elo">${eloStr}</td>
+    <td style="width:170px;cursor:pointer;font-weight:700;white-space:nowrap" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">${getPlayerPhotoHTML(hh.opp,'18px','pointer-events:none;flex-shrink:0;')}<span style="color:var(--blue);white-space:nowrap">${hh.opp}</span></span></td>
+    <td style="width:60px;padding-left:18px"><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
+    <td class="ph-col-map" style="width:104px;color:var(--gray-l);font-size:var(--fs-caption);white-space:nowrap">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
+    <td class="ph-col-elo" style="width:66px">${eloStr}</td>
     ${editBtnHTML}
   </tr>`;
 }
@@ -151,7 +151,7 @@ function buildPlayerRecentHistorySectionHTML(opts){
     </div>`;
   h+=seasonBar;
   h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;
-  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th class="ph-col-map">맵</th><th class="ph-col-elo">ELO</th>${manageHeader}</tr></thead><tbody>`;
+  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:72px">결과</th><th style="width:170px">상대</th><th style="width:60px;padding-left:18px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th>${manageHeader}</tr></thead><tbody>`;
   displayHist.forEach(hh=>{
     h += buildPlayerRecentHistoryRowHTML({
       hh,

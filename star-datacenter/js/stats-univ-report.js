@@ -81,7 +81,9 @@ function _urInjectStyle(){
     'body.dark .ur-roster-sort{background:rgba(15,23,42,.7);border-color:#334155;color:var(--text2)}',
     '.ur-rival-logo,.ur-recent-avatar{width:20px;height:20px;border-radius:50%;overflow:hidden;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--surface);font-size:10px}',
     '.ur-rival-logo img,.ur-recent-avatar img{width:100%;height:100%;object-fit:cover}',
-    '.ur-recent-inline{display:inline-flex;align-items:center;gap:6px;max-width:100%}',
+    '.ur-recent-inline{display:inline-flex;align-items:center;gap:8px;max-width:100%;overflow:hidden}',
+    '.ur-recent-name-cell,.ur-recent-opp-cell{overflow:hidden}',
+    '.ur-recent-name-cell span:not(.ur-recent-avatar),.ur-recent-opp-cell span:not(.ur-recent-avatar){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.ur-vs-label{color:var(--text3);font-weight:800;font-size:10.5px;flex-shrink:0}',
     '.ur-roster-name{font-size:11.5px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.ur-roster-tier{font-size:9px;font-weight:900;padding:1px 7px;border-radius:999px;align-self:flex-start;box-shadow:0 2px 6px rgba(0,0,0,.25)}',
@@ -94,9 +96,11 @@ function _urInjectStyle(){
     '.ur-mini-avatar{width:28px;height:28px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff}',
     '.ur-mini-avatar img{width:100%;height:100%;object-fit:cover}',
     '.ur-bar-track{flex:1;height:9px;border-radius:5px;overflow:hidden;background:var(--border2)}',
-    '.ur-recent-table{width:100%;border-collapse:collapse;font-size:12px}',
+    '.ur-recent-table{width:100%;table-layout:auto;border-collapse:collapse;font-size:12px}',
     '.ur-recent-table thead th{padding:6px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);border-bottom:1.5px solid var(--border2);white-space:nowrap}',
     '.ur-recent-table td{padding:7px 6px;border-bottom:1px solid var(--border2)}',
+    '.ur-recent-table td:nth-child(2){padding-left:12px}',
+    '.ur-recent-table td:nth-child(3){padding-left:12px}',
     '.ur-recent-table tr:last-child td{border-bottom:none}',
     '.ur-recent-row{position:relative;transition:background .12s}',
     '.ur-recent-row:hover td{background:var(--surface)}',
@@ -106,7 +110,8 @@ function _urInjectStyle(){
     '.ur-recent-result{display:inline-flex;align-items:center;justify-content:center;min-width:32px;padding:2px 8px;border-radius:7px;font-size:10px;font-weight:900;letter-spacing:.2px}',
     '.ur-recent-result.is-win{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}',
     '.ur-recent-result.is-lose{background:#dbeafe;color:#2563eb;border:1px solid #93c5fd}',
-    '.ur-recent-map{cursor:pointer;border-bottom:1px dotted var(--text3);padding-bottom:1px}',
+    '.ur-recent-map{cursor:pointer;border-bottom:1px dotted var(--text3);padding-bottom:1px;font-weight:800;color:var(--text2)}',
+    '.ur-recent-mode{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:9.5px;font-weight:900;color:#fff;white-space:nowrap}',
     '.ur-recent-map:hover{color:var(--blue)!important;border-bottom-color:var(--blue)}',
     'body.dark .ur-recent-row:hover td{background:rgba(148,163,184,.08)}',
     'body.dark .ur-recent-result.is-win{background:#7f1d1d33;color:#f87171;border-color:#7f1d1d}',
@@ -351,7 +356,7 @@ function _urRecentMatches(members){
         name:p.name, photo:p.photo||'', secondProfileFile:p.secondProfileFile||'', race:p.race||'',
         date:h.date||h.d||'', result:h.result,
         opp:oppName, oppPhoto: oppP ? (oppP.photo||'') : '', oppSecondProfileFile: oppP ? (oppP.secondProfileFile||'') : '', oppRace: h.oppRace||(oppP?oppP.race:'')||'',
-        map:h.map||''
+        map:h.map||'', mode:h.mode||''
       });
     });
   });
@@ -897,7 +902,7 @@ function statsUnivReportHTML(){
       <div class="ur-panel-title">📅 최근 경기 <small style="font-weight:700;color:var(--text3);margin-left:4px">${_urRecentSorted.length}경기</small>${_urMapFilterChip}</div>
       ${_urRecentFilterBar}
       ${!_urRecentByMap.length?`<div style="padding:24px;text-align:center;color:var(--gray-l)">선택한 조건에 기록이 없습니다.</div>`:`<table class="ur-recent-table"><thead><tr>
-        <th style="width:60px">날짜</th><th>스트리머</th><th style="width:44px">결과</th><th style="width:30px;text-align:center">vs</th><th>상대</th><th style="width:80px;text-align:right">맵</th>
+        <th style="width:66px">날짜</th><th style="width:70px">종류</th><th style="width:150px">스트리머</th><th style="width:44px;text-align:center">결과</th><th style="width:34px;text-align:center">vs</th><th style="width:150px">상대</th><th style="width:80px;text-align:right">맵</th>
       </tr></thead><tbody>
         ${_urRecentByMap.map(m=>{
           const isWin = m.result==='승';
@@ -905,19 +910,23 @@ function statsUnivReportHTML(){
           const safeOppName = String(m.opp||'').replace(/'/g,"\\'");
           const safeMap = String(m.map||'').replace(/'/g,"\\'");
           const oppAvatarHtml = m.opp ? _urRecentAvatarHTML(m.opp, m.oppPhoto, m.oppSecondProfileFile, '#94a3b8') : '';
-          const myRaceBadge = m.race ? `<span class="rbadge r${escHTML(m.race)}" style="font-size:9px;padding:1px 5px">${escHTML(m.race)}</span>` : '';
-          const oppRaceBadge = m.oppRace ? `<span class="rbadge r${escHTML(m.oppRace)}" style="font-size:9px;padding:1px 5px">${escHTML(m.oppRace)}</span>` : '';
+          const myRaceBadge = m.race ? `<span class="rbadge r${escHTML(m.race)}" style="font-size:9px;padding:1px 5px;flex-shrink:0">${escHTML(m.race)}</span>` : '';
+          const oppRaceBadge = m.oppRace ? `<span class="rbadge r${escHTML(m.oppRace)}" style="font-size:9px;padding:1px 5px;flex-shrink:0">${escHTML(m.oppRace)}</span>` : '';
+          const modeLbl = (typeof _pdNormalizeRecentModeLabel==='function') ? _pdNormalizeRecentModeLabel(m.mode) : (m.mode||'');
+          const modeColor = (typeof _pdRecentModeColors==='function' && modeLbl) ? (_pdRecentModeColors()[modeLbl]||'#6b7280') : '#6b7280';
+          const modeBadge = modeLbl ? `<span class="ur-recent-mode" style="background:${modeColor}">${escHTML(modeLbl)}</span>` : '';
           return `<tr class="ur-recent-row ${isWin?'is-win':'is-lose'}">
-            <td style="width:60px;color:var(--text3);font-weight:700;white-space:nowrap">${escHTML(_urFmtRecentDate(m.date))}</td>
+            <td style="width:66px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:none">${escHTML(_urFmtRecentDate(m.date))}</td>
+            <td class="ur-recent-mode-cell">${modeBadge}</td>
             <td class="ur-recent-name-cell" style="font-weight:800;color:${col};cursor:pointer" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeMName}')">
-              <span class="ur-recent-inline">${_urRecentAvatarHTML(m.name, m.photo, m.secondProfileFile, col)}${escHTML(m.name)}${myRaceBadge}</span>
+              <span class="ur-recent-inline">${_urRecentAvatarHTML(m.name, m.photo, m.secondProfileFile, col)}<span style="display:inline-flex;align-items:center;gap:3px">${escHTML(m.name)}${myRaceBadge}</span></span>
             </td>
             <td style="width:44px;text-align:center"><span class="ur-recent-result ${isWin?'is-win':'is-lose'}">${m.result}</span></td>
-            <td class="ur-vs-cell" style="width:30px;text-align:center">${m.opp?`<span class="ur-vs-label">vs</span>`:''}</td>
+            <td class="ur-vs-cell" style="width:34px;text-align:center">${m.opp?`<span class="ur-vs-label">vs</span>`:''}</td>
             <td class="ur-recent-opp-cell" style="color:var(--text2);${m.opp?'cursor:pointer':''}" ${m.opp?`onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeOppName}')"`:''}>
-              <span class="ur-recent-inline">${oppAvatarHtml}${escHTML(m.opp||'-')}${oppRaceBadge}</span>
+              <span class="ur-recent-inline">${oppAvatarHtml}<span style="display:inline-flex;align-items:center;gap:3px">${escHTML(m.opp||'-')}${oppRaceBadge}</span></span>
             </td>
-            <td style="width:80px;text-align:right;color:var(--text3);font-size:11px">${m.map?`<span class="ur-recent-map" title="이 맵으로 필터링" onclick="window._urRecentMapFilter='${safeMap}';render()">${escHTML(m.map)}</span>`:''}</td>
+            <td style="width:80px;text-align:right">${m.map?`<span class="ur-recent-map" title="이 맵으로 필터링" onclick="window._urRecentMapFilter='${safeMap}';render()">${escHTML(m.map)}</span>`:''}</td>
           </tr>`;
         }).join('')}
       </tbody></table>`}
