@@ -2,7 +2,9 @@
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
+// [수정] const는 이 파일(스크립트) 안에서만 유효해 다른 <script> 파일(js/cloud-board-rank-sync.js)에서
+// 참조 시 ReferenceError가 나서 원격 데이터 변경 감지가 조용히 실패했습니다. var로 선언해 전역(window)에 공유합니다.
+var GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
 const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
 function _boardCanManage(){

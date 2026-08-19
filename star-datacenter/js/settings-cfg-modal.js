@@ -91,11 +91,12 @@ function _cfgEnsureModal(){
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!Object.keys(_catSecs||{}).includes(window._cfgCat)) window._cfgCat=(window._cfgCatOrder&&window._cfgCatOrder[0])||'🧩 운영/콘텐츠';
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!Object.keys(window._catSecs||{}).includes(window._cfgCat)) window._cfgCat=(window._cfgCatOrder&&window._cfgCatOrder[0])||'🧩 운영/콘텐츠';
 function _cfgGo(secId){
   // 섹션이 다른 카테고리에 속하면 카테고리 자동 전환
   try{
     let targetCat=null;
+    const _catSecs=window._catSecs||{};
     for(const cat in _catSecs){
       const arr=_catSecs[cat]||[];
       if(arr.indexOf(secId)!==-1){ targetCat=cat; break; }

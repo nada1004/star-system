@@ -12,35 +12,42 @@
      4) star-datacenter/data/history/*.json : 월별 기록 데이터
 ══════════════════════════════════════ */
 
-const GH_OWNER = 'nada1004';
-const GH_REPO = 'star-system';
-const GH_BRANCH = 'main';
-const GH_ENTRY_PATH = 'star-datacenter/data.json';
-const GH_SPLIT_INDEX_PATH = 'star-datacenter/data/index.json';
-const GH_SPLIT_CORE_PATH = 'star-datacenter/data/core.json';
-const GH_SPLIT_HISTORY_DIR = 'star-datacenter/data/history';
-const GH_SPLIT_SCHEMA_VERSION = 2;
-const GH_MONTHLY_KEYS = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
-const FB_AUX_DATABASE_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
-const FB_AUX_SIGNAL_PATH = 'syncSignals/star-datacenter';
+// [수정] const/let 최상위 선언은 이 <script> 태그(이 파일) 안에서만 유효한
+// 렉시컬 스코프를 가지며 window에 자동으로 붙지 않습니다. js/sync/firebase-github.js,
+// js/sync/firebase-signal.js 등 분리된 별도 <script> 파일들이 이 값들을 그대로
+// 참조하고 있었기 때문에, 호출 시점에 "X is not defined" ReferenceError가 발생해
+// GitHub/Firebase 동기화(저장·조회)가 전부 조용히 실패하고 있었습니다.
+// var로 선언하면 최상위 스코프에서 자동으로 window의 프로퍼티가 되어 다른
+// <script> 파일에서도 동일한 전역 변수로 접근/수정할 수 있습니다.
+var GH_OWNER = 'nada1004';
+var GH_REPO = 'star-system';
+var GH_BRANCH = 'main';
+var GH_ENTRY_PATH = 'star-datacenter/data.json';
+var GH_SPLIT_INDEX_PATH = 'star-datacenter/data/index.json';
+var GH_SPLIT_CORE_PATH = 'star-datacenter/data/core.json';
+var GH_SPLIT_HISTORY_DIR = 'star-datacenter/data/history';
+var GH_SPLIT_SCHEMA_VERSION = 2;
+var GH_MONTHLY_KEYS = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
+var FB_AUX_DATABASE_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
+var FB_AUX_SIGNAL_PATH = 'syncSignals/star-datacenter';
 // [보안 수정] 하드코딩된 기본 비밀번호(FB_AUX_DEFAULT_PW)를 제거했습니다.
 // 관리자는 localStorage의 su_fb_pw 값을 직접 설정해야 신호 동기화가 동작합니다.
 // (기존에는 평문 비밀번호가 공개 클라이언트 소스에 그대로 노출되어 있었습니다.)
 
-let _pending = null;
-let _lastSnapshot = null;
-let _lastSavedAt = 0;
-let _saveChain = Promise.resolve();
-let _lastFirebaseSignalAt = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
-let _firebaseSignalBusy = false;
-let _toastPendingSignalTs = 0;
-let _lastMissingMonthsSig = String(localStorage.getItem('su_sync_missing_months_sig')||'');
-let _missingRetryInFlight = false;
-let _autoRetryMissingBusy = false;
-let _autoRetryMissingAttempt = 0;
-let _autoRetryMissingTimer = null;
-let _autoRetryMissingSig = '';
-let _syncAgeBadgeBound = false;
+var _pending = null;
+var _lastSnapshot = null;
+var _lastSavedAt = 0;
+var _saveChain = Promise.resolve();
+var _lastFirebaseSignalAt = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+var _firebaseSignalBusy = false;
+var _toastPendingSignalTs = 0;
+var _lastMissingMonthsSig = String(localStorage.getItem('su_sync_missing_months_sig')||'');
+var _missingRetryInFlight = false;
+var _autoRetryMissingBusy = false;
+var _autoRetryMissingAttempt = 0;
+var _autoRetryMissingTimer = null;
+var _autoRetryMissingSig = '';
+var _syncAgeBadgeBound = false;
 // GitHub 저장/조회 로직은 `js/sync/firebase-github.js`,
 // 신호 감지/강제 동기화/배지 로직은 `js/sync/firebase-signal.js`로 분리
 

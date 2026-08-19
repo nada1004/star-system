@@ -4,7 +4,7 @@
 
 function _cfgApplyCat(cat, autoGo=true){
   window._cfgCat=cat;
-  const show=_catSecs[cat]||[];
+  const show=(window._catSecs||{})[cat]||[];
   let _bottomOpen = true;
   try{
     const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
