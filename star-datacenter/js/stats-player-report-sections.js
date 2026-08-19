@@ -447,7 +447,7 @@ function _prRecentTableHTML(p){
   const shown = filtered.slice(0, window._prTableLimit||20);
   if(!shown.length) return _prEmptyStateHTML('경기 기록이 없습니다');
   let h=`<div class="pr-recent-table" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
-    <table style="margin:0;border:none;width:100%"><thead><tr><th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:72px">결과</th><th style="width:170px">상대</th><th style="width:60px;padding-left:18px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th></tr></thead><tbody>`;
+    <table style="margin:0;border:none;width:100%"><thead><tr><th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:72px">결과</th><th style="width:170px">상대</th><th style="width:60px;padding-left:8px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th></tr></thead><tbody>`;
   shown.forEach(hh=>{
     h += (typeof buildPlayerRecentHistoryRowHTML==='function')
       ? buildPlayerRecentHistoryRowHTML({ hh, hi:-1, pName:p.name, isLoggedIn:false, canEditByDate:false, bulkMode:false, bulkSelectedSet:null })

@@ -113,7 +113,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
         ?`<span style="${resultBadgeStyle};background:#94a3b8;color:#fff;border:1px solid #94a3b8">DRAW</span>`
         :`<span style="${resultBadgeStyle};background:var(--score-lose);color:#fff;border:1px solid var(--score-lose)">LOSE</span>`}</td>
     <td style="width:170px;cursor:pointer;font-weight:700;white-space:nowrap" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">${getPlayerPhotoHTML(hh.opp,'18px','pointer-events:none;flex-shrink:0;')}<span style="color:var(--blue);white-space:nowrap">${hh.opp}</span></span></td>
-    <td style="width:60px;padding-left:18px"><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
+    <td style="width:60px;padding-left:8px"><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
     <td class="ph-col-map" style="width:104px;color:var(--gray-l);font-size:var(--fs-caption);white-space:nowrap">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
     <td class="ph-col-elo" style="width:66px">${eloStr}</td>
     ${editBtnHTML}
@@ -151,7 +151,7 @@ function buildPlayerRecentHistorySectionHTML(opts){
     </div>`;
   h+=seasonBar;
   h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;
-  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:72px">결과</th><th style="width:170px">상대</th><th style="width:60px;padding-left:18px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th>${manageHeader}</tr></thead><tbody>`;
+  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th style="width:86px">날짜</th><th style="width:88px">종류</th><th style="width:72px">결과</th><th style="width:170px">상대</th><th style="width:60px;padding-left:8px">종족</th><th class="ph-col-map" style="width:104px">맵</th><th class="ph-col-elo" style="width:66px">ELO</th>${manageHeader}</tr></thead><tbody>`;
   displayHist.forEach(hh=>{
     h += buildPlayerRecentHistoryRowHTML({
       hh,
