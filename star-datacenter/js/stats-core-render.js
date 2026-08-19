@@ -2,6 +2,29 @@
    통계 - 메인 렌더러 rStats (stats-core.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════
+   (통합, 2026-08-19) ELO 그래프 + 성장 곡선 병합
+   - 두 화면 모두 "스트리머 1명을 골라 시간축 그래프로 보기"라는 동일한
+     패턴이라 별도 서브탭으로 나뉘어 있던 것을 지표 토글 하나로 합침.
+   - 기존 statsEloHTML/statsGrowthHTML, initEloChart/initGrowthChart는
+     그대로 재사용(내부 로직은 건드리지 않아 안전함).
+   ══════════════════════════════════════════════════════════════ */
+function _statsGrowthMergedHTML(){
+  if(window._statsGrowthMetric===undefined){
+    window._statsGrowthMetric = (()=>{ try{ return localStorage.getItem('su_stats_growth_metric')||'elo'; }catch(e){ return 'elo'; } })();
+  }
+  const metric = (window._statsGrowthMetric==='winrate') ? 'winrate' : 'elo';
+  const toggle = `<div class="ssec no-export" style="padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:800;color:var(--text3)">📈 지표</span>
+    <div style="display:flex;gap:6px">
+      <button class="pill ${metric==='elo'?'on':''}" onclick="window._statsGrowthMetric='elo';try{localStorage.setItem('su_stats_growth_metric','elo');}catch(e){}render()">⭐ ELO</button>
+      <button class="pill ${metric==='winrate'?'on':''}" onclick="window._statsGrowthMetric='winrate';try{localStorage.setItem('su_stats_growth_metric','winrate');}catch(e){}render()">📊 누적 승률</button>
+    </div>
+    <span style="font-size:11px;color:var(--gray-l)">${metric==='elo'?'ELO 랭킹이 시즌 동안 어떻게 오르내렸는지 봅니다.':'누적 승률이 초반부터 지금까지 어떻게 변해왔는지 봅니다.'}</span>
+  </div>`;
+  return toggle + (metric==='elo' ? statsEloHTML() : statsGrowthHTML());
+}
+
 function rStats(C,T){
   T.textContent='📊 통계';
   // 전역 유틸(stats-core-utils.js)이 window._statsDateFrom 등을 참조하므로 항상 동기화
@@ -15,7 +38,6 @@ function rStats(C,T){
   // 통계탭 서브탭(스트리머 리포트 등)이 바뀌면 재생 중이던 음성듣기(TTS)를 정지.
   // (SUTTS는 싱글톤이라 stop() 호출 시 speak() 때 등록해둔 onEnd 정리 콜백이 그대로 실행됨)
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _coreIds = new Set(['overview','tierRank','levelRank','award','radar','period','preport','ureport','sharecard']);
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '0') === '1'
     || (typeof window._shouldLockSubFilter==='function' && window._shouldLockSubFilter('stats'));
@@ -27,14 +49,19 @@ function rStats(C,T){
   if(_savedSub&&window.statsSub==='overview'&&_savedSub!=='overview'){
     if((_savedSub!=='csvexport'||_li) && (_savedSub!=='starsystem'||_li)) window.statsSub=_savedSub;
   }
+  // (통합, 2026-08-19) '핵심 통계 / 심화 분석' 모드 구분을 없애고 하나로 합침 + 중복 항목 정리:
+  // - ELO 그래프와 성장 곡선은 "스트리머 1명을 골라 시간축 그래프로 본다"는 점에서 사실상
+  //   같은 화면을 지표만 다르게 보여주던 것이라 'growth' 하나로 합치고 안에서 지표 토글로 전환.
+  // - 최다 기록의 "🔥 최장 연승 기록" 카드는 역대 연속 기록(승/패 스트릭 TOP15)과 내용이 겹쳐서
+  //   역대 연속 기록 쪽을 '최다 기록' 페이지 하단에 합치고 별도 서브탭은 없앰.
+  // 예전에 저장된 서브탭 선택값(elo/streakhist)이 남아있어도 자연스럽게 새 위치로 연결되도록 별칭 처리.
+  if(window.statsSub==='elo') window.statsSub='growth';
+  if(window.statsSub==='streakhist') window.statsSub='records';
   if (window._statsLastSub !== undefined && window._statsLastSub !== window.statsSub &&
       window.SUTTS && ((window.SUTTS.isSpeaking && window.SUTTS.isSpeaking()) || (window.SUTTS.isPaused && window.SUTTS.isPaused()))) {
     try{ window.SUTTS.stop(); }catch(e){}
   }
   window._statsLastSub = window.statsSub;
-  // [UX-FIX] 상단 '핵심 통계 / 심화 분석' 표시와 실제 서브탭이 어긋나지 않도록
-  // 저장된 서브탭 복원이 끝난 뒤에 보기 모드를 계산한다.
-  window._statsViewMode = _coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced';
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},
@@ -42,12 +69,10 @@ function rStats(C,T){
       {id:'levelRank',lbl:'🎮 레벨/등급 순위표'},
       ...(_li?[{id:'starsystem',lbl:'⭐ 스타시스템'}]:[]),
       {id:'promosim',lbl:'🔮 승급 시뮬레이션'},
-      {id:'elo',lbl:'📈 ELO 그래프'},
-      {id:'growth',lbl:'📊 성장 곡선'},
+      {id:'growth',lbl:'📈 성장 그래프'},
       {id:'award',lbl:'🏆 이번 주/달 MVP'},
       {id:'records',lbl:'🎖️ 최다 기록'},
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
-      {id:'streakhist',lbl:'🔥 역대 연속 기록'},
       {id:'playervs',lbl:'⚔️ 스트리머 비교'},
     ]},
     {label:'🏛️ 대학',tabs:[
@@ -79,26 +104,24 @@ function rStats(C,T){
   if (window.TabVis && typeof window.TabVis.visible === 'function') {
     _statsGroups.forEach(g => { g.tabs = g.tabs.filter(t => window.TabVis.visible('stats.' + t.id)); });
   }
+  // 모든 서브탭이 꺼진 그룹은 그룹 pill 자체를 노출하지 않음(빈 그룹 버튼 방지)
+  let _statsGroupsNonEmpty = _statsGroups.filter(g => g.tabs.length);
+  if (!_statsGroupsNonEmpty.length) _statsGroupsNonEmpty = _statsGroups; // 전부 꺼졌으면 안전하게 전체 노출
+  const _statsGroupsFinal = _statsGroupsNonEmpty;
   try{
     if(typeof applyTabLabels==='function'){
-      _statsGroups.forEach(g=>{ g.tabs = applyTabLabels('stats', g.tabs); });
+      _statsGroupsFinal.forEach(g=>{ g.tabs = applyTabLabels('stats', g.tabs); });
     }
   }catch(e){}
-  const _viewFilteredGroups = _statsGroups
-    .map(g=>({
-      ...g,
-      tabs:g.tabs.filter(t=>window._statsViewMode==='core' ? _coreIds.has(t.id) : !_coreIds.has(t.id))
-    }))
-    .filter(g=>g.tabs.length);
   // 유효한 서브탭인지 확인(유효하지 않으면 overview로 복귀)
-  const _allSubIds = new Set(_viewFilteredGroups.flatMap(g=>g.tabs.map(t=>t.id)));
+  const _allSubIds = new Set(_statsGroupsFinal.flatMap(g=>g.tabs.map(t=>t.id)));
   if(!_allSubIds.has(window.statsSub||'')){
-    const _fallback=_viewFilteredGroups[0]?.tabs[0]?.id || 'overview';
+    const _fallback=_statsGroupsFinal[0]?.tabs[0]?.id || 'overview';
     window.statsSub=_fallback;
     try{ localStorage.setItem('su_statsSub',_fallback); }catch(e){}
   }
   // 현재 그룹 찾기
-  const _curGrp=_viewFilteredGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_viewFilteredGroups[0];
+  const _curGrp=_statsGroupsFinal.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroupsFinal[0];
   const _curSub = (window.statsSub||'overview');
   const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
   const _curGrpLabel = (typeof getTabLabel==='function') ? getTabLabel('statsGroup', _curGrp.label, _curGrp.label) : _curGrp.label;
@@ -107,22 +130,14 @@ function rStats(C,T){
     <div class="stats-hero-copy">
       <div class="stats-hero-kicker">Stats Center</div>
       <div class="stats-hero-title">📊 통계 대시보드</div>
-      <div class="stats-hero-desc">${window._statsViewMode==='core'?'자주 보는 핵심 지표 위주로 빠르게 확인할 수 있는 통계 화면입니다.':'세부 비교, 추세, 매트릭스까지 한 번에 볼 수 있는 심화 통계 화면입니다.'}</div>
+      <div class="stats-hero-desc">종합 지표부터 세부 비교·추세·매트릭스까지 한 곳에서 확인할 수 있는 통계 화면입니다.</div>
     </div>
     <div class="stats-hero-badges">
-      <span class="stats-hero-badge">${window._statsViewMode==='core'?'⚡ 핵심 통계':'🧠 심화 분석'}</span>
       <span class="stats-hero-badge">${_curGrpLabel}</span>
       <span class="stats-hero-badge">${_curSubObj?.lbl||'통계'}</span>
     </div>
   </section>`;
   h+=`<div class="stats-toolbar-card no-export">`;
-  h+=`<div class="stats-modebar fbar no-export">
-    <div class="stats-modeseg">
-      <button class="pill ${window._statsViewMode==='core'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='core';window.statsSub='${_coreIds.has(window.statsSub||'')?(window.statsSub||'overview'):'overview'}';localStorage.setItem('su_statsSub',window.statsSub);render()">⚡ 핵심 통계</button>
-      <button class="pill ${window._statsViewMode==='advanced'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='advanced';window.statsSub='${_coreIds.has(window.statsSub||'overview')?(_li?'starsystem':'promosim'):(window.statsSub||(_li?'starsystem':'promosim'))}';localStorage.setItem('su_statsSub',window.statsSub);render()">🧠 심화 분석</button>
-    </div>
-    <span class="stats-modebar-hint">${window._statsViewMode==='core'?'자주 보는 핵심 지표 중심':'세부 비교·추세·매트릭스 중심'}</span>
-  </div>`;
   // 1행: 그룹 pill 바
   h+=`<div class="stats-grouprow fbar no-export">`;
   // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
@@ -130,12 +145,12 @@ function rStats(C,T){
   if(_enableSubFilter && !_lockOpen){
     h+=`<button class="pill stats-filter-toggle ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
   }
-  _viewFilteredGroups.forEach(grp=>{
+  _statsGroupsFinal.forEach(grp=>{
     const isOn=grp===_curGrp;
     const gLbl = (typeof getTabLabel==='function') ? getTabLabel('statsGroup', grp.label, grp.label) : grp.label;
     h+=`<button class="pill stats-group-btn ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${gLbl}</button>`;
   });
-  window._statsGroupItems = _viewFilteredGroups.map(grp=>({
+  window._statsGroupItems = _statsGroupsFinal.map(grp=>({
     id: grp.tabs[0].id,
     label: (typeof getTabLabel==='function') ? getTabLabel('statsGroup', grp.label, grp.label) : grp.label,
     action: `window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()`,
@@ -234,7 +249,7 @@ function rStats(C,T){
   } // end if(_statsFilterOpen)
   h+=`</div>`;
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
-  const _CACHEABLE=['overview','records','streakhist','period','mismatch','univmatrix2'];
+  const _CACHEABLE=['overview','records','period','mismatch','univmatrix2'];
   function _cached(sub, fn){
     if(!_CACHEABLE.includes(sub)) return fn();
     const c=_scGet(sub);
@@ -258,8 +273,7 @@ function rStats(C,T){
       h+=`<div class="ssec"><p style="color:var(--gray-l);padding:30px;text-align:center">⭐ 스타시스템은 로그인 후 이용할 수 있습니다.</p></div>`;
     }
   }
-  else if(window.statsSub==='elo')    h+=_safeRender(statsEloHTML, 'ELO 그래프');
-  else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
+  else if(window.statsSub==='growth') h+=_safeRender(_statsGrowthMergedHTML, '성장 그래프');
   else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이번 주/달 MVP');
   else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
   else if(window.statsSub==='radar'){
@@ -343,7 +357,6 @@ function rStats(C,T){
   else if(window.statsSub==='sharecard')h+=_safeRender(statsShareCardHTML, '공유 카드');
   else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
-  else if(window.statsSub==='streakhist')h+=_safeRender(()=>_cached('streakhist', statsStreakHistHTML), '연속 기록 히스토리');
   else if(window.statsSub==='tiermatch') h+=_safeRender(()=>_cached('tiermatch', statsTierMatchHTML), '티어별 승률(팀전)');
   else if(window.statsSub==='univmatrix2')h+=_safeRender(()=>_cached('univmatrix2', statsUnivMatrix2HTML), '대학 매트릭스');
   else if(window.statsSub==='playervs')  h+=_safeRender(statsPlayerVsHTML, '스트리머 비교');
@@ -352,8 +365,9 @@ function rStats(C,T){
   h+=`</div>`;
   C.innerHTML=h;
   // 서브탭별 후처리
-  if(window.statsSub==='elo')         initEloChart();
-  else if(window.statsSub==='growth') initGrowthChart();
+  if(window.statsSub==='growth'){
+    if((window._statsGrowthMetric||'elo')==='elo') initEloChart(); else initGrowthChart();
+  }
   else if(window.statsSub==='racetrend') initRaceTrendChart();
 }
 

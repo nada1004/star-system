@@ -368,9 +368,9 @@ function _blRenderTable(root){
     + '<div class="bl-table-title">🎱 브레이크 진행 중</div>'
     + '<div class="bl-table-desc">공이 흩어지고 마지막까지 지켜보면 당첨자가 포켓으로 들어갑니다.</div>'
     + '</div>'
-    + '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
     + '<button onclick="_blReplayBreak()" class="bl-btn-secondary" style="font-size:var(--fs-sm);padding:7px 14px">🔄 다시하기</button>'
-    + '<button onclick="_blResetBreak()" class="bl-btn-secondary" style="font-size:var(--fs-caption);padding:5px 10px;opacity:.72;border:none;background:transparent;box-shadow:none">✏️ 참가자 변경</button>'
+    + '<button onclick="_blResetBreak()" class="bl-btn-secondary" style="font-size:var(--fs-sm);padding:7px 14px">⏮ 처음으로</button>'
     + '</div>'
     + '</div>'
     + '<div class="bl-felt-wrap" id="bl-felt-wrap">'
@@ -882,7 +882,7 @@ function _blFinish(){
       +   '</div>'
       +   '<div class="bl-popup-actions">'
       +     '<button class="btn btn-b btn-sm" onclick="_blReplayBreak();_rrClosePopup && _rrClosePopup()">🎱 바로 다시 브레이크!</button>'
-      +     '<button class="bl-popup-link" onclick="_blResetBreak();_rrClosePopup && _rrClosePopup()">✏️ 참가자 변경 후 다시하기</button>'
+      +     '<button class="bl-popup-link" onclick="_blResetBreak();_rrClosePopup && _rrClosePopup()">⏮ 처음으로 (참가자 변경)</button>'
       +   '</div>'
       + '</div>');
   }

@@ -270,6 +270,10 @@ function rTier(C,T){
     if (window.TabVis && typeof window.TabVis.visible === 'function') {
       _viewModes = _viewModes.filter(vm => vm.id==='table' || window.TabVis.visible('tier.mode.'+vm.id));
     }
+    // (개선) 모드 이름도 설정 > 탭 이름(라벨) 설정에서 변경 가능하도록 getTabLabel 적용
+    if (typeof getTabLabel === 'function') {
+      _viewModes = _viewModes.map(vm => ({ ...vm, title: getTabLabel('tierMode', vm.id, vm.title) }));
+    }
     if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
     if(!_viewModes.some(vm=>vm.id===window._tierViewMode)){
       window._tierViewMode='table';

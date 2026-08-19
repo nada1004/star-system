@@ -59,7 +59,7 @@ function statsPlayerReportHTML(){
 
   h += `<div class="ssec" id="pr-sec-winrate"><div class="pr-sec-head"><h4>🎮 ${periodLabelMap[period]} 전체 승률</h4></div>${_prWinRateCardsHTML(stats)}</div>`;
 
-  h += `<div class="ssec" id="pr-sec-map"><div class="pr-sec-head"><h4>🗺️ ${periodLabelMap[period]} 맵별 성적</h4></div>${_prMapBarsHTML(mapStats)}</div>`;
+  h += `<div class="ssec" id="pr-sec-map"><div class="pr-sec-head"><h4>🗺️ ${periodLabelMap[period]} 맵별 성적</h4></div>${_prMapBarsHTML(mapStats, p.univ)}</div>`;
 
   h += `<div class="ssec" id="pr-sec-insights"><div class="pr-sec-head"><h4>📈 핵심 분석 &amp; AI 코멘트 <span class="pr-sec-sub">(${periodLabelMap[period]})</span></h4></div>${_prKeyInsightsHTML(stats, mapStats, histPeriod)}<div style="margin-top:10px">${_prAiCommentHTML(p, histPeriod, stats, periodLabelMap[period])}</div></div>`;
 

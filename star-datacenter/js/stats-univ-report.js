@@ -406,15 +406,18 @@ function statsUnivReportHTML(){
       ${topWinners.map((x,i)=>{
         const p=x.p;
         const medal = i<3 ? ['🥇','🥈','🥉'][i] : `${i+1}`;
-        const wrColP = x.wr===null?'#94a3b8':x.wr>=60?'#10b981':x.wr>=40?'#f59e0b':'#ef4444';
+        const wrColBar = (typeof _prTintByPercent==='function') ? _prTintByPercent(x.wr, col, 95).css : (x.wr===null?'#94a3b8':x.wr>=60?'#10b981':x.wr>=40?'#f59e0b':'#ef4444');
+        // 퍼센트 숫자는 카드 배경(흰색 계열) 위에 직접 얹히는 텍스트라, 배경용과 달리
+        // 너무 옅어지면(대학색이 연할 때) 안 보이므로 명도 상한을 낮게 잡아 항상 읽히게 함
+        const wrColText = (typeof _prTintByPercent==='function') ? _prTintByPercent(x.wr, col, 58).css : wrColBar;
         const safeName = (p.name||'').replace(/'/g,"\\'");
         return `<div class="ur-winner-row" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')">
           <span style="width:20px;text-align:center;font-size:12px;font-weight:900;color:var(--text3);flex-shrink:0">${medal}</span>
           ${_urAvatarHTML(p, col, 28)}
           <span style="font-size:12px;font-weight:800;color:${col};min-width:64px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(p.name||'')}</span>
-          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:${wrColP};border-radius:5px"></div></div>
+          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:${wrColBar};border-radius:5px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:var(--text2);flex-shrink:0">${x.win}승 ${x.loss}패</span>
-          <span style="font-size:11.5px;font-weight:900;color:${wrColP};min-width:36px;text-align:right;flex-shrink:0">${x.wr}%</span>
+          <span style="font-size:11.5px;font-weight:900;color:${wrColText};min-width:36px;text-align:right;flex-shrink:0">${x.wr}%</span>
         </div>`;
       }).join('')}
     </div>`;
@@ -450,12 +453,16 @@ function statsUnivReportHTML(){
       <div class="ur-panel-title">⚔️ 라이벌 대학 상대전적</div>
       ${rivals.map(r=>{
         const rCol = (typeof gc==='function' ? gc(r.name) : '') || '#64748b';
-        const rWrCol = r.wr===null?'#94a3b8':r.wr>=55?'#10b981':r.wr>=45?'#f59e0b':'#ef4444';
+        // (2026-08-19) 라이벌 상대전적 바는 "우리 팀"의 성적을 보여주는 것이라
+        // 상대(rCol) 색이 아니라 우리 대학 고유색(col)을 승률에 따라 옅게~진하게
+        const rWrColBar = (typeof _prTintByPercent==='function') ? _prTintByPercent(r.wr??0, col, 95).css : (r.wr===null?'#94a3b8':r.wr>=55?'#10b981':r.wr>=45?'#f59e0b':'#ef4444');
+        // 퍼센트 숫자는 흰색 카드 배경 위 텍스트라 너무 옅어지면 안 보이므로 명도 상한을 낮춤
+        const rWrColText = (typeof _prTintByPercent==='function') ? _prTintByPercent(r.wr??0, col, 58).css : rWrColBar;
         const safeRival = String(r.name||'').replace(/'/g,"\\'");
         return `<div class="ur-rival-row" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeRival}')">
           <span style="font-size:12px;font-weight:800;color:${rCol};min-width:70px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(r.name)}</span>
-          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:${rWrCol};border-radius:5px"></div></div>
-          <span style="font-size:11.5px;font-weight:900;color:${rWrCol};min-width:38px;text-align:right">${r.wr!==null?r.wr+'%':'-'}</span>
+          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:${rWrColBar};border-radius:5px"></div></div>
+          <span style="font-size:11.5px;font-weight:900;color:${rWrColText};min-width:38px;text-align:right">${r.wr!==null?r.wr+'%':'-'}</span>
           <span style="font-size:10.5px;color:var(--text3);min-width:64px;text-align:right">${r.w}승 ${r.l}패</span>
         </div>`;
       }).join('')}

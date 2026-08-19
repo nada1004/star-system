@@ -312,7 +312,6 @@ function statsRecordsHTML(){
     {title:'🏆 역대 최다승',icon:'🏆',sort:(a,b)=>b.w-a.w,val:p=>`${p.w}승`,sub:p=>`총 ${p.tot}경기`},
     {title:'📊 역대 최고 승률',icon:'📊',sort:(a,b)=>b.rate-a.rate||b.tot-a.tot,val:p=>`${p.rate}%`,sub:p=>`${p.w}승${p.l}패`,filter:p=>p.tot>=_statsMinGames},
     {title:'⚡ 역대 최다 경기',icon:'⚡',sort:(a,b)=>b.tot-a.tot,val:p=>`${p.tot}경기`,sub:p=>`${p.w}승${p.l}패`},
-    {title:'🔥 최장 연승 기록',icon:'🔥',sort:(a,b)=>b.maxStreak-a.maxStreak,val:p=>`${p.maxStreak}연승`,sub:p=>`총 ${p.w}승`},
     {title:'💎 최고 ELO',icon:'💎',sort:(a,b)=>b.elo-a.elo,val:p=>`${p.elo}`,sub:p=>`${p.w}승${p.l}패`},
     {title:'🎯 현재 연승중',icon:'🎯',sort:(a,b)=>b.curStreak-a.curStreak,val:p=>`${p.curStreak}연${p.curStreakType==='승'?'승':'패'}`,sub:p=>`현재 진행중`,filter:p=>p.curStreakType==='승'&&p.curStreak>=2},
   ];
@@ -341,7 +340,10 @@ function statsRecordsHTML(){
     <span style="font-size:12px;color:var(--gray-l);font-weight:700">(프로리그 제외)</span>
     <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-records-sec','records')">📷 이미지 저장</button>
   </div>
-  <div class="stats-records-grid">${cats.map(recordCard).join('')}</div></div>`;
+  <div class="stats-records-grid">${cats.map(recordCard).join('')}</div></div>
+  <div style="margin-top:22px">
+    ${(typeof window.statsStreakHistHTML==='function') ? window.statsStreakHistHTML() : ''}
+  </div>`;
 }
 
 /* ══════════════════════════════════════

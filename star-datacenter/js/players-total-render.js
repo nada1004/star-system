@@ -96,6 +96,12 @@ function rTotal(C,T){
   // (단, 'table'은 폴백 기본값이므로 항상 최소 하나는 남도록 필터에서 제외하지 않음)
   const _streamerViewModeIds = Object.keys(_streamerViewModeMeta).filter(id => id==='table' ||
     !(window.TabVis && typeof window.TabVis.visible === 'function') || window.TabVis.visible('total.mode.' + id));
+  // (개선) 모드 이름도 설정 > 탭 이름(라벨) 설정에서 변경 가능하도록 getTabLabel 적용
+  if (typeof getTabLabel === 'function') {
+    _streamerViewModeIds.forEach(id => {
+      _streamerViewModeMeta[id].label = getTabLabel('total', id, _streamerViewModeMeta[id].label);
+    });
+  }
   const _viewSeg = `<div class="streamer-viewmode-seg" role="tablist" aria-label="스트리머 보기 방식">
     ${_streamerViewModeIds.map(id => `<button class="streamer-viewmode-btn ${totalViewMode===id?'on':''}" onclick="${_streamerViewModeMeta[id].action}" title="${_streamerViewModeMeta[id].title}"><span class="streamer-viewmode-ico">${_streamerViewModeMeta[id].icon}</span><span class="streamer-viewmode-txt">${_streamerViewModeMeta[id].label}</span></button>`).join('')}
   </div>`;

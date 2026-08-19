@@ -48,6 +48,10 @@
         {
           key: 'b2.univ', label: '🏟️ 대학별', kind: 'sub', children: [
             { key: 'b2.univ.hoverpopup', label: '스트리머 호버 팝업', kind: 'sub2' },
+            { key: 'b2.univ.mode.default', label: '🖼️ 기본 모드', kind: 'mode' },
+            { key: 'b2.univ.mode.poster', label: '🖼️ 포스터 모드', kind: 'mode' },
+            { key: 'b2.univ.mode.glass', label: '✨ 글래스 모드', kind: 'mode' },
+            { key: 'b2.univ.mode.table', label: '📋 테이블 모드', kind: 'mode' },
             { key: 'b2.univ.mode.designskin', label: '🎨 디자인모드 스킨', kind: 'mode' },
           ]
         },
@@ -125,12 +129,10 @@
         { key: 'stats.levelRank', label: '🎮 레벨/등급 순위표', kind: 'sub' },
         { key: 'stats.starsystem', label: '⭐ 스타시스템', kind: 'sub' },
         { key: 'stats.promosim', label: '🔮 승급 시뮬레이션', kind: 'sub' },
-        { key: 'stats.elo', label: '📈 ELO 그래프', kind: 'sub' },
-        { key: 'stats.growth', label: '📊 성장 곡선', kind: 'sub' },
+        { key: 'stats.growth', label: '📈 성장 그래프(ELO/누적승률)', kind: 'sub' },
         { key: 'stats.award', label: '🏆 이번 주/달 MVP', kind: 'sub' },
-        { key: 'stats.records', label: '🎖️ 최다 기록', kind: 'sub' },
+        { key: 'stats.records', label: '🎖️ 최다 기록(연속기록 포함)', kind: 'sub' },
         { key: 'stats.killer', label: '🗡️ 킬러/피해자', kind: 'sub' },
-        { key: 'stats.streakhist', label: '🔥 역대 연속 기록', kind: 'sub' },
         { key: 'stats.playervs', label: '⚔️ 스트리머 비교', kind: 'sub' },
         // ── 🏛️ 대학 ──
         { kind: 'divider', label: '🏛️ 대학' },

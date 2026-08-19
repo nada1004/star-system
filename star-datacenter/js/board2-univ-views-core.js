@@ -51,12 +51,26 @@ function _b2UnivView() {
     return `<button class="b2-jump-chip" onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="--chip-color:${col}40;border:1.5px solid ${col}bb;background:linear-gradient(135deg,${col}ee,${col}cc);color:${txtCol}"><span style="letter-spacing:-.01em">${safeName}</span></button>`;
   }).join('');
   const _viewMode = _b2GetUnivProfileViewMode();
-  const _viewModes = [['default','기본',''],['poster','포스터',''],['glass','글래스','✨'],['table','테이블','📋']];
+  // TabVis: 대학별 프로필 보기모드(기본/포스터/글래스/테이블) — OFF된 모드는 비로그인 사용자에게 숨김
+  // (이전까지는 이 4개 모드에 TabVis 게이팅이 전혀 없어서 설정에서 꺼도 항상 노출되던 버그였음)
+  let _viewModes = [['default','기본',''],['poster','포스터',''],['glass','글래스','✨'],['table','테이블','📋']];
+  const _univModeTv = (id) => (window.TabVis && typeof window.TabVis.visible === 'function') ? window.TabVis.visible('b2.univ.mode.' + id) : true;
+  const _viewModesFiltered = _viewModes.filter(([mode]) => mode === 'default' || _univModeTv(mode));
+  if (_viewModesFiltered.length) _viewModes = _viewModesFiltered; // 전부 꺼졌으면 안전하게 전체 노출(관리자 실수 방지)
+  let _effViewMode = _viewMode;
+  if (!_viewModes.some(([mode]) => mode === _effViewMode)) {
+    _effViewMode = _viewModes[0][0];
+    try{ _b2SetUnivProfileViewMode(_effViewMode); }catch(e){}
+  }
+  // (개선) 모드 이름도 설정 > 탭 이름(라벨) 설정에서 변경 가능하도록 getTabLabel 적용
+  if (typeof getTabLabel === 'function') {
+    _viewModes = _viewModes.map(([mode,label,ico]) => [mode, getTabLabel('b2univMode', mode, label), ico]);
+  }
   const _viewBtn = _viewModes.map(([mode,label,ico]) =>
-    `<button type="button" class="b2-seg-btn${_viewMode===mode?' on':''}" onclick="_b2SetUnivProfileViewMode('${mode}')">${ico?ico+' ':''}${label}</button>`
+    `<button type="button" class="b2-seg-btn${_effViewMode===mode?' on':''}" onclick="_b2SetUnivProfileViewMode('${mode}')">${ico?ico+' ':''}${label}</button>`
   ).join('');
-  window._b2UnivModeItems = _viewModes.map(([mode,label,ico])=>({id:mode, label:(ico?ico+' ':'')+label, action:`_b2SetUnivProfileViewMode('${mode}')`, active:_viewMode===mode}));
-  const _curUnivVm = _viewModes.find(([mode])=>mode===_viewMode) || _viewModes[0];
+  window._b2UnivModeItems = _viewModes.map(([mode,label,ico])=>({id:mode, label:(ico?ico+' ':'')+label, action:`_b2SetUnivProfileViewMode('${mode}')`, active:_effViewMode===mode}));
+  const _curUnivVm = _viewModes.find(([mode])=>mode===_effViewMode) || _viewModes[0];
   const _univModeMobileTrigger = `<button type="button" class="mode-select-trigger mode-select-trigger--block" onclick="_toggleModePopover(this,'대학별 표시 모드',window._b2UnivModeItems)">
     <span class="mode-select-trigger-main"><span class="mode-select-trigger-label">${(_curUnivVm[2]?_curUnivVm[2]+' ':'')+_curUnivVm[1]}</span></span>
     <span class="mode-select-trigger-caret">▾</span>

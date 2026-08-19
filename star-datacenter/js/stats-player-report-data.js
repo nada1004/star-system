@@ -198,7 +198,7 @@ try{
     '.pr-bar-row{display:flex;align-items:center;gap:10px;padding:6px 0}',
     '.pr-bar-lbl{width:100px;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.pr-bar-track{flex:1;height:20px;border-radius:999px;background:var(--surface);overflow:hidden}',
-    '.pr-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;color:#fff;font-size:10px;font-weight:900;white-space:nowrap;transition:width .3s}',
+    '.pr-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;color:#fff;font-size:10px;font-weight:900;white-space:nowrap;transition:width .3s;text-shadow:0 1px 2px rgba(0,0,0,.45)}',
     '.pr-bar-rec{width:76px;flex-shrink:0;font-size:11px;color:var(--text2);font-weight:700;text-align:right}',
     /* 🎮 이스포츠 카드의 MATCH RECORD 칩 스타일을 리포트 본문(대회·모드별 성적)에도 그대로 재사용 */
     '.pr-mode-chip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}',
@@ -311,12 +311,79 @@ var PR_RACE_COLOR_DARK = {P:'#fbbf24', T:'#60a5fa', Z:'#c084fc'};
 function _prRaceColor(r){
   return (_prIsDarkMode() ? PR_RACE_COLOR_DARK[r] : PR_RACE_COLOR[r]) || '#94a3b8';
 }
-/* 맵별 성적 전용 색상(초록 대신 청록 계열 사용 — 종족 배지 색과 겹치지 않도록) */
-function _prMapWrColor(wr){
-  const dark = _prIsDarkMode();
-  if(wr>=55) return dark ? '#22d3ee' : '#0891b2';
-  if(wr>=38) return dark ? '#fbbf24' : '#f59e0b';
-  return dark ? '#f87171' : '#ef4444';
+/* 헥스 색상 → RGB 배열 (대학 고유색을 그라데이션 베이스로 쓰기 위함) */
+function _prHexToRgb(hex){
+  let h=(hex||'').replace('#','');
+  if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if(h.length!==6) return [107,114,128]; // 파싱 실패 시 회색
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function _prRgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+  let h=0, s=0; const l=(mx+mn)/2;
+  if(mx!==mn){
+    const d=mx-mn; s = l>0.5 ? d/(2-mx-mn) : d/(mx+mn);
+    if(mx===r) h=((g-b)/d + (g<b?6:0))/6;
+    else if(mx===g) h=((b-r)/d+2)/6;
+    else h=((r-g)/d+4)/6;
+  }
+  return [h*360, s*100, l*100];
+}
+function _prHslToRgb(h,s,l){
+  h=((h%360)+360)%360; s=Math.max(0,Math.min(100,s))/100; l=Math.max(0,Math.min(100,l))/100;
+  if(s===0){ const v=Math.round(l*255); return [v,v,v]; }
+  const q = l<0.5 ? l*(1+s) : l+s-l*s;
+  const p = 2*l-q;
+  const hk = h/360;
+  const f = t=>{ t=((t%1)+1)%1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; };
+  return [Math.round(f(hk+1/3)*255), Math.round(f(hk)*255), Math.round(f(hk-1/3)*255)];
+}
+/* 대학 고유색이 너무 옅은 파스텔톤이면(예: 연한 하늘색) 100%로 보간해도 여전히
+   흐릿해 보이는 문제가 있어서, 색조(hue)는 그대로 두고 채도/명도만 "확실히 진하게"
+   보이도록 정규화한다. (2026-08-19, 다승왕/라이벌/맵성적 그라데이션이 잘 안 보인다는
+   피드백 반영)
+   [버그수정, 2026-08-19] 대학색이 검정/흰색/회색처럼 "무채색"이면 HSL 변환에서
+   색조(hue)가 수학적으로 정의되지 않아 0(=빨강)으로 초기화된 값이 그대로 쓰였는데,
+   바로 아래서 채도를 강제로 58% 이상으로 올려버리니 "검정 대학색"이 "빨강"으로
+   둔갑하는 문제가 있었음(흑카데미 사례). 무채색은 색조를 억지로 만들지 않고
+   그대로 회색 계열(채도 0) 그라데이션으로 유지하도록 분기 추가. */
+function _prNormalizeBrandColor(hex){
+  const [r,g,b] = _prHexToRgb(hex);
+  let [h,s,l] = _prRgbToHsl(r,g,b);
+  if(s < 6){
+    // 무채색(검정/흰색/회색) 대학색 — 색조를 만들어내지 않고 짙은 회색조로만 표현
+    return { h:0, s:0, l: Math.max(18, Math.min(l, 30)) };
+  }
+  s = Math.max(s, 58);              // 채도가 너무 낮으면(회색에 가까우면) 최소치로 끌어올림
+  l = Math.max(30, Math.min(l, 44)); // 명도를 30~44% 사이로 고정(너무 밝지도 어둡지도 않게)
+  return { h, s, l };
+}
+/* 승률 → 색상 그라데이션 공용 헬퍼: "해당 대학 색상"을 끝까지 유지하기 위해
+   흰색과 RGB로 섞지 않고, 색조(hue)는 항상 그 대학색 그대로 고정한 채
+   채도·명도만 승률에 따라 움직인다(HSL 보간). RGB 직선 보간은 빨강 계열에서
+   중간 지점이 탁한 갈색/더스티로즈처럼 보이는 문제가 있었는데, hue를 고정하면
+   그 문제 없이 항상 "그 대학색의 옅은 버전 ~ 진한 버전"으로만 보인다.
+   maxLight: 배경으로 쓸 땐 95(거의 흰색까지 옅어져도 됨), 텍스트 색으로 바로 쓸 땐
+   너무 옅으면 흰 카드 배경 위에서 안 보이므로 낮은 값(예: 60)으로 상한을 걸어준다.
+   (2026-08-19) 맵별 성적 / 대학 리포트 다승왕 TOP / 라이벌 대학 상대전적에서 공용으로 사용. */
+function _prTintByPercent(pct, baseHex, maxLight){
+  const norm = _prNormalizeBrandColor(baseHex || '#0d9488');
+  const p = Math.max(1, Math.min(100, pct)) / 100; // 1%를 "가장 옅음" 기준으로 클램프
+  const ml = (typeof maxLight === 'number') ? maxLight : 95;
+  const light = ml - (ml - norm.l) * p;
+  const sat   = (norm.s === 0) ? 0 : (14 + (norm.s - 14) * p);  // 무채색은 그대로 채도 0 유지
+  const rgb = _prHslToRgb(norm.h, sat, light);
+  return { css: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`, light };
+}
+/* 위 그라데이션 색이 배경(바)으로 쓰일 때, 그 위에 올라가는 글씨는
+   배경이 옅으면(밝으면) 어두운 글씨, 진하면 흰 글씨를 써야 항상 잘 보인다. */
+function _prTintBarTextColor(light){
+  return light >= 68 ? '#1f2937' : '#fff';
+}
+/* 맵별 성적 색상 (2026-08-19 — 해당 스트리머 소속 대학색 기반, 1%=아주 옅게 ↔ 100%=대학색 그대로) */
+function _prMapWrColor(wr, univHex){
+  return _prTintByPercent(wr, univHex, 95);
 }
 function _prGaugeCardHTML(label, w, l, icon, colorOverride, badge){
   const tot=w+l; const wr= tot? Math.round(w/tot*100):0;
@@ -405,16 +472,19 @@ function _prMapStats(hist){
 function _prEmptyStateHTML(msg, icon){
   return `<div class="pr-empty-sec"><span class="pr-empty-sec-icon">${icon||'📭'}</span><span>${escHTML(msg)}</span></div>`;
 }
-function _prMapBarsHTML(mapStats){
+function _prMapBarsHTML(mapStats, univName){
   if(!mapStats.length) return _prEmptyStateHTML('맵 기록이 없습니다');
+  const univHex = univName && typeof gc==='function' ? gc(univName) : null;
   const MEDALS=['🥇','🥈','🥉'];
   let h=`<div>`;
   mapStats.forEach((m,i)=>{
-    const color=_prMapWrColor(m.wr);
+    const {css:color, light} = _prMapWrColor(m.wr, univHex);
+    const textColor = _prTintBarTextColor(light);
+    const textShadow = (textColor==='#fff') ? '0 1px 2px rgba(0,0,0,.45)' : 'none';
     const medal = MEDALS[i] || '';
     h+=`<div class="pr-bar-row">
       <div class="pr-bar-lbl" title="${escAttr(m.map)}">${medal?`<span style="margin-right:3px">${medal}</span>`:''}${escHTML(m.map)}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color}">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color};color:${textColor};text-shadow:${textShadow}">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
       <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
     </div>`;
   });
