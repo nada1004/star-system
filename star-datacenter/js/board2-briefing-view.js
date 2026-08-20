@@ -321,7 +321,7 @@ function _b2WeeklyBriefingView() {
       </div>
       <section class="b2w2-hero">
         <div class="b2w2-hero-main">
-          <div style="font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:var(--b2w-gold);text-transform:uppercase">${_isArchive ? 'MVP Archive' : _briefingInfo.kicker}</div>
+          <div class="b2w2-hero-kicker">${_isArchive ? 'MVP Archive' : _briefingInfo.kicker}</div>
           <div class="b2w2-hero-title">${_isArchive ? 'MVP 아카이브' : _briefingInfo.title}</div>
           <div class="b2w2-hero-desc">${_isArchive ? '시즌이 시작된 이후 지금까지의 모든 주간·월간 MVP 수상 기록을 모아봤습니다.' : _heroSummary}</div>
         </div>
@@ -854,8 +854,8 @@ function _b2WeeklyBriefingView() {
         </article>
         ${preset==='thisMonth' ? `<article class="b2w2-highlight-card">
           <div class="b2w2-highlight-kicker">Popularity Vote</div>
-          <div class="b2w2-highlight-title">🗳️ 이달의 인기 MVP</div>
-          <div class="b2w2-highlight-desc">위 대학별 에이스들 중에서 이번 달 마음에 드는 스트리머에게 투표해보세요. 여러 명에게 동시에 투표할 수 있고, 언제든 다시 눌러 취소할 수 있습니다.</div>
+          <div class="b2w2-highlight-title">🗳️ 이달의 인기 투표</div>
+          <div class="b2w2-highlight-desc" style="font-weight:700;color:var(--b2w-ink-mid)">위 대학별 에이스들 중에서 이번 달 마음에 드는 스트리머에게 투표해보세요. 여러 명에게 동시에 투표할 수 있고, 언제든 다시 눌러 취소할 수 있습니다.</div>
           ${(typeof window._b2RenderMvpVoteSection === 'function') ? window._b2RenderMvpVoteSection((typeof window._b2MvpVoteMonthKey === 'function' ? window._b2MvpVoteMonthKey(dateFrom) : dateFrom.slice(0,7)), monthlyUnivAces) : ''}
         </article>` : ''}
       </section>`;
@@ -870,9 +870,9 @@ function _b2WeeklyBriefingView() {
       h += `<div class="b2w2-chart-box">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
           <div class="b2w2-chart-title">📊 대학별 전적 현황 (이번 기간)</div>
-          <div style="display:flex;gap:4px;background:var(--surface,#f1f5f9);padding:3px;border-radius:999px">
-            <button type="button" onclick="_b2SetWeeklyChartSort('games')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='games'?'var(--b2w-paper,#fff)':'transparent'};color:${_chartSort==='games'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='games'?'0 1px 3px rgba(0,0,0,.12)':'none'}">전적순</button>
-            <button type="button" onclick="_b2SetWeeklyChartSort('winrate')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='winrate'?'var(--b2w-paper,#fff)':'transparent'};color:${_chartSort==='winrate'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='winrate'?'0 1px 3px rgba(0,0,0,.12)':'none'}">승률순</button>
+          <div style="display:flex;gap:4px;background:var(--b2w-tag-bg);padding:3px;border-radius:999px">
+            <button type="button" onclick="_b2SetWeeklyChartSort('games')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='games'?'var(--b2w-paper-alt,#fff)':'transparent'};color:${_chartSort==='games'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='games'?'0 1px 3px rgba(0,0,0,.12)':'none'}">전적순</button>
+            <button type="button" onclick="_b2SetWeeklyChartSort('winrate')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='winrate'?'var(--b2w-paper-alt,#fff)':'transparent'};color:${_chartSort==='winrate'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='winrate'?'0 1px 3px rgba(0,0,0,.12)':'none'}">승률순</button>
           </div>
         </div>
         ${_b2WeeklyBarChart(curStats)}
@@ -1017,7 +1017,7 @@ function _b2WeeklyBriefingView() {
         const prevS    = prevPlayerMap[p.name] || null;
         const prevWr2  = prevS && prevS.total>0 ? prevS.winRate : null;
 
-        const _zebraBg = i % 2 === 1 ? 'var(--surface,#f8fafc)' : 'transparent';
+        const _zebraBg = i % 2 === 1 ? 'color-mix(in srgb, var(--b2w-accent) 9%, var(--b2w-paper-alt))' : 'transparent';
         h += `<tr style="background:${isMVP?'#fef9c322':_zebraBg}">
           <td style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>

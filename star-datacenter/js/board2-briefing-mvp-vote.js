@@ -82,13 +82,14 @@ function _b2RenderMvpVoteSection(monthKey, monthlyUnivAces) {
       const isMine = myPicks.includes(c.name);
       const rankIcon = (cnt > 0 && idx === 0) ? '👑' : (cnt > 0 && idx === 1) ? '🥈' : (cnt > 0 && idx === 2) ? '🥉' : String(idx + 1);
       const photoHtml = (typeof getPlayerPhotoHTML === 'function') ? getPlayerPhotoHTML(c.name, '34px', 'flex-shrink:0') : '';
-      return `<div class="b2w2-mvpvote-row" onclick="_b2CastMvpVote('${monthKey}','${_esc(c.name)}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:1.5px solid ${isMine ? c.col : 'var(--border)'};background:${isMine ? c.col + '14' : 'var(--white)'};margin-bottom:6px;transition:border-color .15s,background .15s">
+      const univLogoHtml = (typeof gUI === 'function') ? gUI(c.univ, '18px') : '';
+      return `<div class="b2w2-mvpvote-row" onclick="_b2CastMvpVote('${monthKey}','${_esc(c.name)}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:1.5px solid ${isMine ? c.col : 'var(--b2w-rule)'};background:${isMine ? c.col + '14' : 'var(--b2w-paper-alt)'};margin-bottom:6px;transition:border-color .15s ease,background .15s ease,transform .15s ease,box-shadow .15s ease" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(15,23,42,.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
         <span style="width:20px;text-align:center;font-size:13px;flex-shrink:0;color:var(--gray-l);font-weight:800">${rankIcon}</span>
         ${photoHtml}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
             <span style="font-weight:800;font-size:var(--fs-sm);color:var(--text1);cursor:pointer" onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${_esc(c.name)}')">${_escH(c.name)}</span>
-            <span style="font-size:10px;font-weight:700;color:${c.col};background:${c.col}1a;padding:1px 6px;border-radius:999px">${_escH(c.univ)}</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:${c.col};background:${c.col}1a;padding:1px 6px 1px 4px;border-radius:999px">${univLogoHtml}${_escH(c.univ)}</span>
             ${isMine ? `<span style="font-size:10px;color:${c.col};font-weight:900">✅ 내 투표</span>` : ''}
           </div>
           <div style="height:6px;border-radius:99px;background:rgba(148,163,184,.18);overflow:hidden;margin-top:5px">

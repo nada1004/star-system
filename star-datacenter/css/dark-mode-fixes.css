@@ -92,94 +92,7 @@
      [style*="background:white"],[style*="background: white"]):not(.share-card-host):not(.share-card-host *){
   background:#1e293b !important;
   color:#e2e8f0 !important;
-}
-
-/* ── 3. 자동 생성 다크 대응 규칙 ─────────────────────────────────── */
-/* ===== css/ui-custom-v3.css 다크 대응 ===== */
-:is(body.dark,html.dark) #b2-content .b2w2-rank-row:hover {
-  background: var(--b2w-paper-alt, rgba(22, 32, 50,.96)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-header-row {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.96), rgba(22, 32, 50,.92)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-kpi-card {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.96), rgba(22, 32, 50,.90)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hdr {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.94), rgba(22, 32, 50,.90)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-highlight-card {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.97), rgba(22, 32, 50,.92)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-note-chip {
-  background: rgba(30, 41, 59,.78) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero {
-  background: radial-gradient(circle at top right, rgba(99,102,241,.10), transparent 30%),
-    radial-gradient(circle at top left, rgba(14,165,233,.08), transparent 28%),
-    linear-gradient(180deg, rgba(30, 41, 59,.98), rgba(22, 32, 50,.94)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero::before {
-  background: linear-gradient(135deg, rgba(30, 41, 59,.40), rgba(30, 41, 59,0) 42%) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero-desc {
-  background: linear-gradient(135deg, rgba(30, 58, 95,.92), rgba(30, 41, 59,.84)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero-pill {
-  background: rgba(30, 41, 59,.72) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero-badge {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.90), rgba(22, 32, 50,.86)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero-stats {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.82), rgba(22, 32, 50,.72)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-hero-stat {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.96), rgba(22, 32, 50,.86)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-modecard {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.98), rgba(22, 32, 50,.94)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-modecard::before {
-  background: linear-gradient(135deg, rgba(30, 41, 59,.38), rgba(30, 41, 59,0) 50%) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-modecard.is-active {
-  background: radial-gradient(circle at top right, rgba(96,165,250,.16), transparent 34%),
-    linear-gradient(180deg, rgba(30, 58, 95,.98), rgba(29, 51, 84,.84)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-modebadge {
-  background: rgba(30, 41, 59,.72) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-kpi-card::after {
-  background: linear-gradient(135deg, rgba(30, 41, 59,.28), rgba(30, 41, 59,0) 46%) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-highlight-card::before {
-  background: linear-gradient(90deg, var(--hc-top, #6366f1), rgba(30, 41, 59,.55)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-chart-box {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.98), rgba(22, 32, 50,.94)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-rank-row:hover {
-  background: linear-gradient(135deg, rgba(30, 58, 95,.88), rgba(22, 32, 50,.98)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-note-row {
-  background: linear-gradient(135deg, rgba(30, 41, 59,.97), rgba(22, 32, 50,.92)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-mvp-card::before {
-  background: linear-gradient(145deg, rgba(30, 41, 59,.20), rgba(30, 41, 59,0) 36%),
-    radial-gradient(circle at top right, rgba(30, 41, 59,.20), transparent 24%) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-mvp-race-badge {
-  background: rgba(30, 41, 59,.18) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-mvp-statline {
-  background: linear-gradient(180deg, rgba(30, 41, 59,.14), rgba(30, 41, 59,.05)) !important;
-}
-:is(body.dark,html.dark) #b2-content .b2w2-lead-card {
-  background: radial-gradient(circle at top right, rgba(99,102,241,.10), transparent 32%),
-    linear-gradient(180deg, rgba(30, 41, 59,.99), rgba(22, 32, 50,.95)) !important;
-}
-:is(body.dark,html.dark) .b2-racebar-improved {
+}:is(body.dark,html.dark) .b2-racebar-improved {
   background: linear-gradient(135deg, rgba(22, 32, 50,.95), rgba(26, 36, 54,.90)) !important;
 }
 :is(body.dark,html.dark) .b2-race-badge.race-T {
@@ -253,39 +166,6 @@
 :is(body.dark,html.dark) .b2-femco-pill:hover {
   background: rgba(30, 41, 59,.30) !important;
 }
-
-/* ===== css/board2-briefing.css 다크 대응 ===== */
-:is(body.dark,html.dark) .b2w2-savebtn {
-  background: linear-gradient(135deg, #3b1f24, #4a2226 60%, #5a262b) !important;
-}
-:is(body.dark,html.dark) .b2w2-savebtn:hover {
-  background: linear-gradient(135deg, #4a2226, #5a262b 55%, #fca5a5) !important;
-}
-:is(body.dark,html.dark) .b2w2-mvp-card::after {
-  background: linear-gradient(115deg, transparent 42%, rgba(30, 41, 59,.32) 50%, transparent 58%) !important;
-}
-:is(body.dark,html.dark) .b2w2-mvp-second .b2w2-mvp-bg-fallback {
-  background: linear-gradient(160deg,#334155,#94a3b8) !important;
-}
-:is(body.dark,html.dark) .b2w2-mvp-worst .b2w2-mvp-bg-fallback {
-  background: linear-gradient(160deg,#4a2226,#ef4444) !important;
-}
-:is(body.dark,html.dark) .b2w2-mvp-second .b2w2-mvp-top-badge {
-  background: rgba(30, 41, 59,.75) !important;
-}
-:is(body.dark,html.dark) .b2w2-mvp-statline-sep {
-  background: rgba(30, 41, 59,.28) !important;
-}
-:is(body.dark,html.dark) .b2w2-highlight-card::after {
-  background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), var(--b2w-gold, rgba(30, 41, 59,.55))) !important;
-}
-:is(body.dark,html.dark) .b2w2-card-spotlight {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 8%, var(--white,#1e293b)) 0%, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 15%, var(--white,#1e293b)) 100%) !important;
-}
-:is(body.dark,html.dark) .b2w2-race-pill.loss {
-  background: #1a2436 !important;
-}
-
 /* ===== css/style.css 다크 대응 ===== */
 :is(body.dark,html.dark) body {
   background: #1e293b !important;
@@ -858,12 +738,6 @@
 /* ===== css/ui-custom-v3.css (2건) darkfix14 자동 매핑 ===== */
 :is(body.dark,html.dark) .b2-section-label{ background:rgba(31,40,55,.92) !important; }
 :is(body.dark,html.dark) .heatmap-top5-count:hover{ background:#1e5230 !important; }
-
-/* ===== css/board2-briefing.css (3건) darkfix14 자동 매핑 ===== */
-:is(body.dark,html.dark) .b2w2-rank-delta.up{ background:#21502f !important; }
-:is(body.dark,html.dark) .b2w2-rank-delta.down{ background:#531e1e !important; color:#eccaca !important; }
-:is(body.dark,html.dark) .b2w2-rank-delta.new{ background:#241957 !important; color:#d8cbeb !important; }
-
 /* ===== css/tier-rank.css (28건) darkfix14 자동 매핑 ===== */
 :is(body.dark,html.dark) .tier-hero{ background:linear-gradient(180deg,rgba(31,40,55,.99),rgba(42,56,70,.96)) !important; }
 :is(body.dark,html.dark) .tier-hero-badge{ background:linear-gradient(180deg,rgba(31,40,55,.98),rgba(42,56,70,.94)) !important; }

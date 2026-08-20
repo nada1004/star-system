@@ -4,183 +4,187 @@
         max-width: 1320px;
         margin: 0 auto;
         font-family: 'Noto Sans KR', -apple-system, sans-serif;
-        /* 토큰 */
-        --b2w-accent: var(--blue, #2563eb);
-        --b2w-accent-strong: var(--blue-d, #1a3fb0);
-        --b2w-accent-soft: var(--blue-l, rgba(37,99,235,.08));
+        /* 토큰 — (2026-08-20) 프로리그 브리핑(.plb-wrap)처럼 사이트 라이트/다크 모드와
+           무관하게 항상 같은 톤으로 보이도록, 전역 테마 변수(var(--surface) 등)에
+           기대지 않고 값을 직접 고정한다. 이전엔 var(--surface, #f8f8f5)처럼 전역
+           변수를 먼저 참조해서, 사이트가 다크모드면 폴백(#f8f8f5)이 아니라 전역
+           다크 --surface 값이 그대로 새어 들어와 카드가 어두워지는 문제가 있었다. */
+        --b2w-accent: #2563eb;
+        --b2w-accent-strong: #1a3fb0;
+        --b2w-accent-soft: rgba(37,99,235,.08);
+        --b2w-accent2: #0891b2;
         --b2w-gold: #b8862c;
         --b2w-gold-soft: rgba(184,134,44,.14);
-        --b2w-ink: var(--text1, #111827);
-        --b2w-ink-mid: var(--text2, #374151);
-        --b2w-ink-soft: var(--text3, #6b7280);
-        --b2w-rule: var(--border, rgba(17,24,39,.15));
-        --b2w-rule-hard: var(--border2, rgba(17,24,39,.55));
-        --b2w-rule-soft: var(--border, rgba(17,24,39,.10));
-        --b2w-paper: var(--surface, #f8f8f5);
-        --b2w-paper-alt: var(--white, #fffdf9);
-        --b2w-paper-warm: var(--surface, #faf7f0);
-        --b2w-shadow: var(--sh2, 0 12px 32px rgba(15,23,42,.09));
-        --b2w-shadow-sm: var(--sh, 0 3px 9px rgba(15,23,42,.055));
+        --b2w-ink: #0f172a;
+        --b2w-ink-mid: #475569;
+        --b2w-ink-soft: #64748b;
+        --b2w-rule: rgba(15,23,42,.12);
+        --b2w-rule-hard: rgba(15,23,42,.45);
+        --b2w-rule-soft: rgba(15,23,42,.08);
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
+        --b2w-shadow: 0 10px 26px rgba(15,23,42,.07);
+        --b2w-shadow-sm: 0 2px 8px rgba(15,23,42,.05);
         --b2w-r: 14px;
-        --b2w-r-lg: 20px;
-        --b2w-accent-border: rgba(37,99,235,.22);
+        --b2w-r-lg: 18px;
+        --b2w-accent-border: rgba(37,99,235,.20);
         --b2w-accent-shadow: rgba(37,99,235,.10);
         --b2w-accent-shadow-strong: rgba(37,99,235,.16);
         --b2w-btn-text: #fff;
-        --b2w-tag-bg: var(--surface, #f1f5f9);
-        --b2w-tag-border: var(--border, #e2e8f0);
-        --b2w-tag-text: var(--text2, #374151);
-        --b2w-tag-muted: var(--text3, #6b7280);
-        --b2w-tag-accent-bg: var(--blue-l, #eff6ff);
-        --b2w-tag-accent-border: rgba(37,99,235,.22);
+        --b2w-tag-bg: color-mix(in srgb, var(--b2w-accent) 9%, #f1f5f9);
+        --b2w-tag-border: color-mix(in srgb, var(--b2w-accent) 20%, #e2e8f0);
+        --b2w-tag-text: var(--b2w-ink-mid);
+        --b2w-tag-muted: var(--b2w-ink-soft);
+        --b2w-tag-accent-bg: color-mix(in srgb, var(--b2w-accent) 11%, #ffffff);
+        --b2w-tag-accent-border: color-mix(in srgb, var(--b2w-accent) 28%, transparent);
         /* 가독성 강화: 옅은 회색 보조 텍스트가 잘 안 보인다는 피드백 반영 */
         --text3: #52525b;
       }
-      :is(body.dark,html.dark) .b2w2-wrap {
-        --b2w-accent-border: rgba(96,165,250,.30);
-        --b2w-accent-shadow: rgba(96,165,250,.14);
-        --b2w-accent-shadow-strong: rgba(96,165,250,.20);
-        --b2w-btn-text: #0f172a;
-        --b2w-tag-accent-border: rgba(96,165,250,.28);
-        --b2w-gold: #e0b45a;
-        --b2w-gold-soft: rgba(224,180,90,.16);
-        --text3: #b8c2cf;
-        /* 브리핑 카드/박스/테이블 배경을 반투명 다크 톤으로 통일 */
-        --b2w-paper: rgba(15,23,42,.55);
-        --b2w-paper-alt: rgba(15,23,42,.62);
-        --b2w-paper-warm: rgba(15,23,42,.5);
-        --b2w-rule: rgba(148,163,184,.20);
-        --b2w-rule-hard: rgba(148,163,184,.45);
-        --b2w-rule-soft: rgba(148,163,184,.14);
+      /* (2026-08-20 (5) 재조정) 사이트 다크모드에서 일부 요소가 다크로 전환되지
+         않는다는 피드백을 반영해, 다시 다크모드 대응을 넣되 이번엔 테마마다
+         다른 색이 유지되도록 "테마 인식형" 다크 변환으로 구현한다.
+         이전(2)엔 모든 라이트 테마를 body.dark에서 똑같은 하나의 남색으로
+         덮어썼는데, 그러면 테마를 뭘 고르든 다크모드에선 다 똑같아 보였다.
+         이번엔 각 테마의 --b2w-accent/--b2w-accent2를 color-mix()로 어두운
+         배경에 섞어서, 다크모드에서도 테마 고유의 색감이 살아있게 한다.
+         (다크 전용 테마인 luxury/esports/neon은 이미 항상 다크라 제외) */
+      :is(body.dark,html.dark) .b2w2-wrap:not([data-theme="luxury"]):not([data-theme="esports"]):not([data-theme="neon"]) {
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 20%, #0b1220);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 12%, #131a28);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 16%, #0f1524);
         --b2w-ink: #f1f5f9;
         --b2w-ink-mid: #cbd5e1;
         --b2w-ink-soft: #94a3b8;
-        --b2w-tag-bg: rgba(30,41,59,.7);
+        --b2w-rule: rgba(226,232,240,.14);
+        --b2w-rule-hard: rgba(226,232,240,.32);
+        --b2w-rule-soft: rgba(226,232,240,.08);
+        --b2w-shadow: 0 14px 34px rgba(0,0,0,.38);
+        --b2w-shadow-sm: 0 4px 14px rgba(0,0,0,.24);
+        --b2w-btn-text: #0b1220;
+        --b2w-tag-bg: rgba(148,163,184,.14);
         --b2w-tag-border: rgba(148,163,184,.22);
         --b2w-tag-text: #cbd5e1;
         --b2w-tag-muted: #94a3b8;
-        --b2w-tag-accent-bg: rgba(37,99,235,.18);
+        --b2w-tag-accent-bg: color-mix(in srgb, var(--b2w-accent) 20%, transparent);
+        --b2w-tag-accent-border: color-mix(in srgb, var(--b2w-accent) 40%, transparent);
+        --text3: #b8c2cf;
       }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-tbl tr:hover td,
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-race-row {
-        background: rgba(15,23,42,.55);
-      }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-table-wrap {
-        background: rgba(15,23,42,.5);
-      }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-race-pill.win { background: rgba(220,38,38,.22); color:#fca5a5 }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-race-pill.loss { background: rgba(100,116,139,.28); color:#cbd5e1 }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-rank-delta.up { color:#4ade80; background:rgba(34,197,94,.16); border-color:rgba(34,197,94,.35) }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-rank-delta.down { color:#f87171; background:rgba(248,113,113,.16); border-color:rgba(248,113,113,.35) }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-rank-delta.new { color:#c4b5fd; background:rgba(139,92,246,.18); border-color:rgba(139,92,246,.4) }
-      :is(body.dark,html.dark) .b2w2-wrap .b2w2-mvp-worst .b2w2-mvp-top-badge { background: rgba(239,68,68,.35) }
       .b2w2-wrap *, .b2w2-wrap *::before, .b2w2-wrap *::after { box-sizing: border-box; }
       .b2w2-wrap b, .b2w2-wrap strong { font-weight: 800 }
 
-      /* ── Masthead ── */
+      /* ── Masthead (2026-08-20 (2) 재조정) ──
+         대회 브리핑(.cbs-metabar)과 톤을 맞춘 플랫한 상단 바. 알약형 배경 대신
+         얇은 하단 경계선 + 작은 이슈 배지로 단순화. */
       .b2w2-masthead {
         position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 0 12px;
-        margin-bottom: 6px;
-        font-size: 10px;
+        gap: 12px;
+        padding: 9px 4px;
+        margin-bottom: 0;
+        border-bottom: 1px solid var(--b2w-rule-soft);
+        font-size: 10.5px;
         font-weight: 800;
-        letter-spacing: .18em;
+        letter-spacing: .16em;
         text-transform: uppercase;
         color: var(--b2w-ink-soft);
       }
-      .b2w2-masthead::after {
-        content: '';
-        position: absolute;
-        left: 0; right: 0; bottom: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--b2w-accent) 0%, var(--b2w-accent) 28%, var(--b2w-gold) 28%, var(--b2w-gold) 38%, var(--b2w-rule-hard) 38%, var(--b2w-rule-hard) 100%);
-        opacity: .9;
-      }
+      .b2w2-masthead::after { content: none }
       .b2w2-masthead-brand {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        color: var(--b2w-ink);
+        gap: 8px;
+        padding: 3px 9px;
+        border: 1px solid var(--b2w-rule);
+        border-radius: 5px;
+        background: var(--b2w-paper-alt);
+        color: var(--b2w-ink-mid);
       }
       .b2w2-masthead-mark {
-        width: 16px; height: 16px;
-        border-radius: 4px;
-        background: linear-gradient(135deg, var(--b2w-gold), var(--b2w-accent) 60%, var(--b2w-accent-strong));
-        box-shadow: 0 2px 6px var(--b2w-accent-shadow-strong, rgba(37,99,235,.2));
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: var(--b2w-accent);
         flex-shrink: 0;
+        animation: b2wLivePulse 2s ease-in-out infinite;
       }
+      @keyframes b2wLivePulse { 0%,100% { opacity: 1 } 50% { opacity: .4 } }
+      @media (prefers-reduced-motion: reduce) { .b2w2-masthead-mark { animation: none } }
 
-      /* ── Hero ── */
+      /* ── Hero (2026-08-20 (2) 재조정) ──
+         대회 브리핑(.cbs-hero)과 동일한 레시피로 단순화: 라디얼 글로우/알약칩을
+         걷어내고, 상하 2색 그라디언트 배경 + 대시라인 키커 + 플레인 본문 텍스트로
+         정리해 "라이트하게 바뀐 게 안 보인다"는 피드백을 반영했다. */
       .b2w2-hero {
         position: relative;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 24px;
-        padding: 22px 24px 24px;
-        margin-bottom: 20px;
-        border-bottom: 3px double var(--b2w-rule-hard);
-        background:
-          radial-gradient(circle at 6px 6px, var(--b2w-rule-soft) 1px, transparent 1.6px) 0 0/18px 18px,
-          linear-gradient(180deg, var(--b2w-accent-soft) 0%, transparent 65%);
-        border-radius: var(--b2w-r-lg) var(--b2w-r-lg) 0 0;
+        padding: 26px 26px 24px;
+        margin-top: 14px;
+        margin-bottom: 0;
+        background: linear-gradient(155deg, var(--b2w-paper-alt) 0%, color-mix(in srgb, var(--b2w-accent) 9%, var(--b2w-paper-alt)) 55%, color-mix(in srgb, var(--b2w-accent) 16%, var(--b2w-paper-warm)) 100%);
+        border: 1px solid var(--b2w-rule-soft);
+        border-radius: var(--b2w-r-lg);
         box-shadow: var(--b2w-shadow-sm);
       }
-      .b2w2-hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1 }
+      .b2w2-hero-main { position: relative; display: flex; flex-direction: column; min-width: 0; flex: 1 }
+      .b2w2-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--b2w-accent);
+        margin-bottom: 10px;
+      }
+      .b2w2-hero-kicker::before { content: ''; width: 22px; height: 2px; background: var(--b2w-accent); flex-shrink: 0 }
       .b2w2-hero-title {
         position: relative;
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 36px;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
+        font-size: clamp(24px, 3.2vw, 34px);
         font-weight: 900;
         letter-spacing: -.02em;
         color: var(--b2w-ink);
-        line-height: 1.04;
-        background: linear-gradient(180deg, var(--b2w-ink) 55%, var(--b2w-ink-mid) 130%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        line-height: 1.12;
       }
       .b2w2-hero-desc {
         position: relative;
-        margin-top: 4px;
+        margin-top: 10px;
         font-size: 13px;
-        line-height: 1.75;
+        font-weight: 500;
+        line-height: 1.6;
         color: var(--b2w-ink-mid);
-        max-width: 880px;
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-style: italic;
-        border-left: 3px solid var(--b2w-gold);
-        padding-left: 13px;
-        background: var(--b2w-accent-soft);
-        padding-top: 6px;
-        padding-bottom: 6px;
-        border-radius: 0 var(--b2w-r) var(--b2w-r) 0;
+        max-width: 62ch;
       }
       .b2w2-hero-meta {
+        position: relative;
         display: flex;
         flex-direction: column;
-        min-width: min(100%, 300px);
+        min-width: min(100%, 280px);
         flex-shrink: 0;
-        padding: 16px 18px;
-        border: 1px solid var(--b2w-rule);
-        border-radius: var(--b2w-r-lg);
+        padding: 14px 16px;
+        border: 1px solid var(--b2w-rule-soft);
+        border-radius: var(--b2w-r);
         background: var(--b2w-paper-alt);
-        box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-hero-meta-kicker {
+        display: inline-flex;
+        align-self: flex-start;
         font-size: 10px;
-        font-weight: 800;
-        letter-spacing: .16em;
+        font-weight: 900;
+        letter-spacing: .12em;
         text-transform: uppercase;
         color: var(--b2w-accent);
       }
       .b2w2-hero-meta-headline {
-        margin-top: 6px;
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 16px;
+        margin-top: 8px;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
+        font-size: 14px;
         font-weight: 800;
         letter-spacing: -.01em;
         line-height: 1.35;
@@ -198,19 +202,26 @@
       .b2w2-hero-meta-value { margin-top: 4px; font-size: 13px; font-weight: 800; color: var(--b2w-ink); letter-spacing: -.01em; word-break: keep-all }
 
 
-      /* ── KPI Grid ── */
+      /* ── KPI Grid (2026-08-20 (2) 재조정) ──
+         대회 브리핑(.cbs-kpi-grid/.cbs-kpi-card)과 동일한 레시피: 히어로 바로 아래
+         이어붙는 얇은 배경 패널 + 좌측 3px 컬러바 + 플랫한 화이트 카드. */
       .b2w2-kpi-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0,1fr));
-        gap: 12px;
+        gap: 10px;
+        padding: 16px 18px;
         margin-bottom: 20px;
+        background: linear-gradient(155deg, var(--b2w-paper-warm) 0%, color-mix(in srgb, var(--b2w-accent) 14%, var(--b2w-paper-warm)) 100%);
+        border: 1px solid var(--b2w-rule-soft);
+        border-radius: var(--b2w-r-lg);
+        box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-kpi-card {
-        padding: 14px 16px;
-        border-radius: var(--b2w-r);
+        padding: 12px 14px 12px 16px;
+        border-radius: 10px;
         border: 1px solid var(--b2w-rule);
-        background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
-        box-shadow: var(--b2w-shadow-sm);
+        background: var(--b2w-paper-alt);
+        box-shadow: 0 2px 0 rgba(15,23,42,.04);
         transition: transform .16s cubic-bezier(.2,.8,.3,1.2), box-shadow .16s ease, border-color .16s ease;
         position: relative;
         overflow: hidden;
@@ -218,10 +229,10 @@
       .b2w2-kpi-card::before {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--kpi-accent, var(--b2w-accent)), transparent);
-        border-radius: var(--b2w-r) var(--b2w-r) 0 0;
+        top: 14px; left: 0; bottom: 14px;
+        width: 3px;
+        border-radius: 0 2px 2px 0;
+        background: var(--kpi-accent, var(--b2w-accent));
       }
       .b2w2-kpi-card::after {
         content: '';
@@ -230,7 +241,7 @@
         width: 70px; height: 70px;
         border-radius: 50%;
         background: radial-gradient(circle, var(--kpi-accent, var(--b2w-accent)), transparent 72%);
-        opacity: .12;
+        opacity: .06;
         pointer-events: none;
       }
       .b2w2-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.10); border-color: rgba(148,163,184,.22) }
@@ -255,7 +266,7 @@
         border: 1px solid var(--b2w-rule);
         border-radius: var(--b2w-r-lg);
         margin-bottom: 16px;
-        background: var(--b2w-paper);
+        background: var(--b2w-paper-alt);
         box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-hdr-title { display: flex; align-items: center; gap: 6px; flex-shrink: 0 }
@@ -286,12 +297,12 @@
         border: none;
         font-size: 12px;
         background: transparent;
-        color: var(--text2);
+        color: var(--b2w-ink-mid);
         width: 108px;
         cursor: pointer;
         transition: background-color .14s ease;
       }
-      .b2w2-din:hover, .b2w2-din:focus { background: var(--white); outline: none }
+      .b2w2-din:hover, .b2w2-din:focus { background: var(--b2w-paper-alt); outline: none }
       .b2w2-datebtn {
         width: 26px;
         height: 26px;
@@ -315,11 +326,11 @@
         border: none;
         font-size: 12px;
         background: transparent;
-        color: var(--text2);
+        color: var(--b2w-ink-mid);
         max-width: 160px;
         cursor: pointer;
       }
-      .b2w2-sel:hover, .b2w2-sel:focus { background: var(--white); outline: none }
+      .b2w2-sel:hover, .b2w2-sel:focus { background: var(--b2w-paper-alt); outline: none }
 
       /* 액션 그룹(조회+초기화) — 필터와 시각적으로 분리 */
       .b2w2-actiongroup { display: flex; align-items: center; gap: 6px }
@@ -380,7 +391,7 @@
         padding: 16px 18px;
         border-radius: var(--b2w-r-lg);
         border: 1.5px solid var(--b2w-rule);
-        background: var(--b2w-paper);
+        background: var(--b2w-paper-alt);
         box-shadow: var(--b2w-shadow-sm);
         display: flex;
         flex-direction: column;
@@ -390,13 +401,13 @@
       }
       .b2w2-modecard:hover {
         border-color: var(--b2w-accent-border);
-        background: var(--b2w-paper-warm);
+        background: color-mix(in srgb, var(--b2w-accent) 6%, var(--b2w-paper-alt));
         box-shadow: 0 4px 14px var(--b2w-accent-shadow);
         transform: translateY(-1px);
       }
       .b2w2-modecard.is-active {
         background: var(--b2w-paper-alt);
-        border-color: var(--b2w-accent);
+        border-color: color-mix(in srgb, var(--b2w-accent) 32%, var(--b2w-paper-alt));
         box-shadow: 0 0 0 3px var(--b2w-accent-soft), 0 4px 14px var(--b2w-accent-shadow-strong);
       }
       .b2w2-modecard.is-active .b2w2-modekicker { color: var(--b2w-accent) }
@@ -409,7 +420,7 @@
       .b2w2-modehead { display: flex; align-items: center; justify-content: space-between; gap: 8px }
       .b2w2-modekicker { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--b2w-ink-soft) }
       .b2w2-modetitle {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 17px;
         font-weight: 800;
         color: var(--b2w-ink-mid);
@@ -421,7 +432,7 @@
         padding: 4px 11px;
         border-radius: 999px;
         border: 1px solid var(--b2w-rule);
-        background: var(--white);
+        background: var(--b2w-paper-alt);
         font-size: 11px;
         font-weight: 700;
         color: var(--b2w-ink-mid);
@@ -438,7 +449,7 @@
         padding: 3px 9px;
         border-radius: 999px;
         border: 1px solid var(--b2w-rule);
-        background: var(--white);
+        background: var(--b2w-paper-alt);
         font-size: 10px;
         font-weight: 800;
         color: var(--b2w-ink-soft);
@@ -739,9 +750,10 @@
         --b2w-accent: #64748b;
         --b2w-accent-strong: #475569;
         --b2w-accent-soft: rgba(100,116,139,.06);
-        --b2w-paper: #f4f5f6;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #eef0f2;
+        --b2w-accent2: #0ea5e9;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #1e2530;
         --b2w-ink-mid: #4b5563;
         --b2w-ink-soft: #8b95a3;
@@ -761,9 +773,10 @@
         --b2w-accent: #7c3aed;
         --b2w-accent-strong: #db2777;
         --b2w-accent-soft: rgba(124,58,237,.10);
-        --b2w-paper: #faf7ff;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #f6effc;
+        --b2w-accent2: #db2777;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #241b36;
         --b2w-ink-mid: #5b4a68;
         --b2w-ink-soft: #8d7a9a;
@@ -777,6 +790,7 @@
         --b2w-accent: #1c1a17;
         --b2w-accent-strong: #000000;
         --b2w-accent-soft: rgba(28,26,23,.05);
+        --b2w-accent2: #8a6d3a;
         --b2w-paper: #f4f1ea;
         --b2w-paper-alt: #fdfbf6;
         --b2w-paper-warm: #f4f1ea;
@@ -796,9 +810,10 @@
         --b2w-accent: #1e3a5f;
         --b2w-accent-strong: #0f2942;
         --b2w-accent-soft: rgba(30,58,95,.07);
-        --b2w-paper: #f7f5f0;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #f4f0e8;
+        --b2w-accent2: #c9a227;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #1a1a2e;
         --b2w-ink-mid: #3d3d52;
         --b2w-ink-soft: #6b6b80;
@@ -817,9 +832,10 @@
         --b2w-accent: #ec4899;
         --b2w-accent-strong: #db2777;
         --b2w-accent-soft: rgba(236,72,153,.08);
-        --b2w-paper: #fdf4ff;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #fef2f8;
+        --b2w-accent2: #a78bfa;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #3f2a3d;
         --b2w-ink-mid: #6b4c68;
         --b2w-ink-soft: #9c7d98;
@@ -838,6 +854,7 @@
         --b2w-accent: #c9a227;
         --b2w-accent-strong: #8a6d1a;
         --b2w-accent-soft: rgba(201,162,39,.09);
+        --b2w-accent2: #e8c766;
         --b2w-paper: #14120d;
         --b2w-paper-alt: #1c1a13;
         --b2w-paper-warm: #18160f;
@@ -861,9 +878,10 @@
         --b2w-accent: #dc2626;
         --b2w-accent-strong: #991b1b;
         --b2w-accent-soft: rgba(220,38,38,.08);
-        --b2w-paper: #f2f6fb;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #e9eff8;
+        --b2w-accent2: #2563eb;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #0f172a;
         --b2w-ink-mid: #334155;
         --b2w-ink-soft: #64748b;
@@ -882,6 +900,7 @@
         --b2w-accent: #a855f7;
         --b2w-accent-strong: #7c3aed;
         --b2w-accent-soft: rgba(168,85,247,.10);
+        --b2w-accent2: #22d3ee;
         --b2w-paper: #0b0f19;
         --b2w-paper-alt: #131a2a;
         --b2w-paper-warm: #0f1524;
@@ -904,9 +923,10 @@
         --b2w-accent: #f97316;
         --b2w-accent-strong: #ea580c;
         --b2w-accent-soft: rgba(249,115,22,.09);
-        --b2w-paper: #fffdf7;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #fff8ec;
+        --b2w-accent2: #14b8a6;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #1f2937;
         --b2w-ink-mid: #4b5563;
         --b2w-ink-soft: #9ca3af;
@@ -925,9 +945,10 @@
         --b2w-accent: #16a34a;
         --b2w-accent-strong: #15803d;
         --b2w-accent-soft: rgba(22,163,74,.08);
-        --b2w-paper: #f6f9f4;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #f1f6ee;
+        --b2w-accent2: #4ade80;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #1c2b1f;
         --b2w-ink-mid: #3f5745;
         --b2w-ink-soft: #718775;
@@ -946,9 +967,10 @@
         --b2w-accent: #0891b2;
         --b2w-accent-strong: #0e7490;
         --b2w-accent-soft: rgba(8,145,178,.08);
-        --b2w-paper: #f0f9fb;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #eaf6f8;
+        --b2w-accent2: #38bdf8;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #0c2b33;
         --b2w-ink-mid: #2f5761;
         --b2w-ink-soft: #6b8b93;
@@ -967,9 +989,10 @@
         --b2w-accent: #f5760a;
         --b2w-accent-strong: #db2777;
         --b2w-accent-soft: rgba(245,118,10,.09);
-        --b2w-paper: #fff7f2;
-        --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #fef1ea;
+        --b2w-accent2: #db2777;
+        --b2w-paper: color-mix(in srgb, var(--b2w-accent) 8%, #f8fafc);
+        --b2w-paper-alt: color-mix(in srgb, var(--b2w-accent) 7%, #ffffff);
+        --b2w-paper-warm: color-mix(in srgb, var(--b2w-accent2) 10%, #f1f5f9);
         --b2w-ink: #3a1f24;
         --b2w-ink-mid: #6b4048;
         --b2w-ink-soft: #a1767c;
@@ -988,6 +1011,7 @@
         --b2w-accent: #22d3ee;
         --b2w-accent-strong: #d946ef;
         --b2w-accent-soft: rgba(34,211,238,.10);
+        --b2w-accent2: #d946ef;
         --b2w-paper: #0a0a0f;
         --b2w-paper-alt: #121218;
         --b2w-paper-warm: #0d0d13;
@@ -1007,25 +1031,11 @@
       }
 
       /* ─────────────────────────────────────────────────────────────
-         다크모드 강제 오버라이드
-         - data-theme="elegant/pastel/sports/..." 같은 라이트 테마가
-           body.dark에서도 paper/ink 변수를 덮어써서 (스크린샷처럼) 브리핑 카드가 밝게 남는 문제 수정
-         - dark 전용 테마(luxury/esports/neon)는 제외
+         (2026-08-20 제거) 예전엔 여기서 body.dark일 때 라이트 테마들을
+         강제로 어둡게 덮어썼지만, 이제 현황판 브리핑은 프로리그 브리핑처럼
+         사이트 다크모드와 무관하게 항상 각 테마 고유의 톤(라이트 테마는 라이트,
+         dark 전용 테마인 luxury/esports/neon은 그대로 다크)을 유지한다.
       ───────────────────────────────────────────────────────────── */
-      /* data-theme 속성이 없는 기본 상태도 포함해야 하므로 [data-theme] 조건은 제거 */
-      :is(body.dark,html.dark) .b2w2-wrap:not([data-theme="luxury"]):not([data-theme="esports"]):not([data-theme="neon"]){
-        --b2w-paper: #0f172a !important;
-        --b2w-paper-alt: #1e293b !important;
-        --b2w-paper-warm: #162032 !important;
-        --b2w-ink: #e2e8f0 !important;
-        --b2w-ink-mid: #cbd5e1 !important;
-        --b2w-ink-soft: #94a3b8 !important;
-        --b2w-rule-hard: rgba(226,232,240,.20) !important;
-        --b2w-rule-soft: rgba(226,232,240,.10) !important;
-        --b2w-shadow: 0 14px 44px rgba(0,0,0,.40) !important;
-        --b2w-shadow-sm: 0 6px 18px rgba(0,0,0,.26) !important;
-        --b2w-btn-text: #ffffff !important;
-      }
 
       /* 배경 이미지 없을 때 색상 */
       .b2w2-mvp-first .b2w2-mvp-bg-fallback  { background: linear-gradient(160deg,#fef3c7,#f59e0b); color: #92400e }
@@ -1078,7 +1088,7 @@
       }
 
       .b2w2-mvp-name {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 15px;
         font-weight: 900;
         color: #fff;
@@ -1132,7 +1142,7 @@
         flex-shrink: 0;
       }
       .b2w2-mvp-sv {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 13px;
         font-weight: 900;
         letter-spacing: -.02em;
@@ -1244,7 +1254,7 @@
 
       /* ── 차트 박스 ── */
       .b2w2-chart-box {
-        background: var(--b2w-paper);
+        background: var(--b2w-paper-alt);
         border: 1px solid var(--b2w-rule);
         border-radius: var(--b2w-r-lg);
         padding: 18px 20px;
@@ -1252,7 +1262,7 @@
         box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-chart-title {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 14px;
         font-weight: 800;
         color: var(--b2w-ink);
@@ -1270,7 +1280,7 @@
         padding: 10px 12px;
         border-radius: var(--b2w-r);
         border: 1px solid var(--b2w-rule-soft);
-        background: var(--white);
+        background: var(--b2w-paper-alt);
         box-shadow: var(--b2w-shadow-sm);
         cursor: pointer;
         transition: box-shadow .12s ease, transform .12s ease;
@@ -1282,11 +1292,13 @@
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-size: 11px; font-weight: 900;
-        background: var(--surface,#f1f5f9); color: var(--b2w-ink-soft, #64748b);
+        background: var(--b2w-tag-bg,#f1f5f9); color: var(--b2w-ink-soft, #64748b);
       }
-      .b2w2-rank-badge.gold   { background: linear-gradient(135deg,#fde68a,#f59e0b); color: #78350f }
+      .b2w2-rank-badge.gold   { background: linear-gradient(135deg, var(--b2w-accent), var(--b2w-accent-strong)); color: #fff; box-shadow: 0 2px 6px var(--b2w-accent-shadow, rgba(37,99,235,.25)); animation: b2wGoldPulse 2.4s ease-in-out infinite }
+      @keyframes b2wGoldPulse { 0%,100% { box-shadow: 0 2px 6px var(--b2w-accent-shadow, rgba(37,99,235,.25)) } 50% { box-shadow: 0 2px 14px var(--b2w-accent-shadow-strong, rgba(37,99,235,.42)) } }
+      @media (prefers-reduced-motion: reduce) { .b2w2-rank-badge.gold { animation: none } }
       .b2w2-rank-badge.silver { background: linear-gradient(135deg,#e5e7eb,#94a3b8); color: #334155 }
-      .b2w2-rank-badge.bronze { background: linear-gradient(135deg,#f3c08a,#c2703d); color: #4a2511 }
+      .b2w2-rank-badge.bronze { background: linear-gradient(135deg, color-mix(in srgb, var(--b2w-accent2) 55%, #f3c08a), color-mix(in srgb, var(--b2w-accent2) 70%, #c2703d)); color: #fff }
       .b2w2-rank-logo { flex-shrink: 0; display: inline-flex; align-items: center }
       .b2w2-rank-main { flex: 1; min-width: 0 }
       .b2w2-rank-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px }
@@ -1295,7 +1307,7 @@
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .b2w2-rank-wr { flex-shrink: 0; font-size: 13px; font-weight: 900 }
-      .b2w2-rank-track { position: relative; height: 7px; border-radius: 999px; background: var(--border,#e2e8f0); opacity: .5; overflow: hidden }
+      .b2w2-rank-track { position: relative; height: 7px; border-radius: 999px; background: var(--b2w-rule,#e2e8f0); opacity: .5; overflow: hidden }
       .b2w2-rank-track-fill { position: absolute; top: 0; left: 0; height: 100%; display: flex; border-radius: 999px; overflow: hidden }
       .b2w2-rank-bar-win { height: 100% }
       .b2w2-rank-bar-loss { height: 100%; opacity: .32 }
@@ -1322,7 +1334,7 @@
         padding: 16px 18px;
         border-radius: var(--b2w-r);
         border: 1px solid var(--b2w-rule);
-        background: var(--b2w-paper);
+        background: var(--b2w-paper-alt);
         box-shadow: var(--b2w-shadow-sm);
         display: flex;
         flex-direction: column;
@@ -1364,14 +1376,27 @@
         gap: 5px;
       }
       .b2w2-highlight-title {
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 17px;
-        font-weight: 800;
+        display: flex;
+        align-items: center;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
+        font-size: 16px;
+        font-weight: 900;
         letter-spacing: -.01em;
         color: var(--b2w-ink);
         line-height: 1.25;
         padding-bottom: 8px;
         border-bottom: 1px solid var(--b2w-rule-soft);
+      }
+      /* (2026-08-20) 프로리그 브리핑(.plb-section-title)의 다이아몬드 불릿을 참고 */
+      .b2w2-highlight-title::before {
+        content: '';
+        display: inline-block;
+        width: 8px; height: 8px;
+        margin-right: 8px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--b2w-accent), var(--b2w-accent2));
+        transform: rotate(45deg);
+        border-radius: 2px;
       }
       .b2w2-highlight-desc { font-size: 12px; line-height: 1.7; color: var(--b2w-ink-mid) }
       .b2w2-highlight-list { display: flex; flex-direction: column; gap: 0 }
@@ -1412,7 +1437,7 @@
         border-radius: var(--b2w-r);
         background: var(--b2w-paper-alt);
       }
-      .b2w2-racetable-cell strong { font-size: var(--fs-caption); font-weight: 900; color: var(--text1); letter-spacing: -.01em }
+      .b2w2-racetable-cell strong { font-size: var(--fs-caption); font-weight: 900; color: var(--b2w-ink); letter-spacing: -.01em }
       .b2w2-racetable-cell span { font-size: 10px; font-weight: 700; color: var(--text3) }
 
       /* ── 듀얼 블록 ── */
@@ -1424,7 +1449,7 @@
       .b2w2-dual-block:last-child { border-bottom: none }
       .b2w2-dual-head { display: flex; align-items: center; justify-content: space-between; gap: 10px }
       .b2w2-dual-title {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 13px;
         font-weight: 800;
         color: var(--b2w-ink);
@@ -1452,7 +1477,7 @@
         gap: 5px;
         padding: 3px 9px;
         border-radius: 999px;
-        background: var(--white);
+        background: var(--b2w-paper-alt);
         border: 1px solid var(--b2w-rule-soft);
         font-size: 11px;
         font-weight: 700;
@@ -1591,7 +1616,7 @@
       .b2w2-ace-photo img { width: 100%; height: 100%; object-fit: cover; display: block }
       .b2w2-ace-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 15px; font-weight: 900; color: #fff }
       .b2w2-ace-player-name {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 17px;
         font-weight: 800;
         color: var(--b2w-ink);
@@ -1614,10 +1639,10 @@
         font-size: 10px;
         font-weight: 800;
         border: 1px solid var(--b2w-rule-soft);
-        background: var(--white);
+        background: var(--b2w-paper-alt);
         color: var(--b2w-ink-mid);
       }
-      .b2w2-ace-empty { padding: 14px 14px 13px; border: 1px dashed var(--b2w-rule); border-radius: var(--b2w-r-lg); background: var(--b2w-paper) }
+      .b2w2-ace-empty { padding: 14px 14px 13px; border: 1px dashed var(--b2w-rule); border-radius: var(--b2w-r-lg); background: var(--b2w-paper-alt) }
       .b2w2-ace-empty-title { font-size: 14px; font-weight: 800; color: var(--b2w-ink-mid) }
       .b2w2-ace-empty-sub { margin-top: 5px; font-size: 11px; line-height: 1.6; color: var(--b2w-ink-soft) }
 
@@ -1628,7 +1653,7 @@
       }
       .b2w2-monthly-mvp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px }
       .b2w2-monthly-mvp-name {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 18px;
         font-weight: 800;
         color: var(--b2w-ink);
@@ -1655,12 +1680,12 @@
       }
       .b2w2-monthly-mvp-metric:last-child { border-right: none }
       .b2w2-monthly-mvp-metric-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); text-transform: uppercase; letter-spacing: .04em }
-      .b2w2-monthly-mvp-metric-value { margin-top: 5px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 17px; font-weight: 800; color: var(--b2w-ink) }
+      .b2w2-monthly-mvp-metric-value { margin-top: 5px; font-family: 'Noto Sans KR', -apple-system, sans-serif; font-size: 17px; font-weight: 800; color: var(--b2w-ink) }
       .b2w2-monthly-mvp-form { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dotted var(--b2w-rule-soft) }
 
       /* ── 대학별 카드 ── */
       .b2w2-card {
-        background: var(--b2w-paper);
+        background: var(--b2w-paper-alt);
         border: 1px solid var(--b2w-rule);
         border-radius: var(--b2w-r-lg);
         margin-bottom: 14px;
@@ -1685,7 +1710,7 @@
       .b2w2-card-title { display: flex; align-items: flex-start; gap: 10px; min-width: 0 }
       .b2w2-card-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0 }
       .b2w2-card-name {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 18px;
         font-weight: 800;
         color: var(--b2w-ink);
@@ -1703,10 +1728,10 @@
         border-radius: var(--b2w-r);
         overflow: hidden;
       }
-      .b2w2-card-kpi { padding: 12px 14px; border-right: 1px solid var(--b2w-rule-soft); background: var(--b2w-paper-alt) }
+      .b2w2-card-kpi { padding: 12px 14px; border-right: 1px solid var(--b2w-rule-soft); background: color-mix(in srgb, var(--b2w-accent) 6%, var(--b2w-paper-alt)) }
       .b2w2-card-kpi:last-child { border-right: none }
       .b2w2-card-kpi-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); text-transform: uppercase; letter-spacing: .04em }
-      .b2w2-card-kpi-value { margin-top: 6px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 20px; font-weight: 800; letter-spacing: -.01em; color: var(--b2w-ink) }
+      .b2w2-card-kpi-value { margin-top: 6px; font-family: 'Noto Sans KR', -apple-system, sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -.01em; color: var(--b2w-ink) }
       .b2w2-card-kpi-sub { margin-top: 3px; font-size: 11px; font-weight: 600; color: var(--b2w-ink-soft) }
       .b2w2-card-spotlight {
         display: flex;
@@ -1714,11 +1739,11 @@
         justify-content: center;
         padding: 14px 16px;
         border-radius: var(--b2w-r);
-        border: 1.5px solid color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 32%, transparent);
-        background: linear-gradient(135deg, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 8%, var(--white,#fff)) 0%, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 15%, var(--white,#fff)) 100%);
+        border: 1.5px solid color-mix(in srgb, var(--spot-c, var(--b2w-gold, #92651b)) 32%, transparent);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--spot-c, var(--b2w-gold, #92651b)) 8%, var(--b2w-paper-alt,#fff)) 0%, color-mix(in srgb, var(--spot-c, var(--b2w-gold, #92651b)) 15%, var(--b2w-paper-alt,#fff)) 100%);
       }
-      .b2w2-card-spotlight-kicker { font-size: 10px; font-weight: 800; color: color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 75%, black 15%); letter-spacing: .08em; text-transform: uppercase }
-      .b2w2-card-spotlight-title { margin-top: 6px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 16px; font-weight: 800; color: var(--b2w-ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+      .b2w2-card-spotlight-kicker { font-size: 10px; font-weight: 800; color: color-mix(in srgb, var(--spot-c, var(--b2w-gold, #92651b)) 75%, black 15%); letter-spacing: .08em; text-transform: uppercase }
+      .b2w2-card-spotlight-title { margin-top: 6px; font-family: 'Noto Sans KR', -apple-system, sans-serif; font-size: 16px; font-weight: 800; color: var(--b2w-ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
       .b2w2-card-spotlight-sub { margin-top: 5px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 8px; flex-wrap: wrap }
       .b2w2-card-spotlight-body { display: flex; align-items: center; gap: 12px }
       .b2w2-card-spotlight-photo {
@@ -1737,7 +1762,7 @@
       }
 
       /* ── 테이블 ── */
-      .b2w2-table-wrap { border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); overflow: hidden; background: var(--white) }
+      .b2w2-table-wrap { border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); overflow: hidden; background: color-mix(in srgb, var(--b2w-accent) 6%, var(--b2w-paper-alt)) }
       .b2w2-tbl { width: 100%; border-collapse: collapse }
       .b2w2-tbl th {
         font-size: 13px;
@@ -1751,9 +1776,10 @@
         text-transform: uppercase;
         letter-spacing: .06em;
       }
-      .b2w2-tbl td { font-size: 13px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle }
+      .b2w2-tbl td { font-size: 13px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle; transition: background .14s ease, box-shadow .14s ease }
       .b2w2-tbl tr:last-child td { border-bottom: none }
-      .b2w2-tbl tr:hover td { background: var(--b2w-paper-alt) }
+      .b2w2-tbl tr:hover td { background: var(--b2w-paper-warm) }
+      .b2w2-tbl tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--b2w-accent) }
 
       /* ── 종족전 박스 ── */
       .b2w2-race-box { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); background: var(--b2w-paper-alt) }
@@ -1763,7 +1789,7 @@
       .b2w2-race-head { padding: 0 12px; font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); letter-spacing: .04em; text-transform: uppercase }
       .b2w2-race-head span { text-align: center }
       .b2w2-race-head span:first-child { text-align: left }
-      .b2w2-race-row { padding: 8px 12px; border-radius: var(--b2w-r); border: 1px solid var(--b2w-rule-soft); background: var(--white); box-shadow: var(--b2w-shadow-sm); transition: box-shadow .12s ease }
+      .b2w2-race-row { padding: 8px 12px; border-radius: var(--b2w-r); border: 1px solid var(--b2w-rule-soft); background: var(--b2w-paper-alt); box-shadow: var(--b2w-shadow-sm); transition: box-shadow .12s ease }
       .b2w2-race-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08) }
       .b2w2-race-cell { display: flex; align-items: center; justify-content: center }
       .b2w2-race-cell-main { justify-content: flex-start; gap: 8px }
@@ -1774,7 +1800,7 @@
       .b2w2-race-rate { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid var(--b2w-rule-soft) }
 
       /* ── 빈 상태 ── */
-      .b2w2-empty { text-align: center; padding: 40px 16px; color: var(--b2w-ink-soft); font-size: 13px; font-family: 'Noto Serif KR', Georgia, serif }
+      .b2w2-empty { text-align: center; padding: 40px 16px; color: var(--b2w-ink-soft); font-size: 13px; font-family: 'Noto Sans KR', -apple-system, sans-serif }
 
       /* ── 반응형 ── */
       @media(min-width:1180px){
@@ -1874,7 +1900,7 @@
       }
       .cbf-sec-num::before { content: counter(cbfsec, decimal-leading-zero); }
       .cbf-sec-title {
-        font-family: 'Noto Serif KR', Georgia, serif;
+        font-family: 'Noto Sans KR', -apple-system, sans-serif;
         font-size: 19px;
         font-weight: 900;
         letter-spacing: -.01em;
@@ -1900,6 +1926,45 @@
         .cbf-sec-title { font-size: 16px; }
         .cbf-sec-sub { padding-left: 0; margin-top: 6px; }
       }
+
+      /* ── 현황판 탭 바깥쪽(카드 여백) 배경도 테마색으로 (2026-08-20 (10)) ──
+         .b2w2-wrap은 max-width로 가운데 정렬되는 카드라, 그 좌우/상하 여백은
+         부모 컨테이너(#b2-content)의 배경이 그대로 드러난다. 지금까지는 이
+         여백이 흰색 그대로였음 — CSS 커스텀 프로퍼티는 자식→부모 방향으로는
+         상속되지 않으므로(.b2w2-wrap에 정의한 --b2w-accent를 조상인
+         #b2-content에서 쓸 수 없음), 테마별 accent hex를 직접 :has() 셀렉터에
+         하드코딩해 부모 배경에도 같은 톤을 입힌다. 다크 전용 테마(luxury/
+         esports/neon)는 그 테마 고유의 어두운 페이퍼 색을 그대로 맞춰준다. */
+      #b2-content:has(> .b2w2-wrap) {
+        background: color-mix(in srgb, #2563eb 8%, #f8fafc);
+        transition: background .2s ease;
+      }
+      #b2-content:has(> .b2w2-wrap[data-theme="minimal"]) { background: color-mix(in srgb, #64748b 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="vivid"])   { background: color-mix(in srgb, #7c3aed 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="mono"])    { background: color-mix(in srgb, #1c1a17 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="elegant"]) { background: color-mix(in srgb, #1e3a5f 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="pastel"])  { background: color-mix(in srgb, #ec4899 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="sports"])  { background: color-mix(in srgb, #dc2626 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="pop"])     { background: color-mix(in srgb, #f97316 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="nature"])  { background: color-mix(in srgb, #16a34a 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="ocean"])   { background: color-mix(in srgb, #0891b2 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="sunset"])  { background: color-mix(in srgb, #f5760a 8%, #f8fafc); }
+      #b2-content:has(> .b2w2-wrap[data-theme="luxury"])  { background: #14120d; }
+      #b2-content:has(> .b2w2-wrap[data-theme="esports"]) { background: #0b0f19; }
+      #b2-content:has(> .b2w2-wrap[data-theme="neon"])    { background: #0a0a0f; }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap):not(:has(> .b2w2-wrap[data-theme="luxury"])):not(:has(> .b2w2-wrap[data-theme="esports"])):not(:has(> .b2w2-wrap[data-theme="neon"])) {
+        background: color-mix(in srgb, #2563eb 16%, #0b1220);
+      }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="minimal"]) { background: color-mix(in srgb, #64748b 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="vivid"])   { background: color-mix(in srgb, #7c3aed 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="mono"])    { background: color-mix(in srgb, #1c1a17 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="elegant"]) { background: color-mix(in srgb, #1e3a5f 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="pastel"])  { background: color-mix(in srgb, #ec4899 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="sports"])  { background: color-mix(in srgb, #dc2626 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="pop"])     { background: color-mix(in srgb, #f97316 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="nature"])  { background: color-mix(in srgb, #16a34a 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="ocean"])   { background: color-mix(in srgb, #0891b2 16%, #0b1220); }
+      :is(body.dark,html.dark) #b2-content:has(> .b2w2-wrap[data-theme="sunset"])  { background: color-mix(in srgb, #f5760a 16%, #0b1220); }
 
 /* ══════════════════════════════════════════════════════════════
    프로리그(일반) 브리핑 전용 디자인 (plb-*) — (신규기능, 2026-08-20)
