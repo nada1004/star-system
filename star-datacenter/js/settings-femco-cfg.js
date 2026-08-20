@@ -226,6 +226,24 @@ function _cfgMenuNormalize(layout){
     });
   }catch(e){}
 
+  // (일회성 이전) '🎞️ 브리핑 디자인 & 효과'(briefingfx)는 기본/프로리그/프로리그 끝장전/
+  // 프로리그 대회/일반 대회 브리핑까지 모두 아우르는 "디자인 테마" 설정이라
+  // 현황판 전용 카테고리('🧩 현황판/펨코')보다 '🎨 UI/테마'가 더 맞는 자리다.
+  // 이미 저장된 사용자 레이아웃(su_cfg_menu_layout_v1)에 옛 위치가 박혀 있으면
+  // _DEFAULT_CATSECS를 바꿔도 그대로 남아있으므로, 한 번만 강제로 새 카테고리로 옮긴다.
+  // (이후 사용자가 다시 다른 카테고리로 직접 옮기면 그 선택은 유지된다.)
+  try{
+    const _MIG_BRIEFINGFX_KEY = 'su_cfg_mig_briefingfx_uitheme_v1';
+    if(!localStorage.getItem(_MIG_BRIEFINGFX_KEY)){
+      Object.keys(aliasCatSecs).forEach(c=>{
+        if(c === '🎨 UI/테마' || !Array.isArray(aliasCatSecs[c])) return;
+        const idx = aliasCatSecs[c].indexOf('briefingfx');
+        if(idx > -1) aliasCatSecs[c].splice(idx,1);
+      });
+      localStorage.setItem(_MIG_BRIEFINGFX_KEY,'1');
+    }
+  }catch(e){}
+
   // (구버전 호환) '시스템 설정'을 섹션 단위로 분배하던 로직은
   // 위의 oldToNewCat 병합으로 자연스럽게 해결됨.
   // 사용자 레이아웃 반영

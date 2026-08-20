@@ -752,3 +752,14 @@ _proPasteResults      프로리그 파싱 결과
   - select onchange 시 기존 `document.getElementById('b2-content').innerHTML=...` 방식 대신 통계탭 표준 패턴인 `render()` 재호출로 변경.
 - **수정 파일**: `js/board2-core.js`(버튼/탭정의/dispatch 제거), `js/board2-analytics.js`(`_b2RadarView`, `_b2CompareView` 함수 삭제), `js/stats-overview-elo.js`(`statsUnivCompareHTML` 신규), `js/stats-core.js`(🏛️ 대학 그룹에 `⚔️ 대학비교` 서브탭 추가 및 라우터 연결), `js/settings/tabs.js`(하위탭 라벨 목록 정리)
 - `node build.mjs` 재빌드 완료 (dist/js/chunk-board.js에서 관련 함수 완전 제거 확인, dist/js/lazy-stats.js에 statsUnivCompareHTML 포함 확인)
+
+### 2026-08-20 — 설정탭 "🎞️ 브리핑 디자인 & 효과" 카테고리 이동 (현황판/펨코 → UI/테마)
+
+**요청**: 일반 대회(대회탭) 브리핑도 설정탭에서 여러 디자인 중 선택 가능해야 하고, "브리핑 디자인 & 효과" 섹션이 지금 위치(카테고리)가 맞지 않는 것 같으니 올바른 카테고리로 옮겨달라는 요청.
+
+- **확인**: 일반 대회 브리핑 디자인 테마 선택 기능은 이미 구현되어 있었음 — `js/competition-briefing.js`의 `_cbBriefingThemeLoad()`(`su_cb_briefing_theme`, auto/mono/navy/crimson/forest/luxury 6종) + `js/settings-render-sec4.js`의 "🎪 대회 브리핑 디자인 테마" select(`briefingfx` 섹션 안)에서 이미 정상 동작. 별도 신규 구현 불필요.
+- **문제**: `briefingfx`(🎞️ 브리핑 디자인 & 효과 — 기본/주간 브리핑, 프로리그, 프로리그 끝장전, 프로리그 대회, 일반 대회 브리핑까지 전부 아우르는 디자인 테마 + MVP 카드 효과 설정)가 `_DEFAULT_CATSECS`(`js/settings-b2img.js`)에서 `🧩 현황판/펨코` 카테고리에 속해 있었음 — 이 카테고리는 "현황판/펨코스타일/순서/칩/밝기/배경" 전용인데, `briefingfx`는 현황판뿐 아니라 프로리그·일반 대회 브리핑까지 포괄하는 범용 "디자인 테마" 설정이라 성격이 맞지 않음.
+- **수정**: `js/settings-b2img.js`의 `_DEFAULT_CATSECS`에서 `briefingfx`를 `🧩 현황판/펨코` → `🎨 UI/테마`(탭/버튼/필터/폰트/모바일크기/테마 등 디자인 테마류를 모아둔 카테고리)로 이동.
+- **기존 사용자 레이아웃 호환**: 설정 메뉴 정리 기능으로 사용자가 이미 저장해 둔 `su_cfg_menu_layout_v1`에는 `briefingfx`가 옛 카테고리에 그대로 박혀 있어 `_DEFAULT_CATSECS`만 바꿔서는 반영되지 않음 → `js/settings-femco-cfg.js` `_cfgMenuNormalize()`에 일회성 마이그레이션 추가(`su_cfg_mig_briefingfx_uitheme_v1` 플래그로 1회만 실행): 기존 레이아웃에서 `briefingfx`를 어느 카테고리에 있든 제거한 뒤 "누락된 섹션은 기본 위치에 추가" 로직에 의해 새 기본 카테고리(`🎨 UI/테마`)로 자동 편입되게 함. 마이그레이션 이후 사용자가 다시 다른 카테고리로 옮기면 그 선택은 유지됨.
+- **수정 파일**: `js/settings-b2img.js`(`_DEFAULT_CATSECS`), `js/settings-femco-cfg.js`(`_cfgMenuNormalize` 일회성 이전 로직), `js/settings-render.js`(`🎨 UI/테마` 카테고리 설명에 "브리핑 디자인" 문구 추가)
+- `node build.mjs` 재빌드 완료 (dist/js/chunk-core.js에 새 카테고리 배치 반영 확인)
