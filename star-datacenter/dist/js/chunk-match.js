@@ -2784,7 +2784,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
   </div>`}function _plgbEmpty(msg){return`<div class="plgb-empty">${_cbEsc(msg)}</div>`}function _plgbTickerHTML(){return`<div class="plgb-ticker">
     <span class="plgb-ticker-dot"></span>
     <span class="plgb-ticker-txt">PRO LEAGUE \xB7 SUDDEN DEATH</span>
-  </div>`}function _plgbKpiGrid(items){return`<div class="plgb-kpi-grid">${items.map(k=>`<div class="plgb-kpi-card"><i style="background:${k[3]||"#f97316"}"></i>
+  </div>`}function _plgbKpiGrid(items){return`<div class="plgb-kpi-grid">${items.map(k=>`<div class="plgb-kpi-card"><i style="background:${k[3]||"#f59e0b"}"></i>
     <div class="plgb-kpi-label">${_cbEsc(k[0])}</div>
     <div class="plgb-kpi-value">${k[1]}</div>
     <div class="plgb-kpi-sub">${k[2]||""}</div>
@@ -2801,7 +2801,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       ${sub?`<span class="plgb-section-sub">${_cbEsc(sub)}</span>`:""}
     </div>
     ${inner}
-  </section>`}function _plgbRankList(rows,dark){if(!rows.length)return _plgbEmpty("\uD45C\uC2DC\uD560 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const medal=["#f97316","#94a3b8","#c17a3f"];return`<div class="plgb-rank-list">${rows.map((r,i)=>{const col=r.color||"#fca5a5",top=i===0,badgeBg=i<3?medal[i]:`${col}30`,badgeColor=i<3?"#1a0f0a":col,rowBg=`background:linear-gradient(100deg,${col}${top?"38":"1e"},rgba(255,255,255,.06) 78%)`;return`<div class="plgb-rank-row${top?" top1":""}" style="border-left:${top?"5px":"4px"} solid ${col};${rowBg}">
+  </section>`}function _plgbRankList(rows,dark){if(!rows.length)return _plgbEmpty("\uD45C\uC2DC\uD560 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const medal=["#f59e0b","#94a3b8","#c17a3f"];return`<div class="plgb-rank-list">${rows.map((r,i)=>{const col=r.color||"#fbbf24",top=i===0,badgeBg=i<3?medal[i]:`${col}30`,badgeColor=i<3?"#0a1410":col,rowBg=`background:linear-gradient(100deg,${col}${top?"38":"1e"},rgba(255,255,255,.06) 78%)`;return`<div class="plgb-rank-row${top?" top1":""}" style="border-left:${top?"5px":"4px"} solid ${col};${rowBg}">
       <span class="plgb-rank-badge" style="background:${badgeBg};color:${badgeColor}">${i+1}</span>
       <span class="plgb-rank-name" style="color:${col}">${r.icon||""}<span>${_cbEsc(r.name)}</span></span>
       ${r.sub?`<span class="plgb-rank-sub">${r.sub}</span>`:""}
@@ -2844,7 +2844,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       <div class="plgb-hero-desc">\uC804\uCCB4 ${totalN}\uACBD\uAE30 \uC911 ${doneN}\uACBD\uAE30\uAC00 \uAE30\uB85D\uB410\uC2B5\uB2C8\uB2E4.${periodActive?` \uC120\uD0DD \uAE30\uAC04: ${periodLabel}`:""}</div>
     </div>
     ${periodBar}
-    ${_plgbKpiGrid([["\uCD1D \uACBD\uAE30",`${totalN}\uACBD\uAE30`,`\uC644\uB8CC ${doneN} \xB7 \uC9C4\uD589\uB960 ${pct}%`,"#f97316"],["\uD65C\uB3D9 \uC2A4\uD2B8\uB9AC\uBA38",`${playerStats.length}\uBA85`,mvpTop?`MVP \uD6C4\uBCF4 ${_cbEsc(mvpTop.name)}`:"\uC9D1\uACC4 \uC911","#ef4444"],["\uCD1D \uAC8C\uC784",`${games.length}\uAC8C\uC784`,mapStats.length?`\uCD5C\uB2E4 \uC0AC\uC6A9\uB9F5 ${_cbEsc(mapStats[0].map)}`:"\uB9F5 \uAE30\uB85D \uC5C6\uC74C","#facc15"],["\uAE30\uAC04",periodLabel,"","#fb7185"]])}
+    ${_plgbKpiGrid([["\uCD1D \uACBD\uAE30",`${totalN}\uACBD\uAE30`,`\uC644\uB8CC ${doneN} \xB7 \uC9C4\uD589\uB960 ${pct}%`,"#f59e0b"],["\uD65C\uB3D9 \uC2A4\uD2B8\uB9AC\uBA38",`${playerStats.length}\uBA85`,mvpTop?`MVP \uD6C4\uBCF4 ${_cbEsc(mvpTop.name)}`:"\uC9D1\uACC4 \uC911","#10b981"],["\uCD1D \uAC8C\uC784",`${games.length}\uAC8C\uC784`,mapStats.length?`\uCD5C\uB2E4 \uC0AC\uC6A9\uB9F5 ${_cbEsc(mapStats[0].map)}`:"\uB9F5 \uAE30\uB85D \uC5C6\uC74C","#facc15"],["\uAE30\uAC04",periodLabel,"","#fb7185"]])}
     ${_plgbProgressHTML(pct,doneN,totalN)}
     <div class="plgb-body">${body}</div>
   </div>`}

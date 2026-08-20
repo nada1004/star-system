@@ -116,7 +116,7 @@ function _plgbTickerHTML(){
 }
 
 function _plgbKpiGrid(items){
-  return `<div class="plgb-kpi-grid">${items.map(k=>`<div class="plgb-kpi-card"><i style="background:${k[3]||'#f97316'}"></i>
+  return `<div class="plgb-kpi-grid">${items.map(k=>`<div class="plgb-kpi-card"><i style="background:${k[3]||'#f59e0b'}"></i>
     <div class="plgb-kpi-label">${_cbEsc(k[0])}</div>
     <div class="plgb-kpi-value">${k[1]}</div>
     <div class="plgb-kpi-sub">${k[2]||''}</div>
@@ -146,12 +146,12 @@ function _plgbSection(title,sub,inner){
 
 function _plgbRankList(rows,dark){
   if(!rows.length) return _plgbEmpty('표시할 기록이 없습니다.');
-  const medal=['#f97316','#94a3b8','#c17a3f'];
+  const medal=['#f59e0b','#94a3b8','#c17a3f'];
   return `<div class="plgb-rank-list">${rows.map((r,i)=>{
-    const col=r.color||'#fca5a5';
+    const col=r.color||'#fbbf24';
     const top=i===0;
     const badgeBg=i<3?medal[i]:`${col}30`;
-    const badgeColor=i<3?'#1a0f0a':col;
+    const badgeColor=i<3?'#0a1410':col;
     /* (개선, 2026-08-20) 1등만 있던 팀 색 배경 틴트를 전체 순위로 확장 */
     const rowBg=`background:linear-gradient(100deg,${col}${top?'38':'1e'},rgba(255,255,255,.06) 78%)`;
     return `<div class="plgb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${rowBg}">
@@ -298,8 +298,8 @@ function rProLeagueGJBriefing(){
     </div>
     ${periodBar}
     ${_plgbKpiGrid([
-      ['총 경기',`${totalN}경기`,`완료 ${doneN} · 진행률 ${pct}%`,'#f97316'],
-      ['활동 스트리머',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#ef4444'],
+      ['총 경기',`${totalN}경기`,`완료 ${doneN} · 진행률 ${pct}%`,'#f59e0b'],
+      ['활동 스트리머',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#10b981'],
       ['총 게임',`${games.length}게임`,mapStats.length?`최다 사용맵 ${_cbEsc(mapStats[0].map)}`:'맵 기록 없음','#facc15'],
       ['기간',periodLabel,'','#fb7185']
     ])}
