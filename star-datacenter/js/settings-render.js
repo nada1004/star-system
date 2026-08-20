@@ -143,10 +143,10 @@ function rCfg(C,T){
   const _mvpFxIntensity = (()=>{ const n=parseInt(localStorage.getItem('su_b2mvp_fx_intensity'),10); return Number.isFinite(n) ? Math.max(0,Math.min(100,n)) : 45; })();
   const _mvpDesignMode = (()=>{ const v=localStorage.getItem('su_b2mvp_design_mode'); return ['photo','panel','frame','glasscard','border','ribbon','split','poster'].includes(v) ? v : 'photo'; })();
   const _briefingTheme = (()=>{ const v=localStorage.getItem('su_b2_briefing_theme'); return ['classic','minimal','vivid','mono','elegant','pastel','luxury','sports','esports','pop','nature','ocean','sunset','neon'].includes(v) ? v : 'classic'; })();
-  const _plbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plb_briefing_theme'); return ['classic','crimson','emerald','violet','mono'].includes(v) ? v : 'classic'; })();
-  const _plgbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plgb_briefing_theme'); return ['classic','crimson-duel','azure-duel','violet-duel','mono-duel'].includes(v) ? v : 'classic'; })();
-  const _pcbBriefingTheme = (()=>{ const v=localStorage.getItem('su_pcb_briefing_theme'); return ['classic','crimson-gold','sapphire','emerald-gold','obsidian'].includes(v) ? v : 'classic'; })();
-  const _cbBriefingTheme = (()=>{ const v=localStorage.getItem('su_cb_briefing_theme'); return ['auto','mono','navy','crimson','forest','luxury'].includes(v) ? v : 'auto'; })();
+  const _plbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plb_briefing_theme'); return ['classic','crimson','emerald','violet','mono','amber','ice','indigo'].includes(v) ? v : 'classic'; })();
+  const _plgbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plgb_briefing_theme'); return ['classic','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'].includes(v) ? v : 'classic'; })();
+  const _pcbBriefingTheme = (()=>{ const v=localStorage.getItem('su_pcb_briefing_theme'); return ['classic','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'].includes(v) ? v : 'classic'; })();
+  const _cbBriefingTheme = (()=>{ const v=localStorage.getItem('su_cb_briefing_theme'); return ['auto','mono','navy','crimson','forest','luxury','rose','teal','amber'].includes(v) ? v : 'auto'; })();
   // 🖱️ 라인업 호버 팝업 스타일 (js/board2-univ-views-lineup.js의 _b2LcHoverTipStyle()와 허용값을 동일하게 유지)
   // [FIX-CFG-LCHOVER-WHITELIST] (2026-08-18) 이 화이트리스트가 실제 팝업 구현(_B2LC_HOVERTIP_STYLES)보다
   // 오래돼서 5개만 들어있었다 → gradient/soft/outline/retro/cyber/paper 등을 고르면 즉시 저장은 되지만

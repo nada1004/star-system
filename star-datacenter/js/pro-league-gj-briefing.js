@@ -108,7 +108,7 @@ function _plgbPeriodBarHTML(){
 
 /* 프로리그 끝장전 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plgb_briefing_theme)
    classic(기본)은 별도 data-theme 없이 .plgb-wrap 기본 토큰(다크 차콜+에메랄드/앰버)을 그대로 사용 */
-const _PLGB_BRIEFING_THEMES=['classic','crimson-duel','azure-duel','violet-duel','mono-duel'];
+const _PLGB_BRIEFING_THEMES=['classic','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'];
 function _plgbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_plgb_briefing_theme'); return _PLGB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
 }

@@ -467,6 +467,9 @@ function _cfgSecGroup4(ctx){
           <option value="emerald" ${_plbBriefingTheme==='emerald'?'selected':''}>에메랄드 (그린·라임 포인트)</option>
           <option value="violet" ${_plbBriefingTheme==='violet'?'selected':''}>바이올렛 (퍼플·시안 네온)</option>
           <option value="mono" ${_plbBriefingTheme==='mono'?'selected':''}>모노 (무채색 고대비)</option>
+          <option value="amber" ${_plbBriefingTheme==='amber'?'selected':''}>앰버 (오렌지·앰버 다이나믹)</option>
+          <option value="ice" ${_plbBriefingTheme==='ice'?'selected':''}>아이스 (시원한 아이스블루)</option>
+          <option value="indigo" ${_plbBriefingTheme==='indigo'?'selected':''}>인디고 (인디고·마젠타 네온)</option>
         </select>
       </div>
       <div>
@@ -478,6 +481,9 @@ function _cfgSecGroup4(ctx){
           <option value="azure-duel" ${_plgbBriefingTheme==='azure-duel'?'selected':''}>애저 결투 (블루·인디고 쿨톤)</option>
           <option value="violet-duel" ${_plgbBriefingTheme==='violet-duel'?'selected':''}>바이올렛 결투 (퍼플·핑크 네온)</option>
           <option value="mono-duel" ${_plgbBriefingTheme==='mono-duel'?'selected':''}>모노 결투 (무채색 고대비)</option>
+          <option value="gold-duel" ${_plgbBriefingTheme==='gold-duel'?'selected':''}>골드 결투 (골드·레드 다이나믹)</option>
+          <option value="rose-duel" ${_plgbBriefingTheme==='rose-duel'?'selected':''}>로즈 결투 (로즈핑크·오렌지)</option>
+          <option value="jade-duel" ${_plgbBriefingTheme==='jade-duel'?'selected':''}>제이드 결투 (민트·블루 쿨톤)</option>
         </select>
       </div>
       <div>
@@ -489,6 +495,9 @@ function _cfgSecGroup4(ctx){
           <option value="sapphire" ${_pcbBriefingTheme==='sapphire'?'selected':''}>사파이어 (딥블루 + 실버)</option>
           <option value="emerald-gold" ${_pcbBriefingTheme==='emerald-gold'?'selected':''}>에메랄드 골드 (딥그린 + 골드)</option>
           <option value="obsidian" ${_pcbBriefingTheme==='obsidian'?'selected':''}>옵시디언 (블랙 + 플래티넘/골드)</option>
+          <option value="topaz" ${_pcbBriefingTheme==='topaz'?'selected':''}>토파즈 (앰버 브라운 + 오렌지)</option>
+          <option value="peridot" ${_pcbBriefingTheme==='peridot'?'selected':''}>페리도트 (연둣빛 그린 + 라임)</option>
+          <option value="rose-gold" ${_pcbBriefingTheme==='rose-gold'?'selected':''}>로즈 골드 (마젠타 + 핑크골드)</option>
         </select>
       </div>
       <div>
@@ -501,6 +510,9 @@ function _cfgSecGroup4(ctx){
           <option value="crimson" ${_cbBriefingTheme==='crimson'?'selected':''}>크림슨 (레드 포인트)</option>
           <option value="forest" ${_cbBriefingTheme==='forest'?'selected':''}>포레스트 (그린 포인트)</option>
           <option value="luxury" ${_cbBriefingTheme==='luxury'?'selected':''}>럭셔리 (다크 + 골드, 모든 종류 공통 고정)</option>
+          <option value="rose" ${_cbBriefingTheme==='rose'?'selected':''}>로즈 (핑크 포인트)</option>
+          <option value="teal" ${_cbBriefingTheme==='teal'?'selected':''}>틸 (민트·시안 포인트)</option>
+          <option value="amber" ${_cbBriefingTheme==='amber'?'selected':''}>앰버 (골드·세피아 포인트)</option>
         </select>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">자동은 조별리그/토너먼트/대회 종류에 따라 톤이 자동으로 바뀌고, 그 외를 고르면 종류와 무관하게 항상 같은 색으로 고정됩니다.</div>
       </div>

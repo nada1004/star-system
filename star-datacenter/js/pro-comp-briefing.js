@@ -200,7 +200,7 @@ function _pcbUnivStats(playerStats){
 
 /* 프로리그 대회 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_pcb_briefing_theme)
    classic(기본)은 별도 data-theme 없이 .pcb-wrap 기본 토큰(딥퍼플+골드)을 그대로 사용 */
-const _PCB_BRIEFING_THEMES=['classic','crimson-gold','sapphire','emerald-gold','obsidian'];
+const _PCB_BRIEFING_THEMES=['classic','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'];
 function _pcbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_pcb_briefing_theme'); return _PCB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
 }

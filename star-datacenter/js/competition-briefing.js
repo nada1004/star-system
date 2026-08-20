@@ -312,6 +312,10 @@ function _cbInjectShellStyle(){
     /* luxury는 다크한 베이스라 카드 그림자를 다크모드용과 동일하게 강하게 */
     '.cbs-wrap[data-theme="luxury"]{box-shadow:0 16px 40px rgba(0,0,0,.5)}',
     '.cbs-wrap[data-theme="luxury"] .b2w2-card,.cbs-wrap[data-theme="luxury"] .b2w2-sec,.cbs-wrap[data-theme="luxury"] .cbs-general,.cbs-wrap[data-theme="luxury"] .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}',
+    /* (신규, 2026-08-20) 대회 브리핑 테마 3종 추가 — rose/teal/amber */
+    '.cbs-wrap[data-theme="rose"]{--cbs-accent:#d81d6d;--cbs-accent-2:#f63ba1;--cbs-accent-soft:#febfe5;--cbs-accent-bg:#ffeff9;--cbs-glow:rgba(246,59,161,.28);--cbs-paper:#fbf3f7;--cbs-paper-2:#f8eef4;--cbs-paper-3:#f2e1eb;--cbs-ink:#2e0f1f;--cbs-ink-mid:#703c5a;--cbs-ink-soft:#a36b8d;--cbs-ink-mute:#c59cb5;--cbs-rule:#e7ccdc;--cbs-rule-2:#f0dfe9;--cbs-card:#ffffff}',
+    '.cbs-wrap[data-theme="teal"]{--cbs-accent:#1dabd8;--cbs-accent-2:#3be0f6;--cbs-accent-soft:#bffbfe;--cbs-accent-bg:#effeff;--cbs-glow:rgba(59,224,246,.28);--cbs-paper:#f3fafb;--cbs-paper-2:#eef7f8;--cbs-paper-3:#e1f0f2;--cbs-ink:#0f292e;--cbs-ink-mid:#3c6b70;--cbs-ink-soft:#6ba0a3;--cbs-ink-mute:#9cc2c5;--cbs-rule:#cce5e7;--cbs-rule-2:#dfeef0;--cbs-card:#ffffff}',
+    '.cbs-wrap[data-theme="amber"]{--cbs-accent:#d8c61d;--cbs-accent-2:#f6ce3b;--cbs-accent-soft:#feecbf;--cbs-accent-bg:#fffbef;--cbs-glow:rgba(246,206,59,.28);--cbs-paper:#fbf9f3;--cbs-paper-2:#f8f6ee;--cbs-paper-3:#f2eee1;--cbs-ink:#2e280f;--cbs-ink-mid:#70643c;--cbs-ink-soft:#a3936b;--cbs-ink-mute:#c5ba9c;--cbs-rule:#e7e0cc;--cbs-rule-2:#f0ecdf;--cbs-card:#ffffff}',
     'body.dark .cbs-wrap .b2w2-card,body.dark .cbs-wrap .b2w2-sec,body.dark .cbs-wrap .cbs-general,body.dark .cbs-wrap .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}',
     /* 진행률 100% 완료 시 은은한 반짝임 애니메이션 */
     '@keyframes cbsBarShine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}',
@@ -335,7 +339,7 @@ function _cbInjectShellStyle(){
    파스텔 톤(tone-mt/tone-pc/tone-lv)을 그대로 사용. 그 외 값을 고르면
    종류와 무관하게 해당 팔레트로 고정된다(_cbInjectShellStyle의
    .cbs-wrap[data-theme="..."] 오버라이드가 .tone-* 보다 뒤에 선언되어 우선 적용). */
-const _CB_BRIEFING_THEMES=['auto','mono','navy','crimson','forest','luxury'];
+const _CB_BRIEFING_THEMES=['auto','mono','navy','crimson','forest','luxury','rose','teal','amber'];
 function _cbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_cb_briefing_theme'); return _CB_BRIEFING_THEMES.includes(v)?v:'auto'; }catch(e){ return 'auto'; }
 }

@@ -732,10 +732,19 @@
 
       /* ── 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택) ──
          classic(기본)은 별도 override 없이 위의 기본 토큰을 그대로 사용 */
+      /* 미니멀 — 무채색·쿨그레이 톤. 다른 테마들과 확실히 구분되도록
+         배경(paper)/글자색(ink)까지 채도를 완전히 뺀 그레이스케일로 통일
+         (기존엔 accent 색만 바뀌고 배경은 classic과 동일해 "차이가 안 느껴진다"는 피드백 있었음) */
       .b2w2-wrap[data-theme="minimal"] {
         --b2w-accent: #64748b;
         --b2w-accent-strong: #475569;
         --b2w-accent-soft: rgba(100,116,139,.06);
+        --b2w-paper: #f4f5f6;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #eef0f2;
+        --b2w-ink: #1e2530;
+        --b2w-ink-mid: #4b5563;
+        --b2w-ink-soft: #8b95a3;
         --b2w-rule-hard: rgba(17,24,39,.22);
         --b2w-rule-soft: rgba(17,24,39,.07);
         --b2w-shadow: 0 3px 12px rgba(15,23,42,.045);
@@ -746,11 +755,18 @@
         --b2w-tag-accent-bg: rgba(100,116,139,.08);
         --b2w-tag-accent-border: rgba(100,116,139,.18);
       }
+      /* 비비드 — 보라·핑크 포인트. 배경도 은은한 라벤더 톤으로 물들여
+         classic(따뜻한 아이보리)과 확실히 갈라지도록 함 */
       .b2w2-wrap[data-theme="vivid"] {
         --b2w-accent: #7c3aed;
         --b2w-accent-strong: #db2777;
         --b2w-accent-soft: rgba(124,58,237,.10);
-        --b2w-paper-warm: var(--b2w-paper);
+        --b2w-paper: #faf7ff;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #f6effc;
+        --b2w-ink: #241b36;
+        --b2w-ink-mid: #5b4a68;
+        --b2w-ink-soft: #8d7a9a;
         --b2w-accent-border: rgba(124,58,237,.32);
         --b2w-accent-shadow: rgba(124,58,237,.18);
         --b2w-accent-shadow-strong: rgba(219,39,119,.24);
@@ -839,14 +855,15 @@
         --b2w-tag-accent-bg: rgba(201,162,39,.14);
         --b2w-tag-accent-border: rgba(201,162,39,.35);
       }
-      /* 스포츠 스타일 — 레드 & 블루의 다이나믹한 경기장 톤 */
+      /* 스포츠 스타일 — 레드 & 블루의 다이나믹한 경기장 톤. 배경도 살짝 쿨한
+         스타디움 화이트로 가라앉혀 classic(따뜻한 아이보리)과 구분되게 함 */
       .b2w2-wrap[data-theme="sports"] {
         --b2w-accent: #dc2626;
         --b2w-accent-strong: #991b1b;
         --b2w-accent-soft: rgba(220,38,38,.08);
-        --b2w-paper: #f8fafc;
+        --b2w-paper: #f2f6fb;
         --b2w-paper-alt: #ffffff;
-        --b2w-paper-warm: #f1f5f9;
+        --b2w-paper-warm: #e9eff8;
         --b2w-ink: #0f172a;
         --b2w-ink-mid: #334155;
         --b2w-ink-soft: #64748b;
@@ -1927,7 +1944,12 @@
    적용되면 흰 배경 위에 흰 글자가 되어 "2026년" 등이 안 보이는 문제가 있었음
    → 옵션 목록만 어두운 글자색으로 명시 */
 .plb-wrap .plb-period-bar .ym-sel option{ color:#0f172a; background:#fff; }
-.plb-period-reset{ font-size:11px; font-weight:800; color:var(--plb-bg2); background:var(--plb-gold); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+/* (버그픽스, 2026-08-20) 기존엔 --plb-gold(앰버/골드)를 배경으로 썼는데, 프로리그
+   끝장전 브리핑(plgb-*)의 클래식 테마도 앰버/골드를 보조색으로 쓰다 보니 두 브리핑의
+   "전체 기간 보기" 버튼이 테마가 달라도 거의 같은 색으로 보이는 문제가 있었다.
+   각 브리핑 고유의 주 포인트색(--plb-accent, 시안 계열)을 쓰도록 바꿔 plgb(에메랄드)와
+   확실히 구분되게 한다. */
+.plb-period-reset{ font-size:11px; font-weight:800; color:var(--plb-bg2); background:var(--plb-accent); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
 .plb-period-reset:hover{ filter:brightness(1.06); }
 
 .plb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
@@ -2041,6 +2063,31 @@
   --plb-gold:#f5f5f4; --plb-gold-rgb:245,245,244; --plb-live:#ef4444; --plb-tagbg:#3f3f46;
   --plb-ink-soft:#a1a1aa; --plb-ink-mute:#6b7280; --plb-ink-accsoft:#d4d4d8;
   --plb-ink-mute2:#8a8a94; --plb-ink-mute3:#9d9da5; --plb-ticker-txt:#d4d4d8;
+}
+/* (신규, 2026-08-20) 프로리그 브리핑 테마 3종 추가 — amber/ice/indigo */
+.plb-wrap[data-theme="amber"]{
+  --plb-bg1:#1a150e; --plb-bg2:#0f0c07; --plb-bg3:#2a2114; --plb-bg4:#1f180f; --plb-bg5:#332716;
+  --plb-bg6:#3d2e1a; --plb-bg7:#2c2112; --plb-ticker-bg:#0a0805;
+  --plb-accent:#efa844; --plb-accent-rgb:239,168,68; --plb-accent2:#fff7ed;
+  --plb-gold:#f97316; --plb-gold-rgb:249,115,22; --plb-live:#f43f5e; --plb-tagbg:#7a5522;
+  --plb-ink-soft:#e2d0b8; --plb-ink-mute:#a88d68; --plb-ink-accsoft:#fcd8a5;
+  --plb-ink-mute2:#c9b18f; --plb-ink-mute3:#d9c3a3; --plb-ticker-txt:#fcd8a5;
+}
+.plb-wrap[data-theme="ice"]{
+  --plb-bg1:#0e161a; --plb-bg2:#070c0f; --plb-bg3:#14232a; --plb-bg4:#0f1a1f; --plb-bg5:#162933;
+  --plb-bg6:#1a313d; --plb-bg7:#12232c; --plb-ticker-bg:#05080a;
+  --plb-accent:#44b6ef; --plb-accent-rgb:68,182,239; --plb-accent2:#f0f9ff;
+  --plb-gold:#7dd3fc; --plb-gold-rgb:125,211,252; --plb-live:#f43f5e; --plb-tagbg:#225d7a;
+  --plb-ink-soft:#b8d4e2; --plb-ink-mute:#6893a8; --plb-ink-accsoft:#a5dffc;
+  --plb-ink-mute2:#8fb6c9; --plb-ink-mute3:#a3c7d9; --plb-ticker-txt:#a5dffc;
+}
+.plb-wrap[data-theme="indigo"]{
+  --plb-bg1:#110e1a; --plb-bg2:#09070f; --plb-bg3:#1a142a; --plb-bg4:#130f1f; --plb-bg5:#1d1633;
+  --plb-bg6:#231a3d; --plb-bg7:#19122c; --plb-ticker-bg:#06050a;
+  --plb-accent:#6f44ef; --plb-accent-rgb:111,68,239; --plb-accent2:#f472b6;
+  --plb-gold:#a5b4fc; --plb-gold-rgb:165,180,252; --plb-live:#f43f5e; --plb-tagbg:#38227a;
+  --plb-ink-soft:#c3b8e2; --plb-ink-mute:#7868a8; --plb-ink-accsoft:#bba5fc;
+  --plb-ink-mute2:#9e8fc9; --plb-ink-mute3:#b1a3d9; --plb-ticker-txt:#bba5fc;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2208,6 +2255,31 @@
   --pcb-ink-soft:#c4c4cc; --pcb-ink-mute:#7a7a83; --pcb-ink-mute2:#96969e;
   --pcb-ink-accsoft:#e4e4e9; --pcb-ink-accsoft2:#f0f0f3; --pcb-ink-bright:#f8f8fa; --pcb-ink-bright2:#fafafb;
 }
+/* (신규, 2026-08-20) 프로리그 대회 브리핑 테마 3종 추가 — topaz/peridot/rose-gold */
+.pcb-wrap[data-theme="topaz"]{
+  --pcb-bg1:#261b0c; --pcb-bg2:#140e06; --pcb-bg3:#553810; --pcb-bg3b:#261908; --pcb-bg4:#302310;
+  --pcb-bg5:#38270f; --pcb-bg6:#4d381a; --pcb-bg6b:#362712; --pcb-bg7:#493518; --pcb-bg7b:#2e210f;
+  --pcb-champ-bg1:#3d2410; --pcb-accent:#f8c071; --pcb-accent-rgb:248,192,113; --pcb-accent2:#c2410c;
+  --pcb-gold:#fed7aa; --pcb-gold-rgb:254,215,170; --pcb-gold-a80:#fed7aacc; --pcb-gold-soft:#fff7ed;
+  --pcb-ink-soft:#f3dfc4; --pcb-ink-mute:#a8977f; --pcb-ink-mute2:#c4ae90;
+  --pcb-ink-accsoft:#fee8ca; --pcb-ink-accsoft2:#fef2e2; --pcb-ink-bright:#fff9f1; --pcb-ink-bright2:#fffbf5;
+}
+.pcb-wrap[data-theme="peridot"]{
+  --pcb-bg1:#19260c; --pcb-bg2:#0d1406; --pcb-bg3:#335510; --pcb-bg3b:#172608; --pcb-bg4:#203010;
+  --pcb-bg5:#24380f; --pcb-bg6:#344d1a; --pcb-bg6b:#243612; --pcb-bg7:#314918; --pcb-bg7b:#1f2e0f;
+  --pcb-champ-bg1:#3d2410; --pcb-accent:#b4f871; --pcb-accent-rgb:180,248,113; --pcb-accent2:#65a30d;
+  --pcb-gold:#d9f99d; --pcb-gold-rgb:217,249,157; --pcb-gold-a80:#d9f99dcc; --pcb-gold-soft:#f7fee7;
+  --pcb-ink-soft:#dcf3c4; --pcb-ink-mute:#93a87f; --pcb-ink-mute2:#aac490;
+  --pcb-ink-accsoft:#e4feca; --pcb-ink-accsoft2:#f0fee2; --pcb-ink-bright:#f8fff1; --pcb-ink-bright2:#fafff5;
+}
+.pcb-wrap[data-theme="rose-gold"]{
+  --pcb-bg1:#260c22; --pcb-bg2:#140612; --pcb-bg3:#551049; --pcb-bg3b:#260821; --pcb-bg4:#30102b;
+  --pcb-bg5:#380f31; --pcb-bg6:#4d1a44; --pcb-bg6b:#361230; --pcb-bg7:#491841; --pcb-bg7b:#2e0f29;
+  --pcb-champ-bg1:#3d2410; --pcb-accent:#f871e1; --pcb-accent-rgb:248,113,225; --pcb-accent2:#be185d;
+  --pcb-gold:#fbcfe8; --pcb-gold-rgb:251,207,232; --pcb-gold-a80:#fbcfe8cc; --pcb-gold-soft:#fff0f7;
+  --pcb-ink-soft:#f3c4eb; --pcb-ink-mute:#a87fa1; --pcb-ink-mute2:#c490bb;
+  --pcb-ink-accsoft:#fecaf5; --pcb-ink-accsoft2:#fee2f9; --pcb-ink-bright:#fff1fd; --pcb-ink-bright2:#fff5fd;
+}
 
 /* ══════════════════════════════════════════════════════════════
    프로리그 끝장전 브리핑 전용 디자인 (plgb-*, 신규, 2026-08-20)
@@ -2246,7 +2318,9 @@
 .plgb-wrap .plgb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:var(--plgb-ink-mute3); }
 .plgb-wrap .plgb-period-bar .ym-sel{ font-size:11.5px !important; font-weight:700; padding:5px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.08) !important; color:#fff !important; }
 .plgb-wrap .plgb-period-bar .ym-sel option{ color:var(--plgb-bg1); background:#fff; }
-.plgb-period-reset{ font-size:11px; font-weight:800; color:var(--plgb-bg1); background:var(--plgb-gold); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+/* (버그픽스, 2026-08-20) plb-period-reset과 동일한 이유로 --plgb-gold 대신
+   --plgb-accent(에메랄드 계열)을 써서 프로리그(plb, 시안/골드) 버튼과 구분되게 한다. */
+.plgb-period-reset{ font-size:11px; font-weight:800; color:var(--plgb-bg1); background:var(--plgb-accent); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
 .plgb-period-reset:hover{ filter:brightness(1.06); }
 
 .plgb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
@@ -2355,4 +2429,32 @@
   --plgb-ticker-txt:#d4d4d8; --plgb-ink-soft:#a1a1aa; --plgb-ink-bright:#f4f4f5; --plgb-ink-accsoft:#d4d4d8;
   --plgb-ink-mute:#6b7280; --plgb-ink-mute2:#8a8a94; --plgb-ink-mute3:#b0b0b8; --plgb-ink-bright2:#fafafa;
   --plgb-ink-mute4:#8a8a94; --plgb-ink-accsoft2:#d4d4d8;
+}
+/* (신규, 2026-08-20) 프로리그 끝장전 브리핑 테마 3종 추가 — gold-duel/rose-duel/jade-duel */
+.plgb-wrap[data-theme="gold-duel"]{
+  --plgb-bg1:#1c180e; --plgb-bg2:#0f0d07; --plgb-bg3:#332b14; --plgb-bg3b:#1a160a;
+  --plgb-bg5:#3d3314; --plgb-bg6:#4d401a; --plgb-bg6b:#2c250f; --plgb-bg7:#453917; --plgb-bg7b:#28210d;
+  --plgb-accent:#efc444; --plgb-accent-rgb:239,196,68; --plgb-accent2:#dc2626; --plgb-accent2-rgb:220,38,38;
+  --plgb-gold:#fde047; --plgb-gold-rgb:253,224,71; --plgb-goldalt:#fde047; --plgb-tagbg:#7a4a10;
+  --plgb-ticker-txt:#fce6a5; --plgb-ink-soft:#e2d8b8; --plgb-ink-bright:#fef7e2; --plgb-ink-accsoft:#fef1ca;
+  --plgb-ink-mute:#a89868; --plgb-ink-mute2:#c9bb8f; --plgb-ink-mute3:#e2d8b8; --plgb-ink-bright2:#fffcf1;
+  --plgb-ink-mute4:#c9bb8f; --plgb-ink-accsoft2:#fef1ca;
+}
+.plgb-wrap[data-theme="rose-duel"]{
+  --plgb-bg1:#1c0e15; --plgb-bg2:#0f070b; --plgb-bg3:#331424; --plgb-bg3b:#1a0a12;
+  --plgb-bg5:#3d1429; --plgb-bg6:#4d1a34; --plgb-bg6b:#2c0f1e; --plgb-bg7:#45172e; --plgb-bg7b:#280d1b;
+  --plgb-accent:#ef449a; --plgb-accent-rgb:239,68,154; --plgb-accent2:#fb923c; --plgb-accent2-rgb:251,146,60;
+  --plgb-gold:#fb7185; --plgb-gold-rgb:251,113,133; --plgb-goldalt:#fb7185; --plgb-tagbg:#7a102b;
+  --plgb-ticker-txt:#fca5d1; --plgb-ink-soft:#e2b8cd; --plgb-ink-bright:#fee2f0; --plgb-ink-accsoft:#fecae4;
+  --plgb-ink-mute:#a86888; --plgb-ink-mute2:#c98fac; --plgb-ink-mute3:#e2b8cd; --plgb-ink-bright2:#fff1f8;
+  --plgb-ink-mute4:#c98fac; --plgb-ink-accsoft2:#fecae4;
+}
+.plgb-wrap[data-theme="jade-duel"]{
+  --plgb-bg1:#0e1c15; --plgb-bg2:#070f0b; --plgb-bg3:#143324; --plgb-bg3b:#0a1a12;
+  --plgb-bg5:#143d29; --plgb-bg6:#1a4d34; --plgb-bg6b:#0f2c1e; --plgb-bg7:#17452e; --plgb-bg7b:#0d281b;
+  --plgb-accent:#44ef9a; --plgb-accent-rgb:68,239,154; --plgb-accent2:#38bdf8; --plgb-accent2-rgb:56,189,248;
+  --plgb-gold:#5eead4; --plgb-gold-rgb:94,234,212; --plgb-goldalt:#5eead4; --plgb-tagbg:#107a5f;
+  --plgb-ticker-txt:#a5fcd1; --plgb-ink-soft:#b8e2cd; --plgb-ink-bright:#e2fef0; --plgb-ink-accsoft:#cafee4;
+  --plgb-ink-mute:#68a888; --plgb-ink-mute2:#8fc9ac; --plgb-ink-mute3:#b8e2cd; --plgb-ink-bright2:#f1fff8;
+  --plgb-ink-mute4:#8fc9ac; --plgb-ink-accsoft2:#cafee4;
 }
