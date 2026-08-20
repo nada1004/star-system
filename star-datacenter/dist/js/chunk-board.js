@@ -3916,7 +3916,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
             ${_renderMonthlyRankRows(rankedUnivLeaders)}
           </div>
         </article>
-        <article class="b2w2-highlight-card">
+        <article class="b2w2-highlight-card is-feature" style="--hc-top:#2563eb">
           <div class="b2w2-highlight-kicker">University Aces</div>
           <div class="b2w2-highlight-title">${preset==="thisMonth"?"\uB300\uD559\uBCC4 \uC5D0\uC774\uC2A4":"\uC9C0\uB09C\uB2EC \uB300\uD559\uBCC4 \uC5D0\uC774\uC2A4"}</div>
           <div class="b2w2-highlight-desc">\uCD5C\uC18C 3\uC804, \uC2B9\uB960 50% \uC774\uC0C1, \uC21C\uC2B9 \uC6B0\uC120 \uAE30\uC900\uC73C\uB85C \uBF51\uC558\uC2B5\uB2C8\uB2E4. \uC870\uAC74 \uBBF8\uB2EC \uB300\uD559\uC740 \uBCC4\uB3C4 \uC548\uB0B4\uB85C \uD45C\uC2DC\uD569\uB2C8\uB2E4.</div>
@@ -3924,7 +3924,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
             ${_renderMonthlyAceCards(monthlyUnivAces)}
           </div>
         </article>
-        ${preset==="thisMonth"?`<article class="b2w2-highlight-card">
+        ${preset==="thisMonth"?`<article class="b2w2-highlight-card is-feature" style="--hc-top:#b8862c">
           <div class="b2w2-highlight-kicker">Popularity Vote</div>
           <div class="b2w2-highlight-title">\u{1F5F3}\uFE0F \uC774\uB2EC\uC758 \uC778\uAE30 \uD22C\uD45C</div>
           <div class="b2w2-highlight-desc" style="font-weight:700;color:var(--b2w-ink-mid)">\uC704 \uB300\uD559\uBCC4 \uC5D0\uC774\uC2A4\uB4E4 \uC911\uC5D0\uC11C \uC774\uBC88 \uB2EC \uB9C8\uC74C\uC5D0 \uB4DC\uB294 \uC2A4\uD2B8\uB9AC\uBA38\uC5D0\uAC8C \uD22C\uD45C\uD574\uBCF4\uC138\uC694. \uC5EC\uB7EC \uBA85\uC5D0\uAC8C \uB3D9\uC2DC\uC5D0 \uD22C\uD45C\uD560 \uC218 \uC788\uACE0, \uC5B8\uC81C\uB4E0 \uB2E4\uC2DC \uB20C\uB7EC \uCDE8\uC18C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div>
@@ -3950,7 +3950,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         ${_b2WeeklyRaceStats(_metaRaceCount)}
         ${_metaTop?`<div style="margin-top:8px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">${_metaRaceLabel[_metaTop.r]} \uC9C4\uC601\uC774 \uC0C1\uB300 \uC885\uC871\uC804 \uC2B9\uB960 ${_metaTop.wr}%\uB85C \uAC00\uC7A5 \uAC15\uC138\uC785\uB2C8\uB2E4.</div>`:""}
       </div>`}orderedTargetStats.filter(ud=>ud.tg>0).forEach((ud,ui)=>{var _a2,_b2,_c2,_d2,_e2;const{u,active,tw,tl,tg,wr,raceCount}=ud,color=(gc?gc(u.name):"#64748b")||"#64748b",prevUd=prevMap[u.name],prevWr=prevUd&&prevUd.tg>0?prevUd.wr:null,wrClass=wr===null?"":wr>=60?"#10b981":wr>=40?"#f59e0b":"#ef4444",cid=`b2w2-body-${ui}`,icid=`b2w2-ic-${ui}`,univMVP=_b2WeeklyUnivMVP(active),sorted=[...active].sort((a,b)=>{const ra=a.total?a.wins/a.total:0,rb=b.total?b.wins/b.total:0;return ra!==rb?rb-ra:b.total-a.total});h+=`<div class="b2w2-card" style="border-top:3px solid ${color}">
-        <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}17 0%, ${color}08 55%, transparent 100%)" onclick="(function(){
+        <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}2a 0%, ${color}12 55%, transparent 100%)" onclick="(function(){
           const b=document.getElementById('${cid}');
           const ic=document.getElementById('${icid}');
           const sub=document.getElementById('b2w2-sub-${ui}');

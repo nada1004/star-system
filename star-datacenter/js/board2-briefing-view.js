@@ -846,7 +846,7 @@ function _b2WeeklyBriefingView() {
             ${_renderMonthlyRankRows(rankedUnivLeaders)}
           </div>
         </article>
-        <article class="b2w2-highlight-card">
+        <article class="b2w2-highlight-card is-feature" style="--hc-top:#2563eb">
           <div class="b2w2-highlight-kicker">University Aces</div>
           <div class="b2w2-highlight-title">${preset==='thisMonth' ? '대학별 에이스' : '지난달 대학별 에이스'}</div>
           <div class="b2w2-highlight-desc">최소 3전, 승률 50% 이상, 순승 우선 기준으로 뽑았습니다. 조건 미달 대학은 별도 안내로 표시합니다.</div>
@@ -854,7 +854,7 @@ function _b2WeeklyBriefingView() {
             ${_renderMonthlyAceCards(monthlyUnivAces)}
           </div>
         </article>
-        ${preset==='thisMonth' ? `<article class="b2w2-highlight-card">
+        ${preset==='thisMonth' ? `<article class="b2w2-highlight-card is-feature" style="--hc-top:#b8862c">
           <div class="b2w2-highlight-kicker">Popularity Vote</div>
           <div class="b2w2-highlight-title">🗳️ 이달의 인기 투표</div>
           <div class="b2w2-highlight-desc" style="font-weight:700;color:var(--b2w-ink-mid)">위 대학별 에이스들 중에서 이번 달 마음에 드는 스트리머에게 투표해보세요. 여러 명에게 동시에 투표할 수 있고, 언제든 다시 눌러 취소할 수 있습니다.</div>
@@ -926,7 +926,7 @@ function _b2WeeklyBriefingView() {
       });
 
       h += `<div class="b2w2-card" style="border-top:3px solid ${color}">
-        <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}17 0%, ${color}08 55%, transparent 100%)" onclick="(function(){
+        <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}2a 0%, ${color}12 55%, transparent 100%)" onclick="(function(){
           const b=document.getElementById('${cid}');
           const ic=document.getElementById('${icid}');
           const sub=document.getElementById('b2w2-sub-${ui}');
