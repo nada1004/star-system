@@ -215,6 +215,8 @@ const MATCH_FILES = [
   'js/match-builder-pro.js',
   'js/pro-league-briefing.js',
   'js/pro-league-briefing-tts.js',
+  'js/pro-league-gj-briefing.js',
+  'js/pro-league-gj-briefing-tts.js',
   'js/match-builder-input-views.js',
   'js/match-builder-bulk-input.js',
   'js/match-builder-ranks.js',

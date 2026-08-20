@@ -5,6 +5,54 @@
 
 /* ── 공통 유틸 ── */
 function _cbUcol(n){ try{ const c=(typeof gc==='function'&&n)?gc(n):''; return c||'#64748b'; }catch(e){ return '#64748b'; } }
+
+/* 다크 스코어보드 카드(프로리그/프로리그 대회 브리핑) 전용 — 대학별로 설정된
+   색상은 밝기·채도가 제각각이라(짙은 네이비/회색 계열 등) 다크 배경 위에서
+   특정 순위(예: 2등)만 유독 안 보이는 문제가 있었음. 모든 색상의 밝기·채도를
+   동일한 하한선 이상으로 끌어올려, 어떤 대학 색이든 다크 배경 위에서
+   일관되게 또렷이 보이도록 보정한다. */
+function _cbHexToHsl(hex){
+  hex=String(hex||'').replace('#','');
+  if(hex.length===3) hex=hex.split('').map(c=>c+c).join('');
+  if(hex.length!==6) return [210,15,45];
+  const r=parseInt(hex.slice(0,2),16)/255, g=parseInt(hex.slice(2,4),16)/255, b=parseInt(hex.slice(4,6),16)/255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0,s=0; const l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r: h=(g-b)/d+(g<b?6:0); break;
+      case g: h=(b-r)/d+2; break;
+      default: h=(r-g)/d+4;
+    }
+    h/=6;
+  }
+  return [h*360,s*100,l*100];
+}
+function _cbHslToHex(h,s,l){
+  h=((h%360)+360)%360/360; s=Math.max(0,Math.min(100,s))/100; l=Math.max(0,Math.min(100,l))/100;
+  let r,g,b;
+  if(s===0){ r=g=b=l; } else {
+    const hue2rgb=(p,q,t)=>{ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; };
+    const q=l<0.5?l*(1+s):l+s-l*s, p=2*l-q;
+    r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+  }
+  const toHex=x=>{ const v=Math.round(x*255).toString(16); return v.length===1?'0'+v:v; };
+  return '#'+toHex(r)+toHex(g)+toHex(b);
+}
+function _cbLegibleColor(hex){
+  try{
+    const [h,s,l]=_cbHexToHsl(hex);
+    const s2=Math.max(s,42), l2=Math.min(Math.max(l,58),84);
+    return _cbHslToHex(h,s2,l2);
+  }catch(e){ return hex||'#7dd3fc'; }
+}
+/* 다크 카드 위에서 항상 또렷이 보이는 대학 색상 — 프로리그/프로리그 대회
+   브리핑(plb-, pcb- 전용 렌더링)에서 텍스트/포인트 색으로 쓸 때는 _cbUcol
+   대신 이 함수를 사용한다. */
+function _cbUcolVivid(n){ return _cbLegibleColor(_cbUcol(n)); }
+
 function _cbFmtD(d){ return d?String(d).slice(2).replace(/-/g,'.'):''; }
 function _cbPct(a,b){ return b?Math.round(a/b*100):0; }
 function _cbEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -171,8 +219,8 @@ function _cbBar(pct,col){
   </div>`;
 }
 
-function _cbTeamChip(name,extra){
-  const col=_cbUcol(name);
+function _cbTeamChip(name,extra,colorOverride){
+  const col=colorOverride||_cbUcol(name);
   return `<span style="display:inline-flex;align-items:center;gap:8px;font-weight:900;color:${col}">
     ${(typeof _univIconTag==='function')?_univIconTag(name,17):''}<span>${_cbEsc(name||'미정')}</span>${extra?`<span style="font-weight:700;color:var(--b2w-ink-soft,#6b7280)">${extra}</span>`:''}
   </span>`;

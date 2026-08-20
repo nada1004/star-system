@@ -1,16 +1,23 @@
 /* ══════════════════════════════════════════════════════════════
-   프로리그 대회 브리핑
+   프로리그 대회 브리핑 (재설계, 2026-08-20)
    - 조별리그(개인전) + 대진표 + 팀전 + 중장전, 4개 소스를 한 화면에
-     종합해 보여주는 프로리그 전용 브리핑. 일반대회 브리핑(competition-
-     briefing.js)의 b2w2 신문 디자인 시스템(_cbShell/_cbSection/
-     _cbRankList 등 공용 헬퍼)을 그대로 재사용해 톤을 통일하되,
-     프로리그 데이터 구조(개인전 조별리그/대진표 + 별도 팀전 + 별도
-     중장전)에 맞춰 집계 로직은 새로 작성.
+     종합해 보여주는 프로리그 전용 브리핑. 데이터 집계 로직(_pcb*Matches/
+     _pcbPlayerStats/_pcbUnivStats)은 기존 그대로 두고, 렌더링은 프로리그
+     (일반) 브리핑의 plb-* 스코어보드 톤과 짝을 맞춘 전용 pcb-* 디자인
+     (딥퍼플+골드, "대회·트로피" 톤)으로 새로 작성 — 일반 대회 브리핑
+     (competition-briefing.js의 b2w2 신문 디자인, _cbShell 등)과는 완전히
+     분리된 별도 시스템이라 다른 대회 브리핑 화면에는 영향 없음.
    ══════════════════════════════════════════════════════════════ */
 
 /* ── 데이터 수집 ── */
 
-/* 조별리그+대진표+3위전 개인 매치 수집 (m.a/m.b = 선수명, m.winner='A'|'B') */
+/* 조별리그+대진표+3위전 개인 매치 수집 (m.a/m.b = 선수명, m.winner='A'|'B')
+   (버그픽스, 2026-08-20) 대진표 파트: 대전기록 탭〉프로리그 대회〉토너먼트
+   (histProCompTourneyHTML)와 동일하게 tn.stageRecords(신규 "대진표 기록" 입력
+   시스템)를 최우선으로 사용하고, 해당 대회에 stageRecords 항목이 하나도 없을
+   때만 레거시 tn.bracket으로 폴백한다. 기존엔 tn.bracket만 읽어서, 실제로는
+   "🗂️ 대진표 기록"(stageRecords)으로 입력된 경기가 브리핑에 전혀 반영되지
+   않는 문제가 있었음. */
 function _pcbIndivMatches(tn){
   const out=[];
   (tn.groups||[]).forEach((grp,gi)=>{
@@ -21,14 +28,28 @@ function _pcbIndivMatches(tn){
       out.push({...m,phase:'조별리그',phaseTag:`${grp.name||gl+'조'}`,grpIdx:gi,matchNum:mi+1,done:!!m.winner});
     });
   });
-  const totalRounds=(tn.bracket||[]).length;
-  (tn.bracket||[]).forEach((rnd,ri)=>{
-    const rLabel=ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,Math.max(1,totalRounds-ri))}강`;
-    (rnd||[]).forEach(m=>{
-      if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
-      out.push({...m,phase:'대진표',phaseTag:rLabel,rLabel,done:!!m.winner});
+
+  const _stageOrder=['64강','32강','16강','8강','4강','결승'];
+  let _hasStageItems=false;
+  if(tn.stageRecords){
+    _stageOrder.forEach(r=>{
+      (tn.stageRecords[r]||[]).forEach(m=>{
+        if(!m||!m.a||!m.b) return;
+        _hasStageItems=true;
+        out.push({...m,phase:'대진표',phaseTag:r,rLabel:r,done:!!m.winner});
+      });
     });
-  });
+  }
+  if(!_hasStageItems){
+    const totalRounds=(tn.bracket||[]).length;
+    (tn.bracket||[]).forEach((rnd,ri)=>{
+      const rLabel=ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,Math.max(1,totalRounds-ri))}강`;
+      (rnd||[]).forEach(m=>{
+        if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
+        out.push({...m,phase:'대진표',phaseTag:rLabel,rLabel,done:!!m.winner});
+      });
+    });
+  }
   if(tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD'){
     out.push({...tn.thirdPlace,phase:'3위전',phaseTag:'3위전',rLabel:'3위전',done:!!tn.thirdPlace.winner});
   }
@@ -118,48 +139,129 @@ function _pcbUnivStats(playerStats){
     .sort((a,b)=>b.w-a.w||b.rate-a.rate);
 }
 
-/* ── UI 조각 (프로리그 전용 — competition-briefing.js의 _cb* 공용 헬퍼와 조합해 사용) ── */
+/* ── UI 조각 (pcb-* — 프로리그 "대회" 브리핑 전용, 2026-08-20 재설계)
+   프로리그(일반) 브리핑의 plb-* 스코어보드 톤과 짝을 맞추되, "대회·트로피"
+   느낌의 딥퍼플+골드 톤으로 차별화. competition-briefing.js의 _cb*는 다른
+   대회 브리핑(조별리그/토너먼트 브리핑 등)과 공유되는 헬퍼라 그대로 두고,
+   순수 유틸(_cbEsc/_cbFmtD/_cbPct/_cbUcol/_cbPlayerAvatar/_cbTeamChip/
+   _cbFormDots)만 재사용한다. ── */
+
+function _pcbEmpty(msg){ return `<div class="pcb-empty">${_cbEsc(msg)}</div>`; }
+
+function _pcbTickerHTML(univStats){
+  return `<div class="pcb-ticker">
+    <span class="pcb-ticker-dot"></span>
+    <span class="pcb-ticker-txt">PRO LEAGUE · TOURNAMENT</span>
+  </div>`;
+}
+
+function _pcbKpiGrid(items){
+  return `<div class="pcb-kpi-grid">${items.map(k=>`<div class="pcb-kpi-card"><i style="background:${k[3]||'#a855f7'}"></i>
+    <div class="pcb-kpi-label">${_cbEsc(k[0])}</div>
+    <div class="pcb-kpi-value">${k[1]}</div>
+    <div class="pcb-kpi-sub">${k[2]||''}</div>
+  </div>`).join('')}</div>`;
+}
+
+/* 진행률+TTS 통합 패널 — 처음부터 다크 배경을 명시해, 흰 글자/버튼이 밝은
+   바깥 배경에 묻혀 안 보이는 일이 없도록 설계 */
+function _pcbProgressHTML(pct,doneM,totalM){
+  return `<div class="pcb-progress-panel">
+    <div class="pcb-progress-head">
+      <span class="pcb-progress-title">🏆 대회 진행률</span>
+      <button type="button" id="pcb-speak-btn" class="pcb-speak-btn no-export" onclick="_pcbBriefingToggleSpeak()">🔊 음성듣기</button>
+    </div>
+    <div class="pcb-progress-track"><div class="pcb-progress-fill" style="width:${pct}%"></div></div>
+    <div class="pcb-progress-caption"><span>완료 ${doneM} / ${totalM}경기</span><span>${pct}%</span></div>
+  </div>`;
+}
+
+function _pcbSection(title,sub,inner){
+  return `<section class="pcb-section">
+    <div class="pcb-section-head">
+      <span class="pcb-section-title">${_cbEsc(title)}</span>
+      ${sub?`<span class="pcb-section-sub">${_cbEsc(sub)}</span>`:''}
+    </div>
+    ${inner}
+  </section>`;
+}
+
+/* 순위 리스트 — top3 메달톤 배지. dark=true면(MVP 후보처럼 어두운 카드
+   위에 얹힐 때) 1등 강조 배경이 밝은 색으로 번지지 않게 함 */
+function _pcbRankList(rows,dark){
+  if(!rows.length) return _pcbEmpty('표시할 기록이 없습니다.');
+  const medal=['#fbbf24','#94a3b8','#c17a3f'];
+  return `<div class="pcb-rank-list">${rows.map((r,i)=>{
+    const col=r.color||'#d8b4fe';
+    const top=i===0;
+    const badgeBg=i<3?medal[i]:`${col}30`;
+    const badgeColor=i<3?'#1d1236':col;
+    const topBg=`background:linear-gradient(100deg,${col}38,rgba(255,255,255,.06) 78%)`;
+    return `<div class="pcb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${top?topBg:''}">
+      <span class="pcb-rank-badge" style="background:${badgeBg};color:${badgeColor}">${i+1}</span>
+      <span class="pcb-rank-name" style="color:${col}">${r.icon||''}<span>${_cbEsc(r.name)}</span></span>
+      ${r.sub?`<span class="pcb-rank-sub">${r.sub}</span>`:''}
+      <span class="pcb-rank-value">${r.value}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function _pcbMvpHTML(mvpTop,mvpCands){
+  if(!mvpTop) return '';
+  const mCol=_cbUcolVivid(mvpTop.univ);
+  return `<div class="pcb-mvp">
+    <span style="position:relative;display:inline-flex;flex-shrink:0">${_cbPlayerAvatar(mvpTop.name,(typeof window!=='undefined'&&window.innerWidth<640)?104:150)}</span>
+    <div class="pcb-mvp-side">
+      <div class="pcb-mvp-ribbon">🏆 Tournament MVP</div>
+      <div class="pcb-mvp-name" style="color:${mCol}">${_cbEsc(mvpTop.name)}</div>
+      <div class="pcb-mvp-meta">${mvpTop.univ?_cbTeamChip(mvpTop.univ,'',_cbUcolVivid(mvpTop.univ)):''}<span>${mvpTop.w}승 ${mvpTop.l}패 · 승률 ${mvpTop.rate}%${mvpTop.gjW?` · 중장전 ${mvpTop.gjW}승`:''}</span></div>
+    </div>
+    <div class="pcb-mvp-cands">${_pcbRankList(mvpCands.slice(0,5).map(p=>({
+      name:p.name,color:_cbUcolVivid(p.univ),sub:`${p.w}승 ${p.l}패`,value:`${Math.round(p.score)}pt`
+    })),true)}</div>
+  </div>`;
+}
 
 /* 개인전 매치 1건 행 (조별리그/대진표/3위전 공용) */
 function _pcbIndivRow(m){
-  const ca=_cbUcol(_pcbUniv(m.a)), cb=_cbUcol(_pcbUniv(m.b));
+  const ca=_cbUcolVivid(_pcbUniv(m.a)), cb=_cbUcolVivid(_pcbUniv(m.b));
   const aWin=m.done&&m.winner==='A', bWin=m.done&&m.winner==='B';
-  return `<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--b2w-rule-soft,#e5e7eb);border-radius:10px;background:var(--b2w-paper-alt,#fff);margin-bottom:6px">
-    ${m.phaseTag?`<span style="flex-shrink:0;font-size:10px;font-weight:900;color:#fff;background:var(--b2w-accent,#2563eb);padding:2px 8px;border-radius:99px">${_cbEsc(m.phaseTag)}</span>`:''}
-    ${m.d?`<span style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--b2w-ink-soft,#6b7280)">${_cbFmtD(m.d)}</span>`:''}
+  return `<div class="pcb-match-row">
+    ${m.phaseTag?`<span class="pcb-match-tag" style="background:#7c3aed">${_cbEsc(m.phaseTag)}</span>`:''}
+    ${m.d?`<span class="pcb-match-date">${_cbFmtD(m.d)}</span>`:''}
     <span style="flex:1;text-align:right;font-weight:${aWin?'900':'700'};opacity:${bWin?'.6':'1'};color:${ca}">${_cbEsc(m.a||'미정')}</span>
-    <span style="flex-shrink:0;font-weight:900;padding:2px 9px;border-radius:99px;background:var(--b2w-tag-bg,#f1f5f9);border:1px solid var(--b2w-tag-border,#e2e8f0);font-size:11px">${m.done?'승':'예정'}</span>
+    <span class="pcb-match-score">${m.done?'승':'예정'}</span>
     <span style="flex:1;font-weight:${bWin?'900':'700'};opacity:${aWin?'.6':'1'};color:${cb}">${_cbEsc(m.b||'미정')}</span>
   </div>`;
 }
 
 /* 팀전 매치 1건 행 */
 function _pcbTeamRow(tm){
-  const ca=_cbUcol(tm.teamAName), cb=_cbUcol(tm.teamBName);
+  const ca=_cbUcolVivid(tm.teamAName), cb=_cbUcolVivid(tm.teamBName);
   const aWin=tm.done&&tm.sa>tm.sb, bWin=tm.done&&tm.sb>tm.sa;
-  return `<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--b2w-rule-soft,#e5e7eb);border-radius:10px;background:var(--b2w-paper-alt,#fff);margin-bottom:6px">
-    <span style="flex-shrink:0;font-size:10px;font-weight:900;color:#fff;background:#0891b2;padding:2px 8px;border-radius:99px">🤝 팀전</span>
-    ${tm.d?`<span style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--b2w-ink-soft,#6b7280)">${_cbFmtD(tm.d)}</span>`:''}
+  return `<div class="pcb-match-row">
+    <span class="pcb-match-tag" style="background:#0891b2">🤝 팀전</span>
+    ${tm.d?`<span class="pcb-match-date">${_cbFmtD(tm.d)}</span>`:''}
     <span style="flex:1;text-align:right;font-weight:${aWin?'900':'700'};opacity:${bWin?'.6':'1'};color:${ca}">${_cbEsc(tm.teamAName||'미정')}</span>
-    <span style="flex-shrink:0;font-weight:900;padding:2px 9px;border-radius:99px;background:var(--b2w-tag-bg,#f1f5f9);border:1px solid var(--b2w-tag-border,#e2e8f0)">${tm.done?`${tm.sa}:${tm.sb}`:'예정'}</span>
+    <span class="pcb-match-score">${tm.done?`${tm.sa}:${tm.sb}`:'예정'}</span>
     <span style="flex:1;font-weight:${bWin?'900':'700'};opacity:${aWin?'.6':'1'};color:${cb}">${_cbEsc(tm.teamBName||'미정')}</span>
   </div>`;
 }
 
 /* 중장전 세션 1건 행 */
 function _pcbGjRow(sess){
-  const ca=_cbUcol(_pcbUniv(sess.a)), cb=_cbUcol(_pcbUniv(sess.b));
+  const ca=_cbUcolVivid(_pcbUniv(sess.a)), cb=_cbUcolVivid(_pcbUniv(sess.b));
   const aWin=sess.winner&&sess.winner===sess.a, bWin=sess.winner&&sess.winner===sess.b;
-  return `<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--b2w-rule-soft,#e5e7eb);border-radius:10px;background:var(--b2w-paper-alt,#fff);margin-bottom:6px">
-    <span style="flex-shrink:0;font-size:10px;font-weight:900;color:#fff;background:#dc2626;padding:2px 8px;border-radius:99px">🔥 중장전</span>
-    ${sess.d?`<span style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--b2w-ink-soft,#6b7280)">${_cbFmtD(sess.d)}</span>`:''}
+  return `<div class="pcb-match-row">
+    <span class="pcb-match-tag" style="background:#dc2626">🔥 중장전</span>
+    ${sess.d?`<span class="pcb-match-date">${_cbFmtD(sess.d)}</span>`:''}
     <span style="flex:1;text-align:right;font-weight:${aWin?'900':'700'};opacity:${bWin?'.6':'1'};color:${ca}">${_cbEsc(sess.a||'미정')}</span>
-    <span style="flex-shrink:0;font-weight:900;padding:2px 9px;border-radius:99px;background:var(--b2w-tag-bg,#f1f5f9);border:1px solid var(--b2w-tag-border,#e2e8f0)">${sess.done?`${sess.p1w}:${sess.p2w}`:'예정'}</span>
+    <span class="pcb-match-score">${sess.done?`${sess.p1w}:${sess.p2w}`:'예정'}</span>
     <span style="flex:1;font-weight:${bWin?'900':'700'};opacity:${aWin?'.6':'1'};color:${cb}">${_cbEsc(sess.b||'미정')}</span>
   </div>`;
 }
 
-/* ══════════ 프로리그 대회 브리핑 (메인) ══════════ */
+/* ══════════ 프로리그 대회 브리핑 (메인, pcb-* 전용 디자인) ══════════ */
 function rProCompBriefing(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
 
@@ -175,9 +277,15 @@ function rProCompBriefing(tn){
   const doneM=indivDone.length+teamDone.length+gjDone.length;
 
   if(!totalM){
-    return _cbShell('Pro League Briefing',`${tn.name} 프로리그 브리핑`,'아직 등록된 경기가 없습니다.','핵심 지표','조편성/팀 등록 후 경기를 기록하면 브리핑이 생성됩니다.',
-      [['조 수',(tn.groups||[]).length+'개'],['경기','0'],['완료','0'],['진행률','0%']],
-      _cbEmpty('경기를 기록하면 브리핑이 채워집니다.'));
+    return `<div class="pcb-wrap">
+      <div class="pcb-ticker"><span class="pcb-ticker-dot"></span><span class="pcb-ticker-txt">PRO LEAGUE · TOURNAMENT</span></div>
+      <div class="pcb-hero">
+        <div class="pcb-hero-kicker">Pro League Briefing</div>
+        <div class="pcb-hero-title">${_cbEsc(tn.name)} 프로리그 브리핑</div>
+        <div class="pcb-hero-desc">조편성/팀 등록 후 경기를 기록하면 브리핑이 생성됩니다.</div>
+      </div>
+      <div class="pcb-body">${_pcbEmpty('경기를 기록하면 브리핑이 채워집니다.')}</div>
+    </div>`;
   }
 
   const pct=_cbPct(doneM,totalM);
@@ -225,68 +333,54 @@ function rProCompBriefing(tn){
     };
   }catch(e){}
 
-  let body=_cbKpis([
-    ['총 경기',`${totalM}경기`,`조별리그·대진표 ${indiv.length} · 팀전 ${team.length} · 중장전 ${gj.length}`],
-    ['완료',`${doneM}경기`,`남은 경기 ${totalM-doneM}경기`],
-    ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
-    ['참가 대학',`${univStats.length}팀`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중']
-  ]);
-  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'#16a34a':pct>=50?'var(--b2w-accent,#2563eb)':'#d97706')}</div>`;
-  body+=`<div class="no-export" style="display:flex;justify-content:flex-end;margin-top:10px">
-    <button type="button" id="pcb-speak-btn" class="b2w2-btn" style="padding:6px 14px;font-size:12px" onclick="_pcbBriefingToggleSpeak()">🔊 음성듣기</button>
-  </div>`;
-
-  body+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px">
-    <div>${_cbSection('개인 승률 TOP 5','3경기 이상 기준',_cbRankList(rateTop.map(p=>({
-      name:p.name,color:_cbUcol(p.univ),
+  let body=`<div class="pcb-grid2">
+    <div>${_pcbSection('개인 승률 TOP 5','3경기 이상 기준',_pcbRankList(rateTop.map(p=>({
+      name:p.name,color:_cbUcolVivid(p.univ),
       sub:`${_cbFormDots(p.form)} ${p.w}승 ${p.l}패`,value:`${p.rate}%`
     }))))}</div>
-    <div>${_cbSection('개인 다승 TOP 5','전 포맷 통합 기준',_cbRankList(winTop.map(p=>({
-      name:p.name,color:_cbUcol(p.univ),
+    <div>${_pcbSection('개인 다승 TOP 5','전 포맷 통합 기준',_pcbRankList(winTop.map(p=>({
+      name:p.name,color:_cbUcolVivid(p.univ),
       sub:`${_cbFormDots(p.form)} ${p.rate}%`,value:`${p.w}승 ${p.l}패`
     }))))}</div>
   </div>`;
 
   if(mvpTop){
-    const mCol=_cbUcol(mvpTop.univ);
-    body+=_cbSection('대회 MVP','다승 · 중장전 기여 · 승률 종합',
-      `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px;background:linear-gradient(135deg,${mCol}12,var(--b2w-paper-alt,#fff) 70%);border:1px solid ${mCol}35;border-radius:12px">
-        <span style="position:relative;display:inline-flex;flex-shrink:0">${_cbPlayerAvatar(mvpTop.name,72)}</span>
-        <div style="flex:1;min-width:180px">
-          <div style="font-size:20px;font-weight:900;color:${mCol};line-height:1.25;word-break:break-word">${_cbEsc(mvpTop.name)}</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:13px;font-weight:700;color:var(--b2w-ink-soft,#6b7280)">
-            ${mvpTop.univ?_cbTeamChip(mvpTop.univ):''}
-            <span>${mvpTop.w}승 ${mvpTop.l}패 · 승률 ${mvpTop.rate}%${mvpTop.gjW?` · 중장전 ${mvpTop.gjW}승`:''}</span>
-          </div>
-        </div>
-        <div style="min-width:180px">${_cbRankList(mvpCands.slice(0,5).map(p=>({
-          name:p.name,color:_cbUcol(p.univ),sub:`${p.w}승 ${p.l}패`,value:`${Math.round(p.score)}pt`
-        })))}</div>
-      </div>`);
+    body+=_pcbSection('대회 MVP','다승 · 중장전 기여 · 승률 종합',_pcbMvpHTML(mvpTop,mvpCands));
   }
 
-  body+=_cbSection('최근 경기 결과','조별리그·대진표·팀전·중장전 최신 기록',
+  body+=_pcbSection('최근 경기 결과','조별리그·대진표·팀전·중장전 최신 기록',
     timeline.length?timeline.map(m=>
       m._kind==='team'?_pcbTeamRow(m):m._kind==='gj'?_pcbGjRow(m):_pcbIndivRow(m)
-    ).join(''):_cbEmpty('아직 완료된 경기가 없습니다.'));
+    ).join(''):_pcbEmpty('아직 완료된 경기가 없습니다.'));
 
   if(gjHighlight.length){
-    body+=_cbSection('🔥 중장전 하이라이트','접전으로 끝난 세션 순','<div>'+gjHighlight.map(s=>_pcbGjRow(s)).join('')+'</div>');
+    body+=_pcbSection('🔥 중장전 하이라이트','접전으로 끝난 세션 순','<div>'+gjHighlight.map(s=>_pcbGjRow(s)).join('')+'</div>');
   }
 
   if(upcoming.length){
-    body+=_cbSection('다음 라운드 예고','대진 확정 · 결과 대기',
-      '<div>'+upcoming.map(m=>`<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px dashed var(--b2w-rule-soft,#e5e7eb);border-radius:10px;margin-bottom:6px">
-        <span style="flex-shrink:0;font-size:10px;font-weight:900;color:#fff;background:#7c3aed;padding:2px 8px;border-radius:99px">${_cbEsc(m.rLabel||'')}</span>
-        <span style="flex:1;text-align:right;font-weight:800;color:${_cbUcol(_pcbUniv(m.a))}">${_cbEsc(m.a)}</span>
-        <span style="flex-shrink:0;font-weight:900;color:var(--b2w-ink-soft,#6b7280)">VS</span>
-        <span style="flex:1;font-weight:800;color:${_cbUcol(_pcbUniv(m.b))}">${_cbEsc(m.b)}</span>
+    body+=_pcbSection('다음 라운드 예고','대진 확정 · 결과 대기',
+      '<div>'+upcoming.map(m=>`<div class="pcb-upcoming-row">
+        <span class="pcb-upcoming-tag">${_cbEsc(m.rLabel||'')}</span>
+        <span style="flex:1;text-align:right;font-weight:800;color:${_cbUcolVivid(_pcbUniv(m.a))}">${_cbEsc(m.a)}</span>
+        <span class="pcb-upcoming-vs">VS</span>
+        <span style="flex:1;font-weight:800;color:${_cbUcolVivid(_pcbUniv(m.b))}">${_cbEsc(m.b)}</span>
       </div>`).join('')+'</div>');
   }
 
-  return _cbShell('Pro League Briefing',`${tn.name} 프로리그 브리핑`,
-    `조별리그·대진표·팀전·중장전 전체 ${totalM}경기 중 ${doneM}경기가 기록됐습니다.`,
-    '핵심 지표',headline,
-    [['진행률',`${pct}%`],['참가 대학',`${univStats.length}팀`],['완료 경기',`${doneM}경기`],['MVP 후보',mvpTop?_cbEsc(mvpTop.name):'집계 중']],
-    body);
+  return `<div class="pcb-wrap">
+    ${_pcbTickerHTML(univStats)}
+    <div class="pcb-hero">
+      <div class="pcb-hero-kicker">Pro League Briefing</div>
+      <div class="pcb-hero-title">${_cbEsc(tn.name)} 프로리그 브리핑</div>
+      <div class="pcb-hero-desc">조별리그·대진표·팀전·중장전 전체 ${totalM}경기 중 ${doneM}경기가 기록됐습니다.</div>
+    </div>
+    ${_pcbKpiGrid([
+      ['총 경기',`${totalM}경기`,`조별리그·대진표 ${indiv.length} · 팀전 ${team.length} · 중장전 ${gj.length}`,'#a855f7'],
+      ['참가 대학',`${univStats.length}팀`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#fbbf24'],
+      ['완료 경기',`${doneM}경기`,`남은 경기 ${totalM-doneM}경기`,'#818cf8'],
+      ['기간',dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정','','#f43f5e']
+    ])}
+    ${_pcbProgressHTML(pct,doneM,totalM)}
+    <div class="pcb-body">${body}</div>
+  </div>`;
 }

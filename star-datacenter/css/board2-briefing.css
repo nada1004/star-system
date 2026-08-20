@@ -1883,3 +1883,338 @@
         .cbf-sec-title { font-size: 16px; }
         .cbf-sec-sub { padding-left: 0; margin-top: 6px; }
       }
+
+/* ══════════════════════════════════════════════════════════════
+   프로리그(일반) 브리핑 전용 디자인 (plb-*) — (신규기능, 2026-08-20)
+   기존 b2w2 신문 디자인과 별개로, 프로리그 브리핑탭만 방송 중계
+   스코어보드 톤(다크 네이비 + 시안/골드 포인트)으로 새로 디자인.
+   색상(univ색 등)은 JS에서 inline style로 직접 주입 — 기존 _cb*
+   헬퍼와 동일한 패턴을 따른다.
+   ══════════════════════════════════════════════════════════════ */
+.plb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#0a1226; }
+
+.plb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#060a16; position:relative; overflow:hidden; }
+.plb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#f43f5e; box-shadow:0 0 8px #f43f5e; flex-shrink:0; animation:plbPulse 1.6s ease-in-out infinite; }
+@keyframes plbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
+.plb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#93c5fd; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plb-ticker-teams{ margin-left:auto; display:flex; align-items:center; gap:12px; overflow:hidden; }
+.plb-ticker-team{ display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; color:#e2e8f0; white-space:nowrap; flex-shrink:0; }
+.plb-ticker-team i{ width:7px; height:7px; border-radius:2px; flex-shrink:0; }
+
+.plb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(56,189,248,.20), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(251,191,36,.14), transparent 48%),
+    linear-gradient(155deg,#0f1a34 0%,#070c1a 100%);
+}
+.plb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
+  background:linear-gradient(115deg,transparent 42%,rgba(56,189,248,.09) 42%,rgba(56,189,248,.09) 46%,transparent 46%,transparent 62%,rgba(251,191,36,.07) 62%,rgba(251,191,36,.07) 66%,transparent 66%);
+  pointer-events:none; }
+.plb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#070c1a; text-transform:uppercase; background:#38bdf8; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(56,189,248,.35); }
+.plb-hero-title{ position:relative; margin-top:14px; font-size:clamp(21px,4vw,30px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.2; }
+.plb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#94a3b8; max-width:64ch; line-height:1.5; }
+.plb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#e2e8f0; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); padding:7px 14px; border-radius:99px; }
+.plb-hero-headline b{ color:#fbbf24; }
+.plb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#fbbf24; flex-shrink:0; }
+
+.plb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#111d3d; border-top:1px solid rgba(255,255,255,.08); }
+.plb-period-label{ font-size:11.5px; font-weight:800; color:#7dd3fc; flex-shrink:0; }
+.plb-wrap .plb-period-bar .ym-filter-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.plb-wrap .plb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:#cbd5e1; }
+.plb-wrap .plb-period-bar .ym-sel{ font-size:11.5px !important; font-weight:700; padding:5px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.08) !important; color:#fff !important; }
+/* <select>는 닫혀있을 때(색:#fff)와 펼쳤을 때(옵션 목록)가 분리된 렌더링이라,
+   옵션 목록은 브라우저가 기본 흰 배경으로 그려서 위 color:#fff가 그대로
+   적용되면 흰 배경 위에 흰 글자가 되어 "2026년" 등이 안 보이는 문제가 있었음
+   → 옵션 목록만 어두운 글자색으로 명시 */
+.plb-wrap .plb-period-bar .ym-sel option{ color:#0f172a; background:#fff; }
+.plb-period-reset{ font-size:11px; font-weight:800; color:#070c1a; background:#fbbf24; border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+.plb-period-reset:hover{ filter:brightness(1.06); }
+
+.plb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
+.plb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#152449,#0f1a34); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.plb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
+.plb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#8ea3c9; text-transform:uppercase; }
+.plb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
+.plb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#64748b; }
+
+/* 진행률+TTS 통합 패널 — 어두운 배경을 명시해 kpi-grid(다크 네이비)와 이어지도록 하고,
+   흰 글자 캡션/버튼이 밝은 바깥 배경에 묻히지 않게 함 */
+.plb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
+  background:linear-gradient(155deg,#122043,#0c1730); border:1px solid rgba(255,255,255,.08); }
+.plb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.plb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#e2e8f0; }
+.plb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
+.plb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#38bdf8,#818cf8); box-shadow:0 0 12px rgba(56,189,248,.45); transition:.4s; }
+.plb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#8ea3c9; }
+
+.plb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(56,189,248,.16); border:1px solid rgba(56,189,248,.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.plb-speak-btn:hover{ background:rgba(56,189,248,.28); }
+
+/* 카드 하단 본문 — 예전엔 밝은 배경(라이트: 흰색 / 다크모드: --card)으로
+   상단 히어로 배너와 톤이 끊기고, 다크모드 전환 시에도 자식 요소들이
+   var(--text)/var(--surface) 같은 테마 변수를 참조해 일부는 갱신되고
+   일부는 누락되는 문제가 있었음 → 테마와 무관하게 히어로와 이어지는
+   다크 네이비 스코어보드 톤으로 고정해, 라이트/다크모드 어디서든 항상
+   동일하게(그리고 배너와 한 몸처럼) 보이도록 함. */
+.plb-body{ background:linear-gradient(180deg,#0c1730 0%,#0a1226 100%); padding:28px 22px 32px; }
+
+.plb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+.plb-section{ margin-bottom:28px; }
+.plb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
+.plb-section-title{ font-size:14.5px; font-weight:900; color:#f1f5f9; white-space:nowrap; display:flex; align-items:center; }
+.plb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#38bdf8; transform:rotate(45deg); flex-shrink:0; }
+.plb-section-sub{ font-size:11px; font-weight:700; color:#7e93b8; }
+
+.plb-rank-list{ display:flex; flex-direction:column; gap:7px; }
+.plb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
+.plb-rank-row.top1{ box-shadow:0 6px 16px rgba(0,0,0,.35); border-left-width:5px !important; }
+.plb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
+.plb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
+.plb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
+.plb-rank-sub{ font-size:10.5px; font-weight:700; color:#94a3b8; white-space:nowrap; }
+.plb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
+
+.plb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
+.plb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:#2c4a86; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.plb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#94a3b8; }
+.plb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
+
+.plb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#0f1a34,#152449); position:relative; overflow:hidden; }
+.plb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(251,191,36,.22),transparent 55%); pointer-events:none; }
+.plb-mvp-side{ position:relative; flex:1; min-width:180px; }
+.plb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#fbbf24; text-transform:uppercase; }
+.plb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
+.plb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#cbd5e1; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.plb-mvp-cands{ position:relative; min-width:190px; }
+.plb-mvp-cands .plb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
+.plb-mvp-cands .plb-rank-name,.plb-mvp-cands .plb-rank-value{ color:#fff; }
+.plb-mvp-cands .plb-rank-sub{ color:#94a3b8; }
+
+.plb-map-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+.plb-map-name{ font-size:12.5px; font-weight:800; min-width:120px; color:#e2e8f0; }
+.plb-map-track{ flex:1; height:8px; background:rgba(255,255,255,.10); border-radius:4px; overflow:hidden; }
+.plb-map-fill{ height:100%; background:linear-gradient(90deg,#38bdf8,#818cf8); border-radius:4px; }
+.plb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:#94a3b8; }
+
+.plb-empty{ padding:30px; text-align:center; color:#94a3b8; font-size:13px; font-weight:600; }
+
+@media (max-width:640px){
+  .plb-hero{ padding:20px 16px 24px; }
+  .plb-kpi-grid{ padding:16px 16px 0; grid-template-columns:repeat(2,1fr); }
+  .plb-progress-panel{ margin:14px 16px 18px; padding:12px 14px; }
+  .plb-body{ padding:22px 14px 26px; }
+  .plb-period-bar{ padding:10px 16px; }
+  .plb-ticker-teams{ display:none; }
+  .plb-mvp{ padding:15px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   프로리그 "대회" 브리핑(pcb-*, 2026-08-20 신규) — 조별리그/대진표/팀전/
+   중장전 4개 소스를 종합하는 토너먼트 전용 브리핑. 프로리그(일반) 브리핑의
+   plb-* 스코어보드 톤(다크 네이비 + 시안/골드)과 톤을 맞추되, "대회·트로피"
+   느낌을 살려 딥퍼플 + 골드 포인트로 차별화한 전용 디자인.
+   ══════════════════════════════════════════════════════════════ */
+.pcb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#150c26; }
+
+.pcb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#0a0714; position:relative; overflow:hidden; }
+.pcb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#fbbf24; box-shadow:0 0 8px #fbbf24; flex-shrink:0; animation:pcbPulse 1.6s ease-in-out infinite; }
+@keyframes pcbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
+.pcb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#d8b4fe; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pcb-ticker-src{ margin-left:auto; display:flex; align-items:center; gap:10px; overflow:hidden; }
+.pcb-ticker-src span{ font-size:10.5px; font-weight:800; color:#e9d5ff; white-space:nowrap; flex-shrink:0; }
+.pcb-ticker-src b{ color:#fbbf24; }
+
+.pcb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(251,191,36,.16), transparent 42%),
+    radial-gradient(circle at 90% 88%, rgba(168,85,247,.28), transparent 50%),
+    linear-gradient(155deg,#2b1055 0%,#150826 100%);
+}
+.pcb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
+  background:linear-gradient(115deg,transparent 42%,rgba(251,191,36,.08) 42%,rgba(251,191,36,.08) 46%,transparent 46%,transparent 62%,rgba(168,85,247,.12) 62%,rgba(168,85,247,.12) 66%,transparent 66%);
+  pointer-events:none; }
+.pcb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#2b1055; text-transform:uppercase; background:#fbbf24; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(251,191,36,.35); }
+.pcb-hero-title{ position:relative; margin-top:14px; font-size:clamp(20px,3.6vw,28px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.25; }
+.pcb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#c4b5fd; max-width:64ch; line-height:1.5; }
+.pcb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#f3e8ff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); padding:7px 14px; border-radius:99px; }
+.pcb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#fbbf24; flex-shrink:0; }
+
+.pcb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#1d0f38; border-top:1px solid rgba(255,255,255,.08); }
+.pcb-period-label{ font-size:11.5px; font-weight:800; color:#d8b4fe; flex-shrink:0; }
+
+.pcb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
+.pcb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#2b1a4d,#1d1236); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.pcb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
+.pcb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#c4b5fd; text-transform:uppercase; }
+.pcb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
+.pcb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#8b7aa8; }
+
+/* 진행률+TTS 통합 패널(pro-league와 동일 패턴) — 항상 다크 배경 명시로 흰 글자 가독성 확보 */
+.pcb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
+  background:linear-gradient(155deg,#291849,#190f2e); border:1px solid rgba(255,255,255,.08); }
+.pcb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.pcb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#f3e8ff; }
+.pcb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
+.pcb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#a855f7,#fbbf24); box-shadow:0 0 12px rgba(168,85,247,.45); transition:.4s; }
+.pcb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#c4b5fd; }
+.pcb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(251,191,36,.16); border:1px solid rgba(251,191,36,.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.pcb-speak-btn:hover{ background:rgba(251,191,36,.28); }
+
+/* plb-body와 동일한 이유로 테마와 무관하게 히어로와 이어지는 딥퍼플
+   스코어보드 톤으로 고정 (라이트/다크모드 모두 동일하게 보이도록) */
+.pcb-body{ background:linear-gradient(180deg,#1a1030 0%,#150c26 100%); padding:28px 22px 32px; }
+
+.pcb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+.pcb-section{ margin-bottom:28px; }
+.pcb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
+.pcb-section-title{ font-size:14.5px; font-weight:900; color:#f5f0ff; white-space:nowrap; display:flex; align-items:center; }
+.pcb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#a855f7; transform:rotate(45deg); flex-shrink:0; }
+.pcb-section-sub{ font-size:11px; font-weight:700; color:#a390c4; }
+
+.pcb-rank-list{ display:flex; flex-direction:column; gap:7px; }
+.pcb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
+.pcb-rank-row.top1{ box-shadow:0 6px 16px rgba(0,0,0,.35); border-left-width:5px !important; }
+.pcb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
+.pcb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
+.pcb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
+.pcb-rank-sub{ font-size:10.5px; font-weight:700; color:#a390c4; white-space:nowrap; }
+.pcb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
+
+.pcb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
+.pcb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.pcb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#a390c4; }
+.pcb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
+
+.pcb-upcoming-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; border:1px dashed rgba(255,255,255,.18); margin-bottom:6px; }
+.pcb-upcoming-tag{ flex-shrink:0; font-size:10px; font-weight:900; color:#fff; background:#7c3aed; padding:2px 8px; border-radius:99px; }
+.pcb-upcoming-vs{ flex-shrink:0; font-weight:900; color:#a390c4; font-size:11px; }
+
+.pcb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#1d1236,#2b1a4d); position:relative; overflow:hidden; }
+.pcb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(251,191,36,.25),transparent 55%); pointer-events:none; }
+.pcb-mvp-side{ position:relative; flex:1; min-width:180px; }
+.pcb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#fbbf24; text-transform:uppercase; }
+.pcb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
+.pcb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#e9d5ff; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.pcb-mvp-cands{ position:relative; min-width:190px; }
+.pcb-mvp-cands .pcb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
+.pcb-mvp-cands .pcb-rank-name,.pcb-mvp-cands .pcb-rank-value{ color:#fff; }
+.pcb-mvp-cands .pcb-rank-sub{ color:#c4b5fd; }
+
+.pcb-empty{ padding:30px; text-align:center; color:#a390c4; font-size:13px; font-weight:600; }
+
+@media (max-width:640px){
+  .pcb-hero{ padding:20px 16px 24px; }
+  .pcb-kpi-grid{ padding:16px 16px 0; grid-template-columns:repeat(2,1fr); }
+  .pcb-progress-panel{ margin:14px 16px 18px; padding:12px 14px; }
+  .pcb-body{ padding:22px 14px 26px; }
+  .pcb-period-bar{ padding:10px 16px; }
+  .pcb-ticker-src{ display:none; }
+  .pcb-mvp{ padding:15px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   프로리그 끝장전 브리핑 전용 디자인 (plgb-*, 신규, 2026-08-20)
+   프로리그(일반) 브리핑(plb-*, 다크 네이비+시안/골드)과 프로리그 대회
+   브리핑(pcb-*, 딥퍼플+골드)과는 구분되는, "끝장전(결투)" 느낌의
+   다크 차콜 + 크림슨/앰버 톤 전용 디자인.
+   ══════════════════════════════════════════════════════════════ */
+.plgb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#1a0f0a; }
+
+.plgb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#0e0705; position:relative; overflow:hidden; }
+.plgb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#f97316; box-shadow:0 0 8px #f97316; flex-shrink:0; animation:plgbPulse 1.6s ease-in-out infinite; }
+@keyframes plgbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
+.plgb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#fca5a5; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.plgb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(249,115,22,.22), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(239,68,68,.20), transparent 48%),
+    linear-gradient(155deg,#2a1208 0%,#180a06 100%);
+}
+.plgb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
+  background:linear-gradient(115deg,transparent 42%,rgba(249,115,22,.10) 42%,rgba(249,115,22,.10) 46%,transparent 46%,transparent 62%,rgba(239,68,68,.09) 62%,rgba(239,68,68,.09) 66%,transparent 66%);
+  pointer-events:none; }
+.plgb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#1a0f0a; text-transform:uppercase; background:#f97316; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(249,115,22,.35); }
+.plgb-hero-title{ position:relative; margin-top:14px; font-size:clamp(21px,4vw,30px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.2; }
+.plgb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#d6b8ac; max-width:64ch; line-height:1.5; }
+.plgb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#fde3d8; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); padding:7px 14px; border-radius:99px; }
+.plgb-hero-headline b{ color:#facc15; }
+.plgb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#facc15; flex-shrink:0; }
+
+.plgb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#2a1710; border-top:1px solid rgba(255,255,255,.08); }
+.plgb-period-label{ font-size:11.5px; font-weight:800; color:#fdba74; flex-shrink:0; }
+.plgb-wrap .plgb-period-bar .ym-filter-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.plgb-wrap .plgb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:#e7d0c4; }
+.plgb-wrap .plgb-period-bar .ym-sel{ font-size:11.5px !important; font-weight:700; padding:5px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.08) !important; color:#fff !important; }
+.plgb-wrap .plgb-period-bar .ym-sel option{ color:#1a0f0a; background:#fff; }
+.plgb-period-reset{ font-size:11px; font-weight:800; color:#1a0f0a; background:#facc15; border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+.plgb-period-reset:hover{ filter:brightness(1.06); }
+
+.plgb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
+.plgb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#3a1c10,#26120a); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.plgb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
+.plgb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#e0ad98; text-transform:uppercase; }
+.plgb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
+.plgb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#9c7362; }
+
+.plgb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
+  background:linear-gradient(155deg,#341a0f,#20100a); border:1px solid rgba(255,255,255,.08); }
+.plgb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.plgb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#fde3d8; }
+.plgb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
+.plgb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#f97316,#ef4444); box-shadow:0 0 12px rgba(249,115,22,.45); transition:.4s; }
+.plgb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#d6ab98; }
+
+.plgb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(249,115,22,.18); border:1px solid rgba(249,115,22,.48); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.plgb-speak-btn:hover{ background:rgba(249,115,22,.30); }
+
+.plgb-body{ background:linear-gradient(180deg,#20110a 0%,#1a0f0a 100%); padding:28px 22px 32px; }
+
+.plgb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+.plgb-section{ margin-bottom:28px; }
+.plgb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
+.plgb-section-title{ font-size:14.5px; font-weight:900; color:#fdf1ea; white-space:nowrap; display:flex; align-items:center; }
+.plgb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#f97316; transform:rotate(45deg); flex-shrink:0; }
+.plgb-section-sub{ font-size:11px; font-weight:700; color:#b98a76; }
+
+.plgb-rank-list{ display:flex; flex-direction:column; gap:7px; }
+.plgb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
+.plgb-rank-row.top1{ box-shadow:0 6px 16px rgba(0,0,0,.35); border-left-width:5px !important; }
+.plgb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
+.plgb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
+.plgb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
+.plgb-rank-sub{ font-size:10.5px; font-weight:700; color:#c99c88; white-space:nowrap; }
+.plgb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
+
+.plgb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
+.plgb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:#9a2e15; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.plgb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#c99c88; }
+.plgb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
+
+.plgb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#26120a,#3a1c10); position:relative; overflow:hidden; }
+.plgb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(250,204,21,.20),transparent 55%); pointer-events:none; }
+.plgb-mvp-side{ position:relative; flex:1; min-width:180px; }
+.plgb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#facc15; text-transform:uppercase; }
+.plgb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
+.plgb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#f0d4c6; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.plgb-mvp-cands{ position:relative; min-width:190px; }
+.plgb-mvp-cands .plgb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
+.plgb-mvp-cands .plgb-rank-name,.plgb-mvp-cands .plgb-rank-value{ color:#fff; }
+.plgb-mvp-cands .plgb-rank-sub{ color:#c99c88; }
+
+.plgb-map-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+.plgb-map-name{ font-size:12.5px; font-weight:800; min-width:120px; color:#f0d4c6; }
+.plgb-map-track{ flex:1; height:8px; background:rgba(255,255,255,.10); border-radius:4px; overflow:hidden; }
+.plgb-map-fill{ height:100%; background:linear-gradient(90deg,#f97316,#ef4444); border-radius:4px; }
+.plgb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:#c99c88; }
+
+.plgb-empty{ padding:30px; text-align:center; color:#c99c88; font-size:13px; font-weight:600; }
+
+@media (max-width:640px){
+  .plgb-hero{ padding:20px 16px 24px; }
+  .plgb-kpi-grid{ padding:16px 16px 0; grid-template-columns:repeat(2,1fr); }
+  .plgb-progress-panel{ margin:14px 16px 18px; padding:12px 14px; }
+  .plgb-body{ padding:22px 14px 26px; }
+  .plgb-period-bar{ padding:10px 16px; }
+  .plgb-mvp{ padding:15px; }
+}

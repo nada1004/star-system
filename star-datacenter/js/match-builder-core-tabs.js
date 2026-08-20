@@ -105,11 +105,15 @@ function rGJ(C,T,proOnly,proInput){
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   if(!_li && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;
+  // (신규기능, 2026-08-20) "프로리그 끝장전" 탭에는 프로리그 브리핑탭을 참고해
+  // 별도 색상(plgb-*)으로 새로 만든 전용 브리핑 서브탭을 추가한다.
+  // (일반 "끝장전" 탭에는 영향 없음 — proOnly일 때만 노출)
   const subOpts = _gjCanInput()
-    ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
-    :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
+    ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`},...(proOnly?[{id:'brief',lbl:'📰 브리핑',fn:`gjSub='brief';render()`}]:[])]
+    :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`},...(proOnly?[{id:'brief',lbl:'📰 브리핑',fn:`gjSub='brief';render()`}]:[])];
   const _gjSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
   if(!showInput&&gjSub==='input') gjSub='records';
+  if(!proOnly&&gjSub==='brief') gjSub='records';
   let h='';
   const _gjAltTab = proOnly ? 'progj' : 'gj';
   // (신규기능) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
@@ -128,6 +132,8 @@ function rGJ(C,T,proOnly,proInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
     h+=gjRankHTML(proOnly);
+  } else if(gjSub==='brief'&&proOnly){
+    h+=(typeof rProLeagueGJBriefing==='function' ? rProLeagueGJBriefing() : '');
   } else {
     // 보기모드 버튼줄은 위 _buildMatchSubtabShell에서 이미 별도 줄로 붙였으므로 suppressBar로 중복 방지
     h += (typeof histTabWithViewModes==='function')
