@@ -111,7 +111,14 @@ function rGJ(C,T,proOnly,proInput){
   const subOpts = _gjCanInput()
     ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`},...(proOnly?[{id:'brief',lbl:'📰 브리핑',fn:`gjSub='brief';render()`}]:[])]
     :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`},...(proOnly?[{id:'brief',lbl:'📰 브리핑',fn:`gjSub='brief';render()`}]:[])];
-  const _gjSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
+  const _gjSubOpts0 = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
+  // (설정) 🧷 탭/모드 표시 관리에서 progj.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
+  let _gjSubOpts = _gjSubOpts0;
+  if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
+    const _filtered = window.TabVis.filterDefs(_gjSubOpts0, 'progj.sub');
+    if(_filtered.length) _gjSubOpts = _filtered;
+    if(!_gjSubOpts.some(o=>o.id===gjSub)) gjSub = _gjSubOpts[0].id;
+  }
   if(!showInput&&gjSub==='input') gjSub='records';
   if(!proOnly&&gjSub==='brief') gjSub='records';
   let h='';

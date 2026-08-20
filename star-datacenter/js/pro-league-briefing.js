@@ -11,14 +11,19 @@
 
 /* ── 데이터 수집 ── */
 
-/* proM(경기 단위) → _cb* 공용 헬퍼(a/b/sa/sb/done)가 기대하는 형태로 매핑 */
+/* proM(경기 단위) → _cb* 공용 헬퍼(a/b/sa/sb/done)가 기대하는 형태로 매핑
+   (버그픽스, 2026-08-20) proM 항목의 실제 점수 필드명은 scoreA/scoreB가 아니라
+   sa/sb다(match.js/search-paste-apply.js/search-pro-apply.js가 실제로 저장하는
+   필드 확인). scoreA/scoreB로 읽으면 항상 undefined라 sa/sb가 0으로, done이 항상
+   false로 계산돼 — 완료 경기가 하나도 없는 것처럼 보이고("최근 경기 결과"가 항상
+   빔), 팀 순위/진행률도 전부 집계가 안 되는 문제가 있었다. */
 function _plbMatches(){
   const list=(typeof proM!=='undefined'&&Array.isArray(proM))?proM:[];
   return list.map(m=>({
     ...m,
     a:m.teamALabel||'A팀', b:m.teamBLabel||'B팀',
-    sa:m.scoreA||0, sb:m.scoreB||0,
-    done:(m.scoreA!=null&&m.scoreB!=null)
+    sa:m.sa||0, sb:m.sb||0,
+    done:(m.sa!=null&&m.sb!=null)
   }));
 }
 
@@ -139,8 +144,11 @@ function _plbRankList(rows,dark){
     const top=i===0;
     const badgeBg=i<3?medal[i]:`${col}30`;
     const badgeColor=i<3?'#0b1220':col;
-    const topBg=`background:linear-gradient(100deg,${col}38,rgba(255,255,255,.06) 78%)`;
-    return `<div class="plb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${top?topBg:''}">
+    /* (개선, 2026-08-20) 예전엔 1등만 팀 색 배경 그라디언트가 있고 2~5등은 무채색
+       배경이었다. 전체 순위에 같은 팀 색 틴트를 주되, 1등만 살짝 더 진하게 해서
+       순위 서열감은 유지한다. */
+    const rowBg=`background:linear-gradient(100deg,${col}${top?'38':'1e'},rgba(255,255,255,.06) 78%)`;
+    return `<div class="plb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${rowBg}">
       <span class="plb-rank-badge" style="background:${badgeBg};color:${badgeColor}">${i+1}</span>
       <span class="plb-rank-name" style="color:${col}">${r.icon||''}<span>${_cbEsc(r.name)}</span></span>
       ${r.sub?`<span class="plb-rank-sub">${r.sub}</span>`:''}

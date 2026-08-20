@@ -19,7 +19,7 @@ function rPro(C,T){
   if(!window.BLD) window.BLD = {};
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   if(!_li && proSub==='input') proSub='records';
-  const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
+  let subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`},
@@ -30,6 +30,12 @@ function rPro(C,T){
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`},
     {id:'brief',lbl:'📰 브리핑',fn:`proSub='brief';render()`}
   ];
+  // (설정) 🧷 탭/모드 표시 관리에서 pro.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
+  if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
+    const _filtered = window.TabVis.filterDefs(subOpts, 'pro.sub');
+    if(_filtered.length) subOpts = _filtered;
+    if(!subOpts.some(o=>o.id===proSub)) proSub = subOpts[0].id;
+  }
   let h='';
   // (신규기능) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
   // (대전기록 탭〉프로리그 서브탭과 동일한 'pro' 상태를 공유해 두 화면에서 같은 보기모드가 유지됨)

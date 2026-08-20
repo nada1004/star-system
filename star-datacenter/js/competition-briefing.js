@@ -292,7 +292,19 @@ function _cbInjectShellStyle(){
     'body.dark .cbs-wrap.tone-lv{--cbs-accent:#a78bfa;--cbs-accent-2:#c4b5fd;--cbs-accent-soft:#4c1d95;--cbs-accent-bg:rgba(167,139,250,.14);--cbs-paper:#0b1220;--cbs-paper-2:#0f172a;--cbs-paper-3:#1e293b;--cbs-ink:#e2e8f0;--cbs-ink-mid:#cbd5e1;--cbs-ink-soft:#94a3b8;--cbs-ink-mute:#64748b;--cbs-rule:rgba(148,163,184,.18);--cbs-rule-2:rgba(148,163,184,.10);--cbs-card:#1e293b}',
     /* 다크에서만 보이는 미세한 박스 그림자 */
     'body.dark .cbs-wrap{box-shadow:0 16px 40px rgba(0,0,0,.55)}',
-    'body.dark .cbs-wrap .b2w2-card,body.dark .cbs-wrap .b2w2-sec,body.dark .cbs-wrap .cbs-general,body.dark .cbs-wrap .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}'
+    'body.dark .cbs-wrap .b2w2-card,body.dark .cbs-wrap .b2w2-sec,body.dark .cbs-wrap .cbs-general,body.dark .cbs-wrap .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}',
+    /* 진행률 100% 완료 시 은은한 반짝임 애니메이션 */
+    '@keyframes cbsBarShine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}',
+    /* === 모바일 튜닝 (기존엔 미디어쿼리가 하나도 없어 좁은 화면에서 여백이 과했음) === */
+    '@media (max-width:600px){',
+    '.cbs-metabar{padding:8px 14px;flex-wrap:wrap;gap:6px}',
+    '.cbs-hero{padding:20px 16px 22px}',
+    '.cbs-hero-title{font-size:clamp(21px,6vw,28px)}',
+    '.cbs-hero-desc{font-size:12.5px}',
+    '.cbs-kpi-grid{padding:0 14px;grid-template-columns:repeat(2,1fr)}',
+    '.cbs-body{padding:16px 14px 24px}',
+    '.cbs-general{padding:14px 15px}',
+    '}'
   ].join('');
   document.head.appendChild(s);
 }
@@ -522,9 +534,16 @@ function _cbEmpty(msg){
   return `<div class="b2w2-empty" style="padding:26px;text-align:center;color:var(--b2w-ink-soft,#6b7280)">${_cbEsc(msg)}</div>`;
 }
 
+/* (개선, 2026-08-20) 진행률 100%일 때 막대 자체가 시각적으로 달라 보이도록
+   은은한 반짝임 애니메이션 + 완료 체크 마크를 추가한다 — 스크롤 중에도
+   "이 대회는 끝났다"가 진행바만 보고 바로 구분되도록. */
 function _cbBar(pct,col){
-  return `<div style="height:8px;background:var(--b2w-rule-soft,#e5e7eb);border-radius:99px;overflow:hidden">
-    <div style="height:100%;width:${pct}%;background:${col||'var(--b2w-accent,#2563eb)'};border-radius:99px;transition:.3s"></div>
+  const done=pct>=100;
+  const barCol=col||'var(--b2w-accent,#2563eb)';
+  return `<div style="position:relative;height:8px;background:var(--b2w-rule-soft,#e5e7eb);border-radius:99px;overflow:hidden">
+    <div style="height:100%;width:${pct}%;background:${barCol};border-radius:99px;transition:.3s;position:relative;overflow:hidden">
+      ${done?`<div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:cbsBarShine 2.2s ease-in-out infinite"></div>`:''}
+    </div>
   </div>`;
 }
 
@@ -535,8 +554,10 @@ function _cbTeamChip(name,extra,colorOverride){
   </span>`;
 }
 
-/* 조 색상 (조별리그 일정/기록 탭과 동일 팔레트) */
-function _cbGrpColor(i){ return ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][(i||0)%6]; }
+/* 조 색상 (조별리그 일정/기록 탭과 동일 팔레트) — 고정 팔레트라 대체로 진한 편이지만,
+   팀 색과 마찬가지로 라이트 종이톤 배경 위에서 쓰이므로 동일한 명도/채도 보정을 거쳐
+   일관성을 맞춘다. */
+function _cbGrpColor(i){ return _cbLegibleColorForLight(['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][(i||0)%6]); }
 
 /* 조 배지 (조 색상 적용) */
 function _cbGrpBadge(letter,idx,label){

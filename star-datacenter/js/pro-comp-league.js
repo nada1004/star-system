@@ -182,7 +182,12 @@ function rProComp(C, T) {
       {id:'stats', lbl:'📈 통계'},
       ...(_li?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
-    const _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('procomp', subOpts) : subOpts;
+    let _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('procomp', subOpts) : subOpts;
+    // (설정) 🧷 탭/모드 표시 관리에서 procomp.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
+    if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
+      const _filtered = window.TabVis.filterDefs(_subOpts, 'procomp.sub');
+      if(_filtered.length) _subOpts = _filtered;
+    }
     if (!_subOpts.find(o=>o.id===proCompSub)) {
       proCompSub = 'league';
       localStorage.setItem('su_procomp_sub', proCompSub); // [BUGFIX-3] 폴백 시 localStorage 저장

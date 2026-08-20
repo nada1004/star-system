@@ -239,8 +239,9 @@ function _pcbRankList(rows,dark){
     const top=i===0;
     const badgeBg=i<3?medal[i]:`${col}30`;
     const badgeColor=i<3?'#1d1236':col;
-    const topBg=`background:linear-gradient(100deg,${col}38,rgba(255,255,255,.06) 78%)`;
-    return `<div class="pcb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${top?topBg:''}">
+    /* (개선, 2026-08-20) 1등만 있던 팀 색 배경 틴트를 전체 순위로 확장 */
+    const rowBg=`background:linear-gradient(100deg,${col}${top?'38':'1e'},rgba(255,255,255,.06) 78%)`;
+    return `<div class="pcb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${rowBg}">
       <span class="pcb-rank-badge" style="background:${badgeBg};color:${badgeColor}">${i+1}</span>
       <span class="pcb-rank-name" style="color:${col}">${r.icon||''}<span>${_cbEsc(r.name)}</span></span>
       ${r.sub?`<span class="pcb-rank-sub">${r.sub}</span>`:''}

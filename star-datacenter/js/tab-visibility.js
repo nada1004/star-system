@@ -119,7 +119,12 @@
         { key: 'comp.sub.tiertour', label: '🎯 티어대회(티어대회 선택 시)', kind: 'sub' },
       ]
     },
-    { key: 'main.pro', label: '🥇 프로리그', kind: 'tab' },
+    { key: 'main.pro', label: '🥇 프로리그', kind: 'tab', children: [
+        { key: 'pro.sub.brief', label: '📰 프로리그 브리핑', kind: 'sub' },
+        { key: 'progj.sub.brief', label: '📰 프로 끝장전 브리핑', kind: 'sub' },
+        { key: 'procomp.sub.brief', label: '📰 프로리그 대회 브리핑', kind: 'sub' },
+      ]
+    },
     {
       key: 'main.stats', label: '📈 통계', kind: 'tab', children: [
         // ── 🏆 개인 ──

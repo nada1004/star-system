@@ -10,7 +10,7 @@ function _plgbBriefingBuildSpeakQueue(){
   const q = [];
 
   q.push({text:`${d.title}를 읽어드리겠습니다.`});
-  q.push({text:`전체 ${d.totalN}세션 중 ${d.doneN}세션이 진행되어 진행률은 ${d.pct}퍼센트입니다.`});
+  q.push({text:`전체 ${d.totalN}경기 중 ${d.doneN}경기가 진행되어 진행률은 ${d.pct}퍼센트입니다.`});
 
   if (d.headline) q.push({text:d.headline});
 

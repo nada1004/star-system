@@ -121,7 +121,7 @@ function _plgbProgressHTML(pct,doneN,totalN){
       <button type="button" id="plgb-speak-btn" class="plgb-speak-btn no-export" onclick="_plgbBriefingToggleSpeak()">🔊 음성듣기</button>
     </div>
     <div class="plgb-progress-track"><div class="plgb-progress-fill" style="width:${pct}%"></div></div>
-    <div class="plgb-progress-caption"><span>완료 ${doneN} / ${totalN}세션</span><span>${pct}%</span></div>
+    <div class="plgb-progress-caption"><span>완료 ${doneN} / ${totalN}경기</span><span>${pct}%</span></div>
   </div>`;
 }
 
@@ -143,8 +143,9 @@ function _plgbRankList(rows,dark){
     const top=i===0;
     const badgeBg=i<3?medal[i]:`${col}30`;
     const badgeColor=i<3?'#1a0f0a':col;
-    const topBg=`background:linear-gradient(100deg,${col}38,rgba(255,255,255,.06) 78%)`;
-    return `<div class="plgb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${top?topBg:''}">
+    /* (개선, 2026-08-20) 1등만 있던 팀 색 배경 틴트를 전체 순위로 확장 */
+    const rowBg=`background:linear-gradient(100deg,${col}${top?'38':'1e'},rgba(255,255,255,.06) 78%)`;
+    return `<div class="plgb-rank-row${top?' top1':''}" style="border-left:${top?'5px':'4px'} solid ${col};${rowBg}">
       <span class="plgb-rank-badge" style="background:${badgeBg};color:${badgeColor}">${i+1}</span>
       <span class="plgb-rank-name" style="color:${col}">${r.icon||''}<span>${_cbEsc(r.name)}</span></span>
       ${r.sub?`<span class="plgb-rank-sub">${r.sub}</span>`:''}
@@ -258,7 +259,7 @@ function rProLeagueGJBriefing(){
       name:p.name,color:_cbUcolVivid(p.univ),
       sub:`${_cbFormDots(p.form)} ${p.w}승 ${p.l}패`,value:`${p.rate}%`
     }))))}</div>
-    <div>${_plgbSection('개인 다승 TOP 5','전 세션 통합 기준',_plgbRankList(winTop.map(p=>({
+    <div>${_plgbSection('개인 다승 TOP 5','전 경기 통합 기준',_plgbRankList(winTop.map(p=>({
       name:p.name,color:_cbUcolVivid(p.univ),
       sub:`${_cbFormDots(p.form)} ${p.rate}%`,value:`${p.w}승 ${p.l}패`
     }))))}</div>
@@ -268,8 +269,8 @@ function rProLeagueGJBriefing(){
     body+=_plgbSection('끝장전 MVP','다승 · 승률 종합',_plgbMvpHTML(mvpTop,mvpCands));
   }
 
-  body+=_plgbSection('최근 세션 결과','최신 기록 순',
-    timeline.length?timeline.map(s=>_plgbSessionRow(s)).join(''):_plgbEmpty('아직 완료된 세션이 없습니다.'));
+  body+=_plgbSection('최근 경기 결과','최신 기록 순',
+    timeline.length?timeline.map(s=>_plgbSessionRow(s)).join(''):_plgbEmpty('아직 완료된 경기가 없습니다.'));
 
   if(closeHighlight.length){
     body+=_plgbSection('🔥 접전 하이라이트','스코어 차이가 적은 순','<div>'+closeHighlight.map(s=>_plgbSessionRow(s)).join('')+'</div>');
@@ -284,11 +285,11 @@ function rProLeagueGJBriefing(){
     <div class="plgb-hero">
       <div class="plgb-hero-kicker">Sudden Death Briefing</div>
       <div class="plgb-hero-title">프로리그 끝장전 브리핑</div>
-      <div class="plgb-hero-desc">전체 ${totalN}세션 중 ${doneN}세션이 기록됐습니다.${periodActive?` 선택 기간: ${periodLabel}`:''}</div>
+      <div class="plgb-hero-desc">전체 ${totalN}경기 중 ${doneN}경기가 기록됐습니다.${periodActive?` 선택 기간: ${periodLabel}`:''}</div>
     </div>
     ${periodBar}
     ${_plgbKpiGrid([
-      ['총 세션',`${totalN}세션`,`완료 ${doneN} · 진행률 ${pct}%`,'#f97316'],
+      ['총 경기',`${totalN}경기`,`완료 ${doneN} · 진행률 ${pct}%`,'#f97316'],
       ['활동 선수',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#ef4444'],
       ['총 게임',`${games.length}게임`,mapStats.length?`최다 사용맵 ${_cbEsc(mapStats[0].map)}`:'맵 기록 없음','#facc15'],
       ['기간',periodLabel,'','#fb7185']
