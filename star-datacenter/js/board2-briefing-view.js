@@ -1017,8 +1017,7 @@ function _b2WeeklyBriefingView() {
         const prevS    = prevPlayerMap[p.name] || null;
         const prevWr2  = prevS && prevS.total>0 ? prevS.winRate : null;
 
-        const _zebraBg = i % 2 === 1 ? 'color-mix(in srgb, var(--b2w-accent) 9%, var(--b2w-paper-alt))' : 'transparent';
-        h += `<tr style="background:${isMVP?'#fef9c322':_zebraBg}">
+        h += `<tr class="${isMVP ? 'b2w2-tbl-mvprow' : ''}">
           <td style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>
             <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||''))}" style="font-size:var(--fs-base);font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${(typeof window.escHTML==='function'?window.escHTML(p.name||''):String(p.name||''))}</span>

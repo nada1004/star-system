@@ -930,3 +930,21 @@ _proPasteResults      프로리그 파싱 결과
 - **클래식 테마 보조색 재조정**: 직전 세션에 진한 블루(#1d4ed8)로 바꿨더니 전체가 블루 일색으로 단조롭다는 피드백을 받아, 파란 계열이면서도 시각적으로 구분되는 시안·틸 톤(#0891b2)으로 교체 — 메인(블루)·보조(시안) 투톤으로 단조로움 완화.
 - **빌드**: `npm install` → `node build.mjs` 재빌드 완료. 미니파이된 번들은 한글이 `\uXXXX` 유니코드 이스케이프로 저장되는데, 디코드해서 "이달의 인기 투표"·굵은 설명문·새 accent2·3단 그라디언트가 전부 정상 반영된 것을 확인.
 - **수정 파일**: `js/board2-briefing-view.js`, `css/board2-briefing.css`
+
+### 2026-08-20 (16) — 스트리머 테이블이 계속 흰색이었던 진짜 원인 발견: 사이트 전역 <td> 스타일이 덮어쓰고 있었음
+
+**요청**: (반복) 나린/소심/하블리/김바다 등이 있는 스트리머 순위 테이블 카드가 여전히 흰색.
+
+- **진짜 원인**: `css/style-core.css`(사이트 전역, 모든 탭 공용)에 `td{background:var(--white)}`, `tr:not(.ugrp):not(.tgrp):nth-child(even) td{background:#fbfdff}`, `tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff}`라는 **비-스코프(모든 `<table>`에 적용되는) 전역 규칙**이 있었음. 지금까지 `.b2w2-table-wrap`이나 `<tr>`(행) 자체에 배경색을 줘봤자, 그 안의 `<td>`(칸) 각각이 이 전역 규칙으로 자기 배경을 직접 칠해버려서 부모의 색이 전혀 보이지 않았던 것 — 여러 세션에 걸쳐 이 테이블만 계속 안 고쳐졌던 진짜 이유.
+- **원인 진단**: 전역 `tr:nth-child(even) td`/`tr:hover td` 규칙은 `:not()`·`:nth-child` 등으로 특이도(specificity)가 높아, 단순 클래스 규칙(`.b2w2-tbl td`)보다 강해 항상 이겼음.
+- **수정**: `.b2w2-tbl td`(기본), `.b2w2-tbl tr:nth-child(even) td`(짝수 행), `.b2w2-tbl tr:hover td`(호버) 전부 `!important`로 명시해 전역 규칙을 확실히 이기도록 처리. MVP 표시 행은 기존에 `<tr>` 인라인 스타일로 골드빛 배경을 주려 했지만 같은 이유로 안 먹혔던 것을 확인 → `b2w2-tbl-mvprow` 클래스로 바꾸고 `.b2w2-tbl tr.b2w2-tbl-mvprow td`에 `!important`로 골드 톤 배경을 지정.
+- **빌드**: `npm install` → `node build.mjs` 재빌드 완료, `dist/css/bundle.css`에서 `.b2w2-tbl td`/`tr:nth-child(2n) td`/`tr:hover td`/`tr.b2w2-tbl-mvprow td` 전부 `!important` 규칙으로 반영된 것과, `dist/js/chunk-board.js`에 `b2w2-tbl-mvprow` 클래스가 들어간 것을 확인.
+- **수정 파일**: `css/board2-briefing.css`, `js/board2-briefing-view.js`
+
+### 2026-08-20 (17) — 스트리머 테이블 줄무늬 제거(첫 행/둘째 행 색 다르고 진하다는 피드백)
+
+**요청**: 첫번째 행과 두번째 행 색상이 다르고 두번째가 너무 진함 — 색상이 똑같이 나와야 함.
+
+- **수정**: 직전 세션에서 넣은 짝수 행 강조 배경(`.b2w2-tbl tr:nth-child(even) td`)을 제거 — 이제 모든 행이 동일하게 `--b2w-paper-alt`(테마색이 옅게 섞인 카드색)를 사용. 호버 시 강조, MVP 행 골드 배경은 그대로 유지.
+- **빌드**: `npm install` → `node build.mjs` 재빌드 완료, `dist/css/bundle.css`에서 짝수 행 전용 규칙이 사라지고 `.b2w2-tbl td`만 남은 것을 확인.
+- **수정 파일**: `css/board2-briefing.css`

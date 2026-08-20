@@ -1776,10 +1776,13 @@
         text-transform: uppercase;
         letter-spacing: .06em;
       }
-      .b2w2-tbl td { font-size: 13px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle; transition: background .14s ease, box-shadow .14s ease }
+      .b2w2-tbl td { font-size: 13px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle; transition: background .14s ease, box-shadow .14s ease; background: var(--b2w-paper-alt) !important }
       .b2w2-tbl tr:last-child td { border-bottom: none }
-      .b2w2-tbl tr:hover td { background: var(--b2w-paper-warm) }
+      /* (2026-08-20 (17)) 짝수 행만 더 진해 보인다는 피드백으로 줄무늬 제거 — 전 행 동일한 색으로 통일 */
+      .b2w2-tbl tr:hover td { background: color-mix(in srgb, var(--b2w-accent) 16%, var(--b2w-paper-alt)) !important }
       .b2w2-tbl tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--b2w-accent) }
+      .b2w2-tbl tr.b2w2-tbl-mvprow td { background: color-mix(in srgb, var(--b2w-gold) 16%, var(--b2w-paper-alt)) !important }
+      .b2w2-tbl tr.b2w2-tbl-mvprow:hover td { background: color-mix(in srgb, var(--b2w-gold) 26%, var(--b2w-paper-alt)) !important }
 
       /* ── 종족전 박스 ── */
       .b2w2-race-box { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); background: var(--b2w-paper-alt) }
