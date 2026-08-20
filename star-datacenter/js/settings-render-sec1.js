@@ -437,6 +437,46 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </details>`;
   })()}
+  ${(()=>{
+    const masterVol = (typeof window.getUnivBgmMasterVol==='function') ? window.getUnivBgmMasterVol() : 100;
+    const univList = Array.isArray(univCfg) ? univCfg : [];
+    const rowsHtml = univList.map((u,i)=>{
+      const url = String(u.bgmUrl||'');
+      const vol = Number.isFinite(parseInt(u.bgmVolume,10)) ? Math.max(0,Math.min(100,parseInt(u.bgmVolume,10))) : 50;
+      return `<div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="cdot" style="background:${u.color||'#999'};flex-shrink:0"></div>
+          <span style="flex:1;font-size:var(--fs-sm);font-weight:900;color:var(--text2);word-break:keep-all">${esc(u.name||'')}</span>
+          <button type="button" id="cfg-univbgm-prev-btn-${i}" class="btn btn-xs btn-w" onclick="cfgPreviewUnivBgmToggle(${i})" style="white-space:nowrap;flex-shrink:0">▶ 미리듣기</button>
+        </div>
+        <input type="text" id="cfg-univbgm-url-${i}" value="${esc(url)}" placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box" onblur="cfgSaveUnivBgmRow(${i})">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);min-width:56px">볼륨</div>
+          <input type="range" id="cfg-univbgm-vol-${i}" min="0" max="100" step="5" value="${vol}" style="flex:1;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-univbgm-vol-v-${i}').textContent=this.value" onchange="cfgSaveUnivBgmRow(${i})">
+          <span id="cfg-univbgm-vol-v-${i}" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:24px;text-align:right;font-weight:700">${vol}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return _scfgD('univbgm','🎓 대학별 BGM 설정') + `
+      <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+        대학별로 "소개연출" 재생 시 배경음악으로 나오는 유튜브 링크를 이 화면 한 곳에서 등록/수정합니다.
+        (대학 상세의 "대학 정보 수정" 팝업과 같은 값을 공유하므로 어디서 수정해도 동일하게 반영됩니다)
+      </div>
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);min-width:110px">공통(전체) 볼륨</div>
+          <input id="cfg-univbgm-master-vol" type="range" min="0" max="100" step="5" value="${masterVol}" style="flex:1;min-width:160px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-univbgm-master-vol-v').textContent=this.value" onchange="cfgSaveUnivBgmMasterVol(this.value)">
+          <span id="cfg-univbgm-master-vol-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:28px;text-align:right;font-weight:900">${masterVol}</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);line-height:1.5">
+          모든 대학의 개별 볼륨에 이 값이 곱해져 최종 재생 볼륨이 결정됩니다. (예: 개별 볼륨 80 × 공통 50% = 40)
+        </div>
+        ${univList.length ? `<div style="display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:2px">${rowsHtml}</div>` : `<div style="font-size:var(--fs-sm);color:var(--gray-l)">등록된 대학이 없습니다. 먼저 "🏛️ 대학" 설정에서 대학을 추가하세요.</div>`}
+      </div>
+    </details>`;
+  })()}
   ${(()=>{ 
     const list = (localStorage.getItem('su_soop_list') || '').trim();
     return _scfgD('soopmv','📺 SOOP(숲) 멀티뷰') + `

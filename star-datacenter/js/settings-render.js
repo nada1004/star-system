@@ -101,7 +101,7 @@ function rCfg(C,T){
     'tierrank-view':'📊 티어 순위표 보기 방식',
     streamerchannel:'📺 스트리머 방송국 URL',
     'streamer-view':'🎬 스트리머탭 기본 뷰', 'streamer-tab-style':'🎬 스트리머탭 디자인/레이아웃',
-    bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
+    bgm:'🎵 유튜브 배경음악(BGM)', univbgm:'🎓 대학별 BGM 설정', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 플로팅(FAB)', storage:'💾 저장소', datacheck:'🧾 데이터 검수', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'☁️ GitHub(깃허브) 동기화', aibot:'🤖 AI봇(Groq) 서버 설정', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
@@ -204,6 +204,7 @@ function rCfg(C,T){
     streamerchannel:'스트리머별 SOOP/치지직 등 방송국 홈 URL 빠른 편집',
     'tierrank-view':'티어 순위표 보기 방식 변경',
     bgm:'유튜브 배경음악 표시와 링크 설정',
+    univbgm:'대학별 BGM 링크·개별/공통 볼륨 등록과 미리듣기',
     soopmv:'SOOP 멀티뷰 연결 설정',
     pasteRoute:'붙여넣기 결과 자동 분리 규칙 설정',
     hdr:'상단 헤더 제목, 배경, 아이콘 조정',

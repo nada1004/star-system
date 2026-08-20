@@ -1185,13 +1185,18 @@ function _b2LineupBgmEnsurePlayer() {
 function _b2LineupBgmApplyVol() {
   if (!_b2LineupBgmPlayer) return;
   try {
-    let v = Math.max(0, Math.min(100, parseInt(_b2LineupBgmVolume, 10) || 0));
+    // (기능추가, 2026-08-20) 설정탭 "🎓 대학별 BGM 설정"의 공통(전체) 볼륨 배율을
+    // 개별 대학 볼륨에 곱해 최종 볼륨을 낸다. 배율 함수가 없으면(구버전) 100%로 취급.
+    let v = (typeof window.getUnivBgmEffectiveVol === 'function')
+      ? window.getUnivBgmEffectiveVol(_b2LineupBgmVolume)
+      : Math.max(0, Math.min(100, parseInt(_b2LineupBgmVolume, 10) || 0));
     if (_b2LineupBgmDucked) v = Math.round(v * _b2LineupBgmDuckRatio);
     if (v <= 0) { _b2LineupBgmPlayer.mute && _b2LineupBgmPlayer.mute(); }
     else { _b2LineupBgmPlayer.unMute && _b2LineupBgmPlayer.unMute(); }
     _b2LineupBgmPlayer.setVolume(v);
   } catch (e) {}
 }
+try { window._b2LineupBgmApplyVol = _b2LineupBgmApplyVol; } catch (e) {}
 
 // 더킹 on/off — 소개연출 재생 시작~종료 동안 켜둔다. 저장된 볼륨값(_b2LineupBgmVolume) 자체는
 // 건드리지 않고, 실제 재생 볼륨에만 일시적으로 비율을 곱해 적용한다.

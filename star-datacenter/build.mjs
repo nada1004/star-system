@@ -110,6 +110,7 @@ const CORE_FILES = [
   'js/settings-crud-photopos.js',
   'js/settings-crud-recedit.js',
   'js/settings-crud-univ.js',
+  'js/settings-univ-bgm.js',
   'js/settings-map-status.js',
   'js/settings-profile-ui.js',
   'js/settings-match-detail.js',

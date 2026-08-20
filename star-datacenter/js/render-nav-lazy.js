@@ -421,6 +421,11 @@ function sw(t,el){
     if(t !== curTab && typeof _plyrBgmStop === 'function') _plyrBgmStop();
   }catch(e){}
 
+  // 🎓 설정탭 "대학별 BGM 설정" 미리듣기 — 설정탭을 벗어나면 자동 정지
+  try{
+    if(t !== curTab && typeof window._cfgUnivBgmPreviewStop === 'function') window._cfgUnivBgmPreviewStop();
+  }catch(e){}
+
   // [FIX-14] TAB_ENTER 맵 실행
   try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
   // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
