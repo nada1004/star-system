@@ -95,8 +95,7 @@ function _urInjectStyle(){
     '.ur-winner-row+.ur-winner-row,.ur-rival-row+.ur-rival-row{border-top:1px solid var(--border2)}',
     '.ur-mini-avatar{width:28px;height:28px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff}',
     '.ur-mini-avatar img{width:100%;height:100%;object-fit:cover}',
-    '.ur-bar-track{flex:1;height:14px;border-radius:7px;overflow:hidden;background:var(--border2);border:1px solid var(--border);box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}',
-    '.ur-bar-track>.ur-bar-fill,.ur-bar-track>div{height:100%;border-radius:6px;background:linear-gradient(90deg,#3ee5ff 0%,#6cb4ff 35%,#9d7bf5 70%,#a78bfa 100%)!important;box-shadow:0 0 10px rgba(110,180,255,.4),inset 0 1px 0 rgba(255,255,255,.25);transition:width .6s ease,background .3s ease}',
+    '.ur-bar-track{flex:1;height:9px;border-radius:5px;overflow:hidden;background:var(--border2)}',
     '.ur-recent-table{width:100%;table-layout:auto;border-collapse:collapse;font-size:12px}',
     '.ur-recent-table thead th{padding:6px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);border-bottom:1.5px solid var(--border2);white-space:nowrap}',
     '.ur-recent-table td{padding:7px 6px;border-bottom:1px solid var(--border2)}',
@@ -160,19 +159,7 @@ function _urInjectStyle(){
     'body.dark .ur-list-box{border-color:#334155}',
     'body.dark .ur-winner-row.is-alt,body.dark .ur-rival-row.is-alt{background:rgba(148,163,184,.04)}',
     'body.dark .ur-winner-row:hover,body.dark .ur-rival-row:hover{background:rgba(96,165,250,.12)}',
-    'body.dark .ur-bar-track{background:#0d1117;border-color:#1f2937;box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}',
-    '.ur-gauge-list{display:flex;flex-direction:column;gap:13px;max-width:780px;margin:4px 0 2px}',
-    '.ur-gauge-row{display:grid;grid-template-columns:140px 1fr 170px;align-items:center;gap:14px;padding:2px 0}',
-    '.ur-gauge-label{display:flex;flex-direction:column;gap:1px;min-width:0}',
-    '.ur-gauge-name{font-size:12.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.ur-gauge-meta{font-size:10px;font-weight:600;color:var(--text3)}',
-    '.ur-gauge-val{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}',
-    '.ur-gauge-w{color:#3ee5ff}',
-    '.ur-gauge-pct{min-width:38px;text-align:right;font-size:13px;font-weight:950}',
-    '.ur-gauge-l{color:#a78bfa}',
-    'body.dark .ur-gauge-name{color:#e6edf3}',
-    'body.dark .ur-gauge-meta{color:#6e7681}',
-    '@media(max-width:640px){.ur-gauge-row{grid-template-columns:96px 1fr 130px;gap:10px}.ur-gauge-name{font-size:11.5px}.ur-gauge-val{font-size:11px}}',
+    'body.dark .ur-bar-track{background:#334155}',
     'body.dark .ur-recent-table td{border-bottom-color:#334155}',
     '.ur-bg-loading .ur-img-preview-body{position:relative}',
     '.ur-bg-loading .ur-img-preview-body img{opacity:.35}',
@@ -633,22 +620,24 @@ function statsUnivReportHTML(){
   // ⚔️ 종족별 승률
   h += `<div class="ur-panel" id="ur-sec-racewin">
     <div class="ur-panel-title">⚔️ 종족별 승률 <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">전체 기간 통산</span></div>
-    <div class="ur-gauge-list">
+    <div style="display:flex;flex-direction:column;gap:11px">
       ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}]
         .concat(raceRecord['?'].w+raceRecord['?'].l>0 ? [{r:'?',c:'#64748b',l:'❔ 종족 미정'}] : [])
         .map(({r,c,l})=>{
         const rec=raceRecord[r]; const g=rec.w+rec.l; const wr=g>0?Math.round(rec.w/g*100):null;
-        return `<div class="ur-gauge-row">
-          <div class="ur-gauge-label">
-            <span class="ur-gauge-name" style="color:${c}">${l}</span>
-            <span class="ur-gauge-meta">${g}전</span>
+        // (수정) 단순 alpha 투명도 대신, 스트리머 리포트(맵별 성적/다승왕/라이벌전)에서
+        // 이미 검증된 HSL 기반 틴트 헬퍼(_prTintByPercent)를 재사용 — hue를 고정한 채
+        // 채도·명도만 승률에 따라 움직여서, alpha blending에서 생기는 탁한 중간톤 없이
+        // "그 종족색의 옅은 버전 ~ 진한 버전"으로 자연스럽게 표현됨.
+        const rWrBarColor = (typeof _prTintByPercent==='function')
+          ? _prTintByPercent(wr===null?1:wr, c, 95).css
+          : ((typeof _urHexToRgba==='function') ? _urHexToRgba(c, wr===null?0.14:0.22+(wr/100)*0.78) : c);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:800;color:${c}">${l}</span>
+            <span style="font-size:12px;font-weight:900;color:${c}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
           </div>
-          <div class="ur-bar-track"><div style="width:${wr??0}%"></div></div>
-          <div class="ur-gauge-val">
-            <span class="ur-gauge-w">${rec.w}승</span>
-            <span class="ur-gauge-pct" style="color:${c}">${wr!==null?wr+'%':'-'}</span>
-            <span class="ur-gauge-l">${rec.l}패</span>
-          </div>
+          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:${rWrBarColor};border-radius:5px;transition:width .6s ease,background .3s ease"></div></div>
         </div>`;
       }).join('')}
     </div>

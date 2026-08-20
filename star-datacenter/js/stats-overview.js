@@ -2,34 +2,7 @@
    통계 - 개요 (stats-overview-elo.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
-function _soInjectGaugeStyle(){
-  if(typeof document==='undefined')return;
-  if(document.getElementById('so-gauge-style'))return;
-  const s=document.createElement('style');
-  s.id='so-gauge-style';
-  s.textContent=[
-    '.gauge-bar-list{display:flex;flex-direction:column;gap:11px;max-width:780px;margin:6px 0 4px}',
-    '.gauge-bar-row{display:grid;grid-template-columns:150px 1fr 200px;align-items:center;gap:14px}',
-    '.gauge-bar-label{display:flex;flex-direction:column;gap:1px;min-width:0}',
-    '.gauge-bar-name{font-size:12.5px;font-weight:800;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.gauge-bar-meta{font-size:10px;font-weight:600;color:var(--text3)}',
-    '.gauge-bar-track{position:relative;height:14px;background:var(--border2);border-radius:7px;overflow:hidden;border:1px solid var(--border);box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}',
-    '.gauge-bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:6px;background:linear-gradient(90deg,#3ee5ff 0%,#6cb4ff 35%,#9d7bf5 70%,#a78bfa 100%);box-shadow:0 0 12px rgba(110,180,255,.4),inset 0 1px 0 rgba(255,255,255,.25);transition:width .6s ease}',
-    '.gauge-bar-fill::after{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);border-radius:6px 6px 0 0;pointer-events:none}',
-    '.gauge-bar-val{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}',
-    '.gauge-bar-w{color:#3ee5ff}',
-    '.gauge-bar-pct{color:var(--text1);min-width:38px;text-align:right;font-size:13px;font-weight:950}',
-    '.gauge-bar-l{color:#a78bfa}',
-    'body.dark .gauge-bar-track{background:#0d1117;border-color:#1f2937;box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}',
-    'body.dark .gauge-bar-name{color:#e6edf3}',
-    'body.dark .gauge-bar-meta{color:#6e7681}',
-    '@media(max-width:640px){.gauge-bar-row{grid-template-columns:96px 1fr 132px;gap:10px}.gauge-bar-name{font-size:11.5px}.gauge-bar-val{font-size:11px}}'
-  ].join('');
-  document.head.appendChild(s);
-}
-
 function statsOverviewHTML(){
-  _soInjectGaugeStyle();
   const proMatchIds=statsProMatchIds();
   const univStats={};
   const _players = Array.isArray(players) ? players : [];
@@ -154,25 +127,15 @@ function statsOverviewHTML(){
       </div>`;
     }).join('')}
   </div></div>
-  <div class="ssec"><h4>🗺️ 맵별 경기 통계 (게이지바)</h4>
-    <div class="gauge-bar-list">
-      ${mapRank.length?mapRank.map(m=>{
-        const rate=m.total===0?0:Math.round(m.w/m.total*100);
-        return`<div class="gauge-bar-row">
-          <div class="gauge-bar-label">
-            <span class="gauge-bar-name">${escHTML(m.name)}</span>
-            <span class="gauge-bar-meta">${m.total}전</span>
-          </div>
-          <div class="gauge-bar-track"><div class="gauge-bar-fill" style="width:${rate}%"></div></div>
-          <div class="gauge-bar-val">
-            <span class="gauge-bar-w">${m.w}승</span>
-            <span class="gauge-bar-pct">${rate}%</span>
-            <span class="gauge-bar-l">${m.l}패</span>
-          </div>
-        </div>`;
-      }).join(''):'<p style="color:var(--gray-l)">기록 없음</p>'}
-    </div>
-  </div>
+  <div class="ssec"><h4>🗺️ 맵별 경기 통계</h4><div class="stats-duo-grid">
+    ${mapRank.map(m=>{const rate=m.total===0?0:Math.round(m.w/m.total*100);return`<div class="stats-surface-box" style="min-width:150px;flex:1;max-width:220px">
+      <div style="font-weight:800;font-size:13px;margin-bottom:4px">${m.name}</div>
+      <div style="font-size:24px;font-weight:800;color:var(--blue)">${m.total}</div>
+      <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">총 경기</div>
+      <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:4px"><div style="height:100%;width:${rate}%;background:var(--blue);border-radius:2px"></div></div>
+      <div style="font-size:11px;display:flex;justify-content:space-between"><span style="color:var(--red);font-weight:700">${m.w}승</span><span style="color:var(--gray-l)">${rate}%</span><span style="color:var(--blue);font-weight:700">${m.l}패</span></div>
+    </div>`;}).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}
+  </div></div>
   <div class="ssec"><h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
     <div style="display:flex;flex-direction:column;gap:4px">${formF.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
   </div>

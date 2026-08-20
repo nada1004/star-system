@@ -158,31 +158,306 @@ function _cbPlayerStats(matches){
 }
 
 /* ── 공용 UI 조각 ── */
-function _cbShell(kicker,title,desc,metaKicker,headline,cells,body){
-  return `<div class="b2w2-wrap" data-theme="${(typeof _b2BriefingThemeLoad==='function')?_b2BriefingThemeLoad():'paper'}">
-    <div class="b2w2-masthead">
-      <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
-      <span>${_cbEsc(kicker)}</span>
+
+/* (재설계 v4, 2026-08-20) 프로리그(plb-*)와 명확히 구분되는 "토너먼트 프로그램 표지" 컨셉
+   - 라이트 종이톤 베이스 + 큰 세리프 타이포 + 따뜻한 파스텔 액센트
+   - 상단 TTS 듣기 버튼 (메타바 우측)
+   - 일반 기록(reflect general record) 섹션 자동 주입
+   - 좌측 세로 띠 / 우측 메달 / 점선 제거 — 깔끔한 매거진 톤
+   - 2026-08-20 패치: 다크모드 지원 추가 (body.dark .cbs-wrap 변수 오버라이드)
+     기존엔 "다크모드에서도 라이트 종이톤 유지" 주석이 있어 다크 모드에서 흰색
+     배경이 그대로 남아 어색했는데, 대회 브리핑만 유독 다크 적용이 안 되는 문제
+     를 해결하기 위해 다크 모드용 토큰/배경 오버라이드를 추가했다. */
+function _cbInjectShellStyle(){
+  if(typeof document==='undefined')return;
+  if(document.getElementById('cbs-shell-style'))return;
+  const s=document.createElement('style');
+  s.id='cbs-shell-style';
+  s.textContent=[
+    /* === 액센트 토큰 (따뜻한 파스텔, 라이트) === */
+    '.cbs-wrap.tone-mt{--cbs-accent:#0d9488;--cbs-accent-2:#14b8a6;--cbs-accent-soft:#99f6e4;--cbs-accent-bg:#ecfdf5;--cbs-glow:rgba(20,184,166,.28);--cbs-paper:#fdfcf8;--cbs-paper-2:#faf8f3;--cbs-paper-3:#f5f3ed;--cbs-ink:#0f172a;--cbs-ink-mid:#57534e;--cbs-ink-soft:#78716c;--cbs-ink-mute:#a8a29e;--cbs-rule:#e7e2d4;--cbs-rule-2:#efe9da;--cbs-card:#fbf8f2}',
+    '.cbs-wrap.tone-pc{--cbs-accent:#ea580c;--cbs-accent-2:#f97316;--cbs-accent-soft:#fed7aa;--cbs-accent-bg:#fff7ed;--cbs-glow:rgba(249,115,22,.28);--cbs-paper:#fdfcf8;--cbs-paper-2:#faf8f3;--cbs-paper-3:#f5f3ed;--cbs-ink:#0f172a;--cbs-ink-mid:#57534e;--cbs-ink-soft:#78716c;--cbs-ink-mute:#a8a29e;--cbs-rule:#e7e2d4;--cbs-rule-2:#efe9da;--cbs-card:#fbf8f2}',
+    '.cbs-wrap.tone-lv{--cbs-accent:#7c3aed;--cbs-accent-2:#a855f7;--cbs-accent-soft:#ddd6fe;--cbs-accent-bg:#faf5ff;--cbs-glow:rgba(168,85,247,.28);--cbs-paper:#fdfcf8;--cbs-paper-2:#faf8f3;--cbs-paper-3:#f5f3ed;--cbs-ink:#0f172a;--cbs-ink-mid:#57534e;--cbs-ink-soft:#78716c;--cbs-ink-mute:#a8a29e;--cbs-rule:#e7e2d4;--cbs-rule-2:#efe9da;--cbs-card:#fbf8f2}',
+    /* === 컨테이너 (종이톤 — 좌측 띠 제거) === */
+    '.cbs-wrap{font-family:"Noto Sans KR",sans-serif;max-width:100%;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,.10);background:var(--cbs-paper,#fdfcf8);color:var(--cbs-ink,#0f172a);position:relative}',
+    /* === 상단 메타바 (얇은 회색 띠 + TTS 버튼) === */
+    '.cbs-metabar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 22px;background:var(--cbs-paper-3,#f5f3ed);border-bottom:1px solid var(--cbs-rule,#e7e2d4);font-size:10.5px;font-weight:800;letter-spacing:.18em;color:var(--cbs-ink-soft,#78716c);text-transform:uppercase}',
+    '.cbs-metabar-l{display:flex;align-items:center;gap:10px}',
+    '.cbs-metabar-issue{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;background:var(--cbs-card,#fff);border:1px solid #d6cfbe;border-radius:4px;color:var(--cbs-ink-mid,#57534e)}',
+    '.cbs-metabar-issue::before{content:"";width:6px;height:6px;background:var(--cbs-accent);border-radius:99px}',
+    '.cbs-metabar-r{display:flex;align-items:center;gap:8px}',
+    /* TTS 듣기 버튼 (메타바 우측) */
+    '.cbs-speak-btn{font-family:inherit;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--cbs-accent);border:1px solid var(--cbs-accent-2);border-radius:4px;padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-transform:none;transition:filter .12s,transform .12s}',
+    '.cbs-speak-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}',
+    '.cbs-speak-btn:active{transform:translateY(0)}',
+    '.cbs-speak-btn.is-speaking{background:#dc2626;border-color:#dc2626}',
+    /* === 히어로 (메달 제거, 큰 타이포만) === */
+    '.cbs-hero{position:relative;padding:30px 26px;overflow:hidden;background:linear-gradient(180deg,var(--cbs-card,#ffffff) 0%,var(--cbs-paper-2,#faf8f3) 100%)}',
+    '.cbs-hero-main{position:relative;z-index:1;min-width:0}',
+    '.cbs-hero-kicker{position:relative;display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--cbs-accent);text-transform:uppercase;margin-bottom:10px}',
+    '.cbs-hero-kicker::before{content:"";width:24px;height:2px;background:var(--cbs-accent)}',
+    '.cbs-hero-title{position:relative;font-family:"Noto Serif KR",Georgia,serif;font-size:clamp(26px,4.5vw,38px);font-weight:900;color:var(--cbs-ink,#0f172a);letter-spacing:-.02em;line-height:1.1}',
+    '.cbs-hero-desc{position:relative;margin-top:10px;font-size:13px;font-weight:500;color:var(--cbs-ink-mid,#57534e);max-width:62ch;line-height:1.55}',
+    '.cbs-hero-headline{position:relative;margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--cbs-accent);padding:0}',
+    /* === KPI 그리드 === */
+    '.cbs-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:22px;padding:0 26px;background:var(--cbs-paper-2,#faf8f3);position:relative;z-index:1}',
+    '.cbs-kpi-card{position:relative;padding:12px 14px;background:var(--cbs-card,#fff);border:1px solid var(--cbs-rule,#e7e2d4);border-radius:10px;box-shadow:0 2px 0 rgba(15,23,42,.04)}',
+    '.cbs-kpi-card::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;background:var(--cbs-accent);border-radius:0 2px 2px 0}',
+    '.cbs-kpi-label{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--cbs-ink-soft,#78716c);text-transform:uppercase}',
+    '.cbs-kpi-value{margin-top:4px;font-size:20px;font-weight:900;color:var(--cbs-ink,#0f172a);letter-spacing:-.02em;font-variant-numeric:tabular-nums}',
+    '.cbs-kpi-sub{margin-top:2px;font-size:10.5px;font-weight:600;color:var(--cbs-ink-mute,#a8a29e)}',
+    /* === 본문 (상단 점선 제거) === */
+    '.cbs-body{background:var(--cbs-paper-2,#faf8f3);padding:24px 22px 32px}',
+    /* === 일반 기록 (general record) 섹션 === */
+    '.cbs-general{background:var(--cbs-card,#fff);border:1px solid var(--cbs-rule,#e7e2d4);border-radius:12px;padding:18px 20px;margin-bottom:18px;box-shadow:0 2px 0 rgba(15,23,42,.04)}',
+    '.cbs-general-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;margin-bottom:14px;border-bottom:1.5px solid var(--cbs-rule,#e7e2d4)}',
+    '.cbs-general-title{font-size:14.5px;font-weight:900;color:var(--cbs-ink,#0f172a);display:flex;align-items:center;gap:8px}',
+    '.cbs-general-title b{color:var(--cbs-accent)}',
+    '.cbs-general-sub{font-size:11px;color:var(--cbs-ink-soft,#78716c);font-weight:700}',
+    '.cbs-general-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--cbs-accent-bg);color:var(--cbs-accent);border:1.5px solid var(--cbs-accent)}',
+    '.cbs-general-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}',
+    '.cbs-general-card{position:relative;padding:11px 13px;background:var(--cbs-paper-2,#faf8f3);border:1px solid var(--cbs-rule,#e7e2d4);border-radius:10px}',
+    '.cbs-general-card::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:3px;background:var(--cbs-accent);border-radius:0 2px 2px 0}',
+    '.cbs-general-lbl{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--cbs-ink-soft,#78716c);text-transform:uppercase}',
+    '.cbs-general-val{margin-top:4px;font-size:18px;font-weight:900;color:var(--cbs-ink,#0f172a);letter-spacing:-.02em;font-variant-numeric:tabular-nums}',
+    '.cbs-general-val b{color:var(--cbs-accent)}',
+    '.cbs-general-meta{margin-top:2px;font-size:10.5px;font-weight:600;color:var(--cbs-ink-mute,#a8a29e)}',
+    /* === 기존 b2w2-* 라이트 톤 오버라이드 (다크 토큰이 정의되지 않은 폴백 포함) === */
+    /* cbs-wrap 안의 b2w2-wrap이 자체 --b2w-* 토큰을 새로 갖도록 강제.
+       이렇게 두면 인라인에서 var(--b2w-paper-alt,...)로 색을 지정한 자식들(예: 라운드 카드,
+       MVP 카드 등)도 다크모드에서 자동으로 cbs-* 토큰을 따라간다. */
+    /* !important 필수: 주간 현황판(board2-briefing.css)에 정의된 "body.dark .b2w2-wrap"
+       규칙이 (body 타입 셀렉터가 붙어) 이 규칙보다 CSS 명시도가 높아서, !important 없이는
+       실제 다크모드에서 이 카드 안 색상 토큰이 cbs-* 값 대신 주간 현황판의 다크 토큰으로
+       덮어써지는 문제가 있었다. 항상 cbs-wrap이 자신의 톤(라이트/다크)을 강제하도록 고정. */
+    '.cbs-wrap .b2w2-wrap{background:transparent!important;box-shadow:none!important;border-radius:0!important;color:var(--cbs-ink,#0f172a)!important;--b2w-paper:var(--cbs-paper-2)!important;--b2w-paper-alt:var(--cbs-card)!important;--b2w-paper-warm:var(--cbs-paper-3)!important;--b2w-ink:var(--cbs-ink)!important;--b2w-ink-mid:var(--cbs-ink-mid)!important;--b2w-ink-soft:var(--cbs-ink-soft)!important;--b2w-rule:var(--cbs-rule)!important;--b2w-rule-soft:var(--cbs-rule-2)!important;--b2w-rule-hard:var(--cbs-rule)!important;--b2w-shadow:0 2px 0 rgba(15,23,42,.04)!important}',
+    '.cbs-wrap .b2w2-masthead{display:none}',
+    '.cbs-wrap .b2w2-hero{background:transparent!important;padding:0!important;border:0!important;display:none!important}',
+    '.cbs-wrap .b2w2-hero-main,.cbs-wrap .b2w2-hero-meta{display:none}',
+    '.cbs-wrap .b2w2-sec{background:var(--cbs-card,#fff)!important;border:1px solid var(--cbs-rule,#e7e2d4)!important;border-radius:12px!important;padding:18px 20px!important;margin-bottom:18px!important;color:var(--cbs-ink,#0f172a)!important;box-shadow:0 2px 0 rgba(15,23,42,.04)!important}',
+    '.cbs-wrap .b2w2-sec-head{border-bottom:1.5px solid var(--cbs-rule,#e7e2d4)!important;color:var(--cbs-ink,#0f172a)!important;padding-bottom:10px!important}',
+    '.cbs-wrap .b2w2-sec-title{color:var(--cbs-ink,#0f172a)!important;font-weight:900!important}',
+    '.cbs-wrap .b2w2-sec-num{background:var(--cbs-accent)!important;color:#fff!important;font-family:"Noto Serif KR",Georgia,serif!important}',
+    '.cbs-wrap .b2w2-sec-sub{color:var(--cbs-ink-soft,#78716c)!important}',
+    '.cbs-wrap .b2w2-sec-tag{background:var(--cbs-accent-bg)!important;color:var(--cbs-accent)!important;border:1.5px solid var(--cbs-accent)!important;font-weight:800!important}',
+    '.cbs-wrap .b2w2-table{background:transparent!important;color:var(--cbs-ink,#0f172a)!important}',
+    '.cbs-wrap .b2w2-table th{background:var(--cbs-paper-3,#f5f3ed)!important;color:var(--cbs-ink-mid,#57534e)!important;border-color:var(--cbs-rule,#e7e2d4)!important;font-weight:900!important;letter-spacing:.04em;text-transform:uppercase;font-size:10.5px!important}',
+    '.cbs-wrap .b2w2-table td{background:transparent!important;color:var(--cbs-ink,#0f172a)!important;border-color:var(--cbs-rule-2,#efe9da)!important}',
+    '.cbs-wrap .b2w2-table tr:hover td{background:var(--cbs-accent-bg)!important}',
+    '.cbs-wrap .b2w2-table tr:nth-child(even) td{background:var(--cbs-paper-2,#faf8f3)!important}',
+    '.cbs-wrap .b2w2-table tr:nth-child(even):hover td{background:var(--cbs-accent-bg)!important}',
+    '.cbs-wrap .b2w2-card{background:var(--cbs-card,#fff)!important;border:1px solid var(--cbs-rule,#e7e2d4)!important;border-top:1px solid var(--cbs-rule,#e7e2d4)!important;border-radius:12px!important;color:var(--cbs-ink,#0f172a)!important;box-shadow:0 2px 0 rgba(15,23,42,.04)!important}',
+    '.cbs-wrap .b2w2-mini{background:var(--cbs-paper-2,#faf8f3)!important;border:1px solid var(--cbs-rule,#e7e2d4)!important;color:var(--cbs-ink,#0f172a)!important;border-radius:10px!important}',
+    '.cbs-wrap .b2w2-mini-name{color:var(--cbs-ink,#0f172a)!important;font-weight:900!important}',
+    '.cbs-wrap .b2w2-mini-meta{color:var(--cbs-ink-soft,#78716c)!important}',
+    '.cbs-wrap .b2w2-list-item{background:var(--cbs-card,#fff)!important;border:1px solid var(--cbs-rule,#e7e2d4)!important;color:var(--cbs-ink,#0f172a)!important;border-radius:10px!important;box-shadow:0 1px 0 rgba(15,23,42,.04)!important}',
+    '.cbs-wrap .b2w2-list-item.is-alt{background:var(--cbs-paper-2,#faf8f3)!important}',
+    '.cbs-wrap .b2w2-list-item:hover{background:var(--cbs-accent-bg)!important;border-color:var(--cbs-accent)!important}',
+    '.cbs-wrap .b2w2-stat-pill{background:var(--cbs-accent-bg)!important;color:var(--cbs-accent)!important;border:1.5px solid var(--cbs-accent)!important;font-weight:800!important}',
+    '.cbs-wrap .b2w2-kpi-grid,.cbs-wrap .b2w2-kpi-card{display:none!important}',
+    /* === 인라인 #fff 폴백이 들어간 자식 요소들도 토큰화 === */
+    '.cbs-wrap [style*="background:#fff"],.cbs-wrap [style*="background: #fff"],.cbs-wrap [style*="background:#fffdf9"],.cbs-wrap [style*="background: #fffdf9"]{background:var(--cbs-card,#fff)!important;color:var(--cbs-ink,#0f172a)!important}',
+    '.cbs-wrap [style*="background:#faf8f3"],.cbs-wrap [style*="background: #faf8f3"]{background:var(--cbs-paper-2,#faf8f3)!important;color:var(--cbs-ink,#0f172a)!important}',
+    '.cbs-wrap [style*="color:#0f172a"],.cbs-wrap [style*="color: #0f172a"]{color:var(--cbs-ink,#0f172a)!important}',
+    '.cbs-wrap [style*="color:#57534e"],.cbs-wrap [style*="color: #57534e"]{color:var(--cbs-ink-mid,#57534e)!important}',
+    '.cbs-wrap [style*="color:#78716c"],.cbs-wrap [style*="color: #78716c"]{color:var(--cbs-ink-soft,#78716c)!important}',
+    '.cbs-wrap [style*="color:#a8a29e"],.cbs-wrap [style*="color: #a8a29e"]{color:var(--cbs-ink-mute,#a8a29e)!important}',
+    '.cbs-wrap [style*="border:1px solid #e7e2d4"],.cbs-wrap [style*="border: 1px solid #e7e2d4"]{border-color:var(--cbs-rule,#e7e2d4)!important}',
+    /* === cbf-sec (섹션) 의 상단 1px 라인도 다크 토큰 사용 === */
+    '.cbs-wrap .b2w2-wrap > .cbf-sec{border-top-color:var(--cbs-rule,#e7e2d4)!important}',
+    /* === cbs-sec-num (섹션 번호 배지) 색 보정 === */
+    '.cbs-wrap .b2w2-sec-num{background:var(--cbs-accent)!important;color:#fff!important}',
+    /* === cbs-wrap 자체 그림자: 다크에서는 더 강하게 === */
+    'body.dark .cbs-wrap{box-shadow:0 16px 40px rgba(0,0,0,.5)}',
+    /* === 다크 모드 오버라이드 (토큰만 갈아끼움) === */
+    'body.dark .cbs-wrap.tone-mt{--cbs-accent:#2dd4bf;--cbs-accent-2:#5eead4;--cbs-accent-soft:#134e4a;--cbs-accent-bg:rgba(45,212,191,.12);--cbs-paper:#0b1220;--cbs-paper-2:#0f172a;--cbs-paper-3:#1e293b;--cbs-ink:#e2e8f0;--cbs-ink-mid:#cbd5e1;--cbs-ink-soft:#94a3b8;--cbs-ink-mute:#64748b;--cbs-rule:rgba(148,163,184,.18);--cbs-rule-2:rgba(148,163,184,.10);--cbs-card:#1e293b}',
+    'body.dark .cbs-wrap.tone-pc{--cbs-accent:#fb923c;--cbs-accent-2:#fdba74;--cbs-accent-soft:#7c2d12;--cbs-accent-bg:rgba(251,146,60,.14);--cbs-paper:#0b1220;--cbs-paper-2:#0f172a;--cbs-paper-3:#1e293b;--cbs-ink:#e2e8f0;--cbs-ink-mid:#cbd5e1;--cbs-ink-soft:#94a3b8;--cbs-ink-mute:#64748b;--cbs-rule:rgba(148,163,184,.18);--cbs-rule-2:rgba(148,163,184,.10);--cbs-card:#1e293b}',
+    'body.dark .cbs-wrap.tone-lv{--cbs-accent:#a78bfa;--cbs-accent-2:#c4b5fd;--cbs-accent-soft:#4c1d95;--cbs-accent-bg:rgba(167,139,250,.14);--cbs-paper:#0b1220;--cbs-paper-2:#0f172a;--cbs-paper-3:#1e293b;--cbs-ink:#e2e8f0;--cbs-ink-mid:#cbd5e1;--cbs-ink-soft:#94a3b8;--cbs-ink-mute:#64748b;--cbs-rule:rgba(148,163,184,.18);--cbs-rule-2:rgba(148,163,184,.10);--cbs-card:#1e293b}',
+    /* 다크에서만 보이는 미세한 박스 그림자 */
+    'body.dark .cbs-wrap{box-shadow:0 16px 40px rgba(0,0,0,.55)}',
+    'body.dark .cbs-wrap .b2w2-card,body.dark .cbs-wrap .b2w2-sec,body.dark .cbs-wrap .cbs-general,body.dark .cbs-wrap .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}'
+  ].join('');
+  document.head.appendChild(s);
+}
+
+/* kicker 문자열로 토큰 결정 (따뜻한 파스텔 톤) */
+function _cbToneOf(kicker){
+  const k=String(kicker||'').toLowerCase();
+  if(k.includes('league')||k.includes('조별')||k.includes('조편'))return 'tone-mt';
+  if(k.includes('tournament')||k.includes('토너먼트')||k.includes('대진'))return 'tone-pc';
+  return 'tone-lv';
+}
+
+/* 일반 기록(reflect general record) — 대회(tn) 단위의 "일반 탭 기록"만 반영
+   - 사용자가 "현재 일반 기록에 전체 기록 반영 된거 같은데"라고 지적한 케이스:
+     기존엔 (typeof players!=='undefined'?players:[])의 전역 history를 집계해
+     모든 시즌 통산 전적이 섞여 들어가는 버그가 있었다.
+     대회 브리핑에서는 그 대회의 tn.normalMatches(일반 탭에서 입력한 경기)만
+     집계해서 보여주는 게 의도된 동작이므로, tn을 인자로 받아 그 대회 데이터만
+     사용하도록 수정한다.
+   - 데이터가 0건이면 섹션 자체를 숨긴다("기록 반영하기 없으면 표시 없고"). */
+function _cbGeneralRecordHTML(tn){
+  if(!tn) return '';
+  const nmAll = Array.isArray(tn.normalMatches) ? tn.normalMatches : [];
+  const nmDone = nmAll.filter(m=>m && m.sa!=null && m.sb!=null);
+  if(!nmDone.length) return '';
+  // 일반 탭의 모든 게임(세트 안의 개별 game)을 펼쳐서 선수 단위로 집계
+  const ps = {}; // name -> {w,l,form:[]}
+  const dates = [];
+  // (버그픽스, 2026-08-20) 일반 탭은 매치마다 서로 다른 대학(a vs b) 조합이 섞여 있는데,
+  // 기존엔 "이긴 쪽이면 무조건 teamW++"로 세서 서로 다른 대학들의 승수가 하나로
+  // 뭉뚱그려져 "1승 2패"처럼 의미 없는 숫자가 나왔다. 대학별로 승패를 따로 집계해
+  // "가장 많이 이긴 팀"을 보여주는 것으로 교체한다.
+  const teamStats = {}; // u -> {u,w,l,history:[{d,win}]} — 팀별로 승패 이력을 따로 쌓아
+                          // "최근 5경기"를 특정 팀(가장 많이 이긴 팀) 기준으로 보여줄 수 있게 한다
+  nmDone.forEach(m=>{
+    if(m.d) dates.push(m.d);
+    if(m.a){ if(!teamStats[m.a]) teamStats[m.a]={u:m.a,w:0,l:0,history:[]}; }
+    if(m.b){ if(!teamStats[m.b]) teamStats[m.b]={u:m.b,w:0,l:0,history:[]}; }
+    if(m.sa>m.sb){
+      if(m.a){ teamStats[m.a].w++; teamStats[m.a].history.push({d:m.d||'', win:true}); }
+      if(m.b){ teamStats[m.b].l++; teamStats[m.b].history.push({d:m.d||'', win:false}); }
+    } else if(m.sb>m.sa){
+      if(m.b){ teamStats[m.b].w++; teamStats[m.b].history.push({d:m.d||'', win:true}); }
+      if(m.a){ teamStats[m.a].l++; teamStats[m.a].history.push({d:m.d||'', win:false}); }
+    }
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g || !g.playerA || !g.playerB || !g.winner) return;
+        const wn = g.winner==='A' ? g.playerA : g.playerB;
+        const ln = g.winner==='A' ? g.playerB : g.playerA;
+        if(!ps[wn]) ps[wn] = {name:wn, w:0, l:0, form:[]};
+        if(!ps[ln]) ps[ln] = {name:ln, w:0, l:0, form:[]};
+        ps[wn].w++; ps[wn].form.push({d:m.d||'', win:true});
+        ps[ln].l++; ps[ln].form.push({d:m.d||'', win:false});
+      });
+    });
+  });
+  const playerList = Object.values(ps);
+  const topTeam = Object.values(teamStats).sort((a,b)=>b.w-a.w||a.l-b.l)[0]||null;
+  // (버그픽스, 2026-08-20) "최근 5경기"도 서로 다른 대학 매치를 뒤섞어 세던 문제가
+  // 있었다 — 누구 기준인지 알 수 없는 숫자였다. 이제 "가장 많이 이긴 팀"의 최근 5경기로
+  // 기준을 명확히 하고, 카드에도 팀 이름을 표시해 혼동이 없게 한다.
+  const recent = topTeam ? topTeam.history.slice().sort((a,b)=>(b.d||'').localeCompare(a.d||'')).slice(0,5) : [];
+  const recent5W = recent.filter(r=>r.win).length;
+  const recent5L = recent.length - recent5W;
+  // 최장 연승 / 연패 (선수별)
+  let topStreak=0, topStreakName='', topStreakWin=true;
+  playerList.forEach(p=>{
+    let s=0, sw=null, mx=0, mxWin=true;
+    p.form.slice().sort((a,b)=>(a.d||'').localeCompare(b.d||'')).forEach(x=>{
+      if(sw===null){ sw=x.win; s=1; mxWin=sw; }
+      else if(x.win===sw){ s++; }
+      else { sw=x.win; s=1; }
+      if(s>mx){ mx=s; mxWin=sw; }
+    });
+    if(mx>topStreak || (mx===topStreak && mxWin)){ topStreak=mx; topStreakName=p.name; topStreakWin=mxWin; }
+  });
+  // 활동 스트리머 수
+  const activeCount = playerList.filter(p=>p.w+p.l>0).length;
+  // 날짜 범위
+  dates.sort();
+  const dateRange = dates.length
+    ? `${dates[0].slice(2).replaceAll('-','.')} ~ ${dates[dates.length-1].slice(2).replaceAll('-','.')}`
+    : '-';
+  const winLabel = topStreakWin ? '연승' : '연패';
+  return `<div class="cbs-general">
+    <div class="cbs-general-head">
+      <div class="cbs-general-title">📚 <b>일반 기록</b></div>
+      <div class="cbs-general-sub">${dateRange}</div>
+      <span class="cbs-general-tag">일반 탭</span>
     </div>
-    <section class="b2w2-hero">
-      <div class="b2w2-hero-main">
-        <div style="font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:var(--b2w-gold);text-transform:uppercase">${_cbEsc(kicker)}</div>
-        <div class="b2w2-hero-title">${_cbEsc(title)}</div>
-        <div class="b2w2-hero-desc">${desc}</div>
+    <div class="cbs-general-grid">
+      <div class="cbs-general-card"><div class="cbs-general-lbl">가장 많이 이긴 팀</div><div class="cbs-general-val">${topTeam?`<b>${_cbEsc(topTeam.u)}</b>`:'—'}</div><div class="cbs-general-meta">${topTeam?`${topTeam.w}승 ${topTeam.l}패`:'기록 없음'}</div></div>
+      <div class="cbs-general-card"><div class="cbs-general-lbl">활동 스트리머</div><div class="cbs-general-val">${activeCount}명</div><div class="cbs-general-meta">이 대회의 일반 탭 기준</div></div>
+      <div class="cbs-general-card"><div class="cbs-general-lbl">최근 5경기</div><div class="cbs-general-val">${recent.length?`<b>${recent5W}승</b> ${recent5L}패`:'-'}</div><div class="cbs-general-meta">${recent.length?`${_cbEsc(topTeam.u)} 기준 · 승률 ${Math.round(recent5W/recent.length*100)}%`:'기록 없음'}</div></div>
+      <div class="cbs-general-card"><div class="cbs-general-lbl">최장 ${winLabel}</div><div class="cbs-general-val">${topStreak>0?`<b>${topStreak}${winLabel}</b>`:'—'}</div><div class="cbs-general-meta">${topStreakName||'-'}</div></div>
+    </div>
+  </div>`;
+}
+
+function _cbShell(kicker,title,desc,metaKicker,headline,cells,body,tn){
+  _cbInjectShellStyle();
+  const tone=_cbToneOf(kicker);
+  const issue=`VOL.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}`;
+  return `<div class="cbs-wrap ${tone}">
+    <div class="cbs-metabar">
+      <div class="cbs-metabar-l">
+        <span class="cbs-metabar-issue">${issue}</span>
+        <span>${_cbEsc(kicker)}</span>
       </div>
-      <div class="b2w2-hero-meta">
-        <div class="b2w2-hero-meta-kicker">${_cbEsc(metaKicker)}</div>
-        <div class="b2w2-hero-meta-headline">${headline}</div>
-        <div class="b2w2-hero-meta-grid">
-          ${cells.map(c=>`<div class="b2w2-hero-meta-cell">
-            <div class="b2w2-hero-meta-label">${_cbEsc(c[0])}</div>
-            <div class="b2w2-hero-meta-value">${c[1]}</div>
-          </div>`).join('')}
-        </div>
+      <div class="cbs-metabar-r">
+        <span>${_cbEsc(metaKicker||'')}</span>
+        <button type="button" class="cbs-speak-btn no-export" onclick="_cbBriefingToggleSpeak(this)">🔊 음성듣기</button>
+      </div>
+    </div>
+    <section class="cbs-hero">
+      <div class="cbs-hero-main">
+        <div class="cbs-hero-kicker">${_cbEsc(kicker)}</div>
+        <div class="cbs-hero-title">${_cbEsc(title)}</div>
+        <div class="cbs-hero-desc">${desc}</div>
+        <div class="cbs-hero-headline">${headline}</div>
       </div>
     </section>
-    ${body}
+    <div class="cbs-kpi-grid">
+      ${cells.map(c=>`<div class="cbs-kpi-card">
+        <div class="cbs-kpi-label">${_cbEsc(c[0])}</div>
+        <div class="cbs-kpi-value">${c[1]}</div>
+        ${c[2]?`<div class="cbs-kpi-sub">${_cbEsc(c[2])}</div>`:''}
+        </div>`).join('')}
+    </div>
+    <div class="cbs-body">
+      ${_cbGeneralRecordHTML(tn)}
+      <div class="b2w2-wrap">
+        ${body}
+      </div>
+    </div>
   </div>`;
+}
+
+/* 음성듣기(TTS) — pro-league-briefing-tts.js 패턴 차용
+   pro-league와 동일하게: 큐를 직접 만들고 window.SUTTS.speak(queue, ...)로 전달한다.
+   - 일시정지/이어듣기/버튼 라벨 토글까지 SUTTS 단일 진입점으로 통일 */
+function _cbBriefingSpeakBtnLabel(){
+  const btn = document.querySelector('.cbs-speak-btn');
+  if(!btn) return;
+  const speaking = !!(window.SUTTS && window.SUTTS.isSpeaking());
+  const paused = !speaking && !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
+  btn.innerHTML = speaking ? '⏸ 일시정지' : (paused ? '▶ 이어듣기' : '🔊 음성듣기');
+  btn.classList.toggle('is-speaking', speaking);
+  btn.classList.toggle('is-paused', paused);
+}
+function _cbBriefingBuildSpeakQueue(){
+  const d = window._cbBriefingSpeakSnapshot;
+  if(!d) return [];
+  const q = [];
+  q.push({text:`${d.title}, ${d.totalLabel}경기 중 ${d.doneLabel}경기가 진행되어 진행률은 ${d.pct}퍼센트입니다.`});
+  if(d.headline) q.push({text:d.headline});
+  if(d.mvp){
+    q.push({text:`${d.kind==='overall'?'대회 MVP는':(d.kind==='tour'?'토너먼트 MVP는':'이번 조별리그의 핵심 선수는')} ${d.mvp.name}입니다. ${d.mvp.w}승 ${d.mvp.l}패, 승률 ${d.mvp.rate}퍼센트를 기록했습니다.`});
+  }
+  if(d.champ){
+    q.push({text:`우승팀은 ${d.champ}입니다.`});
+  }
+  if(Array.isArray(d.winTop) && d.winTop.length){
+    q.push({text:'개인 다승 순위입니다.'});
+    d.winTop.forEach((p,i)=>{
+      q.push({text:`${i+1}위 ${p.name}, ${p.w}승 ${p.l}패, 승률 ${p.rate}퍼센트입니다.`});
+    });
+  }
+  q.push({text:'이상으로 브리핑을 마칩니다.'});
+  return q;
+}
+function _cbBriefingToggleSpeak(btn){
+  try{
+    if(!window.SUTTS || !('speechSynthesis' in window)){ alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
+    if(window.SUTTS.isSpeaking()){ window.SUTTS.pause(); _cbBriefingSpeakBtnLabel(); return; }
+    if(window.SUTTS.isPaused && window.SUTTS.isPaused()){ window.SUTTS.resume(); _cbBriefingSpeakBtnLabel(); return; }
+    const queue = _cbBriefingBuildSpeakQueue();
+    if(!queue.length){ alert('음성으로 읽어줄 브리핑 내용이 없습니다.'); return; }
+    window.SUTTS.speak(queue, { onEnd: _cbBriefingSpeakBtnLabel });
+    _cbBriefingSpeakBtnLabel();
+  }catch(e){ console.warn(e); }
 }
 
 function _cbKpis(items){
@@ -320,7 +595,7 @@ function rCompLeagueBriefing(tn){
   if(!all.length){
     return _cbShell('League Briefing',`${tn.name} 조별리그 브리핑`,'아직 등록된 조별리그 경기가 없습니다.','핵심 지표','조편성 후 경기를 등록하면 브리핑이 생성됩니다.',
       [['조 수',groups.length+'개'],['경기','0'],['완료','0'],['진행률','0%']],
-      _cbEmpty('조별리그 경기를 추가하면 브리핑이 채워집니다.'));
+      _cbEmpty('조별리그 경기를 추가하면 브리핑이 채워집니다.'),tn);
   }
 
   const lead=teams[0];
@@ -331,7 +606,7 @@ function rCompLeagueBriefing(tn){
     ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
     ['누적 세트',`${setTotal}세트`,`경기당 평균 ${done.length?(setTotal/done.length).toFixed(1):'0.0'}세트`]
   ]);
-  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'#16a34a':pct>=50?'var(--b2w-accent,#2563eb)':'#d97706')}</div>`;
+  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':pct>=50?'var(--b2w-accent,#2563eb)':'#d97706')}</div>`;
 
   body+=_cbSection('조별 현황','각 조 선두와 진행 상황',
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
@@ -382,11 +657,23 @@ function rCompLeagueBriefing(tn){
   body+=_cbSection('최근 경기 결과','가장 최근에 기록된 5경기',
     recent.length?recent.map(m=>_cbMatchRow(m,`${m.grpLetter}조`)).join(''):_cbEmpty('완료된 경기가 없습니다.'));
 
+  /* 음성듣기(TTS)용 스냅샷 */
+  try{
+    window._cbBriefingSpeakSnapshot={
+      kind:'league',
+      title:`${tn.name} 조별리그 브리핑`,
+      totalLabel:String(all.length), doneLabel:String(done.length), pct,
+      headline:headline,
+      mvp:topPlayers[0]?{name:topPlayers[0].name,w:topPlayers[0].w,l:topPlayers[0].l,rate:topPlayers[0].rate}:null,
+      champ:'',
+      winTop:topPlayers.slice(0,5).map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate}))
+    };
+  }catch(e){}
   return _cbShell('League Briefing',`${tn.name} 조별리그 브리핑`,
     `조별리그 ${all.length}경기 중 ${done.length}경기가 완료됐습니다. 조별 판도와 팀·선수 흐름을 한 화면에서 정리했습니다.`,
     '핵심 지표',headline,
     [['진행률',`${pct}%`],['조 수',`${groups.length}개`],['참가 팀',`${univCount}팀`],['남은 경기',`${all.length-done.length}경기`]],
-    body);
+    body,tn);
 }
 
 /* ══════════ 2) 토너먼트 브리핑 ══════════ */
@@ -411,7 +698,7 @@ function rCompTourBriefing(tn){
   if(!all.length){
     return _cbShell('Tournament Briefing',`${tn.name} 토너먼트 브리핑`,'아직 등록된 대진표 경기 기록이 없습니다.','핵심 지표','대진표 기록을 입력하면 브리핑이 생성됩니다.',
       [['라운드','-'],['경기','0'],['완료','0'],['진행률','0%']],
-      _cbEmpty('대진표 기록에서 결과를 입력하면 여기에 정리됩니다.'));
+      _cbEmpty('대진표 기록에서 결과를 입력하면 여기에 정리됩니다.'),tn);
   }
 
   let body='';
@@ -434,7 +721,7 @@ function rCompTourBriefing(tn){
     ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
     ['우승팀',champ?_cbEsc(champ):'미정',champ?`준우승 ${_cbEsc(runnerUp||'-')}`:'결승 결과 대기']
   ]);
-  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'#16a34a':'var(--b2w-accent,#2563eb)')}</div>`;
+  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':'var(--b2w-accent,#2563eb)')}</div>`;
 
   body+=_cbSection('라운드별 진행','8강 → 4강 → 결승 흐름',
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
@@ -476,14 +763,108 @@ function rCompTourBriefing(tn){
       </div>
     </div>`);
 
+  /* 음성듣기(TTS)용 스냅샷 */
+  try{
+    window._cbBriefingSpeakSnapshot={
+      kind:'tour',
+      title:`${tn.name} 토너먼트 브리핑`,
+      totalLabel:String(all.length), doneLabel:String(done.length), pct,
+      headline:champ?`${champ} 우승`:'',
+      mvp:players_[0]?{name:players_[0].name,w:players_[0].w,l:players_[0].l,rate:players_[0].rate}:null,
+      champ:champ||'',
+      winTop:players_.slice(0,5).map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate}))
+    };
+  }catch(e){}
   return _cbShell('Tournament Briefing',`${tn.name} 토너먼트 브리핑`,
     `대진표 ${all.length}경기 중 ${done.length}경기가 기록됐습니다. 라운드별 진행과 결승 결과를 정리했습니다.`,
     '핵심 지표',champ?`🏆 ${_cbEsc(champ)} 우승`:'결승 결과 대기 중',
     [['진행률',`${pct}%`],['라운드',`${roundArr.length}개`],['참가 팀',`${teams.length}팀`],['남은 경기',`${all.length-done.length}경기`]],
-    body);
+    body,tn);
 }
 
 /* ══════════ 3) 대회 종합 브리핑 ══════════ */
+/* (신규, 2026-08-20) 조별리그·대진표 기록이 전혀 없고 "일반 탭"으로만 경기를 저장한
+   대회의 경우, 기존엔 "핵심 지표 · 일반 기록" 요약 박스만 나오고 대회 MVP·팀 순위
+   TOP5·개인 다승/승률/최다출전 TOP5 같은 나머지 섹션은 전부 비어 있었다(대회를
+   순수하게 일반 탭으로만 운영하는 경우 브리핑이 사실상 텅 빈 것처럼 보이는 문제).
+   조별리그/대진표와 동일한 매치 셰이프(a/b/sa/sb/done/sets)를 쓰는 tn.normalMatches를
+   그대로 _cbTeamStats/_cbPlayerStats에 넣어 같은 섹션들을 일반 탭 데이터 기준으로
+   채워준다. */
+function _cbOverallFromNormalOnly(tn,nm,nmDone){
+  const pct=_cbPct(nmDone.length,nm.length);
+  const teams=_cbTeamStats(nm);
+  const allPs=_cbPlayerStats(nm);
+  const mvp=allPs.slice().sort((a,b)=>b.w-a.w||b.rate-a.rate)[0]||null;
+  const bestRate=allPs.filter(p=>p.total>=3).sort((a,b)=>b.rate-a.rate||b.w-a.w).slice(0,5);
+  const mostGames=allPs.slice().sort((a,b)=>b.total-a.total).slice(0,5);
+  const dates=[...new Set(nmDone.map(m=>m.d).filter(Boolean))].sort();
+  const setTotal=nmDone.reduce((s,m)=>s+(m.sa||0)+(m.sb||0),0);
+
+  let body=_cbKpis([
+    ['전체 경기',`${nm.length}경기`,'일반 탭 기준'],
+    ['완료',`${_cbTotalGames(nm)}판`,`${nmDone.length}경기 완료`],
+    ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
+    ['참가 선수',`${allPs.length}명`,`누적 ${setTotal}세트`]
+  ]);
+  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':'var(--b2w-accent,#2563eb)')}</div>`;
+
+  if(mvp){
+    const mCol=_cbUcol(mvp.univ);
+    body+=_cbSection('대회 MVP','일반 탭 다승 · 승률 종합',
+      `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+        <div style="display:flex;align-items:center;gap:18px;padding:18px 20px;border-radius:14px;border:1px solid ${mCol}33;background:linear-gradient(135deg,${mCol}14,var(--b2w-paper-alt,#fff))">
+          <span style="position:relative;display:inline-flex;flex-shrink:0">${_cbPlayerAvatar(mvp.name,92)}
+            <span style="position:absolute;bottom:-4px;right:-4px;font-size:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))">🏅</span></span>
+          <div style="min-width:0">
+            <div style="font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--b2w-gold,#b8862c)">MOST VALUABLE PLAYER</div>
+            <div style="font-size:22px;font-weight:900;color:${mCol};line-height:1.25;word-break:break-word">${_cbEsc(mvp.name)}</div>
+            <div style="margin-top:4px;font-size:12px;font-weight:800;color:var(--b2w-ink-soft,#6b7280);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              ${mvp.univ?_cbTeamChip(mvp.univ):''}
+              <span>${mvp.w}승 ${mvp.l}패 · 승률 ${mvp.rate}%</span>
+            </div>
+          </div>
+        </div>
+      </div>`);
+  }
+
+  body+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:28px;padding-top:22px;border-top:1px solid var(--b2w-rule-soft,#e5e7eb)">
+    <div>${_cbSection('팀 순위 TOP 5','일반 탭 기준',teams.length?_cbRankList(teams.slice(0,5).map(t=>({
+      name:t.u,icon:(typeof _univIconTag==='function')?_univIconTag(t.u,20):'',
+      sub:`세트 ${t.sw}-${t.sl}`,value:`${t.w}승 ${t.l}패`
+    }))):_cbEmpty('팀 기록이 없습니다.'))}</div>
+    <div>${_cbSection('개인 다승 TOP 5','일반 탭 기준',_cbRankList(allPs.slice().sort((a,b)=>b.w-a.w||b.rate-a.rate).slice(0,5).map(p=>({
+      name:p.name,color:_cbUcol(p.univ),icon:_cbPlayerAvatar(p.name,28),
+      sub:_cbFormDots(p.form),value:`${p.w}승 ${p.l}패`
+    }))))}</div>
+    <div>${_cbSection('승률 TOP 5','3경기 이상',_cbRankList(bestRate.map(p=>({
+      name:p.name,color:_cbUcol(p.univ),icon:_cbPlayerAvatar(p.name,28),
+      sub:`${p.w}승 ${p.l}패`,value:`${p.rate}%`
+    }))))}</div>
+    <div>${_cbSection('최다 출전 TOP 5','세부 게임 출전 수',_cbRankList(mostGames.map(p=>({
+      name:p.name,color:_cbUcol(p.univ),icon:_cbPlayerAvatar(p.name,28),
+      sub:`${p.w}승 ${p.l}패`,value:`${p.total}게임`
+    }))))}</div>
+  </div>`;
+
+  try{
+    window._cbBriefingSpeakSnapshot={
+      kind:'overall',
+      title:`${tn.name} 대회 브리핑`,
+      totalLabel:String(nm.length), doneLabel:String(nmDone.length), pct,
+      headline:mvp?`MVP ${mvp.name}`:'',
+      mvp:mvp?{name:mvp.name,w:mvp.w,l:mvp.l,rate:mvp.rate}:null,
+      champ:'',
+      winTop:allPs.slice().sort((a,b)=>b.w-a.w||b.rate-a.rate).slice(0,5).map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate}))
+    };
+  }catch(e){}
+
+  return _cbShell('Competition Briefing',`${tn.name} 대회 브리핑`,
+    `아직 조별리그·대진표 기록은 없지만, 일반 탭에 입력된 ${nm.length}경기 중 ${nmDone.length}경기를 기준으로 브리핑을 정리했습니다.`,
+    '핵심 지표',mvp?`MVP 후보 ${_cbEsc(mvp.name)} (${mvp.w}승)`:'집계 중',
+    [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 선수',`${allPs.length}명`],['기준','일반 탭']],
+    body,tn);
+}
+
 function rCompOverallBriefing(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   const lg=_cbLeagueMatches(tn);
@@ -515,9 +896,14 @@ function rCompOverallBriefing(tn){
   const setTotal=all.filter(m=>m.done).reduce((s,m)=>s+(m.sa||0)+(m.sb||0),0);
 
   if(!all.length){
+    const nmPrepped=(Array.isArray(tn.normalMatches)?tn.normalMatches:[]).map(m=>({...m,done:(m.sa!=null&&m.sb!=null)}));
+    const nmDone=nmPrepped.filter(m=>m.done);
+    if(nmDone.length){
+      return _cbOverallFromNormalOnly(tn,nmPrepped,nmDone);
+    }
     return _cbShell('Competition Briefing',`${tn.name} 대회 브리핑`,'아직 등록된 경기가 없습니다.','핵심 지표','조별리그와 대진표 기록이 쌓이면 종합 브리핑이 생성됩니다.',
       [['경기','0'],['완료','0'],['진행률','0%'],['우승팀','미정']],
-      _cbEmpty('경기 결과를 입력하면 종합 브리핑이 채워집니다.'));
+      _cbEmpty('경기 결과를 입력하면 종합 브리핑이 채워집니다.'),tn);
   }
 
   let body='';
@@ -540,7 +926,7 @@ function rCompOverallBriefing(tn){
     ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
     ['참가 선수',`${allPs.length}명`,`누적 ${setTotal}세트`]
   ]);
-  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'#16a34a':'var(--b2w-accent,#2563eb)')}</div>`;
+  body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':'var(--b2w-accent,#2563eb)')}</div>`;
 
   /* ── 대회 MVP (다승 + 대진표 가중 + 승률) ── */
   const mvpCands=allPs.slice().map(p=>({...p,score:p.w*10+p.bkW*6+p.rate*0.4+(champ&&p.univ===champ?12:0)}))
@@ -672,11 +1058,24 @@ function rCompOverallBriefing(tn){
       }).join('')}
     </div>`:_cbEmpty('대진표 기록이 없습니다.'));
 
+  /* 음성듣기(TTS)용 스냅샷 */
+  try{
+    const topWinAll = allPs.slice().sort((a,b)=>b.w-a.w||b.rate-a.rate).slice(0,5);
+    window._cbBriefingSpeakSnapshot={
+      kind:'overall',
+      title:`${tn.name} 대회 브리핑`,
+      totalLabel:String(all.length), doneLabel:String(done), pct,
+      headline:champ?`${champ} 우승${mvp?`, MVP ${mvp.name}`:''}`:'',
+      mvp:mvp?{name:mvp.name,w:mvp.w,l:mvp.l,rate:mvp.rate}:null,
+      champ:champ||'',
+      winTop:topWinAll.map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate}))
+    };
+  }catch(e){}
   return _cbShell('Competition Briefing',`${tn.name} 대회 브리핑`,
     `조별리그와 대진표를 합쳐 ${all.length}경기 중 ${done}경기가 기록됐습니다. 대회 전체 흐름을 종합해 정리했습니다.`,
     '핵심 지표',champ?`🏆 ${_cbEsc(champ)} 우승${mvp?` · MVP ${_cbEsc(mvp.name)}`:''}`:(mvp?`MVP 후보 ${_cbEsc(mvp.name)} (${mvp.w}승)`:'집계 중'),
     [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 선수',`${allPs.length}명`],['우승팀',champ?_cbEsc(champ):'미정']],
-    body);
+    body,tn);
 }
 
 try{

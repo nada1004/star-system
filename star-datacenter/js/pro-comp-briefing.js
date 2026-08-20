@@ -29,27 +29,34 @@ function _pcbIndivMatches(tn){
     });
   });
 
-  const _stageOrder=['64강','32강','16강','8강','4강','결승'];
-  let _hasStageItems=false;
+  /* (버그픽스, 2026-08-20) 라운드별 독립 폴백으로 변경.
+     기존엔 tn.stageRecords에 단 하나의 라운드라도 항목이 있으면(_hasStageItems=true)
+     레거시 tn.bracket 전체를 통째로 무시했다. 그 결과 일부 라운드(예: 결승)만 예전
+     대진표 UI로 입력되고 나머지 라운드가 새 "대진표 기록" 시스템으로 입력된 대회에서는,
+     레거시로 입력된 라운드의 경기가 통계 집계에서 통째로 빠져 선수 승패 총합이
+     실제보다 적게 나오는 문제가 있었다(우승자 개인 기록이 조별리그+대진표 전체가
+     아니라 일부만 반영되는 것처럼 보이는 원인). 이제 라운드 단위로 병합한다:
+     stageRecords에 항목이 있는 라운드는 그것을 쓰고, 없는(또는 비어있는) 라운드만
+     레거시 tn.bracket에서 보완한다 — 두 시스템이 라운드별로 섞여 있어도 누락 없다. */
+  const usedRoundLabels=new Set();
   if(tn.stageRecords){
-    _stageOrder.forEach(r=>{
-      (tn.stageRecords[r]||[]).forEach(m=>{
-        if(!m||!m.a||!m.b) return;
-        _hasStageItems=true;
-        out.push({...m,phase:'대진표',phaseTag:r,rLabel:r,done:!!m.winner});
-      });
+    Object.keys(tn.stageRecords).forEach(r=>{
+      const list=Array.isArray(tn.stageRecords[r])?tn.stageRecords[r].filter(m=>m&&m.a&&m.b):[];
+      if(!list.length) return;
+      usedRoundLabels.add(r);
+      list.forEach(m=>out.push({...m,phase:'대진표',phaseTag:r,rLabel:r,done:!!m.winner}));
     });
   }
-  if(!_hasStageItems){
-    const totalRounds=(tn.bracket||[]).length;
-    (tn.bracket||[]).forEach((rnd,ri)=>{
-      const rLabel=ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,Math.max(1,totalRounds-ri))}강`;
-      (rnd||[]).forEach(m=>{
-        if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
-        out.push({...m,phase:'대진표',phaseTag:rLabel,rLabel,done:!!m.winner});
-      });
+  const _bktRounds=Array.isArray(tn.bracket)?tn.bracket:[];
+  const _bktTotalRounds=_bktRounds.length;
+  _bktRounds.forEach((rnd,ri)=>{
+    const rLabel=ri===_bktTotalRounds-1?'결승':ri===_bktTotalRounds-2?'4강':ri===_bktTotalRounds-3?'8강':`${Math.pow(2,Math.max(1,_bktTotalRounds-ri))}강`;
+    if(usedRoundLabels.has(rLabel)) return; // 이 라운드는 stageRecords로 이미 채워짐
+    (rnd||[]).forEach(m=>{
+      if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
+      out.push({...m,phase:'대진표',phaseTag:rLabel,rLabel,done:!!m.winner});
     });
-  }
+  });
   if(tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD'){
     out.push({...tn.thirdPlace,phase:'3위전',phaseTag:'3위전',rLabel:'3위전',done:!!tn.thirdPlace.winner});
   }
@@ -87,6 +94,42 @@ function _pcbGjMatches(tn){
 
 function _pcbUniv(name){
   try{ const p=(typeof players!=='undefined'?players:[]).find(x=>x.name===name); return p?(p.univ||''):''; }catch(e){ return ''; }
+}
+
+/* 대회 우승자 — 반드시 "결승에서 이긴 사람"만 인정한다(순위 기반 추정 금지).
+   1순위: tn.stageRecords['결승']에 기록된, 완료된(a/b/winner 모두 있는) 마지막 경기의 승자.
+   2순위(레거시 폴백): tn.bracket 마지막 라운드의 첫 번째 경기 승자 — 대진표 화면의
+   "FINAL CHAMPION" 배너(_pcBracketMeta, pro-comp-bracket.js)가 쓰는 것과 동일한 소스라
+   항상 실제 결승 결과와 일치한다. 두 경로 모두 없으면 우승자 없음(null) — 순위 등으로
+   대체 추정하지 않는다(순위 1위가 결승 승자가 아닐 수 있으므로). */
+function _pcbChampion(tn){
+  if(!tn) return null;
+  const build=(f)=>{
+    const winName=f.winner==='A'?f.a:f.b;
+    if(!winName) return null;
+    const loseName=f.winner==='A'?f.b:f.a;
+    const games=Array.isArray(f._games)?f._games:[];
+    const scoreWin=games.filter(g=>g&&g.winner===f.winner).length;
+    const scoreLose=games.filter(g=>g&&g.winner&&g.winner!==f.winner).length;
+    return {
+      name:winName,univ:_pcbUniv(winName),
+      opponent:loseName||'',opponentUniv:loseName?_pcbUniv(loseName):'',
+      score:(scoreWin+scoreLose>0)?`${scoreWin}:${scoreLose}`:''
+    };
+  };
+  const stageFinal=Array.isArray(tn.stageRecords&&tn.stageRecords['결승'])?tn.stageRecords['결승']:[];
+  const doneStageFinal=stageFinal.filter(m=>m&&m.a&&m.b&&m.winner);
+  if(doneStageFinal.length){
+    const info=build(doneStageFinal[doneStageFinal.length-1]);
+    if(info) return info;
+  }
+  const rounds=Array.isArray(tn.bracket)?tn.bracket:[];
+  const finalMatch=(rounds[rounds.length-1]||[])[0];
+  if(finalMatch&&finalMatch.a&&finalMatch.b&&finalMatch.winner){
+    const info=build(finalMatch);
+    if(info) return info;
+  }
+  return null;
 }
 
 /* ── 집계 ── */
@@ -206,11 +249,35 @@ function _pcbRankList(rows,dark){
   }).join('')}</div>`;
 }
 
+/* 대회 우승 — 결승전 승자를 별도의 큰 히어로 카드로 강조 표시 (대회 MVP 카드보다 크게).
+   결승 상대·스코어 정보까지 채워 카드 내용 밀도를 MVP 카드(순위 리스트로 꽉 참)와
+   맞춰서, 사진만 있고 휑해 보이지 않도록 한다. */
+function _pcbChampionHeroHTML(champion,champStat){
+  if(!champion) return '';
+  const cCol=_cbUcolVivid(champion.univ);
+  const oCol=champion.opponentUniv?_cbUcolVivid(champion.opponentUniv):'#c4b5fd';
+  const isMobile=(typeof window!=='undefined'&&window.innerWidth<640);
+  return `<div class="pcb-champion-hero">
+    <span class="pcb-champion-hero-avatar">${_cbPlayerAvatar(champion.name,isMobile?104:150)}</span>
+    <div class="pcb-champion-hero-side">
+      <div class="pcb-champion-hero-ribbon">🏆 TOURNAMENT CHAMPION</div>
+      <div class="pcb-champion-hero-name" style="color:${cCol}">${_cbEsc(champion.name)}</div>
+      <div class="pcb-champion-hero-meta">${champion.univ?_cbTeamChip(champion.univ,'',cCol):''}${champStat?`<span>${champStat.w}승 ${champStat.l}패 · 승률 ${champStat.rate}%</span>`:''}</div>
+      ${champion.opponent?`<div class="pcb-champion-hero-final">
+        <span class="pcb-champion-hero-final-label">⚔️ 결승 상대</span>
+        <span class="pcb-champion-hero-final-opp" style="color:${oCol}">${_cbEsc(champion.opponent)}</span>
+        ${champion.score?`<span class="pcb-champion-hero-final-score">${_cbEsc(champion.score)}</span>`:''}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
 function _pcbMvpHTML(mvpTop,mvpCands){
   if(!mvpTop) return '';
   const mCol=_cbUcolVivid(mvpTop.univ);
+  const isMobile=(typeof window!=='undefined'&&window.innerWidth<640);
   return `<div class="pcb-mvp">
-    <span style="position:relative;display:inline-flex;flex-shrink:0">${_cbPlayerAvatar(mvpTop.name,(typeof window!=='undefined'&&window.innerWidth<640)?104:150)}</span>
+    <span style="position:relative;display:inline-flex;flex-shrink:0">${_cbPlayerAvatar(mvpTop.name,isMobile?104:150)}</span>
     <div class="pcb-mvp-side">
       <div class="pcb-mvp-ribbon">🏆 Tournament MVP</div>
       <div class="pcb-mvp-name" style="color:${mCol}">${_cbEsc(mvpTop.name)}</div>
@@ -313,6 +380,8 @@ function rProCompBriefing(tn){
   const mvpCands=playerStats.map(p=>({...p,score:p.w*10+p.gjW*8+p.rate*0.4+(lead&&p.univ===lead.u?12:0)}))
     .sort((a,b)=>b.score-a.score);
   const mvpTop=mvpCands[0]||null;
+  const champion=_pcbChampion(tn);
+  const champStat=champion?(playerStats.find(p=>p.name===champion.name)||null):null;
 
   // 다음 라운드 예고
   const upcoming=_pcbUpcomingBktMatches(tn).slice(0,5);
@@ -329,6 +398,7 @@ function rProCompBriefing(tn){
       winTop:winTop.map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate})),
       rateTop:rateTop.map(p=>({name:p.name,w:p.w,l:p.l,rate:p.rate})),
       mvp:mvpTop?{name:mvpTop.name,w:mvpTop.w,l:mvpTop.l,rate:mvpTop.rate,gjW:mvpTop.gjW}:null,
+      champion:champion?{name:champion.name,w:champStat?champStat.w:null,l:champStat?champStat.l:null}:null,
       upcoming:upcoming.map(m=>({a:m.a,b:m.b,rLabel:m.rLabel}))
     };
   }catch(e){}
@@ -344,8 +414,11 @@ function rProCompBriefing(tn){
     }))))}</div>
   </div>`;
 
-  if(mvpTop){
-    body+=_pcbSection('대회 MVP','다승 · 중장전 기여 · 승률 종합',_pcbMvpHTML(mvpTop,mvpCands));
+  if(champion||mvpTop){
+    body+=`<div class="pcb-champ-mvp-row">
+      ${champion?_pcbSection('대회 우승','결승전 승자',_pcbChampionHeroHTML(champion,champStat)):''}
+      ${mvpTop?_pcbSection('대회 MVP','다승 · 중장전 기여 · 승률 종합',_pcbMvpHTML(mvpTop,mvpCands)):''}
+    </div>`;
   }
 
   body+=_pcbSection('최근 경기 결과','조별리그·대진표·팀전·중장전 최신 기록',

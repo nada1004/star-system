@@ -14,6 +14,8 @@ function _pcbBriefingBuildSpeakQueue(){
 
   if (d.headline) q.push({text:d.headline});
 
+  if (d.champion) q.push({text:`이번 대회 우승자는 ${d.champion.name}입니다.`});
+
   if (Array.isArray(d.winTop) && d.winTop.length) {
     q.push({text:`개인 다승 순위입니다.`});
     d.winTop.forEach((p,i) => {
