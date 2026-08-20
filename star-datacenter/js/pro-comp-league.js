@@ -178,6 +178,7 @@ function rProComp(C, T) {
       {id:'tourmatch', lbl:'📋 대진표 기록'},
       {id:'team', lbl:'🤝 팀전'},
       {id:'gj', lbl:'🔥 중장전'},
+      {id:'brief', lbl:'📰 브리핑'},
       {id:'stats', lbl:'📈 통계'},
       ...(_li?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
@@ -210,6 +211,7 @@ function rProComp(C, T) {
     else if (proCompSub === 'tourmatch') h += proCompTourMatchInput(tn);
     else if (proCompSub === 'team') h += proCompTeamSection(tn);
     else if (proCompSub === 'gj') h += proCompGJSection(tn);
+    else if (proCompSub === 'brief') h += (typeof rProCompBriefing==='function' ? rProCompBriefing(tn) : '');
     else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
     else if (proCompSub === 'grpedit') h += proCompGrpEdit();
     

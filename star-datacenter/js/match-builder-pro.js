@@ -22,18 +22,20 @@ function rPro(C,T){
   const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
-    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
+    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`},
+    {id:'brief',lbl:'📰 브리핑',fn:`proSub='brief';render()`}
   ]) : [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
-    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
+    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`},
+    {id:'brief',lbl:'📰 브리핑',fn:`proSub='brief';render()`}
   ];
   let h='';
   // (신규기능) 기본/미니 기본/그리드/컴팩트 테이블형 보기모드 지원
   // (대전기록 탭〉프로리그 서브탭과 동일한 'pro' 상태를 공유해 두 화면에서 같은 보기모드가 유지됨)
   // (요청사항) 보기모드 버튼은 "최신순/오래된순" 바로 우측(같은 줄)에 이어붙이되,
   // 날짜필터/정렬/보기모드 세 그룹이 한눈에 구분되도록 구분선(hist-inline-sep)으로 나눈다
-  const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
+  const extra = (proSub!=='input' && proSub!=='brief' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('pro', true)
       + `<span class="hist-inline-sep"></span>`
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
@@ -46,6 +48,8 @@ function rPro(C,T){
     h+=buildProInputHTML();
   } else if(proSub==='rank'){
     h+=proRankHTML();
+  } else if(proSub==='brief'){
+    h+=(typeof rProLeagueBriefing==='function' ? rProLeagueBriefing() : '');
   } else {
     // 보기모드 버튼줄은 위 _buildMatchSubtabShell에서 이미 별도 줄로 붙였으므로 suppressBar로 중복 방지
     h += (typeof histTabWithViewModes==='function')

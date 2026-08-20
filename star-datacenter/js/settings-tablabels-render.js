@@ -78,7 +78,7 @@
         {id:'input', d:'📝 경기 입력'}, {id:'rank', d:'🏆 순위'}, {id:'records', d:'📋 기록'},
       ]},
       { title:'🏅 프로리그 하위메뉴', ctx:'pro', items:[
-        {id:'input', d:'📝 경기 입력'}, {id:'rank', d:'🏆 순위'}, {id:'records', d:'📋 기록'},
+        {id:'input', d:'📝 경기 입력'}, {id:'rank', d:'🏆 순위'}, {id:'records', d:'📋 기록'}, {id:'brief', d:'📰 브리핑'},
       ]},
       { title:'🎖️ 일반 대회 하위메뉴', ctx:'comp', items:[
         {id:'league', d:'📅 조별리그 일정'}, {id:'grprank', d:'📊 조별 순위'}, {id:'tour', d:'🗂️ 대진표'},
