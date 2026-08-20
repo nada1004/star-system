@@ -1891,34 +1891,34 @@
    색상(univ색 등)은 JS에서 inline style로 직접 주입 — 기존 _cb*
    헬퍼와 동일한 패턴을 따른다.
    ══════════════════════════════════════════════════════════════ */
-.plb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#0a1226; }
+.plb-wrap{ --plb-bg1:#0a1226; --plb-bg2:#070c1a; --plb-bg3:#0f1a34; --plb-bg4:#0c1730; --plb-bg5:#111d3d; --plb-bg6:#152449; --plb-bg7:#122043; --plb-ticker-bg:#060a16; --plb-accent:#38bdf8; --plb-accent-rgb:56,189,248; --plb-accent2:#818cf8; --plb-gold:#fbbf24; --plb-gold-rgb:251,191,36; --plb-live:#f43f5e; --plb-tagbg:#2c4a86; --plb-ink-soft:#94a3b8; --plb-ink-mute:#64748b; --plb-ink-accsoft:#7dd3fc; --plb-ink-mute2:#7e93b8; --plb-ink-mute3:#8ea3c9; --plb-ticker-txt:#93c5fd; font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:var(--plb-bg1); }
 
-.plb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#060a16; position:relative; overflow:hidden; }
-.plb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#f43f5e; box-shadow:0 0 8px #f43f5e; flex-shrink:0; animation:plbPulse 1.6s ease-in-out infinite; }
+.plb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:var(--plb-ticker-bg); position:relative; overflow:hidden; }
+.plb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:var(--plb-live); box-shadow:0 0 8px var(--plb-live); flex-shrink:0; animation:plbPulse 1.6s ease-in-out infinite; }
 @keyframes plbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
-.plb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#93c5fd; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:var(--plb-ticker-txt); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .plb-ticker-teams{ margin-left:auto; display:flex; align-items:center; gap:12px; overflow:hidden; }
 .plb-ticker-team{ display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; color:#e2e8f0; white-space:nowrap; flex-shrink:0; }
 .plb-ticker-team i{ width:7px; height:7px; border-radius:2px; flex-shrink:0; }
 
 .plb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
   background:
-    radial-gradient(circle at 12% 15%, rgba(56,189,248,.20), transparent 42%),
-    radial-gradient(circle at 88% 85%, rgba(251,191,36,.14), transparent 48%),
-    linear-gradient(155deg,#0f1a34 0%,#070c1a 100%);
+    radial-gradient(circle at 12% 15%, rgba(var(--plb-accent-rgb),.20), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(var(--plb-gold-rgb),.14), transparent 48%),
+    linear-gradient(155deg,var(--plb-bg3) 0%,var(--plb-bg2) 100%);
 }
 .plb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
-  background:linear-gradient(115deg,transparent 42%,rgba(56,189,248,.09) 42%,rgba(56,189,248,.09) 46%,transparent 46%,transparent 62%,rgba(251,191,36,.07) 62%,rgba(251,191,36,.07) 66%,transparent 66%);
+  background:linear-gradient(115deg,transparent 42%,rgba(var(--plb-accent-rgb),.09) 42%,rgba(var(--plb-accent-rgb),.09) 46%,transparent 46%,transparent 62%,rgba(var(--plb-gold-rgb),.07) 62%,rgba(var(--plb-gold-rgb),.07) 66%,transparent 66%);
   pointer-events:none; }
-.plb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#070c1a; text-transform:uppercase; background:#38bdf8; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(56,189,248,.35); }
+.plb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:var(--plb-bg2); text-transform:uppercase; background:var(--plb-accent); padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(var(--plb-accent-rgb),.35); }
 .plb-hero-title{ position:relative; margin-top:14px; font-size:clamp(21px,4vw,30px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.2; }
-.plb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#94a3b8; max-width:64ch; line-height:1.5; }
+.plb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:var(--plb-ink-soft); max-width:64ch; line-height:1.5; }
 .plb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#e2e8f0; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); padding:7px 14px; border-radius:99px; }
-.plb-hero-headline b{ color:#fbbf24; }
-.plb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#fbbf24; flex-shrink:0; }
+.plb-hero-headline b{ color:var(--plb-gold); }
+.plb-hero-dot{ width:6px; height:6px; border-radius:99px; background:var(--plb-gold); flex-shrink:0; }
 
-.plb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#111d3d; border-top:1px solid rgba(255,255,255,.08); }
-.plb-period-label{ font-size:11.5px; font-weight:800; color:#7dd3fc; flex-shrink:0; }
+.plb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:var(--plb-bg5); border-top:1px solid rgba(255,255,255,.08); }
+.plb-period-label{ font-size:11.5px; font-weight:800; color:var(--plb-ink-accsoft); flex-shrink:0; }
 .plb-wrap .plb-period-bar .ym-filter-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .plb-wrap .plb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:#cbd5e1; }
 .plb-wrap .plb-period-bar .ym-sel{ font-size:11.5px !important; font-weight:700; padding:5px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.08) !important; color:#fff !important; }
@@ -1927,28 +1927,28 @@
    적용되면 흰 배경 위에 흰 글자가 되어 "2026년" 등이 안 보이는 문제가 있었음
    → 옵션 목록만 어두운 글자색으로 명시 */
 .plb-wrap .plb-period-bar .ym-sel option{ color:#0f172a; background:#fff; }
-.plb-period-reset{ font-size:11px; font-weight:800; color:#070c1a; background:#fbbf24; border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+.plb-period-reset{ font-size:11px; font-weight:800; color:var(--plb-bg2); background:var(--plb-gold); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
 .plb-period-reset:hover{ filter:brightness(1.06); }
 
 .plb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
-.plb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#152449,#0f1a34); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.plb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,var(--plb-bg6),var(--plb-bg3)); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
 .plb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
-.plb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#8ea3c9; text-transform:uppercase; }
+.plb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:var(--plb-ink-mute3); text-transform:uppercase; }
 .plb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
-.plb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#64748b; }
+.plb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:var(--plb-ink-mute); }
 
 /* 진행률+TTS 통합 패널 — 어두운 배경을 명시해 kpi-grid(다크 네이비)와 이어지도록 하고,
    흰 글자 캡션/버튼이 밝은 바깥 배경에 묻히지 않게 함 */
 .plb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
-  background:linear-gradient(155deg,#122043,#0c1730); border:1px solid rgba(255,255,255,.08); }
+  background:linear-gradient(155deg,var(--plb-bg7),var(--plb-bg4)); border:1px solid rgba(255,255,255,.08); }
 .plb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
 .plb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#e2e8f0; }
 .plb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
-.plb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#38bdf8,#818cf8); box-shadow:0 0 12px rgba(56,189,248,.45); transition:.4s; }
-.plb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#8ea3c9; }
+.plb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--plb-accent),var(--plb-accent2)); box-shadow:0 0 12px rgba(var(--plb-accent-rgb),.45); transition:.4s; }
+.plb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--plb-ink-mute3); }
 
-.plb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(56,189,248,.16); border:1px solid rgba(56,189,248,.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
-.plb-speak-btn:hover{ background:rgba(56,189,248,.28); }
+.plb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(var(--plb-accent-rgb),.16); border:1px solid rgba(var(--plb-accent-rgb),.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.plb-speak-btn:hover{ background:rgba(var(--plb-accent-rgb),.28); }
 
 /* 카드 하단 본문 — 예전엔 밝은 배경(라이트: 흰색 / 다크모드: --card)으로
    상단 히어로 배너와 톤이 끊기고, 다크모드 전환 시에도 자식 요소들이
@@ -1956,14 +1956,14 @@
    일부는 누락되는 문제가 있었음 → 테마와 무관하게 히어로와 이어지는
    다크 네이비 스코어보드 톤으로 고정해, 라이트/다크모드 어디서든 항상
    동일하게(그리고 배너와 한 몸처럼) 보이도록 함. */
-.plb-body{ background:linear-gradient(180deg,#0c1730 0%,#0a1226 100%); padding:28px 22px 32px; }
+.plb-body{ background:linear-gradient(180deg,var(--plb-bg4) 0%,var(--plb-bg1) 100%); padding:28px 22px 32px; }
 
 .plb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
 .plb-section{ margin-bottom:28px; }
 .plb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
 .plb-section-title{ font-size:14.5px; font-weight:900; color:#f1f5f9; white-space:nowrap; display:flex; align-items:center; }
-.plb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#38bdf8; transform:rotate(45deg); flex-shrink:0; }
-.plb-section-sub{ font-size:11px; font-weight:700; color:#7e93b8; }
+.plb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:var(--plb-accent); transform:rotate(45deg); flex-shrink:0; }
+.plb-section-sub{ font-size:11px; font-weight:700; color:var(--plb-ink-mute2); }
 
 .plb-rank-list{ display:flex; flex-direction:column; gap:7px; }
 .plb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
@@ -1971,32 +1971,32 @@
 .plb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
 .plb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
 .plb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
-.plb-rank-sub{ font-size:10.5px; font-weight:700; color:#94a3b8; white-space:nowrap; }
+.plb-rank-sub{ font-size:10.5px; font-weight:700; color:var(--plb-ink-soft); white-space:nowrap; }
 .plb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
 
 .plb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
-.plb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:#2c4a86; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
-.plb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#94a3b8; }
+.plb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:var(--plb-tagbg); padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.plb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:var(--plb-ink-soft); }
 .plb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
 
-.plb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#0f1a34,#152449); position:relative; overflow:hidden; }
-.plb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(251,191,36,.22),transparent 55%); pointer-events:none; }
+.plb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,var(--plb-bg3),var(--plb-bg6)); position:relative; overflow:hidden; }
+.plb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(var(--plb-gold-rgb),.22),transparent 55%); pointer-events:none; }
 .plb-mvp-side{ position:relative; flex:1; min-width:180px; }
-.plb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#fbbf24; text-transform:uppercase; }
+.plb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--plb-gold); text-transform:uppercase; }
 .plb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
 .plb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#cbd5e1; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .plb-mvp-cands{ position:relative; min-width:190px; }
 .plb-mvp-cands .plb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
 .plb-mvp-cands .plb-rank-name,.plb-mvp-cands .plb-rank-value{ color:#fff; }
-.plb-mvp-cands .plb-rank-sub{ color:#94a3b8; }
+.plb-mvp-cands .plb-rank-sub{ color:var(--plb-ink-soft); }
 
 .plb-map-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
 .plb-map-name{ font-size:12.5px; font-weight:800; min-width:120px; color:#e2e8f0; }
 .plb-map-track{ flex:1; height:8px; background:rgba(255,255,255,.10); border-radius:4px; overflow:hidden; }
-.plb-map-fill{ height:100%; background:linear-gradient(90deg,#38bdf8,#818cf8); border-radius:4px; }
-.plb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:#94a3b8; }
+.plb-map-fill{ height:100%; background:linear-gradient(90deg,var(--plb-accent),var(--plb-accent2)); border-radius:4px; }
+.plb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:var(--plb-ink-soft); }
 
-.plb-empty{ padding:30px; text-align:center; color:#94a3b8; font-size:13px; font-weight:600; }
+.plb-empty{ padding:30px; text-align:center; color:var(--plb-ink-soft); font-size:13px; font-weight:600; }
 
 @media (max-width:640px){
   .plb-hero{ padding:20px 16px 24px; }
@@ -2008,61 +2008,96 @@
   .plb-mvp{ padding:15px; }
 }
 
+/* ── 프로리그 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plb_briefing_theme)
+   classic(기본)은 위 .plb-wrap 기본 토큰(다크 네이비+시안/골드)을 그대로 사용 ── */
+.plb-wrap[data-theme="crimson"]{
+  --plb-bg1:#1a0e0e; --plb-bg2:#0f0707; --plb-bg3:#2a1414; --plb-bg4:#1f0f0f; --plb-bg5:#331616;
+  --plb-bg6:#3d1a1a; --plb-bg7:#2c1212; --plb-ticker-bg:#0a0505;
+  --plb-accent:#ef4444; --plb-accent-rgb:239,68,68; --plb-accent2:#f8fafc;
+  --plb-gold:#fbbf24; --plb-gold-rgb:251,191,36; --plb-live:#f43f5e; --plb-tagbg:#7a2222;
+  --plb-ink-soft:#e2b8b8; --plb-ink-mute:#a86868; --plb-ink-accsoft:#fca5a5;
+  --plb-ink-mute2:#c98f8f; --plb-ink-mute3:#d9a3a3; --plb-ticker-txt:#fca5a5;
+}
+.plb-wrap[data-theme="emerald"]{
+  --plb-bg1:#08160f; --plb-bg2:#05100a; --plb-bg3:#0e2a1c; --plb-bg4:#0a2015; --plb-bg5:#0f3322;
+  --plb-bg6:#123d28; --plb-bg7:#0d2c1d; --plb-ticker-bg:#040c08;
+  --plb-accent:#22c55e; --plb-accent-rgb:34,197,94; --plb-accent2:#a3e635;
+  --plb-gold:#facc15; --plb-gold-rgb:250,204,21; --plb-live:#f43f5e; --plb-tagbg:#1e5c3a;
+  --plb-ink-soft:#a7d8bb; --plb-ink-mute:#5f9c78; --plb-ink-accsoft:#86efac;
+  --plb-ink-mute2:#79b596; --plb-ink-mute3:#8fc7a5; --plb-ticker-txt:#86efac;
+}
+.plb-wrap[data-theme="violet"]{
+  --plb-bg1:#150c26; --plb-bg2:#0d0718; --plb-bg3:#241040; --plb-bg4:#180c30; --plb-bg5:#2c1450;
+  --plb-bg6:#33175c; --plb-bg7:#26113f; --plb-ticker-bg:#0a0616;
+  --plb-accent:#c026d3; --plb-accent-rgb:192,38,211; --plb-accent2:#22d3ee;
+  --plb-gold:#f0abfc; --plb-gold-rgb:240,171,252; --plb-live:#f43f5e; --plb-tagbg:#5b2470;
+  --plb-ink-soft:#d8b4e2; --plb-ink-mute:#8c67a3; --plb-ink-accsoft:#e9a8f5;
+  --plb-ink-mute2:#a688b8; --plb-ink-mute3:#bb9cc8; --plb-ticker-txt:#f0abfc;
+}
+.plb-wrap[data-theme="mono"]{
+  --plb-bg1:#0a0a0a; --plb-bg2:#050505; --plb-bg3:#161616; --plb-bg4:#0f0f0f; --plb-bg5:#1c1c1c;
+  --plb-bg6:#222222; --plb-bg7:#181818; --plb-ticker-bg:#000000;
+  --plb-accent:#e5e7eb; --plb-accent-rgb:229,231,235; --plb-accent2:#9ca3af;
+  --plb-gold:#f5f5f4; --plb-gold-rgb:245,245,244; --plb-live:#ef4444; --plb-tagbg:#3f3f46;
+  --plb-ink-soft:#a1a1aa; --plb-ink-mute:#6b7280; --plb-ink-accsoft:#d4d4d8;
+  --plb-ink-mute2:#8a8a94; --plb-ink-mute3:#9d9da5; --plb-ticker-txt:#d4d4d8;
+}
+
 /* ══════════════════════════════════════════════════════════════
    프로리그 "대회" 브리핑(pcb-*, 2026-08-20 신규) — 조별리그/대진표/팀전/
    중장전 4개 소스를 종합하는 토너먼트 전용 브리핑. 프로리그(일반) 브리핑의
    plb-* 스코어보드 톤(다크 네이비 + 시안/골드)과 톤을 맞추되, "대회·트로피"
    느낌을 살려 딥퍼플 + 골드 포인트로 차별화한 전용 디자인.
    ══════════════════════════════════════════════════════════════ */
-.pcb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#150c26; }
+.pcb-wrap{ --pcb-bg1:#150c26; --pcb-bg2:#0a0714; --pcb-bg3:#2b1055; --pcb-bg4:#1a1030; --pcb-bg5:#1d0f38; --pcb-bg6:#2b1a4d; --pcb-bg6b:#1d1236; --pcb-bg7:#291849; --pcb-bg7b:#190f2e; --pcb-champ-bg1:#3d2410; --pcb-bg3b:#150826; --pcb-accent:#a855f7; --pcb-accent-rgb:168,85,247; --pcb-accent2:#7c3aed; --pcb-gold:#fbbf24; --pcb-gold-rgb:251,191,36; --pcb-gold-a80:#fbbf24cc; --pcb-gold-soft:#ffe8b8; --pcb-ink-soft:#c4b5fd; --pcb-ink-mute:#8b7aa8; --pcb-ink-mute2:#a390c4; --pcb-ink-accsoft:#d8b4fe; --pcb-ink-accsoft2:#e9d5ff; --pcb-ink-bright:#f3e8ff; --pcb-ink-bright2:#f5f0ff; font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:var(--pcb-bg1); }
 
-.pcb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#0a0714; position:relative; overflow:hidden; }
-.pcb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#fbbf24; box-shadow:0 0 8px #fbbf24; flex-shrink:0; animation:pcbPulse 1.6s ease-in-out infinite; }
+.pcb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:var(--pcb-bg2); position:relative; overflow:hidden; }
+.pcb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:var(--pcb-gold); box-shadow:0 0 8px var(--pcb-gold); flex-shrink:0; animation:pcbPulse 1.6s ease-in-out infinite; }
 @keyframes pcbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
-.pcb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#d8b4fe; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pcb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:var(--pcb-ink-accsoft); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .pcb-ticker-src{ margin-left:auto; display:flex; align-items:center; gap:10px; overflow:hidden; }
-.pcb-ticker-src span{ font-size:10.5px; font-weight:800; color:#e9d5ff; white-space:nowrap; flex-shrink:0; }
-.pcb-ticker-src b{ color:#fbbf24; }
+.pcb-ticker-src span{ font-size:10.5px; font-weight:800; color:var(--pcb-ink-accsoft2); white-space:nowrap; flex-shrink:0; }
+.pcb-ticker-src b{ color:var(--pcb-gold); }
 
 .pcb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
   background:
-    radial-gradient(circle at 12% 12%, rgba(251,191,36,.16), transparent 42%),
-    radial-gradient(circle at 90% 88%, rgba(168,85,247,.28), transparent 50%),
-    linear-gradient(155deg,#2b1055 0%,#150826 100%);
+    radial-gradient(circle at 12% 12%, rgba(var(--pcb-gold-rgb),.16), transparent 42%),
+    radial-gradient(circle at 90% 88%, rgba(var(--pcb-accent-rgb),.28), transparent 50%),
+    linear-gradient(155deg,var(--pcb-bg3) 0%,var(--pcb-bg3b) 100%);
 }
 .pcb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
-  background:linear-gradient(115deg,transparent 42%,rgba(251,191,36,.08) 42%,rgba(251,191,36,.08) 46%,transparent 46%,transparent 62%,rgba(168,85,247,.12) 62%,rgba(168,85,247,.12) 66%,transparent 66%);
+  background:linear-gradient(115deg,transparent 42%,rgba(var(--pcb-gold-rgb),.08) 42%,rgba(var(--pcb-gold-rgb),.08) 46%,transparent 46%,transparent 62%,rgba(var(--pcb-accent-rgb),.12) 62%,rgba(var(--pcb-accent-rgb),.12) 66%,transparent 66%);
   pointer-events:none; }
-.pcb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#2b1055; text-transform:uppercase; background:#fbbf24; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(251,191,36,.35); }
+.pcb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:var(--pcb-bg3); text-transform:uppercase; background:var(--pcb-gold); padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(var(--pcb-gold-rgb),.35); }
 .pcb-hero-title{ position:relative; margin-top:14px; font-size:clamp(20px,3.6vw,28px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.25; }
-.pcb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#c4b5fd; max-width:64ch; line-height:1.5; }
-.pcb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#f3e8ff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); padding:7px 14px; border-radius:99px; }
-.pcb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#fbbf24; flex-shrink:0; }
+.pcb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:var(--pcb-ink-soft); max-width:64ch; line-height:1.5; }
+.pcb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:var(--pcb-ink-bright); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); padding:7px 14px; border-radius:99px; }
+.pcb-hero-dot{ width:6px; height:6px; border-radius:99px; background:var(--pcb-gold); flex-shrink:0; }
 
-.pcb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#1d0f38; border-top:1px solid rgba(255,255,255,.08); }
-.pcb-period-label{ font-size:11.5px; font-weight:800; color:#d8b4fe; flex-shrink:0; }
+.pcb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:var(--pcb-bg5); border-top:1px solid rgba(255,255,255,.08); }
+.pcb-period-label{ font-size:11.5px; font-weight:800; color:var(--pcb-ink-accsoft); flex-shrink:0; }
 
 .pcb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
-.pcb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#2b1a4d,#1d1236); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.pcb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,var(--pcb-bg6),var(--pcb-bg6b)); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
 .pcb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
-.pcb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#c4b5fd; text-transform:uppercase; }
+.pcb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:var(--pcb-ink-soft); text-transform:uppercase; }
 .pcb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
-.pcb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#8b7aa8; }
+.pcb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:var(--pcb-ink-mute); }
 
 /* 진행률+TTS 통합 패널(pro-league와 동일 패턴) — 항상 다크 배경 명시로 흰 글자 가독성 확보 */
 .pcb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
-  background:linear-gradient(155deg,#291849,#190f2e); border:1px solid rgba(255,255,255,.08); }
+  background:linear-gradient(155deg,var(--pcb-bg7),var(--pcb-bg7b)); border:1px solid rgba(255,255,255,.08); }
 .pcb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-.pcb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#f3e8ff; }
+.pcb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:var(--pcb-ink-bright); }
 .pcb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
-.pcb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#a855f7,#fbbf24); box-shadow:0 0 12px rgba(168,85,247,.45); transition:.4s; }
-.pcb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#c4b5fd; }
-.pcb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(251,191,36,.16); border:1px solid rgba(251,191,36,.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
-.pcb-speak-btn:hover{ background:rgba(251,191,36,.28); }
+.pcb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--pcb-accent),var(--pcb-gold)); box-shadow:0 0 12px rgba(var(--pcb-accent-rgb),.45); transition:.4s; }
+.pcb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--pcb-ink-soft); }
+.pcb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(var(--pcb-gold-rgb),.16); border:1px solid rgba(var(--pcb-gold-rgb),.45); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.pcb-speak-btn:hover{ background:rgba(var(--pcb-gold-rgb),.28); }
 
 /* plb-body와 동일한 이유로 테마와 무관하게 히어로와 이어지는 딥퍼플
    스코어보드 톤으로 고정 (라이트/다크모드 모두 동일하게 보이도록) */
-.pcb-body{ background:linear-gradient(180deg,#1a1030 0%,#150c26 100%); padding:28px 22px 32px; }
+.pcb-body{ background:linear-gradient(180deg,var(--pcb-bg4) 0%,var(--pcb-bg1) 100%); padding:28px 22px 32px; }
 
 .pcb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
 .pcb-champ-mvp-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:18px; margin-bottom:28px; }
@@ -2071,9 +2106,9 @@
 .pcb-champ-mvp-row .pcb-mvp{ flex:1; }
 .pcb-section{ margin-bottom:28px; }
 .pcb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
-.pcb-section-title{ font-size:14.5px; font-weight:900; color:#f5f0ff; white-space:nowrap; display:flex; align-items:center; }
-.pcb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#a855f7; transform:rotate(45deg); flex-shrink:0; }
-.pcb-section-sub{ font-size:11px; font-weight:700; color:#a390c4; }
+.pcb-section-title{ font-size:14.5px; font-weight:900; color:var(--pcb-ink-bright2); white-space:nowrap; display:flex; align-items:center; }
+.pcb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:var(--pcb-accent); transform:rotate(45deg); flex-shrink:0; }
+.pcb-section-sub{ font-size:11px; font-weight:700; color:var(--pcb-ink-mute2); }
 
 .pcb-rank-list{ display:flex; flex-direction:column; gap:7px; }
 .pcb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
@@ -2081,52 +2116,52 @@
 .pcb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
 .pcb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
 .pcb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
-.pcb-rank-sub{ font-size:10.5px; font-weight:700; color:#a390c4; white-space:nowrap; }
+.pcb-rank-sub{ font-size:10.5px; font-weight:700; color:var(--pcb-ink-mute2); white-space:nowrap; }
 .pcb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
 
 .pcb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
 .pcb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
-.pcb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#a390c4; }
+.pcb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:var(--pcb-ink-mute2); }
 .pcb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
 
 .pcb-upcoming-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; border:1px dashed rgba(255,255,255,.18); margin-bottom:6px; }
-.pcb-upcoming-tag{ flex-shrink:0; font-size:10px; font-weight:900; color:#fff; background:#7c3aed; padding:2px 8px; border-radius:99px; }
-.pcb-upcoming-vs{ flex-shrink:0; font-weight:900; color:#a390c4; font-size:11px; }
+.pcb-upcoming-tag{ flex-shrink:0; font-size:10px; font-weight:900; color:#fff; background:var(--pcb-accent2); padding:2px 8px; border-radius:99px; }
+.pcb-upcoming-vs{ flex-shrink:0; font-weight:900; color:var(--pcb-ink-mute2); font-size:11px; }
 
 /* 대회 우승 히어로 카드 — 대회 MVP 카드와 동일한 크기(사진·패딩·폰트)로 맞추되,
    트로피 골드 톤 + 카드 전체를 감싸는 은은한 골드 글로우 효과로 "우승" 카드임을
    구분한다. 크기는 MVP와 동일, 대신 결승 상대/스코어 정보를 추가로 채워 넣는다. */
 .pcb-champion-hero{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px;
-  background:linear-gradient(135deg,#3d2410,#2b1a4d 65%); border:1px solid rgba(251,191,36,.4);
-  position:relative; overflow:hidden; box-shadow:0 10px 26px rgba(251,191,36,.20); }
+  background:linear-gradient(135deg,var(--pcb-champ-bg1),var(--pcb-bg6) 65%); border:1px solid rgba(var(--pcb-gold-rgb),.4);
+  position:relative; overflow:hidden; box-shadow:0 10px 26px rgba(var(--pcb-gold-rgb),.20); }
 .pcb-champion-hero::before{ content:''; position:absolute; inset:0;
-  background:radial-gradient(ellipse at center,rgba(251,191,36,.30),transparent 78%); pointer-events:none; }
+  background:radial-gradient(ellipse at center,rgba(var(--pcb-gold-rgb),.30),transparent 78%); pointer-events:none; }
 .pcb-champion-hero::after{ content:''; position:absolute; inset:0; border-radius:inherit;
-  box-shadow:inset 0 0 46px rgba(251,191,36,.24); pointer-events:none; }
+  box-shadow:inset 0 0 46px rgba(var(--pcb-gold-rgb),.24); pointer-events:none; }
 .pcb-champion-hero-avatar{ position:relative; flex-shrink:0; }
-.pcb-champion-hero-avatar > span{ border-color:#fbbf24cc !important; box-shadow:0 8px 22px rgba(251,191,36,.5); }
+.pcb-champion-hero-avatar > span{ border-color:var(--pcb-gold-a80) !important; box-shadow:0 8px 22px rgba(var(--pcb-gold-rgb),.5); }
 .pcb-champion-hero-side{ position:relative; flex:1; min-width:180px; }
-.pcb-champion-hero-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#fbbf24; text-transform:uppercase; }
+.pcb-champion-hero-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--pcb-gold); text-transform:uppercase; }
 .pcb-champion-hero-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
-.pcb-champion-hero-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#ffe8b8; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.pcb-champion-hero-final{ position:relative; margin-top:9px; padding-top:9px; border-top:1px solid rgba(251,191,36,.28);
+.pcb-champion-hero-meta{ margin-top:5px; font-size:12px; font-weight:800; color:var(--pcb-gold-soft); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.pcb-champion-hero-final{ position:relative; margin-top:9px; padding-top:9px; border-top:1px solid rgba(var(--pcb-gold-rgb),.28);
   display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.pcb-champion-hero-final-label{ font-size:10.5px; font-weight:900; letter-spacing:.05em; color:#fbbf24; text-transform:uppercase; }
+.pcb-champion-hero-final-label{ font-size:10.5px; font-weight:900; letter-spacing:.05em; color:var(--pcb-gold); text-transform:uppercase; }
 .pcb-champion-hero-final-opp{ font-size:13px; font-weight:900; }
-.pcb-champion-hero-final-score{ font-size:11.5px; font-weight:900; color:#1d1236; background:#fbbf24; padding:2px 9px; border-radius:99px; }
+.pcb-champion-hero-final-score{ font-size:11.5px; font-weight:900; color:var(--pcb-bg6b); background:var(--pcb-gold); padding:2px 9px; border-radius:99px; }
 
-.pcb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#1d1236,#2b1a4d); position:relative; overflow:hidden; }
-.pcb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(251,191,36,.25),transparent 55%); pointer-events:none; }
+.pcb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,var(--pcb-bg6b),var(--pcb-bg6)); position:relative; overflow:hidden; }
+.pcb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(var(--pcb-gold-rgb),.25),transparent 55%); pointer-events:none; }
 .pcb-mvp-side{ position:relative; flex:1; min-width:180px; }
-.pcb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#fbbf24; text-transform:uppercase; }
+.pcb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--pcb-gold); text-transform:uppercase; }
 .pcb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
-.pcb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#e9d5ff; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.pcb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:var(--pcb-ink-accsoft2); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .pcb-mvp-cands{ position:relative; min-width:190px; }
 .pcb-mvp-cands .pcb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
 .pcb-mvp-cands .pcb-rank-name,.pcb-mvp-cands .pcb-rank-value{ color:#fff; }
-.pcb-mvp-cands .pcb-rank-sub{ color:#c4b5fd; }
+.pcb-mvp-cands .pcb-rank-sub{ color:var(--pcb-ink-soft); }
 
-.pcb-empty{ padding:30px; text-align:center; color:#a390c4; font-size:13px; font-weight:600; }
+.pcb-empty{ padding:30px; text-align:center; color:var(--pcb-ink-mute2); font-size:13px; font-weight:600; }
 
 @media (max-width:640px){
   .pcb-hero{ padding:20px 16px 24px; }
@@ -2139,6 +2174,41 @@
   .pcb-champion-hero{ padding:15px; }
 }
 
+/* ── 프로리그 대회 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_pcb_briefing_theme)
+   classic(기본)은 위 .pcb-wrap 기본 토큰(딥퍼플+골드)을 그대로 사용 ── */
+.pcb-wrap[data-theme="crimson-gold"]{
+  --pcb-bg1:#260c0c; --pcb-bg2:#140606; --pcb-bg3:#551010; --pcb-bg3b:#260808; --pcb-bg4:#301010;
+  --pcb-bg5:#380f0f; --pcb-bg6:#4d1a1a; --pcb-bg6b:#361212; --pcb-bg7:#491818; --pcb-bg7b:#2e0f0f;
+  --pcb-champ-bg1:#3d2410; --pcb-accent:#f87171; --pcb-accent-rgb:248,113,113; --pcb-accent2:#dc2626;
+  --pcb-gold:#fbbf24; --pcb-gold-rgb:251,191,36; --pcb-gold-a80:#fbbf24cc; --pcb-gold-soft:#ffe8b8;
+  --pcb-ink-soft:#f3c4c4; --pcb-ink-mute:#a87f7f; --pcb-ink-mute2:#c49090;
+  --pcb-ink-accsoft:#fecaca; --pcb-ink-accsoft2:#fee2e2; --pcb-ink-bright:#fff1f1; --pcb-ink-bright2:#fff5f5;
+}
+.pcb-wrap[data-theme="sapphire"]{
+  --pcb-bg1:#0a1830; --pcb-bg2:#050d1a; --pcb-bg3:#123262; --pcb-bg3b:#08172e; --pcb-bg4:#0c2040;
+  --pcb-bg5:#0e2648; --pcb-bg6:#153b6e; --pcb-bg6b:#0f2a50; --pcb-bg7:#123863; --pcb-bg7b:#0a2140;
+  --pcb-champ-bg1:#1c3a5e; --pcb-accent:#38bdf8; --pcb-accent-rgb:56,189,248; --pcb-accent2:#0ea5e9;
+  --pcb-gold:#e5e7eb; --pcb-gold-rgb:229,231,235; --pcb-gold-a80:#e5e7ebcc; --pcb-gold-soft:#dbeafe;
+  --pcb-ink-soft:#bcdcf7; --pcb-ink-mute:#6f96b8; --pcb-ink-mute2:#8ab0cc;
+  --pcb-ink-accsoft:#bae6fd; --pcb-ink-accsoft2:#e0f2fe; --pcb-ink-bright:#f0f9ff; --pcb-ink-bright2:#f0f9ff;
+}
+.pcb-wrap[data-theme="emerald-gold"]{
+  --pcb-bg1:#0c2016; --pcb-bg2:#06120c; --pcb-bg3:#164430; --pcb-bg3b:#0a1e14; --pcb-bg4:#0f2a1c;
+  --pcb-bg5:#123420; --pcb-bg6:#1a4c30; --pcb-bg6b:#123322; --pcb-bg7:#173e28; --pcb-bg7b:#0f2618;
+  --pcb-champ-bg1:#3d2410; --pcb-accent:#34d399; --pcb-accent-rgb:52,211,153; --pcb-accent2:#059669;
+  --pcb-gold:#fbbf24; --pcb-gold-rgb:251,191,36; --pcb-gold-a80:#fbbf24cc; --pcb-gold-soft:#fde68a;
+  --pcb-ink-soft:#a7e0c4; --pcb-ink-mute:#5f9c7c; --pcb-ink-mute2:#7bb59a;
+  --pcb-ink-accsoft:#a7f3d0; --pcb-ink-accsoft2:#d1fae5; --pcb-ink-bright:#ecfdf5; --pcb-ink-bright2:#f0fdf7;
+}
+.pcb-wrap[data-theme="obsidian"]{
+  --pcb-bg1:#0c0c0e; --pcb-bg2:#060607; --pcb-bg3:#1c1c20; --pcb-bg3b:#0e0e10; --pcb-bg4:#141416;
+  --pcb-bg5:#18181b; --pcb-bg6:#232326; --pcb-bg6b:#19191c; --pcb-bg7:#1e1e21; --pcb-bg7b:#131315;
+  --pcb-champ-bg1:#332c1a; --pcb-accent:#d4d4d8; --pcb-accent-rgb:212,212,216; --pcb-accent2:#a1a1aa;
+  --pcb-gold:#eab308; --pcb-gold-rgb:234,179,8; --pcb-gold-a80:#eab308cc; --pcb-gold-soft:#fde68a;
+  --pcb-ink-soft:#c4c4cc; --pcb-ink-mute:#7a7a83; --pcb-ink-mute2:#96969e;
+  --pcb-ink-accsoft:#e4e4e9; --pcb-ink-accsoft2:#f0f0f3; --pcb-ink-bright:#f8f8fa; --pcb-ink-bright2:#fafafb;
+}
+
 /* ══════════════════════════════════════════════════════════════
    프로리그 끝장전 브리핑 전용 디자인 (plgb-*, 신규, 2026-08-20)
    프로리그(일반) 브리핑(plb-*, 다크 네이비+시안/골드)과 프로리그 대회
@@ -2147,64 +2217,64 @@
    재변경: 기존 오렌지+레드 조합이 "너무 빨간 계열"이라는 피드백에 따라
    에메랄드그린+앰버골드 톤으로 교체, 다크 차콜 베이스는 유지).
    ══════════════════════════════════════════════════════════════ */
-.plgb-wrap{ font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:#0a1410; }
+.plgb-wrap{ --plgb-bg1:#0a1410; --plgb-bg2:#071009; --plgb-bg3:#132a1d; --plgb-bg3b:#0a1710; --plgb-bg5:#102818; --plgb-bg6:#1e3d29; --plgb-bg6b:#122318; --plgb-bg7:#1a3524; --plgb-bg7b:#0f2015; --plgb-accent:#10b981; --plgb-accent-rgb:16,185,129; --plgb-accent2:#f59e0b; --plgb-accent2-rgb:245,158,11; --plgb-gold:#facc15; --plgb-gold-rgb:250,204,21; --plgb-goldalt:#fbbf24; --plgb-tagbg:#78350f; --plgb-ticker-txt:#7fd9ae; --plgb-ink-soft:#a9c9b6; --plgb-ink-bright:#dff5e8; --plgb-ink-accsoft:#a8dcc0; --plgb-ink-mute:#6b9c84; --plgb-ink-mute2:#9ecab0; --plgb-ink-mute3:#bfe0cd; --plgb-ink-bright2:#eaf7ee; --plgb-ink-mute4:#7fae93; --plgb-ink-accsoft2:#c8ecd8; font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 14px 34px rgba(15,23,42,.16); background:var(--plgb-bg1); }
 
-.plgb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:#071009; position:relative; overflow:hidden; }
-.plgb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:#10b981; box-shadow:0 0 8px #10b981; flex-shrink:0; animation:plgbPulse 1.6s ease-in-out infinite; }
+.plgb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:var(--plgb-bg2); position:relative; overflow:hidden; }
+.plgb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:var(--plgb-accent); box-shadow:0 0 8px var(--plgb-accent); flex-shrink:0; animation:plgbPulse 1.6s ease-in-out infinite; }
 @keyframes plgbPulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
-.plgb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:#7fd9ae; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plgb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:var(--plgb-ticker-txt); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .plgb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
   background:
-    radial-gradient(circle at 12% 15%, rgba(16,185,129,.22), transparent 42%),
-    radial-gradient(circle at 88% 85%, rgba(245,158,11,.20), transparent 48%),
-    linear-gradient(155deg,#132a1d 0%,#0a1710 100%);
+    radial-gradient(circle at 12% 15%, rgba(var(--plgb-accent-rgb),.22), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(var(--plgb-accent2-rgb),.20), transparent 48%),
+    linear-gradient(155deg,var(--plgb-bg3) 0%,var(--plgb-bg3b) 100%);
 }
 .plgb-hero::before{ content:''; position:absolute; top:0; right:-4%; width:44%; height:100%;
-  background:linear-gradient(115deg,transparent 42%,rgba(16,185,129,.10) 42%,rgba(16,185,129,.10) 46%,transparent 46%,transparent 62%,rgba(245,158,11,.09) 62%,rgba(245,158,11,.09) 66%,transparent 66%);
+  background:linear-gradient(115deg,transparent 42%,rgba(var(--plgb-accent-rgb),.10) 42%,rgba(var(--plgb-accent-rgb),.10) 46%,transparent 46%,transparent 62%,rgba(var(--plgb-accent2-rgb),.09) 62%,rgba(var(--plgb-accent2-rgb),.09) 66%,transparent 66%);
   pointer-events:none; }
-.plgb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#0a1410; text-transform:uppercase; background:#f59e0b; padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(245,158,11,.35); }
+.plgb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:var(--plgb-bg1); text-transform:uppercase; background:var(--plgb-accent2); padding:4px 12px; border-radius:99px; box-shadow:0 6px 16px rgba(var(--plgb-accent2-rgb),.35); }
 .plgb-hero-title{ position:relative; margin-top:14px; font-size:clamp(21px,4vw,30px); font-weight:900; color:#fff; letter-spacing:-.01em; line-height:1.2; }
-.plgb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:#a9c9b6; max-width:64ch; line-height:1.5; }
-.plgb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#dff5e8; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); padding:7px 14px; border-radius:99px; }
-.plgb-hero-headline b{ color:#facc15; }
-.plgb-hero-dot{ width:6px; height:6px; border-radius:99px; background:#facc15; flex-shrink:0; }
+.plgb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:var(--plgb-ink-soft); max-width:64ch; line-height:1.5; }
+.plgb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:var(--plgb-ink-bright); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); padding:7px 14px; border-radius:99px; }
+.plgb-hero-headline b{ color:var(--plgb-gold); }
+.plgb-hero-dot{ width:6px; height:6px; border-radius:99px; background:var(--plgb-gold); flex-shrink:0; }
 
-.plgb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#102818; border-top:1px solid rgba(255,255,255,.08); }
-.plgb-period-label{ font-size:11.5px; font-weight:800; color:#fbbf24; flex-shrink:0; }
+.plgb-period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:var(--plgb-bg5); border-top:1px solid rgba(255,255,255,.08); }
+.plgb-period-label{ font-size:11.5px; font-weight:800; color:var(--plgb-goldalt); flex-shrink:0; }
 .plgb-wrap .plgb-period-bar .ym-filter-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.plgb-wrap .plgb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:#bfe0cd; }
+.plgb-wrap .plgb-period-bar .ym-lbl{ font-size:11px; font-weight:700; color:var(--plgb-ink-mute3); }
 .plgb-wrap .plgb-period-bar .ym-sel{ font-size:11.5px !important; font-weight:700; padding:5px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.08) !important; color:#fff !important; }
-.plgb-wrap .plgb-period-bar .ym-sel option{ color:#0a1410; background:#fff; }
-.plgb-period-reset{ font-size:11px; font-weight:800; color:#0a1410; background:#facc15; border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
+.plgb-wrap .plgb-period-bar .ym-sel option{ color:var(--plgb-bg1); background:#fff; }
+.plgb-period-reset{ font-size:11px; font-weight:800; color:var(--plgb-bg1); background:var(--plgb-gold); border:none; border-radius:99px; padding:5px 12px; cursor:pointer; flex-shrink:0; }
 .plgb-period-reset:hover{ filter:brightness(1.06); }
 
 .plgb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
-.plgb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,#1e3d29,#122318); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.plgb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,var(--plgb-bg6),var(--plgb-bg6b)); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
 .plgb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
-.plgb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#a8dcc0; text-transform:uppercase; }
+.plgb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:var(--plgb-ink-accsoft); text-transform:uppercase; }
 .plgb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:#fff; letter-spacing:-.02em; }
-.plgb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:#6b9c84; }
+.plgb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:var(--plgb-ink-mute); }
 
 .plgb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
-  background:linear-gradient(155deg,#1a3524,#0f2015); border:1px solid rgba(255,255,255,.08); }
+  background:linear-gradient(155deg,var(--plgb-bg7),var(--plgb-bg7b)); border:1px solid rgba(255,255,255,.08); }
 .plgb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-.plgb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:#dff5e8; }
+.plgb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:var(--plgb-ink-bright); }
 .plgb-progress-track{ height:9px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
-.plgb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,#10b981,#f59e0b); box-shadow:0 0 12px rgba(16,185,129,.45); transition:.4s; }
-.plgb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:#9ecab0; }
+.plgb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--plgb-accent),var(--plgb-accent2)); box-shadow:0 0 12px rgba(var(--plgb-accent-rgb),.45); transition:.4s; }
+.plgb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--plgb-ink-mute2); }
 
-.plgb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.48); border-radius:99px; padding:6px 14px; cursor:pointer; }
-.plgb-speak-btn:hover{ background:rgba(16,185,129,.30); }
+.plgb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:#fff; background:rgba(var(--plgb-accent-rgb),.18); border:1px solid rgba(var(--plgb-accent-rgb),.48); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.plgb-speak-btn:hover{ background:rgba(var(--plgb-accent-rgb),.30); }
 
-.plgb-body{ background:linear-gradient(180deg,#0f2015 0%,#0a1410 100%); padding:28px 22px 32px; }
+.plgb-body{ background:linear-gradient(180deg,var(--plgb-bg7b) 0%,var(--plgb-bg1) 100%); padding:28px 22px 32px; }
 
 .plgb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
 .plgb-section{ margin-bottom:28px; }
 .plgb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(255,255,255,.12); }
-.plgb-section-title{ font-size:14.5px; font-weight:900; color:#eaf7ee; white-space:nowrap; display:flex; align-items:center; }
-.plgb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:#10b981; transform:rotate(45deg); flex-shrink:0; }
-.plgb-section-sub{ font-size:11px; font-weight:700; color:#7fae93; }
+.plgb-section-title{ font-size:14.5px; font-weight:900; color:var(--plgb-ink-bright2); white-space:nowrap; display:flex; align-items:center; }
+.plgb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:var(--plgb-accent); transform:rotate(45deg); flex-shrink:0; }
+.plgb-section-sub{ font-size:11px; font-weight:700; color:var(--plgb-ink-mute4); }
 
 .plgb-rank-list{ display:flex; flex-direction:column; gap:7px; }
 .plgb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
@@ -2212,32 +2282,32 @@
 .plgb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
 .plgb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
 .plgb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
-.plgb-rank-sub{ font-size:10.5px; font-weight:700; color:#7fae93; white-space:nowrap; }
+.plgb-rank-sub{ font-size:10.5px; font-weight:700; color:var(--plgb-ink-mute4); white-space:nowrap; }
 .plgb-rank-value{ font-weight:900; color:#fff; white-space:nowrap; font-size:13.5px; }
 
 .plgb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); margin-bottom:6px; }
-.plgb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:#78350f; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
-.plgb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:#7fae93; }
+.plgb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; background:var(--plgb-tagbg); padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.plgb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:var(--plgb-ink-mute4); }
 .plgb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:12px; }
 
-.plgb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,#122318,#1e3d29); position:relative; overflow:hidden; }
-.plgb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(250,204,21,.20),transparent 55%); pointer-events:none; }
+.plgb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,var(--plgb-bg6b),var(--plgb-bg6)); position:relative; overflow:hidden; }
+.plgb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,rgba(var(--plgb-gold-rgb),.20),transparent 55%); pointer-events:none; }
 .plgb-mvp-side{ position:relative; flex:1; min-width:180px; }
-.plgb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:#facc15; text-transform:uppercase; }
+.plgb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--plgb-gold); text-transform:uppercase; }
 .plgb-mvp-name{ font-size:21px; font-weight:900; color:#fff; line-height:1.28; word-break:break-word; margin-top:2px; }
-.plgb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:#c8ecd8; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.plgb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:var(--plgb-ink-accsoft2); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .plgb-mvp-cands{ position:relative; min-width:190px; }
 .plgb-mvp-cands .plgb-rank-row{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); }
 .plgb-mvp-cands .plgb-rank-name,.plgb-mvp-cands .plgb-rank-value{ color:#fff; }
-.plgb-mvp-cands .plgb-rank-sub{ color:#7fae93; }
+.plgb-mvp-cands .plgb-rank-sub{ color:var(--plgb-ink-mute4); }
 
 .plgb-map-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
-.plgb-map-name{ font-size:12.5px; font-weight:800; min-width:120px; color:#c8ecd8; }
+.plgb-map-name{ font-size:12.5px; font-weight:800; min-width:120px; color:var(--plgb-ink-accsoft2); }
 .plgb-map-track{ flex:1; height:8px; background:rgba(255,255,255,.10); border-radius:4px; overflow:hidden; }
-.plgb-map-fill{ height:100%; background:linear-gradient(90deg,#10b981,#f59e0b); border-radius:4px; }
-.plgb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:#7fae93; }
+.plgb-map-fill{ height:100%; background:linear-gradient(90deg,var(--plgb-accent),var(--plgb-accent2)); border-radius:4px; }
+.plgb-map-val{ font-size:11px; font-weight:800; min-width:64px; text-align:right; color:var(--plgb-ink-mute4); }
 
-.plgb-empty{ padding:30px; text-align:center; color:#7fae93; font-size:13px; font-weight:600; }
+.plgb-empty{ padding:30px; text-align:center; color:var(--plgb-ink-mute4); font-size:13px; font-weight:600; }
 
 @media (max-width:640px){
   .plgb-hero{ padding:20px 16px 24px; }
@@ -2246,4 +2316,43 @@
   .plgb-body{ padding:22px 14px 26px; }
   .plgb-period-bar{ padding:10px 16px; }
   .plgb-mvp{ padding:15px; }
+}
+
+/* ── 프로리그 끝장전 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plgb_briefing_theme)
+   classic(기본)은 위 .plgb-wrap 기본 토큰(다크 차콜+에메랄드/앰버)을 그대로 사용 ── */
+.plgb-wrap[data-theme="crimson-duel"]{
+  --plgb-bg1:#1c0e0e; --plgb-bg2:#0f0707; --plgb-bg3:#331414; --plgb-bg3b:#1a0a0a;
+  --plgb-bg5:#3d1414; --plgb-bg6:#4d1a1a; --plgb-bg6b:#2c0f0f; --plgb-bg7:#451717; --plgb-bg7b:#280d0d;
+  --plgb-accent:#ef4444; --plgb-accent-rgb:239,68,68; --plgb-accent2:#f59e0b; --plgb-accent2-rgb:245,158,11;
+  --plgb-gold:#fbbf24; --plgb-gold-rgb:251,191,36; --plgb-goldalt:#fbbf24; --plgb-tagbg:#7a2a10;
+  --plgb-ticker-txt:#fca5a5; --plgb-ink-soft:#e2b8b8; --plgb-ink-bright:#fee2e2; --plgb-ink-accsoft:#fecaca;
+  --plgb-ink-mute:#a86868; --plgb-ink-mute2:#c98f8f; --plgb-ink-mute3:#e2b8b8; --plgb-ink-bright2:#fff1f1;
+  --plgb-ink-mute4:#c98f8f; --plgb-ink-accsoft2:#fecaca;
+}
+.plgb-wrap[data-theme="azure-duel"]{
+  --plgb-bg1:#0a1620; --plgb-bg2:#050c12; --plgb-bg3:#0f2e42; --plgb-bg3b:#081826;
+  --plgb-bg5:#0e3448; --plgb-bg6:#154860; --plgb-bg6b:#0f3040; --plgb-bg7:#123c50; --plgb-bg7b:#0a2432;
+  --plgb-accent:#38bdf8; --plgb-accent-rgb:56,189,248; --plgb-accent2:#818cf8; --plgb-accent2-rgb:129,140,248;
+  --plgb-gold:#7dd3fc; --plgb-gold-rgb:125,211,252; --plgb-goldalt:#7dd3fc; --plgb-tagbg:#1e4a7a;
+  --plgb-ticker-txt:#93c5fd; --plgb-ink-soft:#aed7ee; --plgb-ink-bright:#e0f2fe; --plgb-ink-accsoft:#bae6fd;
+  --plgb-ink-mute:#5f8fa8; --plgb-ink-mute2:#7ba9c2; --plgb-ink-mute3:#a3cfe4; --plgb-ink-bright2:#f0f9ff;
+  --plgb-ink-mute4:#7ba9c2; --plgb-ink-accsoft2:#bae6fd;
+}
+.plgb-wrap[data-theme="violet-duel"]{
+  --plgb-bg1:#170c26; --plgb-bg2:#0d0718; --plgb-bg3:#2c1044; --plgb-bg3b:#170a26;
+  --plgb-bg5:#33124e; --plgb-bg6:#3d1760; --plgb-bg6b:#2a1042; --plgb-bg7:#37154e; --plgb-bg7b:#210c34;
+  --plgb-accent:#c026d3; --plgb-accent-rgb:192,38,211; --plgb-accent2:#f472b6; --plgb-accent2-rgb:244,114,182;
+  --plgb-gold:#f0abfc; --plgb-gold-rgb:240,171,252; --plgb-goldalt:#f0abfc; --plgb-tagbg:#5b1f70;
+  --plgb-ticker-txt:#f0abfc; --plgb-ink-soft:#d8b4e2; --plgb-ink-bright:#fae8ff; --plgb-ink-accsoft:#e9a8f5;
+  --plgb-ink-mute:#8c67a3; --plgb-ink-mute2:#a688b8; --plgb-ink-mute3:#c8a5d6; --plgb-ink-bright2:#fdf4ff;
+  --plgb-ink-mute4:#a688b8; --plgb-ink-accsoft2:#e9a8f5;
+}
+.plgb-wrap[data-theme="mono-duel"]{
+  --plgb-bg1:#0a0a0a; --plgb-bg2:#050505; --plgb-bg3:#181818; --plgb-bg3b:#0d0d0d;
+  --plgb-bg5:#1c1c1c; --plgb-bg6:#242424; --plgb-bg6b:#191919; --plgb-bg7:#202020; --plgb-bg7b:#131313;
+  --plgb-accent:#e5e7eb; --plgb-accent-rgb:229,231,235; --plgb-accent2:#f59e0b; --plgb-accent2-rgb:245,158,11;
+  --plgb-gold:#f5f5f4; --plgb-gold-rgb:245,245,244; --plgb-goldalt:#f5f5f4; --plgb-tagbg:#3f3f46;
+  --plgb-ticker-txt:#d4d4d8; --plgb-ink-soft:#a1a1aa; --plgb-ink-bright:#f4f4f5; --plgb-ink-accsoft:#d4d4d8;
+  --plgb-ink-mute:#6b7280; --plgb-ink-mute2:#8a8a94; --plgb-ink-mute3:#b0b0b8; --plgb-ink-bright2:#fafafa;
+  --plgb-ink-mute4:#8a8a94; --plgb-ink-accsoft2:#d4d4d8;
 }

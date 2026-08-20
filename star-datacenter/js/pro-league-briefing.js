@@ -105,6 +105,17 @@ function _plbPeriodBarHTML(){
 
 /* ── UI 조각 (plb-* — 프로리그 브리핑 전용) ── */
 
+/* 프로리그 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plb_briefing_theme)
+   classic(기본)은 별도 data-theme 없이 .plb-wrap 기본 토큰(다크 네이비+시안/골드)을 그대로 사용 */
+const _PLB_BRIEFING_THEMES=['classic','crimson','emerald','violet','mono'];
+function _plbBriefingThemeLoad(){
+  try{ const v=localStorage.getItem('su_plb_briefing_theme'); return _PLB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
+}
+function _plbWrapAttr(){
+  const t=_plbBriefingThemeLoad();
+  return t!=='classic'?` data-theme="${t}"`:'';
+}
+
 function _plbEmpty(msg){ return `<div class="plb-empty">${_cbEsc(msg)}</div>`; }
 
 function _plbTickerHTML(teamStats){
@@ -223,7 +234,7 @@ function rProLeagueBriefing(){
   const totalM=matches.length, doneM=done.length;
 
   if(!totalM){
-    return `<div class="plb-wrap">
+    return `<div class="plb-wrap"${_plbWrapAttr()}>
       <div class="plb-ticker"><span class="plb-ticker-dot"></span><span class="plb-ticker-txt">PRO LEAGUE BRIEFING</span></div>
       <div class="plb-hero">
         <div class="plb-hero-kicker">Pro League Briefing</div>
@@ -289,7 +300,7 @@ function rProLeagueBriefing(){
     body+=_plbSection('인기 맵','전체 게임 기준',_plbMapBarsHTML(mapStats));
   }
 
-  return `<div class="plb-wrap">
+  return `<div class="plb-wrap"${_plbWrapAttr()}>
     ${_plbTickerHTML(teamStats)}
     <div class="plb-hero">
       <div class="plb-hero-kicker">Pro League Briefing</div>

@@ -302,6 +302,16 @@ function _cbInjectShellStyle(){
     'body.dark .cbs-wrap.tone-lv{--cbs-accent:#38bdf8;--cbs-accent-2:#7dd3fc;--cbs-accent-soft:#0c4a6e;--cbs-accent-bg:rgba(56,189,248,.14);--cbs-paper:#0b1220;--cbs-paper-2:#0f172a;--cbs-paper-3:#1e293b;--cbs-ink:#e2e8f0;--cbs-ink-mid:#cbd5e1;--cbs-ink-soft:#94a3b8;--cbs-ink-mute:#64748b;--cbs-rule:rgba(148,163,184,.18);--cbs-rule-2:rgba(148,163,184,.10);--cbs-card:#1e293b}',
     /* 다크에서만 보이는 미세한 박스 그림자 */
     'body.dark .cbs-wrap{box-shadow:0 16px 40px rgba(0,0,0,.55)}',
+    /* === 대회 브리핑 디자인 테마 (설정탭 선택, su_cb_briefing_theme) ===
+       tone-* 규칙보다 뒤에 선언되어(동일 명시도) data-theme이 있으면 항상 우선 적용된다. */
+    '.cbs-wrap[data-theme="mono"]{--cbs-accent:#44403c;--cbs-accent-2:#78716c;--cbs-accent-soft:#d6d3d1;--cbs-accent-bg:#f5f5f4;--cbs-glow:rgba(68,64,60,.20);--cbs-paper:#f4f1ea;--cbs-paper-2:#efebe1;--cbs-paper-3:#e5e0d3;--cbs-ink:#1c1a17;--cbs-ink-mid:#44403c;--cbs-ink-soft:#78716c;--cbs-ink-mute:#a8a29e;--cbs-rule:#d6d0c0;--cbs-rule-2:#e5e0d3;--cbs-card:#fbfaf6}',
+    '.cbs-wrap[data-theme="navy"]{--cbs-accent:#1d4ed8;--cbs-accent-2:#3b82f6;--cbs-accent-soft:#bfdbfe;--cbs-accent-bg:#eff6ff;--cbs-glow:rgba(59,130,246,.28);--cbs-paper:#f3f6fb;--cbs-paper-2:#eef2f8;--cbs-paper-3:#e1e8f2;--cbs-ink:#0f1a2e;--cbs-ink-mid:#3c5170;--cbs-ink-soft:#6b84a3;--cbs-ink-mute:#9caec5;--cbs-rule:#ccd7e7;--cbs-rule-2:#dfe6f0;--cbs-card:#ffffff}',
+    '.cbs-wrap[data-theme="crimson"]{--cbs-accent:#b91c1c;--cbs-accent-2:#ef4444;--cbs-accent-soft:#fecaca;--cbs-accent-bg:#fef2f2;--cbs-glow:rgba(239,68,68,.28);--cbs-paper:#fbf5f5;--cbs-paper-2:#f7eeee;--cbs-paper-3:#efe0e0;--cbs-ink:#291414;--cbs-ink-mid:#5c3535;--cbs-ink-soft:#8a6262;--cbs-ink-mute:#b89898;--cbs-rule:#e3caca;--cbs-rule-2:#eedcdc;--cbs-card:#ffffff}',
+    '.cbs-wrap[data-theme="forest"]{--cbs-accent:#166534;--cbs-accent-2:#22c55e;--cbs-accent-soft:#bbf7d0;--cbs-accent-bg:#f0fdf4;--cbs-glow:rgba(34,197,94,.28);--cbs-paper:#f4f8f3;--cbs-paper-2:#eef4ec;--cbs-paper-3:#e0ebdd;--cbs-ink:#132316;--cbs-ink-mid:#3c5540;--cbs-ink-soft:#6c8770;--cbs-ink-mute:#9cb3a0;--cbs-rule:#cfe0cf;--cbs-rule-2:#e2ecdf;--cbs-card:#ffffff}',
+    '.cbs-wrap[data-theme="luxury"]{--cbs-accent:#a16207;--cbs-accent-2:#ca8a04;--cbs-accent-soft:#fde68a;--cbs-accent-bg:#fefce8;--cbs-glow:rgba(202,138,4,.30);--cbs-paper:#161310;--cbs-paper-2:#1c1812;--cbs-paper-3:#241f17;--cbs-ink:#f3ecd9;--cbs-ink-mid:#d3c39c;--cbs-ink-soft:#a8977a;--cbs-ink-mute:#7e7053;--cbs-rule:rgba(202,138,4,.30);--cbs-rule-2:rgba(202,138,4,.14);--cbs-card:#211b13}',
+    /* luxury는 다크한 베이스라 카드 그림자를 다크모드용과 동일하게 강하게 */
+    '.cbs-wrap[data-theme="luxury"]{box-shadow:0 16px 40px rgba(0,0,0,.5)}',
+    '.cbs-wrap[data-theme="luxury"] .b2w2-card,.cbs-wrap[data-theme="luxury"] .b2w2-sec,.cbs-wrap[data-theme="luxury"] .cbs-general,.cbs-wrap[data-theme="luxury"] .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}',
     'body.dark .cbs-wrap .b2w2-card,body.dark .cbs-wrap .b2w2-sec,body.dark .cbs-wrap .cbs-general,body.dark .cbs-wrap .cbs-kpi-card{box-shadow:0 2px 0 rgba(0,0,0,.4)!important}',
     /* 진행률 100% 완료 시 은은한 반짝임 애니메이션 */
     '@keyframes cbsBarShine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}',
@@ -320,6 +330,15 @@ function _cbInjectShellStyle(){
 }
 
 /* kicker 문자열로 토큰 결정 (따뜻한 파스텔 톤) */
+/* 대회 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_cb_briefing_theme)
+   'auto'(기본)는 기존 _cbToneOf() 로직대로 조별리그/토너먼트/대회 종류별
+   파스텔 톤(tone-mt/tone-pc/tone-lv)을 그대로 사용. 그 외 값을 고르면
+   종류와 무관하게 해당 팔레트로 고정된다(_cbInjectShellStyle의
+   .cbs-wrap[data-theme="..."] 오버라이드가 .tone-* 보다 뒤에 선언되어 우선 적용). */
+const _CB_BRIEFING_THEMES=['auto','mono','navy','crimson','forest','luxury'];
+function _cbBriefingThemeLoad(){
+  try{ const v=localStorage.getItem('su_cb_briefing_theme'); return _CB_BRIEFING_THEMES.includes(v)?v:'auto'; }catch(e){ return 'auto'; }
+}
 function _cbToneOf(kicker){
   const k=String(kicker||'').toLowerCase();
   if(k.includes('league')||k.includes('조별')||k.includes('조편'))return 'tone-mt';
@@ -433,8 +452,10 @@ function _cbKpiColor(label){
 function _cbShell(kicker,title,desc,metaKicker,headline,cells,body,tn){
   _cbInjectShellStyle();
   const tone=_cbToneOf(kicker);
+  const _cbTheme=(typeof _cbBriefingThemeLoad==='function')?_cbBriefingThemeLoad():'auto';
+  const _cbThemeAttr=_cbTheme!=='auto'?` data-theme="${_cbTheme}"`:'';
   const issue=`VOL.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}`;
-  return `<div class="cbs-wrap ${tone}">
+  return `<div class="cbs-wrap ${tone}"${_cbThemeAttr}>
     <div class="cbs-metabar">
       <div class="cbs-metabar-l">
         <span class="cbs-metabar-issue">${issue}</span>

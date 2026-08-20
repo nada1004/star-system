@@ -1,6 +1,6 @@
 // settings-render.js에서 분리됨 (설정 탭 렌더링 — 메뉴정리/이미지설정/경기상세/스트리머·대학상세디자인/FAB/현황판칩/구현황판/브리핑효과)
 function _cfgSecGroup4(ctx){
-  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
+  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
   return `${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">카테고리 이동 + 섹션 순서 변경을 직접 정리할 수 있습니다. 변경 즉시 저장되며 새로고침 없이 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
@@ -434,7 +434,7 @@ function _cfgSecGroup4(ctx){
     </div>
   </details>
   ${_scfgD('briefingfx','🎞️ 브리핑 디자인 & 효과')}
-    <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">브리핑 탭 전체 디자인 테마와, 이달/이번주 MVP 카드의 프로필 사진 위 효과 강도·스타일, 카드 디자인 모드를 조절합니다. 변경하면 즉시 반영됩니다.</p>
+    <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">기본(주간/월간) 브리핑, 프로리그·프로리그 끝장전·프로리그 대회·대회 브리핑의 전체 디자인 테마와, 이달/이번주 MVP 카드의 프로필 사진 위 효과 강도·스타일, 카드 디자인 모드를 조절합니다. 변경하면 즉시 반영됩니다.</p>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:16px">
       <div>
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🖋️ 브리핑 전체 디자인 테마</label>
@@ -456,6 +456,53 @@ function _cfgSecGroup4(ctx){
           <option value="neon" ${_briefingTheme==='neon'?'selected':''}>네온 (화려한 · 시안·마젠타)</option>
         </select>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">헤더, 카드 테두리, 포인트 색상 등 브리핑 탭 전체 색감 톤이 바뀝니다.</div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:0">
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🏟️ 프로리그 브리핑 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_plb_briefing_theme',this.value);render()">
+          <option value="classic" ${_plbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 다크 네이비 + 시안/골드)</option>
+          <option value="crimson" ${_plbBriefingTheme==='crimson'?'selected':''}>크림슨 (레드 스코어보드 톤)</option>
+          <option value="emerald" ${_plbBriefingTheme==='emerald'?'selected':''}>에메랄드 (그린·라임 포인트)</option>
+          <option value="violet" ${_plbBriefingTheme==='violet'?'selected':''}>바이올렛 (퍼플·시안 네온)</option>
+          <option value="mono" ${_plbBriefingTheme==='mono'?'selected':''}>모노 (무채색 고대비)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🔥 프로리그 끝장전 브리핑 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_plgb_briefing_theme',this.value);render()">
+          <option value="classic" ${_plgbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 다크 차콜 + 에메랄드/앰버)</option>
+          <option value="crimson-duel" ${_plgbBriefingTheme==='crimson-duel'?'selected':''}>크림슨 결투 (레드·앰버 다이나믹)</option>
+          <option value="azure-duel" ${_plgbBriefingTheme==='azure-duel'?'selected':''}>애저 결투 (블루·인디고 쿨톤)</option>
+          <option value="violet-duel" ${_plgbBriefingTheme==='violet-duel'?'selected':''}>바이올렛 결투 (퍼플·핑크 네온)</option>
+          <option value="mono-duel" ${_plgbBriefingTheme==='mono-duel'?'selected':''}>모노 결투 (무채색 고대비)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🏆 프로리그 대회 브리핑 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_pcb_briefing_theme',this.value);render()">
+          <option value="classic" ${_pcbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 딥퍼플 + 골드)</option>
+          <option value="crimson-gold" ${_pcbBriefingTheme==='crimson-gold'?'selected':''}>크림슨 골드 (레드 + 트로피 골드)</option>
+          <option value="sapphire" ${_pcbBriefingTheme==='sapphire'?'selected':''}>사파이어 (딥블루 + 실버)</option>
+          <option value="emerald-gold" ${_pcbBriefingTheme==='emerald-gold'?'selected':''}>에메랄드 골드 (딥그린 + 골드)</option>
+          <option value="obsidian" ${_pcbBriefingTheme==='obsidian'?'selected':''}>옵시디언 (블랙 + 플래티넘/골드)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎪 대회 브리핑 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_cb_briefing_theme',this.value);render()">
+          <option value="auto" ${_cbBriefingTheme==='auto'?'selected':''}>자동 (기본 · 조별리그/토너먼트/대회별 파스텔 톤)</option>
+          <option value="mono" ${_cbBriefingTheme==='mono'?'selected':''}>모노 (세피아 신문지 톤)</option>
+          <option value="navy" ${_cbBriefingTheme==='navy'?'selected':''}>네이비 (블루 포인트)</option>
+          <option value="crimson" ${_cbBriefingTheme==='crimson'?'selected':''}>크림슨 (레드 포인트)</option>
+          <option value="forest" ${_cbBriefingTheme==='forest'?'selected':''}>포레스트 (그린 포인트)</option>
+          <option value="luxury" ${_cbBriefingTheme==='luxury'?'selected':''}>럭셔리 (다크 + 골드, 모든 종류 공통 고정)</option>
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">자동은 조별리그/토너먼트/대회 종류에 따라 톤이 자동으로 바뀌고, 그 외를 고르면 종류와 무관하게 항상 같은 색으로 고정됩니다.</div>
       </div>
       <hr style="border:none;border-top:1px solid var(--border);margin:0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -503,7 +550,7 @@ function _cfgSecGroup4(ctx){
         </select>
       </div>
       <button class="btn btn-w btn-xs" style="align-self:flex-start"
-        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');render()">↩️ 기본값으로 초기화</button>
+        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');localStorage.removeItem('su_plb_briefing_theme');localStorage.removeItem('su_plgb_briefing_theme');localStorage.removeItem('su_pcb_briefing_theme');localStorage.removeItem('su_cb_briefing_theme');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
   ${_scfgD('lineuphover','🖱️ 라인업 호버 팝업 스타일')}

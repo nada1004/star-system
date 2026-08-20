@@ -106,6 +106,17 @@ function _plgbPeriodBarHTML(){
 
 /* ── UI 조각 (plgb-* — 프로리그 끝장전 브리핑 전용, 다크 차콜+크림슨/앰버 "결투" 톤) ── */
 
+/* 프로리그 끝장전 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plgb_briefing_theme)
+   classic(기본)은 별도 data-theme 없이 .plgb-wrap 기본 토큰(다크 차콜+에메랄드/앰버)을 그대로 사용 */
+const _PLGB_BRIEFING_THEMES=['classic','crimson-duel','azure-duel','violet-duel','mono-duel'];
+function _plgbBriefingThemeLoad(){
+  try{ const v=localStorage.getItem('su_plgb_briefing_theme'); return _PLGB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
+}
+function _plgbWrapAttr(){
+  const t=_plgbBriefingThemeLoad();
+  return t!=='classic'?` data-theme="${t}"`:'';
+}
+
 function _plgbEmpty(msg){ return `<div class="plgb-empty">${_cbEsc(msg)}</div>`; }
 
 function _plgbTickerHTML(){
@@ -217,7 +228,7 @@ function rProLeagueGJBriefing(){
   const totalN=sessions.length, doneN=doneSess.length;
 
   if(!totalN){
-    return `<div class="plgb-wrap">
+    return `<div class="plgb-wrap"${_plgbWrapAttr()}>
       <div class="plgb-ticker"><span class="plgb-ticker-dot"></span><span class="plgb-ticker-txt">PRO LEAGUE SUDDEN DEATH</span></div>
       <div class="plgb-hero">
         <div class="plgb-hero-kicker">Sudden Death Briefing</div>
@@ -289,7 +300,7 @@ function rProLeagueGJBriefing(){
     body+=_plgbSection('인기 맵','전체 게임 기준',_plgbMapBarsHTML(mapStats));
   }
 
-  return `<div class="plgb-wrap">
+  return `<div class="plgb-wrap"${_plgbWrapAttr()}>
     ${_plgbTickerHTML()}
     <div class="plgb-hero">
       <div class="plgb-hero-kicker">Sudden Death Briefing</div>
