@@ -41,10 +41,19 @@ function _plgbUniv(name){
   try{ const p=(typeof players!=='undefined'?players:[]).find(x=>x.name===name); return p?(p.univ||''):''; }catch(e){ return ''; }
 }
 
-/* 선수별 통합 전적 — 게임(gjM 행) 단위 승/패 집계 */
+/* 선수별 통합 전적 — 게임(gjM 행) 단위 승/패 집계
+   (버그픽스, 2026-08-20) 같은 선수를 한 경기는 별명(메모)으로, 다른 경기는 실명으로
+   입력하면 raw wName/lName 문자열이 달라 두 명으로 갈라져 집계됐다.
+   resolvePlayerName()(constants-game.js, 이름/별명/메모 통합 매칭)으로 정규화한
+   등록명을 집계 키로 사용해 합친다. */
 function _plgbPlayerStats(games){
   const ps={};
-  const ens=(n)=>{ if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,univ:_plgbUniv(n),form:[]}; return ps[n]; };
+  const canon=(raw)=>{
+    const n=String(raw||'').trim(); if(!n) return '';
+    try{ if(typeof resolvePlayerName==='function'){ const info=resolvePlayerName(n); if(info&&info.name) return info.name; } }catch(e){}
+    return n;
+  };
+  const ens=(raw)=>{ const n=canon(raw); if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,univ:_plgbUniv(n),form:[]}; return ps[n]; };
   games.forEach(g=>{
     if(!g.wName||!g.lName) return;
     ens(g.wName).w++; ens(g.lName).l++;
@@ -290,7 +299,7 @@ function rProLeagueGJBriefing(){
     ${periodBar}
     ${_plgbKpiGrid([
       ['총 경기',`${totalN}경기`,`완료 ${doneN} · 진행률 ${pct}%`,'#f97316'],
-      ['활동 선수',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#ef4444'],
+      ['활동 스트리머',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#ef4444'],
       ['총 게임',`${games.length}게임`,mapStats.length?`최다 사용맵 ${_cbEsc(mapStats[0].map)}`:'맵 기록 없음','#facc15'],
       ['기간',periodLabel,'','#fb7185']
     ])}

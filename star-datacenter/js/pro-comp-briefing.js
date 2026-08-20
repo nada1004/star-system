@@ -134,10 +134,19 @@ function _pcbChampion(tn){
 
 /* ── 집계 ── */
 
-/* 선수별 통합 전적: 조별리그+대진표+3위전(개인전) + 팀전 게임 + 중장전 게임 */
+/* 선수별 통합 전적: 조별리그+대진표+3위전(개인전) + 팀전 게임 + 중장전 게임
+   (버그픽스, 2026-08-20) 같은 선수를 한 소스는 별명(메모)으로, 다른 소스는 실명으로
+   입력하면 raw 이름 문자열이 달라 "참가 스트리머" 수가 두 명으로 갈라져 집계됐다.
+   resolvePlayerName()(constants-game.js, 이름/별명/메모 통합 매칭)으로 정규화한
+   등록명을 집계 키로 사용해 합친다. */
 function _pcbPlayerStats(indiv,team,gj){
   const ps={};
-  const ens=(n)=>{ if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,gjW:0,gjL:0,univ:_pcbUniv(n),form:[]}; return ps[n]; };
+  const canon=(raw)=>{
+    const n=String(raw||'').trim(); if(!n) return '';
+    try{ if(typeof resolvePlayerName==='function'){ const info=resolvePlayerName(n); if(info&&info.name) return info.name; } }catch(e){}
+    return n;
+  };
+  const ens=(raw)=>{ const n=canon(raw); if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,gjW:0,gjL:0,univ:_pcbUniv(n),form:[]}; return ps[n]; };
   indiv.forEach(m=>{
     if(!m.done||!m.a||!m.b) return;
     const wn=m.winner==='A'?m.a:m.b, ln=m.winner==='A'?m.b:m.a;
@@ -450,7 +459,7 @@ function rProCompBriefing(tn){
     </div>
     ${_pcbKpiGrid([
       ['총 경기',`${totalM}경기`,`조별리그·대진표 ${indiv.length} · 팀전 ${team.length} · 중장전 ${gj.length}`,'#a855f7'],
-      ['참가 대학',`${univStats.length}팀`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#fbbf24'],
+      ['참가 스트리머',`${playerStats.length}명`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#fbbf24'],
       ['완료 경기',`${doneM}경기`,`남은 경기 ${totalM-doneM}경기`,'#818cf8'],
       ['기간',dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정','','#f43f5e']
     ])}

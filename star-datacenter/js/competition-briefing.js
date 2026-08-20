@@ -143,17 +143,27 @@ function _cbTeamStats(matches){
     .sort((a,b)=>b.w-a.w||b.diff-a.diff||b.sw-a.sw);
 }
 
-/* 선수 단위 집계 (조별/대진표 phase 지정) */
+/* 선수 단위 집계 (조별/대진표 phase 지정)
+   (버그픽스, 2026-08-20) 같은 선수를 한 경기는 별명(메모)으로, 다른 경기는 실명으로
+   입력하면 raw playerA/playerB 문자열이 달라 "참가 스트리머" 수가 두 명으로 갈라져
+   집계됐다. resolvePlayerName()(constants-game.js, 이름/별명/메모 통합 매칭)으로
+   정규화한 등록명을 집계 키로 사용해 합친다. */
 function _cbPlayerStats(matches){
   const ps={};
+  const canon=(raw)=>{
+    const n=String(raw||'').trim(); if(!n) return '';
+    try{ if(typeof resolvePlayerName==='function'){ const info=resolvePlayerName(n); if(info&&info.name) return info.name; } }catch(e){}
+    return n;
+  };
   const ens=(n)=>{ if(!ps[n]) ps[n]={name:n,w:0,l:0,form:[]}; };
   matches.forEach(m=>{
     if(!m.done) return;
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner) return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const wn=canon(g.winner==='A'?g.playerA:g.playerB);
+        const ln=canon(g.winner==='A'?g.playerB:g.playerA);
+        if(!wn||!ln) return;
         ens(wn); ens(ln);
         ps[wn].w++; ps[ln].l++;
         ps[wn].form.push({d:m.d||'',win:true});
@@ -869,7 +879,7 @@ function _cbOverallFromNormalOnly(tn,nm,nmDone){
     ['전체 경기',`${nm.length}경기`,'일반 탭 기준'],
     ['완료',`${_cbTotalGames(nm)}판`,`${nmDone.length}경기 완료`],
     ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
-    ['참가 선수',`${allPs.length}명`,`누적 ${setTotal}세트`]
+    ['참가 스트리머',`${allPs.length}명`,`누적 ${setTotal}세트`]
   ]);
   body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':'var(--b2w-accent,#2563eb)')}</div>`;
 
@@ -926,7 +936,7 @@ function _cbOverallFromNormalOnly(tn,nm,nmDone){
   return _cbShell('Competition Briefing',`${tn.name} 대회 브리핑`,
     `아직 조별리그·대진표 기록은 없지만, 일반 탭에 입력된 ${nm.length}경기 중 ${nmDone.length}경기를 기준으로 브리핑을 정리했습니다.`,
     '핵심 지표',mvp?`MVP 후보 ${_cbEsc(mvp.name)} (${mvp.w}승)`:'집계 중',
-    [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 선수',`${allPs.length}명`],['기준','일반 탭']],
+    [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 스트리머',`${allPs.length}명`],['기준','일반 탭']],
     body,tn);
 }
 
@@ -990,7 +1000,7 @@ function rCompOverallBriefing(tn){
     ['전체 경기',`${all.length}경기`,`조별 ${lg.length} · 대진표 ${bk.length}`],
     ['완료',`${_cbTotalGames(all)}판`,`${done}경기 완료 · 조별 ${lgDone.length} · 대진표 ${bkDone.length}`],
     ['진행률',`${pct}%`,dates.length?`${_cbFmtD(dates[0])} ~ ${_cbFmtD(dates[dates.length-1])}`:'일정 미정'],
-    ['참가 선수',`${allPs.length}명`,`누적 ${setTotal}세트`]
+    ['참가 스트리머',`${allPs.length}명`,`누적 ${setTotal}세트`]
   ]);
   body+=`<div style="margin-top:12px">${_cbBar(pct,pct===100?'var(--cbs-accent,#0d9488)':'var(--b2w-accent,#2563eb)')}</div>`;
 
@@ -1152,7 +1162,7 @@ function rCompOverallBriefing(tn){
   return _cbShell('Competition Briefing',`${tn.name} 대회 브리핑`,
     `조별리그와 대진표를 합쳐 ${all.length}경기 중 ${done}경기가 기록됐습니다. 대회 전체 흐름을 종합해 정리했습니다.`,
     '핵심 지표',champ?`🏆 ${_cbEsc(champ)} 우승${mvp?` · MVP ${_cbEsc(mvp.name)}`:''}`:(mvp?`MVP 후보 ${_cbEsc(mvp.name)} (${mvp.w}승)`:'집계 중'),
-    [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 선수',`${allPs.length}명`],
+    [['진행률',`${pct}%`],['참가 팀',`${teams.length}팀`],['참가 스트리머',`${allPs.length}명`],
       hasBracket?['우승팀',champ?_cbEsc(champ):'미정']:['조별리그 1위',teams[0]?_cbEsc(teams[0].u):'미정']],
     body,tn);
 }

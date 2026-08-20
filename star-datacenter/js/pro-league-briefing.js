@@ -27,11 +27,25 @@ function _plbMatches(){
   }));
 }
 
-/* 선수별 통합 전적 — 각 게임의 승/패 진영(개인전/2인1조 모두 지원)을 선수 단위로 집계 */
+/* 선수별 통합 전적 — 각 게임의 승/패 진영(개인전/2인1조 모두 지원)을 선수 단위로 집계
+   (버그픽스, 2026-08-20) split(g.playerA) 경로는 이름을 trim()하지만 g.teamA/g.teamB
+   배열이나 g.a1/g.a2 필드는 trim 없이 그대로 썼다. 입력 경로(수동 입력 vs 붙여넣기)에
+   따라 이름 앞뒤 공백이 섞여 들어가면 같은 사람이 "이영호"와 "이영호 " 두 명으로 갈라져
+   집계돼 "활동 선수" 수가 실제보다 부풀려질 수 있었다. ens()에서 항상 trim해서 통일.
+   (버그픽스, 2026-08-20) 위 trim 처리와 별개로, 같은 선수를 한 경기는 별명(메모)으로
+   다른 경기는 실명으로 입력하면 raw 문자열이 서로 달라 여전히 두 명으로 갈라졌다.
+   resolvePlayerName()(constants-game.js, 이름/별명/메모 통합 매칭)으로 먼저 정규화한
+   뒤 그 결과(선수부 등록명)를 집계 키로 써서 별명 입력도 실명과 동일 인물로 합쳐지게
+   했다. */
 function _plbPlayerStats(matches){
   const ps={};
   const split=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
-  const ens=(n)=>{ if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,univ:(typeof _pcbUniv==='function'?_pcbUniv(n):''),form:[]}; return ps[n]; };
+  const canon=(raw)=>{
+    const n=String(raw||'').trim(); if(!n) return '';
+    try{ if(typeof resolvePlayerName==='function'){ const info=resolvePlayerName(n); if(info&&info.name) return info.name; } }catch(e){}
+    return n;
+  };
+  const ens=(raw)=>{ const n=canon(raw); if(!n) return null; if(!ps[n]) ps[n]={name:n,w:0,l:0,univ:(typeof _pcbUniv==='function'?_pcbUniv(n):''),form:[]}; return ps[n]; };
   matches.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
@@ -286,7 +300,7 @@ function rProLeagueBriefing(){
     ${_plbKpiGrid([
       ['총 경기',`${totalM}경기`,`완료 ${doneM} · 진행률 ${pct}%`,'#38bdf8'],
       ['참가 팀',`${teamStats.length}팀`,mvpTop?`MVP 후보 ${_cbEsc(mvpTop.name)}`:'집계 중','#fbbf24'],
-      ['활동 선수',`${playerStats.length}명`,mapStats.length?`최다 사용맵 ${_cbEsc(mapStats[0].map)}`:'맵 기록 없음','#818cf8'],
+      ['참가 스트리머',`${playerStats.length}명`,mapStats.length?`최다 사용맵 ${_cbEsc(mapStats[0].map)}`:'맵 기록 없음','#818cf8'],
       ['기간',periodLabel,'','#f43f5e']
     ])}
     ${_plbProgressHTML(pct,doneM,totalM)}
