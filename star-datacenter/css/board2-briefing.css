@@ -1747,7 +1747,7 @@
       .b2w2-card-spotlight-sub { margin-top: 5px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 8px; flex-wrap: wrap }
       .b2w2-card-spotlight-body { display: flex; align-items: center; gap: 12px }
       .b2w2-card-spotlight-photo {
-        position: relative; width: 56px; height: 56px; flex-shrink: 0; overflow: hidden;
+        position: relative; width: 80px; height: 80px; flex-shrink: 0; overflow: hidden;
         border-radius: var(--su_profile_radius,50%); clip-path: var(--su_profile_clip,none);
         background: linear-gradient(160deg,#3f3a33,#171512);
         border: 3px solid var(--_c,#92651b);
@@ -1755,7 +1755,7 @@
         display: flex; align-items: center; justify-content: center;
       }
       .b2w2-card-spotlight-photo img { width: 100%; height: 100%; object-fit: cover; display: block }
-      .b2w2-card-spotlight-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 19px; font-weight: 900; color: #fff }
+      .b2w2-card-spotlight-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 27px; font-weight: 900; color: #fff }
       .b2w2-card-spotlight-wr-badge {
         display: inline-flex; align-items: center; font-weight: 900; font-size: 11px;
         padding: 2px 9px; border-radius: 999px; letter-spacing: -.01em;

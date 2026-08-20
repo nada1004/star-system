@@ -746,10 +746,12 @@ function _b2WeeklyBriefingView() {
         const deltaClass = ud.rankDelta === null ? 'new' : ud.rankDelta > 0 ? 'up' : ud.rankDelta < 0 ? 'down' : 'same';
         const deltaText = ud.rankDelta === null ? 'NEW' : ud.rankDelta > 0 ? `▲${ud.rankDelta}` : ud.rankDelta < 0 ? `▼${Math.abs(ud.rankDelta)}` : '유지';
         const univNameJs = ud.u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const univLogo = (typeof gUI === 'function') ? gUI(ud.u.name, '20px') : '';
         return `
               <div class="b2w2-rank-row" style="cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univNameJs}')">
                 <div class="b2w2-rank-main">
                   <span class="b2w2-rank-badge" style="background:${col}18;color:${col}">${ud.rank}</span>
+                  <span class="b2w2-rank-logo">${univLogo}</span>
                   <div style="min-width:0">
                     <div class="b2w2-rank-name">${(typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''))}</div>
                     <div class="b2w2-rank-sub">

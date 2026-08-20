@@ -948,3 +948,12 @@ _proPasteResults      프로리그 파싱 결과
 - **수정**: 직전 세션에서 넣은 짝수 행 강조 배경(`.b2w2-tbl tr:nth-child(even) td`)을 제거 — 이제 모든 행이 동일하게 `--b2w-paper-alt`(테마색이 옅게 섞인 카드색)를 사용. 호버 시 강조, MVP 행 골드 배경은 그대로 유지.
 - **빌드**: `npm install` → `node build.mjs` 재빌드 완료, `dist/css/bundle.css`에서 짝수 행 전용 규칙이 사라지고 `.b2w2-tbl td`만 남은 것을 확인.
 - **수정 파일**: `css/board2-briefing.css`
+
+### 2026-08-20 (18) — 대학별 에이스 프로필 사진 확대, 이번달 대학 순위에 대학 로고 추가
+
+**요청**: 대학별 에이스 프로필 이미지 더 크게. 이번달 대학 순위에 대학 로고가 있어야 함.
+
+- **에이스 프로필 확대**: `.b2w2-card-spotlight-photo`(대학 카드의 "대학별 에이스" 프로필)를 56px → 80px로 확대, 사진이 없을 때 표시되는 이니셜 폴백 글자 크기도 19px → 27px로 비례 확대.
+- **월간 대학 순위 로고 추가**: `_renderMonthlyRankRows`(이번달/지난달 대학 순위 목록)에 대학 로고가 없었던 것을 확인 — 다른 화면(대학별 전적 현황 차트 등)에서 쓰는 `gUI(univName, size)` 헬퍼를 그대로 재사용해 순위 배지와 대학명 사이에 로고를 추가. 기존 CSS(`.b2w2-rank-logo`)가 이미 있어 별도 스타일 추가 없이 바로 적용됨.
+- **빌드**: `npm install` → `node build.mjs` 재빌드 완료, `dist/css/bundle.css`에서 확대된 사진 크기와 `dist/js/chunk-board.js`에서 새 로고 마크업을 확인.
+- **수정 파일**: `css/board2-briefing.css`, `js/board2-briefing-view.js`

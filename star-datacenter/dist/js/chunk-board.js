@@ -3843,10 +3843,11 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           </div>`:""}
         `:'<div class="b2w2-highlight-desc">\uC2B9\uB9AC \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</div>'}
       </article>
-    </section>`;const _renderMonthlyRankRows=list=>{if(!list.length)return'<div class="b2w2-highlight-desc">\uC6D4\uAC04 \uB300\uD559 \uC21C\uC704\uB97C \uACC4\uC0B0\uD560 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</div>';const _renderRow=ud=>{var _a2;const col=(typeof gc=="function"?gc(ud.u.name):"#64748b")||"#64748b",deltaClass=ud.rankDelta===null?"new":ud.rankDelta>0?"up":ud.rankDelta<0?"down":"same",deltaText=ud.rankDelta===null?"NEW":ud.rankDelta>0?`\u25B2${ud.rankDelta}`:ud.rankDelta<0?`\u25BC${Math.abs(ud.rankDelta)}`:"\uC720\uC9C0";return`
-              <div class="b2w2-rank-row" style="cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${ud.u.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')">
+    </section>`;const _renderMonthlyRankRows=list=>{if(!list.length)return'<div class="b2w2-highlight-desc">\uC6D4\uAC04 \uB300\uD559 \uC21C\uC704\uB97C \uACC4\uC0B0\uD560 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</div>';const _renderRow=ud=>{var _a2;const col=(typeof gc=="function"?gc(ud.u.name):"#64748b")||"#64748b",deltaClass=ud.rankDelta===null?"new":ud.rankDelta>0?"up":ud.rankDelta<0?"down":"same",deltaText=ud.rankDelta===null?"NEW":ud.rankDelta>0?`\u25B2${ud.rankDelta}`:ud.rankDelta<0?`\u25BC${Math.abs(ud.rankDelta)}`:"\uC720\uC9C0",univNameJs=ud.u.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'"),univLogo=typeof gUI=="function"?gUI(ud.u.name,"20px"):"";return`
+              <div class="b2w2-rank-row" style="cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univNameJs}')">
                 <div class="b2w2-rank-main">
                   <span class="b2w2-rank-badge" style="background:${col}18;color:${col}">${ud.rank}</span>
+                  <span class="b2w2-rank-logo">${univLogo}</span>
                   <div style="min-width:0">
                     <div class="b2w2-rank-name">${typeof window.escHTML=="function"?window.escHTML(ud.u.name):String(ud.u.name||"")}</div>
                     <div class="b2w2-rank-sub">
