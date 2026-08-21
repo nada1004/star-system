@@ -48,7 +48,9 @@ function statsPlayerReportHTML(){
   const stats = _prRaceStats(histPeriod);
   const mapStats = _prMapStats(histPeriod);
 
-  h += `<div id="pr-report-capture" style="--pr-accent:${(p.univ && typeof gcReport==='function') ? (gcReport(p.univ,'streamer')||'#2563eb') : (p.univ && typeof gc==='function' ? (gc(p.univ)||'#2563eb') : '#2563eb')}">`;
+  const _prThemeFx = (typeof getReportFx==='function') ? (getReportFx('streamer').themeFx||'default') : 'default';
+  const _prIntensity = (typeof getReportFx==='function') ? ((parseInt(getReportFx('streamer').intensity,10)||100)/100) : 1;
+  h += `<div id="pr-report-capture" data-pr-theme="${_prThemeFx}" style="--pr-accent:${(p.univ && typeof gcReport==='function') ? (gcReport(p.univ,'streamer')||'#2563eb') : (p.univ && typeof gc==='function' ? (gc(p.univ)||'#2563eb') : '#2563eb')};--pr-intensity:${_prIntensity}">`;
   h += _prHeroHTML(p);
 
   h += _prSectionNavHTML();
@@ -226,6 +228,8 @@ try{
 
 /* ─── 섹션 바로가기 내비게이션 ─── */
 function _prSectionNavHTML(){
+  const _prNavFx = (typeof getReportFx==='function') ? getReportFx('streamer') : {navFx:'none'};
+  const _navFxCls = _prNavFx.navFx && _prNavFx.navFx!=='none' ? ` prfx-nav-${_prNavFx.navFx}` : '';
   const items=[
     ['pr-sec-info','📋 기본정보'],
     ['pr-sec-mvp','🏆 MVP'],
@@ -237,7 +241,7 @@ function _prSectionNavHTML(){
     ['pr-sec-recent','📋 최근경기'],
   ];
   const chips = items.map(([id,lbl])=>
-    `<button type="button" class="pr-nav-chip" onclick="_prScrollToSection('${id}')">${lbl}</button>`
+    `<button type="button" class="pr-nav-chip${_navFxCls}" onclick="_prScrollToSection('${id}')">${lbl}</button>`
   ).join('');
   return `<div class="pr-nav-bar no-export">${chips}</div>`;
 }

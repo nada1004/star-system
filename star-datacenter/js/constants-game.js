@@ -118,8 +118,15 @@ function gcReport(n, kind){
 function getReportFx(kind){
   try{
     const v = J(_reportFxKey(kind)) || {};
-    return { photoFx: v.photoFx || 'none', nameFx: v.nameFx || 'none' };
-  }catch(e){ return { photoFx:'none', nameFx:'none' }; }
+    return {
+      photoFx: v.photoFx || 'none',
+      nameFx: v.nameFx || 'none',
+      themeFx: v.themeFx || 'default',
+      logoFx: v.logoFx || 'none',
+      navFx: v.navFx || 'none',
+      intensity: v.intensity || '100'
+    };
+  }catch(e){ return { photoFx:'none', nameFx:'none', themeFx:'default', logoFx:'none', navFx:'none', intensity:'100' }; }
 }
 function setReportColor(kind, univName, hex){
   if(!univName) return;

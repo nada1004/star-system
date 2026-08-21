@@ -603,6 +603,9 @@ function _cfgSecGroup4(ctx){
     const _rOnSr = (typeof getReportColorOn==='function') ? getReportColorOn('streamer') : true;
     const _rPhotoOpts = [['none','없음'],['glow','글로우'],['shadow','진한 그림자'],['ring','컬러 링'],['shine','샤인(스윕)'],['grayscale','흑백(호버시 컬러)'],['vignette','비네트'],['sparkle','스파클(반짝)'],['pulse','펄스(맥동)'],['float','플로트(둥실)'],['frame','더블 프레임'],['spotlight','스포트라이트']];
     const _rNameOpts = [['none','없음'],['outline','아웃라인'],['glow','글로우'],['gradient','그라디언트'],['shadow3d','3D 그림자'],['neon','네온'],['shimmer','시머(반짝임)'],['fire','파이어'],['ice','아이스'],['holo','홀로그램'],['metallic','메탈릭'],['pulse','펄스(맥동)']];
+    const _rThemeOpts = [['default','기본'],['vivid','비비드(진하게)'],['fade','페이드(진하게→연하게)'],['glass','글래스모피즘'],['outline','아웃라인'],['minimal','미니멀'],['neon','네온/다크']];
+    const _rLogoOpts = [['none','없음'],['glow','글로우'],['ring','컬러 링'],['shadow','진한 그림자'],['frame','더블 프레임'],['pulse','펄스(맥동)'],['float','플로트(둥실)'],['spin','회전'],['spotlight','스포트라이트'],['sparkle','스파클(반짝)']];
+    const _rNavOpts = [['none','없음'],['glow','글로우(호버)'],['fill','채우기(호버)'],['underline','언더라인(호버)'],['outline','아웃라인'],['bounce','바운스(호버)']];
     const _fxSelectHTML = (kind, label, prop, opts, cur) => `
       <div>
         <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">${label}</label>
@@ -611,6 +614,19 @@ function _cfgSecGroup4(ctx){
           ${opts.map(([v,l])=>`<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('')}
         </select>
       </div>`;
+    const _rIntensityLabel = (v) => v<=55?'많이 연하게':v<=85?'연하게':v<=115?'보통':v<=150?'진하게':'매우 진하게';
+    const _fxIntensityHTML = (kind, cur) => {
+      const val = parseInt(cur,10)||100;
+      const spanId = `fx-intensity-lbl-${kind}`;
+      return `<div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>🎚️ 색상 진하기</span><span id="${spanId}" style="color:var(--text2);font-weight:900">${_rIntensityLabel(val)} (${val}%)</span>
+        </label>
+        <input type="range" min="40" max="180" step="10" value="${val}" style="width:100%"
+          oninput="document.getElementById('${spanId}').textContent=({40:'많이 연하게',50:'많이 연하게',60:'연하게',70:'연하게',80:'연하게',90:'보통',100:'보통',110:'보통',120:'진하게',130:'진하게',140:'진하게',150:'진하게',160:'매우 진하게',170:'매우 진하게',180:'매우 진하게'}[this.value]||'보통')+' ('+this.value+'%)'"
+          onchange="setReportFx('${kind}','intensity',this.value);render()">
+      </div>`;
+    };
     const _univRowsHTML = (univCfg||[]).filter(u=>u && !u.hidden).map(u=>{
       const base = (typeof gc==='function') ? gc(u.name) : '#6b7280';
       const urHex = /^#[0-9a-fA-F]{6}$/.test(_rcolUr[u.name]||'') ? _rcolUr[u.name] : base;
@@ -647,16 +663,27 @@ function _cfgSecGroup4(ctx){
       <div style="font-size:10px;color:var(--gray-l);margin-top:-10px">끄면 해당 리포트는 대학과 무관하게 중립 회색 톤으로만 표시됩니다(아래 대학별 색상 지정도 무시됨).</div>
       <div>
         <div style="font-size:var(--fs-sm);font-weight:900;margin-bottom:8px">🏛️ 대학 리포트 효과</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px">
+          ${_fxSelectHTML('univ','🖼️ 리포트 전체 테마','themeFx',_rThemeOpts,_rfxUr.themeFx)}
+          ${_fxIntensityHTML('univ',_rfxUr.intensity)}
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           ${_fxSelectHTML('univ','로스터 사진 효과','photoFx',_rPhotoOpts,_rfxUr.photoFx)}
-          ${_fxSelectHTML('univ','이름 효과','nameFx',_rNameOpts,_rfxUr.nameFx)}
+          ${_fxSelectHTML('univ','이름 효과(대학명·로스터명)','nameFx',_rNameOpts,_rfxUr.nameFx)}
+          ${_fxSelectHTML('univ','🏫 대학 로고 효과','logoFx',_rLogoOpts,_rfxUr.logoFx)}
+          ${_fxSelectHTML('univ','🧭 메뉴 버튼 효과','navFx',_rNavOpts,_rfxUr.navFx)}
         </div>
       </div>
       <div>
         <div style="font-size:var(--fs-sm);font-weight:900;margin-bottom:8px">📺 스트리머 리포트 효과</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px">
+          ${_fxSelectHTML('streamer','🖼️ 리포트 전체 테마','themeFx',_rThemeOpts,_rfxSr.themeFx)}
+          ${_fxIntensityHTML('streamer',_rfxSr.intensity)}
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           ${_fxSelectHTML('streamer','프로필 사진 효과','photoFx',_rPhotoOpts,_rfxSr.photoFx)}
           ${_fxSelectHTML('streamer','이름 효과','nameFx',_rNameOpts,_rfxSr.nameFx)}
+          ${_fxSelectHTML('streamer','🧭 메뉴 버튼 효과','navFx',_rNavOpts,_rfxSr.navFx)}
         </div>
       </div>
       <div style="${(_rOnUr||_rOnSr)?'':'opacity:.45;pointer-events:none'}">

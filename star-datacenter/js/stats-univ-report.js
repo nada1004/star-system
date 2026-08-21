@@ -165,30 +165,63 @@ function _urInjectStyle(){
     '.ur-bg-loading .ur-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.15)}',
     /* ── 소속 대학 색상 테마: #ur-report-capture 안의 배경/박스/버튼/메뉴를 --ur-accent(대학색)의 연한 톤으로
        (2026-08-21 "좀 더 연하게" 피드백으로 비율 축소 재조정) ── */
-    '#ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 4%, transparent);border-radius:22px}',
-    '#ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 6%, var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 18%, rgba(148,163,184,.16))}',
+    '#ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(4% * var(--ur-intensity,1)), transparent);border-radius:22px}',
+    '#ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(6% * var(--ur-intensity,1)), var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(18% * var(--ur-intensity,1)), rgba(148,163,184,.16))}',
     /* 핵심 분석 & AI 코멘트 패널은 대학색 대신 AI 코멘트와 어울리는 별도 톤(인디고/보라 계열) 고정 사용 — ID 2개라 위 .ur-panel 규칙보다 항상 우선 적용됨 */
     '#ur-report-capture #ur-sec-insights.ur-panel{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border-color:#e0e7ff}',
     'body.dark #ur-report-capture #ur-sec-insights.ur-panel{background:linear-gradient(135deg,#1e2547,#241b47)!important;border-color:#2d3f55!important}',
-    '#ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 10%, var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 20%, rgba(148,163,184,.16))}',
+    '#ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(10% * var(--ur-intensity,1)), var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(20% * var(--ur-intensity,1)), rgba(148,163,184,.16))}',
     /* .ur-btn-primary는 자체 배경(var(--blue))+흰 글자 조합인데, ID로 스코프된 아래 규칙이
        클래스 2개짜리 .ur-btn.ur-btn-primary보다 우선순위가 높아 배경만 연하게 덮어써 흰 글자가 거의 안 보이던
        버그가 있었음(2026-08-21) → :not()으로 제외해 원래 진한 배경+흰 글자 유지 */
-    '#ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
-    '#ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 16%, var(--white))}',
-    '#ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 5%, var(--surface))}',
-    '#ur-report-capture .ur-nav-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
-    '#ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
-    '#ur-report-capture .ur-list-box{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 4%, transparent)}',
-    '#ur-report-capture .ur-tier-roster-headrow,#ur-report-capture .ur-tier-roster-tierbar,#ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--surface))}',
-    'body.dark #ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, transparent)}',
-    'body.dark #ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 13%, #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 24%, #334155)!important}',
-    'body.dark #ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 17%, #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 26%, #334155)!important}',
-    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) 12%, #1e293b)!important}',
-    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 20%, #1e293b)!important}',
-    'body.dark #ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 9%, rgba(15,23,42,.5))}',
-    'body.dark #ur-report-capture .ur-nav-chip,body.dark #ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 12%, rgba(15,23,42,.7))}',
-    'body.dark #ur-report-capture .ur-tier-roster-headrow,body.dark #ur-report-capture .ur-tier-roster-tierbar,body.dark #ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 11%, rgba(15,23,42,.5))}',
+    '#ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(7% * var(--ur-intensity,1)), var(--white))}',
+    '#ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(16% * var(--ur-intensity,1)), var(--white))}',
+    '#ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(5% * var(--ur-intensity,1)), var(--surface))}',
+    '#ur-report-capture .ur-nav-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(7% * var(--ur-intensity,1)), var(--white))}',
+    '#ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(7% * var(--ur-intensity,1)), var(--white))}',
+    '#ur-report-capture .ur-list-box{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(4% * var(--ur-intensity,1)), transparent)}',
+    '#ur-report-capture .ur-tier-roster-headrow,#ur-report-capture .ur-tier-roster-tierbar,#ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(7% * var(--ur-intensity,1)), var(--surface))}',
+    'body.dark #ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(7% * var(--ur-intensity,1)), transparent)}',
+    'body.dark #ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(13% * var(--ur-intensity,1)), #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(24% * var(--ur-intensity,1)), #334155)!important}',
+    'body.dark #ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(17% * var(--ur-intensity,1)), #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(26% * var(--ur-intensity,1)), #334155)!important}',
+    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(12% * var(--ur-intensity,1)), #1e293b)!important}',
+    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(20% * var(--ur-intensity,1)), #1e293b)!important}',
+    'body.dark #ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(9% * var(--ur-intensity,1)), rgba(15,23,42,.5))}',
+    'body.dark #ur-report-capture .ur-nav-chip,body.dark #ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(12% * var(--ur-intensity,1)), rgba(15,23,42,.7))}',
+    'body.dark #ur-report-capture .ur-tier-roster-headrow,body.dark #ur-report-capture .ur-tier-roster-tierbar,body.dark #ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(11% * var(--ur-intensity,1)), rgba(15,23,42,.5))}',
+    /* 히어로(로고 영역) 배경도 색상 강도(--ur-intensity) 슬라이더에 반응하도록 재정의(인라인 스타일보다 우선) */
+    '#ur-report-capture .ur-hero{background:linear-gradient(135deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(40% * var(--ur-intensity,1)), white) 0%,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(18% * var(--ur-intensity,1)), white) 100%)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(55% * var(--ur-intensity,1)), transparent)!important}',
+    /* ── 대학 리포트 전체 테마 (설정탭 "🎨 리포트 색상 & 효과" > 리포트 전체 테마에서 선택) ──
+       data-ur-theme 속성으로 전환. 위 기본(연한 톤) 규칙 뒤에 와서 같은 클래스 조합에서 우선 적용됨. ── */
+    '#ur-report-capture[data-ur-theme="vivid"]{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(9% * var(--ur-intensity,1)), transparent)}',
+    '#ur-report-capture[data-ur-theme="vivid"] .ur-hero{background:linear-gradient(135deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(55% * var(--ur-intensity,1)), white),color-mix(in srgb, var(--ur-accent,var(--blue)) calc(26% * var(--ur-intensity,1)), white))!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(65% * var(--ur-intensity,1)), transparent)!important}',
+    '#ur-report-capture[data-ur-theme="vivid"] .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(13% * var(--ur-intensity,1)), var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(32% * var(--ur-intensity,1)), rgba(148,163,184,.16))}',
+    '#ur-report-capture[data-ur-theme="vivid"] .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(20% * var(--ur-intensity,1)), var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(34% * var(--ur-intensity,1)), rgba(148,163,184,.16))}',
+    'body.dark #ur-report-capture[data-ur-theme="vivid"] .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(26% * var(--ur-intensity,1)), #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(40% * var(--ur-intensity,1)), #334155)!important}',
+    'body.dark #ur-report-capture[data-ur-theme="vivid"] .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(32% * var(--ur-intensity,1)), #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(42% * var(--ur-intensity,1)), #334155)!important}',
+    '#ur-report-capture[data-ur-theme="glass"] .ur-hero,#ur-report-capture[data-ur-theme="glass"] .ur-panel,#ur-report-capture[data-ur-theme="glass"] .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(10% * var(--ur-intensity,1)), rgba(255,255,255,.55))!important;backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border:1px solid color-mix(in srgb, var(--ur-accent,var(--blue)) calc(30% * var(--ur-intensity,1)), rgba(255,255,255,.6))!important;box-shadow:0 8px 32px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(18% * var(--ur-intensity,1)), transparent)!important}',
+    'body.dark #ur-report-capture[data-ur-theme="glass"] .ur-hero,body.dark #ur-report-capture[data-ur-theme="glass"] .ur-panel,body.dark #ur-report-capture[data-ur-theme="glass"] .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(22% * var(--ur-intensity,1)), rgba(15,23,42,.55))!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(38% * var(--ur-intensity,1)), rgba(148,163,184,.25))!important}',
+    '#ur-report-capture[data-ur-theme="outline"] .ur-hero{background:var(--white)!important;border:2px solid var(--ur-accent,var(--blue))!important}',
+    '#ur-report-capture[data-ur-theme="outline"] .ur-panel{background:var(--white)!important;border:1.5px solid color-mix(in srgb, var(--ur-accent,var(--blue)) calc(55% * var(--ur-intensity,1)), rgba(148,163,184,.3))!important}',
+    '#ur-report-capture[data-ur-theme="outline"] .ur-kpi{background:var(--white)!important;border:1.5px solid var(--ur-accent,var(--blue))!important}',
+    'body.dark #ur-report-capture[data-ur-theme="outline"] .ur-hero,body.dark #ur-report-capture[data-ur-theme="outline"] .ur-panel,body.dark #ur-report-capture[data-ur-theme="outline"] .ur-kpi{background:#1e293b!important;border-color:var(--ur-accent,var(--blue))!important}',
+    '#ur-report-capture[data-ur-theme="minimal"]{background:transparent!important}',
+    '#ur-report-capture[data-ur-theme="minimal"] .ur-hero{background:var(--white)!important;border:1px solid var(--border2)!important;border-left:4px solid var(--ur-accent,var(--blue))!important}',
+    '#ur-report-capture[data-ur-theme="minimal"] .ur-panel{background:var(--white)!important;border-color:var(--border2)!important}',
+    '#ur-report-capture[data-ur-theme="minimal"] .ur-panel .ur-panel-title{border-left:3px solid var(--ur-accent,var(--blue));padding-left:8px}',
+    '#ur-report-capture[data-ur-theme="minimal"] .ur-kpi{background:var(--white)!important;border-color:var(--border2)!important}',
+    'body.dark #ur-report-capture[data-ur-theme="minimal"] .ur-hero,body.dark #ur-report-capture[data-ur-theme="minimal"] .ur-panel,body.dark #ur-report-capture[data-ur-theme="minimal"] .ur-kpi{background:#1e293b!important;border-color:#334155!important}',
+    '#ur-report-capture[data-ur-theme="neon"] .ur-hero{background:linear-gradient(135deg,#0f172a,#1e293b)!important;border:1px solid var(--ur-accent,var(--blue))!important;box-shadow:0 0 0 1px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(60% * var(--ur-intensity,1)), transparent),0 0 30px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(45% * var(--ur-intensity,1)), transparent)!important}',
+    '#ur-report-capture[data-ur-theme="neon"] .ur-hero .ur-hero-name{color:var(--ur-accent,var(--blue))!important;text-shadow:0 0 10px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(80% * var(--ur-intensity,1)), transparent),0 0 22px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(55% * var(--ur-intensity,1)), transparent)}',
+    '#ur-report-capture[data-ur-theme="neon"] .ur-hero .ur-badge{background:rgba(255,255,255,.08)!important;color:#e2e8f0!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(50% * var(--ur-intensity,1)), transparent)!important}',
+    '#ur-report-capture[data-ur-theme="neon"] .ur-panel{border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(45% * var(--ur-intensity,1)), rgba(148,163,184,.16))!important;box-shadow:0 0 16px color-mix(in srgb, var(--ur-accent,var(--blue)) calc(14% * var(--ur-intensity,1)), transparent)}',
+    '#ur-report-capture[data-ur-theme="fade"] .ur-hero{background:linear-gradient(120deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(85% * var(--ur-intensity,1)), black 6%) 0%,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(45% * var(--ur-intensity,1)), white) 45%,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(6% * var(--ur-intensity,1)), white) 100%)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(60% * var(--ur-intensity,1)), transparent)!important}',
+    '#ur-report-capture[data-ur-theme="fade"] .ur-hero .ur-hero-name,#ur-report-capture[data-ur-theme="fade"] .ur-hero .ur-hero-badges .ur-badge{color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.35)}',
+    '#ur-report-capture[data-ur-theme="fade"] .ur-hero .ur-badge{background:rgba(255,255,255,.16)!important;border-color:rgba(255,255,255,.3)!important}',
+    '#ur-report-capture[data-ur-theme="fade"] .ur-panel{background:linear-gradient(160deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(30% * var(--ur-intensity,1)), var(--white)) 0%,var(--white) 70%)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) calc(30% * var(--ur-intensity,1)), rgba(148,163,184,.16))!important}',
+    '#ur-report-capture[data-ur-theme="fade"] .ur-kpi{background:linear-gradient(160deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(38% * var(--ur-intensity,1)), var(--white)) 0%,var(--white) 80%)!important}',
+    'body.dark #ur-report-capture[data-ur-theme="fade"] .ur-panel{background:linear-gradient(160deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(38% * var(--ur-intensity,1)), #1e293b) 0%,#1e293b 70%)!important}',
+    'body.dark #ur-report-capture[data-ur-theme="fade"] .ur-kpi{background:linear-gradient(160deg,color-mix(in srgb, var(--ur-accent,var(--blue)) calc(46% * var(--ur-intensity,1)), #1e293b) 0%,#1e293b 80%)!important}',
     /* ── 대학 리포트 전용 효과 (설정탭 "🎨 리포트 색상 & 효과"에서 선택, 로스터 카드 사진/이름에 적용) ── */
     '.ur-roster-card.urfx-photo-glow{box-shadow:0 0 0 1.5px var(--ur-accent,#64748b),0 0 26px 4px color-mix(in srgb, var(--ur-accent,#64748b) 55%, transparent),0 8px 18px rgba(15,23,42,.12)!important}',
     '.ur-roster-card.urfx-photo-shadow{box-shadow:0 0 0 1.5px color-mix(in srgb, var(--ur-accent,#64748b) 40%, transparent),0 22px 36px rgba(15,23,42,.4)!important}',
@@ -225,7 +258,32 @@ function _urInjectStyle(){
     '@keyframes urfxIce{0%{background-position:0 0}100%{background-position:220% 0}}',
     '@keyframes urfxHolo{0%{background-position:0 0}100%{background-position:280% 0}}',
     '@keyframes urfxMetallic{0%{background-position:0 0}100%{background-position:260% 0}}',
-    '@keyframes urfxNamePulse{0%,100%{text-shadow:0 0 4px var(--ur-accent,#fff)}50%{text-shadow:0 0 16px var(--ur-accent,#fff),0 0 30px var(--ur-accent,#fff)}}'
+    '@keyframes urfxNamePulse{0%,100%{text-shadow:0 0 4px var(--ur-accent,#fff)}50%{text-shadow:0 0 16px var(--ur-accent,#fff),0 0 30px var(--ur-accent,#fff)}}',
+    /* ── 대학 로고(히어로) 전용 효과 ── */
+    '.ur-hero-logo{position:relative}',
+    '.ur-hero-logo.urfx-logo-glow{box-shadow:0 0 0 3px var(--white),0 0 30px 6px color-mix(in srgb, var(--ur-accent,#64748b) 60%, transparent);border-radius:50%}',
+    '.ur-hero-logo.urfx-logo-ring{box-shadow:0 0 0 3px var(--white),0 0 0 6px var(--ur-accent,#64748b);border-radius:50%}',
+    '.ur-hero-logo.urfx-logo-shadow{box-shadow:0 0 0 3px var(--white),0 20px 30px rgba(15,23,42,.4);border-radius:50%}',
+    '.ur-hero-logo.urfx-logo-frame{box-shadow:0 0 0 3px var(--white),0 0 0 6px var(--ur-accent,#64748b),0 8px 18px rgba(15,23,42,.14);border-radius:50%}',
+    '.ur-hero-logo.urfx-logo-pulse{animation:urfxLogoPulse 2.2s ease-in-out infinite;border-radius:50%}',
+    '.ur-hero-logo.urfx-logo-float{animation:urfxCardFloat 3.4s ease-in-out infinite}',
+    '.ur-hero-logo.urfx-logo-spin img{animation:urfxLogoSpin 6s linear infinite}',
+    '.ur-hero-logo.urfx-logo-spotlight::before{content:"";position:absolute;left:50%;top:-30%;width:220%;height:220%;transform:translateX(-50%);background:radial-gradient(circle,color-mix(in srgb, var(--ur-accent,#64748b) 55%, transparent) 0%,transparent 60%);filter:blur(4px);z-index:0;pointer-events:none;animation:urfxSpotlight 3s ease-in-out infinite}',
+    '.ur-hero-logo.urfx-logo-sparkle::before,.ur-hero-logo.urfx-logo-sparkle::after{content:"✦";position:absolute;color:var(--ur-accent,#64748b);text-shadow:0 0 6px rgba(255,255,255,.9);pointer-events:none;z-index:2;animation:urfxSparkle 1.8s ease-in-out infinite}',
+    '.ur-hero-logo.urfx-logo-sparkle::before{top:-4px;right:-4px;font-size:16px;animation-delay:0s}',
+    '.ur-hero-logo.urfx-logo-sparkle::after{top:16px;right:-10px;font-size:11px;animation-delay:.6s}',
+    '@keyframes urfxLogoPulse{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb, var(--ur-accent,#64748b) 25%, transparent)}50%{box-shadow:0 0 0 5px var(--ur-accent,#64748b),0 0 24px 4px color-mix(in srgb, var(--ur-accent,#64748b) 55%, transparent)}}',
+    '@keyframes urfxLogoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}',
+    /* ── 대학 리포트 메뉴 버튼(섹션 이동 칩) 전용 효과 ── */
+    '.ur-nav-chip.urfx-nav-glow:hover{box-shadow:0 0 12px 2px color-mix(in srgb, var(--ur-accent,var(--blue)) 55%, transparent)}',
+    '.ur-nav-chip.urfx-nav-fill{transition:background .15s,color .15s,transform .12s}',
+    '.ur-nav-chip.urfx-nav-fill:hover{background:var(--ur-accent,var(--blue))!important;color:#fff!important;border-color:var(--ur-accent,var(--blue))!important}',
+    '.ur-nav-chip.urfx-nav-underline{position:relative;overflow:hidden}',
+    '.ur-nav-chip.urfx-nav-underline::after{content:"";position:absolute;left:50%;bottom:2px;width:0;height:2px;background:var(--ur-accent,var(--blue));transition:width .18s ease,left .18s ease}',
+    '.ur-nav-chip.urfx-nav-underline:hover::after{left:14%;width:72%}',
+    '.ur-nav-chip.urfx-nav-bounce:hover{animation:urfxNavBounce .4s ease}',
+    '.ur-nav-chip.urfx-nav-outline{background:transparent!important;border:1.5px solid var(--ur-accent,var(--blue))!important;color:var(--ur-accent,var(--blue))!important}',
+    '@keyframes urfxNavBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}70%{transform:translateY(1px)}}'
   ].join('');
   document.head.appendChild(s);
 }
@@ -462,6 +520,8 @@ function _urRecentAvatarHTML(name, photo, secondProfileFile, col){
 
 /* ─── 섹션 바로가기 내비게이션 (스트리머 리포트와 동일한 패턴) ─── */
 function _urSectionNavHTML(){
+  const _urNavFx = (typeof getReportFx==='function') ? getReportFx('univ') : {navFx:'none'};
+  const _navFxCls = _urNavFx.navFx && _urNavFx.navFx!=='none' ? ` urfx-nav-${_urNavFx.navFx}` : '';
   const items = [
     ['ur-sec-race','🎮 구성'],
     ['ur-sec-racewin','⚔️ 종족승률'],
@@ -475,7 +535,7 @@ function _urSectionNavHTML(){
     ['ur-sec-recent','📅 최근경기'],
   ];
   const chips = items.map(([id,lbl])=>
-    `<button type="button" class="ur-nav-chip" onclick="_urScrollToSection('${id}')">${lbl}</button>`
+    `<button type="button" class="ur-nav-chip${_navFxCls}" onclick="_urScrollToSection('${id}')">${lbl}</button>`
   ).join('');
   return `<div class="ur-nav-bar no-export">${chips}</div>`;
 }
@@ -530,9 +590,11 @@ function statsUnivReportHTML(){
   }
 
   const col = (typeof gcReport==='function' ? gcReport(univName,'univ') : (typeof gc==='function' ? gc(univName) : '')) || '#64748b';
-  const _urFx = (typeof getReportFx==='function') ? getReportFx('univ') : {photoFx:'none',nameFx:'none'};
+  const _urFx = (typeof getReportFx==='function') ? getReportFx('univ') : {photoFx:'none',nameFx:'none',themeFx:'default',logoFx:'none',navFx:'none',intensity:'100'};
   const _urPhotoFxCls = _urFx.photoFx && _urFx.photoFx!=='none' ? ` urfx-photo-${_urFx.photoFx}` : '';
   const _urNameFxCls = _urFx.nameFx && _urFx.nameFx!=='none' ? ` urfx-name-${_urFx.nameFx}` : '';
+  const _urLogoFxCls = _urFx.logoFx && _urFx.logoFx!=='none' ? ` urfx-logo-${_urFx.logoFx}` : '';
+  const _urNavFxCls = _urFx.navFx && _urFx.navFx!=='none' ? ` urfx-nav-${_urFx.navFx}` : '';
   const _dissOwn = !!(uCfg.dissolved || uCfg.hidden);
   const allMembers = (players||[]).filter(p => p && !p.hidden && !p.retired && !p.hideFromBoard && String(p?.univ||'').trim()===univName);
   const hasRoleFn = (typeof _b2HasRole==='function') ? _b2HasRole : (()=>false);
@@ -620,9 +682,11 @@ function statsUnivReportHTML(){
     ? `<img src="${logoSrc}" onerror="this.parentNode.style.display='none'">`
     : `<span style="font-size:26px">🏫</span>`;
 
-  h += `<div id="ur-report-capture" style="--ur-accent:${col}">`;
+  const _urThemeFx = _urFx.themeFx || 'default';
+  const _urIntensity = (parseInt(_urFx.intensity,10)||100)/100;
+  h += `<div id="ur-report-capture" data-ur-theme="${_urThemeFx}" style="--ur-accent:${col};--ur-intensity:${_urIntensity}">`;
   h += `<div class="ur-hero" style="background:linear-gradient(135deg,${col}40,${col}18);border-color:${col}55;--ur-hero-accent:${col}">
-    <div class="ur-hero-logo">${logoHtml}</div>
+    <div class="ur-hero-logo${_urLogoFxCls}">${logoHtml}</div>
     <div style="min-width:0;flex:1">
       <div class="ur-hero-name${_urNameFxCls}" style="color:${col}">${escHTML(univName)}</div>
       <div class="ur-hero-badges">
