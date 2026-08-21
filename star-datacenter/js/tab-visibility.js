@@ -117,6 +117,7 @@
         { key: 'comp.sub.comprank', label: '🏅 개인 순위', kind: 'sub' },
         { key: 'comp.sub.compbrief', label: '📰 대회 브리핑', kind: 'sub' },
         { key: 'comp.sub.tiertour', label: '🎯 티어대회(티어대회 선택 시)', kind: 'sub' },
+        { key: 'tiertour.sub.brief', label: '📰 티어대회 브리핑', kind: 'sub' },
       ]
     },
     { key: 'main.pro', label: '🥇 프로리그', kind: 'tab', children: [

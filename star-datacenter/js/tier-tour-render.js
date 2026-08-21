@@ -69,7 +69,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=_tourneys.find(t=>t && t.name===_ttCurComp && t.type==='tier') || null;
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprecords','grprank','tourschedule','bktrecords','grpedit'];
+  const _validSubs=['input','records','rank','league','grprecords','grprank','tourschedule','bktrecords','brief','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!_li) _ttSub='records';
   if(_ttSub==='grpedit'&&!_li) _ttSub='records';
@@ -83,9 +83,15 @@ function rTierTourTab(C, T){
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
     {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
+    {id:'brief',lbl:'📰 브리핑',fn:`_ttSub='brief';render()`},
     ...(_li?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  const _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('tiertour', subOpts) : subOpts;
+  let _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('tiertour', subOpts) : subOpts;
+  // (신규, 2026-08-21) 설정 → 탭 표시 관리에서 브리핑 탭 PC/모바일 ON/OFF 가능하게
+  if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
+    const _filtered = window.TabVis.filterDefs(_subOpts, 'tiertour.sub');
+    if(_filtered.length) _subOpts = _filtered;
+  }
   h+=`<div class="fbar utilbar utilbar--scroll merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${_subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}
   </div>`;
@@ -111,6 +117,8 @@ function rTierTourTab(C, T){
       try{ _migrateTierBracketToRoundsIfNeeded(_curTierTn); }catch(e){}
       h+= (typeof proCompBracket==='function') ? proCompBracket(_curTierTn) : _noTnMsg;
     } else h+=_noTnMsg;
+  } else if(_ttSub==='brief'){
+    h+=(typeof rTierTourBriefing==='function') ? rTierTourBriefing(_ttCurComp) : '<div style="padding:30px;text-align:center;color:var(--gray-l)">브리핑 모듈을 불러올 수 없습니다.</div>';
   } else if(_ttSub==='bktrecords'){
     // [BUGFIX-HIGH-2] _ttCurComp 미선택 시 안내 메시지 표시
     if(!_ttCurComp){

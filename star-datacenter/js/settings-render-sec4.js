@@ -1,6 +1,6 @@
 // settings-render.js에서 분리됨 (설정 탭 렌더링 — 메뉴정리/이미지설정/경기상세/스트리머·대학상세디자인/FAB/현황판칩/구현황판/브리핑효과)
 function _cfgSecGroup4(ctx){
-  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
+  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_ttbBriefingTheme,_ttbCustomAccent,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
   return `${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">카테고리 이동 + 섹션 순서 변경을 직접 정리할 수 있습니다. 변경 즉시 저장되며 새로고침 없이 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
@@ -516,6 +516,29 @@ function _cfgSecGroup4(ctx){
         </select>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">자동은 조별리그/토너먼트/대회 종류에 따라 톤이 자동으로 바뀌고, 그 외를 고르면 종류와 무관하게 항상 같은 색으로 고정됩니다.</div>
       </div>
+      <div>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎯 티어대회 브리핑 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="localStorage.setItem('su_ttb_briefing_theme',this.value);render()">
+          <option value="dynamic" ${_ttbBriefingTheme==='dynamic'?'selected':''}>티어 색상 연동 (기본 · 참가자 티어 색이 포인트로 반영됨, 은은한 무채색 배경)</option>
+          <option value="custom" ${_ttbBriefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
+          <option value="sage" ${_ttbBriefingTheme==='sage'?'selected':''}>세이지 (은은한 그린)</option>
+          <option value="slate" ${_ttbBriefingTheme==='slate'?'selected':''}>슬레이트 (은은한 그레이블루)</option>
+          <option value="plum" ${_ttbBriefingTheme==='plum'?'selected':''}>플럼 (은은한 와인·모브)</option>
+          <option value="sand" ${_ttbBriefingTheme==='sand'?'selected':''}>샌드 (은은한 그레이지)</option>
+          <option value="mono" ${_ttbBriefingTheme==='mono'?'selected':''}>모노 (무채색 고정)</option>
+          <option value="rose" ${_ttbBriefingTheme==='rose'?'selected':''}>로즈 (은은한 더스티 핑크)</option>
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">기본(티어 색상 연동)은 대회에 참가한 선수들의 실제 설정된 티어 색을 그대로 브리핑 포인트 색으로 씁니다 — 대회마다 색이 달라집니다. 직접 선택은 원하는 색 하나를 고르면 보조색은 자동으로 밝게 만들어줍니다. 나머지 프리셋은 대회 종류와 무관하게 항상 같은 색으로 고정됩니다.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" id="cfg-ttb-custom-color" value="${_ttbCustomAccent}" style="width:44px;height:32px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_ttb_custom_accent',this.value);localStorage.setItem('su_ttb_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-sm);color:var(--text2)">
+            <div style="font-weight:700">포인트 색 직접 고르기</div>
+            <div style="font-size:10px;color:var(--gray-l)">색을 고르면 자동으로 "직접 선택" 테마로 전환됩니다.</div>
+          </div>
+        </div>
+      </div>
       <hr style="border:none;border-top:1px solid var(--border);margin:0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">MVP 카드 그라디언트 효과 사용</label>
@@ -562,7 +585,7 @@ function _cfgSecGroup4(ctx){
         </select>
       </div>
       <button class="btn btn-w btn-xs" style="align-self:flex-start"
-        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');localStorage.removeItem('su_plb_briefing_theme');localStorage.removeItem('su_plgb_briefing_theme');localStorage.removeItem('su_pcb_briefing_theme');localStorage.removeItem('su_cb_briefing_theme');render()">↩️ 기본값으로 초기화</button>
+        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');localStorage.removeItem('su_plb_briefing_theme');localStorage.removeItem('su_plgb_briefing_theme');localStorage.removeItem('su_pcb_briefing_theme');localStorage.removeItem('su_cb_briefing_theme');localStorage.removeItem('su_ttb_briefing_theme');localStorage.removeItem('su_ttb_custom_accent');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
   ${_scfgD('lineuphover','🖱️ 라인업 호버 팝업 스타일')}

@@ -2396,6 +2396,158 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
+   티어대회 브리핑 전용 디자인 (ttb-*, 신규, 2026-08-21)
+   일반대회(cbs-*, 라이트 종이톤)/프로리그 3종(plb-/plgb-/pcb-*, 다크
+   스코어보드·트로피 톤)과 구분되는 "티어 색상 연동 래더(등급표)" 톤.
+   중간 톤 다크 그래파이트 배경 위에, 이 대회 참가자들의 실제 설정된
+   티어 색상을 --ttb-accent/--ttb-accent2로 주입해 대회마다 색이 다르게
+   보이는 게 기본(dynamic)이고, 설정탭에서 고정 프리셋으로 바꿀 수도 있음
+   (su_ttb_briefing_theme). 기본값(dynamic)일 때는 아래 --ttb-accent 값을
+   JS(_ttbWrapAttrs)가 인라인 style로 덮어써서 실제 티어 색이 반영된다. */
+.ttb-wrap{ --ttb-bg1:#e2e2e2; --ttb-bg2:#d0d0d0; --ttb-bg3:#efefef; --ttb-bg3b:#dadada; --ttb-bg4:#e9e9e9; --ttb-bg5:#dcdcdc; --ttb-bg6:#efefef; --ttb-bg6b:#dadada; --ttb-bg7:#ececec; --ttb-bg7b:#dadada; --ttb-champ-bg1:#efeadb; --ttb-accent:#64748b; --ttb-accent2:#94a3b8; --ttb-ink-soft:#3f3f3f; --ttb-ink-mute:#5c5c5c; --ttb-ink-mute2:#4d4d4d; --ttb-ink-accsoft:#242424; --ttb-ink-accsoft2:#141414; --ttb-ink-bright:#0d0d0d; --ttb-ink-bright2:#080808; font-family:'Noto Sans KR',sans-serif; max-width:100%; border-radius:16px; overflow:hidden; box-shadow:0 10px 28px rgba(20,20,20,.16); background:var(--ttb-bg1); border:1px solid rgba(20,20,20,.13); }
+
+.ttb-ticker{ display:flex; align-items:center; gap:9px; padding:7px 16px; background:var(--ttb-bg2); position:relative; overflow:hidden; border-bottom:1px solid rgba(20,20,20,.06); }
+.ttb-ticker-dot{ width:7px; height:7px; border-radius:99px; background:var(--ttb-accent); box-shadow:0 0 6px color-mix(in srgb, var(--ttb-accent) 60%, transparent); flex-shrink:0; animation:ttbPulse 1.6s ease-in-out infinite; }
+@keyframes ttbPulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+.ttb-ticker-txt{ font-size:10.5px; font-weight:800; letter-spacing:.14em; color:var(--ttb-ink-accsoft); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.ttb-hero{ position:relative; padding:26px 24px 28px; overflow:hidden;
+  background:
+    radial-gradient(circle at 90% 88%, color-mix(in srgb, var(--ttb-accent) 16%, transparent), transparent 55%),
+    linear-gradient(155deg,var(--ttb-bg3) 0%,var(--ttb-bg3b) 100%);
+}
+.ttb-hero::before{ content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:repeating-linear-gradient(135deg, rgba(20,20,20,.05) 0 2px, transparent 2px 14px);
+}
+.ttb-hero-kicker{ position:relative; display:inline-flex; align-items:center; gap:7px; font-size:10.5px; font-weight:900; letter-spacing:.16em; color:#fff; text-transform:uppercase; background:var(--ttb-accent); padding:4px 12px; border-radius:99px; }
+.ttb-hero-title{ position:relative; margin-top:14px; font-size:clamp(20px,3.6vw,28px); font-weight:900; color:var(--ttb-ink-bright); letter-spacing:-.01em; line-height:1.25; }
+.ttb-hero-desc{ position:relative; margin-top:7px; font-size:12.5px; font-weight:600; color:var(--ttb-ink-soft); max-width:64ch; line-height:1.5; }
+.ttb-hero-headline{ position:relative; margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:var(--ttb-ink-bright); background:rgba(20,20,20,.07); border:1px solid rgba(20,20,20,.10); padding:7px 14px; border-radius:99px; }
+.ttb-hero-dot{ width:6px; height:6px; border-radius:99px; background:var(--ttb-accent); flex-shrink:0; }
+
+.ttb-kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; padding:20px 24px 0; position:relative; }
+.ttb-kpi-card{ position:relative; padding:14px 15px; border-radius:12px; background:linear-gradient(155deg,var(--ttb-bg6),var(--ttb-bg6b)); border:1px solid rgba(20,20,20,.07); overflow:hidden; }
+.ttb-kpi-card i{ position:absolute; left:0; top:0; bottom:0; width:3px; }
+.ttb-kpi-label{ font-size:10.5px; font-weight:800; letter-spacing:.05em; color:var(--ttb-ink-mute); text-transform:uppercase; }
+.ttb-kpi-value{ margin-top:5px; font-size:21px; font-weight:900; color:var(--ttb-ink-bright); letter-spacing:-.02em; }
+.ttb-kpi-sub{ margin-top:3px; font-size:10.5px; font-weight:700; color:var(--ttb-ink-mute); }
+
+.ttb-progress-panel{ margin:16px 24px 22px; padding:14px 16px; border-radius:12px; position:relative;
+  background:linear-gradient(155deg,var(--ttb-bg7),var(--ttb-bg7b)); border:1px solid rgba(20,20,20,.07); }
+.ttb-progress-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.ttb-progress-title{ font-size:11.5px; font-weight:900; letter-spacing:.03em; color:var(--ttb-ink-bright); }
+.ttb-progress-track{ height:9px; border-radius:99px; background:rgba(20,20,20,.08); overflow:hidden; }
+.ttb-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--ttb-accent),var(--ttb-accent2)); transition:.4s; }
+.ttb-progress-caption{ margin-top:7px; display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--ttb-ink-soft); }
+.ttb-speak-btn{ flex-shrink:0; font-size:11.5px; font-weight:800; color:var(--ttb-ink-bright); background:rgba(20,20,20,.05); border:1px solid rgba(20,20,20,.16); border-radius:99px; padding:6px 14px; cursor:pointer; }
+.ttb-speak-btn:hover{ background:rgba(20,20,20,.09); }
+
+.ttb-body{ background:linear-gradient(180deg,var(--ttb-bg4) 0%,var(--ttb-bg1) 100%); padding:28px 22px 32px; }
+
+.ttb-grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+.ttb-champ-mvp-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:18px; margin-bottom:28px; }
+.ttb-champ-mvp-row .ttb-section{ margin-bottom:0; display:flex; flex-direction:column; }
+.ttb-champ-mvp-row .ttb-champion-hero,
+.ttb-champ-mvp-row .ttb-mvp{ flex:1; }
+.ttb-section{ margin-bottom:28px; }
+.ttb-section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:9px; border-bottom:2px solid rgba(20,20,20,.10); }
+.ttb-section-title{ font-size:14.5px; font-weight:900; color:var(--ttb-ink-bright2); white-space:nowrap; display:flex; align-items:center; }
+.ttb-section-title::before{ content:''; display:inline-block; width:9px; height:9px; margin-right:8px; background:var(--ttb-accent); transform:rotate(45deg); flex-shrink:0; }
+.ttb-section-sub{ font-size:11px; font-weight:700; color:var(--ttb-ink-mute2); }
+
+.ttb-rank-list{ display:flex; flex-direction:column; gap:7px; }
+.ttb-rank-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:rgba(20,20,20,.05); border:1px solid rgba(20,20,20,.07); }
+.ttb-rank-row.top1{ box-shadow:0 4px 12px rgba(20,20,20,.10); border-left-width:5px !important; }
+.ttb-rank-badge{ flex-shrink:0; width:27px; height:27px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; }
+.ttb-rank-name{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; font-weight:900; font-size:13px; }
+.ttb-rank-name span{ white-space:normal; word-break:break-word; line-height:1.25; min-width:0; }
+.ttb-rank-sub{ font-size:10.5px; font-weight:700; color:var(--ttb-ink-mute2); white-space:nowrap; }
+.ttb-rank-value{ font-weight:900; color:var(--ttb-ink-bright); white-space:nowrap; font-size:13.5px; }
+
+.ttb-match-row{ display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:10px; background:rgba(20,20,20,.05); border:1px solid rgba(20,20,20,.07); margin-bottom:6px; }
+.ttb-match-tag{ flex-shrink:0; font-size:9.5px; font-weight:900; color:#fff; padding:2px 8px; border-radius:5px; letter-spacing:.02em; }
+.ttb-match-date{ flex-shrink:0; font-size:10px; font-weight:700; color:var(--ttb-ink-mute2); }
+.ttb-match-score{ flex-shrink:0; font-weight:900; padding:2px 10px; border-radius:7px; background:rgba(20,20,20,.055); border:1px solid rgba(20,20,20,.12); color:var(--ttb-ink-bright); font-size:12px; }
+
+.ttb-champion-hero{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px;
+  background:linear-gradient(135deg,var(--ttb-champ-bg1),var(--ttb-bg6) 65%); border:1px solid color-mix(in srgb, var(--ttb-accent) 40%, transparent);
+  position:relative; overflow:hidden; box-shadow:0 8px 20px rgba(20,20,20,.10); }
+.ttb-champion-hero::before{ content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at center,color-mix(in srgb, var(--ttb-accent) 14%, transparent),transparent 78%); pointer-events:none; }
+.ttb-champion-hero-avatar{ position:relative; flex-shrink:0; }
+.ttb-champion-hero-avatar > span{ border-color:var(--ttb-accent) !important; box-shadow:0 6px 16px rgba(20,20,20,.18); }
+.ttb-champion-hero-side{ position:relative; flex:1; min-width:180px; }
+.ttb-champion-hero-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--ttb-accent); text-transform:uppercase; }
+.ttb-champion-hero-name{ font-size:21px; font-weight:900; color:var(--ttb-ink-bright); line-height:1.28; word-break:break-word; margin-top:2px; }
+.ttb-champion-hero-meta{ margin-top:5px; font-size:12px; font-weight:800; color:var(--ttb-ink-accsoft); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.ttb-champion-hero-final{ position:relative; margin-top:9px; padding-top:9px; border-top:1px solid rgba(20,20,20,.10);
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ttb-champion-hero-final-label{ font-size:10.5px; font-weight:900; letter-spacing:.05em; color:var(--ttb-accent); text-transform:uppercase; }
+.ttb-champion-hero-final-opp{ font-size:13px; font-weight:900; }
+.ttb-champion-hero-final-score{ font-size:11.5px; font-weight:900; color:#fff; background:var(--ttb-accent); padding:2px 9px; border-radius:99px; }
+
+.ttb-mvp{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:18px; border-radius:14px; background:linear-gradient(135deg,var(--ttb-bg6b),var(--ttb-bg6)); border:1px solid rgba(20,20,20,.07); position:relative; overflow:hidden; }
+.ttb-mvp::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 18% 25%,color-mix(in srgb, var(--ttb-accent2) 16%, transparent),transparent 55%); pointer-events:none; }
+.ttb-mvp-side{ position:relative; flex:1; min-width:180px; }
+.ttb-mvp-ribbon{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--ttb-accent2); text-transform:uppercase; }
+.ttb-mvp-name{ font-size:21px; font-weight:900; color:var(--ttb-ink-bright); line-height:1.28; word-break:break-word; margin-top:2px; }
+.ttb-mvp-meta{ margin-top:5px; font-size:12px; font-weight:800; color:var(--ttb-ink-accsoft2); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.ttb-mvp-cands{ position:relative; min-width:190px; }
+.ttb-mvp-cands .ttb-rank-row{ background:rgba(20,20,20,.07); border-color:rgba(20,20,20,.08); }
+.ttb-mvp-cands .ttb-rank-name,.ttb-mvp-cands .ttb-rank-value{ color:var(--ttb-ink-bright); }
+.ttb-mvp-cands .ttb-rank-sub{ color:var(--ttb-ink-soft); }
+
+.ttb-empty{ padding:30px; text-align:center; color:var(--ttb-ink-mute2); font-size:13px; font-weight:600; }
+
+@media (max-width:640px){
+  .ttb-hero{ padding:20px 16px 24px; }
+  .ttb-kpi-grid{ padding:16px 16px 0; grid-template-columns:repeat(2,1fr); }
+  .ttb-progress-panel{ margin:14px 16px 18px; padding:12px 14px; }
+  .ttb-body{ padding:22px 14px 26px; }
+  .ttb-mvp{ padding:15px; }
+  .ttb-champion-hero{ padding:15px; }
+}
+
+/* ── 티어대회 브리핑 고정 프리셋 테마(설정탭 "브리핑 디자인 & 효과"에서 선택,
+   su_ttb_briefing_theme). dynamic(기본)이 아닌 경우에만 아래 data-theme이
+   적용되고, JS는 인라인 style을 주입하지 않는다 ── */
+/* 각 프리셋은 포인트색만이 아니라 배경/잉크 톤 전체를 바꿔 서로 확실히
+   구분되게 하되, 전부 채도를 낮춘 은은한 톤으로 통일(비비드/네온 금지) */
+.ttb-wrap[data-theme="sage"]{
+  --ttb-bg1:#dfe4d8; --ttb-bg2:#cdd5c2; --ttb-bg3:#eef1e8; --ttb-bg3b:#d8dfcb; --ttb-bg4:#e7ebdf; --ttb-bg5:#dae1cd;
+  --ttb-bg6:#eef1e8; --ttb-bg6b:#d8dfcb; --ttb-bg7:#eaeee2; --ttb-bg7b:#d8dfcb;
+  --ttb-ink-soft:#3d4a37; --ttb-ink-mute:#5a6853; --ttb-ink-mute2:#4c5a45; --ttb-ink-accsoft:#24301d; --ttb-ink-accsoft2:#131b0e; --ttb-ink-bright:#0d130a; --ttb-ink-bright2:#080c05;
+  --ttb-accent:#6b8f71; --ttb-accent2:#9dbb9f;
+}
+.ttb-wrap[data-theme="slate"]{
+  --ttb-bg1:#dfe2e6; --ttb-bg2:#cdd2d8; --ttb-bg3:#eef0f2; --ttb-bg3b:#d7dbe0; --ttb-bg4:#e7e9ec; --ttb-bg5:#d9dde1;
+  --ttb-bg6:#eef0f2; --ttb-bg6b:#d7dbe0; --ttb-bg7:#eaecee; --ttb-bg7b:#d7dbe0;
+  --ttb-ink-soft:#3c4650; --ttb-ink-mute:#5a6570; --ttb-ink-mute2:#4b5560; --ttb-ink-accsoft:#232c34; --ttb-ink-accsoft2:#131920; --ttb-ink-bright:#0c1116; --ttb-ink-bright2:#080c10;
+  --ttb-accent:#71808f; --ttb-accent2:#a3aeb8;
+}
+.ttb-wrap[data-theme="plum"]{
+  --ttb-bg1:#e6dee2; --ttb-bg2:#d5c8cf; --ttb-bg3:#f2ecef; --ttb-bg3b:#ddd0d6; --ttb-bg4:#ece3e6; --ttb-bg5:#e0d3d9;
+  --ttb-bg6:#f2ecef; --ttb-bg6b:#ddd0d6; --ttb-bg7:#efe7ea; --ttb-bg7b:#ddd0d6;
+  --ttb-ink-soft:#503a45; --ttb-ink-mute:#6e5761; --ttb-ink-mute2:#5c4650; --ttb-ink-accsoft:#33202a; --ttb-ink-accsoft2:#1e1218; --ttb-ink-bright:#150c10; --ttb-ink-bright2:#0e080a;
+  --ttb-accent:#8f6478; --ttb-accent2:#b995a5;
+}
+.ttb-wrap[data-theme="sand"]{
+  --ttb-bg1:#e5e0d6; --ttb-bg2:#d4cdbe; --ttb-bg3:#f1ede4; --ttb-bg3b:#dcd4c3; --ttb-bg4:#ebe6db; --ttb-bg5:#dfd8c8;
+  --ttb-bg6:#f1ede4; --ttb-bg6b:#dcd4c3; --ttb-bg7:#eee9dd; --ttb-bg7b:#dcd4c3;
+  --ttb-ink-soft:#4e463a; --ttb-ink-mute:#6d6353; --ttb-ink-mute2:#5c5344; --ttb-ink-accsoft:#302a1f; --ttb-ink-accsoft2:#1c1811; --ttb-ink-bright:#13100b; --ttb-ink-bright2:#0c0a07;
+  --ttb-accent:#8f7f63; --ttb-accent2:#b9ab8f;
+}
+.ttb-wrap[data-theme="mono"]{
+  --ttb-accent:#6b6b6b; --ttb-accent2:#9c9c9c;
+}
+.ttb-wrap[data-theme="rose"]{
+  --ttb-bg1:#e8dedb; --ttb-bg2:#d8c7c2; --ttb-bg3:#f3eceb; --ttb-bg3b:#e0cfca; --ttb-bg4:#ede4e2; --ttb-bg5:#e2d2ce;
+  --ttb-bg6:#f3eceb; --ttb-bg6b:#e0cfca; --ttb-bg7:#f0e7e5; --ttb-bg7b:#e0cfca;
+  --ttb-ink-soft:#5a4038; --ttb-ink-mute:#7a5e54; --ttb-ink-mute2:#684c43; --ttb-ink-accsoft:#3a251e; --ttb-ink-accsoft2:#241511; --ttb-ink-bright:#180d0a; --ttb-ink-bright2:#100907;
+  --ttb-accent:#b07a6d; --ttb-accent2:#d1a99d;
+}
+
+/* ══════════════════════════════════════════════════════════════
    프로리그 끝장전 브리핑 전용 디자인 (plgb-*, 신규, 2026-08-20)
    프로리그(일반) 브리핑(plb-*, 다크 네이비+시안/골드)과 프로리그 대회
    브리핑(pcb-*, 딥퍼플+골드)과는 구분되는, "끝장전(결투)" 느낌의
