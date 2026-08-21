@@ -168,6 +168,39 @@ async function fbCloudSave(opts) {
     window.LOG('fbCloudSave', '원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
     return window.fbSet(payload);
   };
+  // [FIX-DATA-LOSS] 저장 직전 안전장치: 이 세션이 로컬에서 아직 못 불러온 값을
+  // 그대로 저장하면, 전체 스냅샷 덮어쓰기 방식 때문에 클라우드에 이미 저장돼 있던
+  // 데이터가 통째로 사라질 수 있음(실제로 프로리그 대회 19개가 이렇게 사라진 적 있음).
+  // 저장 직전 클라우드의 현재 값과 비교해서, 이미 데이터가 있던 항목이 이번 저장으로
+  // 갑자기 0개(또는 크게 줄어듦)가 되려 하면 관리자에게 확인을 받는다.
+  try{
+    if(typeof window._fetchGithubData === 'function'){
+      const _cloudNow = await window._fetchGithubData().catch(()=>null);
+      if(_cloudNow){
+        const _shrinkFields = [
+          ['proTourneys','프로리그 대회'],
+          ['boardOrder','현황판 순서'],
+          ['tourneys','대진표'],
+          ['players','선수']
+        ];
+        const _shrunk = _shrinkFields.filter(([key,label])=>{
+          const before = Array.isArray(_cloudNow[key]) ? _cloudNow[key].length : 0;
+          const after = Array.isArray(dataObj[key]) ? dataObj[key].length : 0;
+          return before > 0 && after === 0;
+        });
+        if(_shrunk.length){
+          const msg = `⚠️ 저장 전 확인 필요\n\n다음 항목이 클라우드에는 데이터가 있는데, 지금 이 브라우저에는 비어있는 상태로 저장하려 합니다:\n\n${_shrunk.map(([k,l])=>`- ${l} (클라우드 ${_cloudNow[k].length}개 → 저장 시 0개)`).join('\n')}\n\n이대로 저장하면 해당 데이터가 전부 사라집니다.\n계속하려면 확인, 취소하고 새로고침 후 다시 시도하려면 취소를 눌러주세요.`;
+          const proceed = (typeof confirm === 'function') ? confirm(msg) : true;
+          if(!proceed){
+            const statusEl = document.getElementById('cloudStatus');
+            if(statusEl){ statusEl.style.color='#d97706'; statusEl.textContent='⏸️ 저장 취소됨 (데이터 유실 방지)'; }
+            window._isSaving = false;
+            return;
+          }
+        }
+      }
+    }
+  }catch(guardErr){ console.warn('[fbCloudSave shrink-guard]', guardErr); }
   try {
     await _tryFbSet(dataObj);
     // GitHub-only 모드: window.fbSet가 이미 GitHub data.json 저장을 수행함
