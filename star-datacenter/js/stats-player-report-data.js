@@ -507,17 +507,16 @@ function _prEmptyStateHTML(msg, icon){
 }
 function _prMapBarsHTML(mapStats, univName){
   if(!mapStats.length) return _prEmptyStateHTML('맵 기록이 없습니다');
-  const univHex = univName && typeof gc==='function' ? gc(univName) : null;
   const MEDALS=['🥇','🥈','🥉'];
+  /* (2026-08-21) 대학색 기반 옅은 틴트 대신, 요청받은 참고 이미지처럼
+     하늘색→보라색 고정 브랜드 그라데이션으로 통일 */
+  const GAUGE_GRADIENT = 'linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef)';
   let h=`<div>`;
   mapStats.forEach((m,i)=>{
-    const {css:color, light} = _prMapWrColor(m.wr, univHex);
-    const textColor = _prTintBarTextColor(light);
-    const textShadow = (textColor==='#fff') ? '0 1px 2px rgba(0,0,0,.45)' : 'none';
     const medal = MEDALS[i] || '';
     h+=`<div class="pr-bar-row">
       <div class="pr-bar-lbl" title="${escAttr(m.map)}">${medal?`<span style="margin-right:3px">${medal}</span>`:''}${escHTML(m.map)}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${color};color:${textColor};text-shadow:${textShadow}">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${GAUGE_GRADIENT};color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
       <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
     </div>`;
   });

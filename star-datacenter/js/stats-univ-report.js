@@ -95,7 +95,7 @@ function _urInjectStyle(){
     '.ur-winner-row+.ur-winner-row,.ur-rival-row+.ur-rival-row{border-top:1px solid var(--border2)}',
     '.ur-mini-avatar{width:28px;height:28px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff}',
     '.ur-mini-avatar img{width:100%;height:100%;object-fit:cover}',
-    '.ur-bar-track{flex:1;height:9px;border-radius:5px;overflow:hidden;background:var(--border2)}',
+    '.ur-bar-track{flex:1;height:14px;border-radius:999px;overflow:hidden;background:var(--border2)}',
     '.ur-recent-table{width:100%;table-layout:auto;border-collapse:collapse;font-size:12px}',
     '.ur-recent-table thead th{padding:6px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);border-bottom:1.5px solid var(--border2);white-space:nowrap}',
     '.ur-recent-table td{padding:7px 6px;border-bottom:1px solid var(--border2)}',
@@ -625,19 +625,12 @@ function statsUnivReportHTML(){
         .concat(raceRecord['?'].w+raceRecord['?'].l>0 ? [{r:'?',c:'#64748b',l:'❔ 종족 미정'}] : [])
         .map(({r,c,l})=>{
         const rec=raceRecord[r]; const g=rec.w+rec.l; const wr=g>0?Math.round(rec.w/g*100):null;
-        // (수정) 단순 alpha 투명도 대신, 스트리머 리포트(맵별 성적/다승왕/라이벌전)에서
-        // 이미 검증된 HSL 기반 틴트 헬퍼(_prTintByPercent)를 재사용 — hue를 고정한 채
-        // 채도·명도만 승률에 따라 움직여서, alpha blending에서 생기는 탁한 중간톤 없이
-        // "그 종족색의 옅은 버전 ~ 진한 버전"으로 자연스럽게 표현됨.
-        const rWrBarColor = (typeof _prTintByPercent==='function')
-          ? _prTintByPercent(wr===null?1:wr, c, 95).css
-          : ((typeof _urHexToRgba==='function') ? _urHexToRgba(c, wr===null?0.14:0.22+(wr/100)*0.78) : c);
         return `<div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
             <span style="font-size:12px;font-weight:800;color:${c}">${l}</span>
             <span style="font-size:12px;font-weight:900;color:${c}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
           </div>
-          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:${rWrBarColor};border-radius:5px;transition:width .6s ease,background .3s ease"></div></div>
+          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px;transition:width .6s ease"></div></div>
         </div>`;
       }).join('')}
     </div>
@@ -732,7 +725,7 @@ function statsUnivReportHTML(){
           <span style="width:20px;text-align:center;font-size:12px;font-weight:900;color:var(--text3);flex-shrink:0">${medal}</span>
           ${_urAvatarHTML(p, col, 32)}
           <span style="font-size:12px;font-weight:800;color:${col};min-width:64px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(p.name||'')}</span>
-          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:${wrColBar};border-radius:5px"></div></div>
+          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:var(--text2);flex-shrink:0">${x.win}승 ${x.loss}패</span>
           <span style="font-size:11.5px;font-weight:900;color:${wrColText};min-width:36px;text-align:right;flex-shrink:0">${x.wr}%</span>
         </div>`;
@@ -789,7 +782,7 @@ function statsUnivReportHTML(){
         return `<div class="ur-rival-row${i%2?' is-alt':''}" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeRival}')">
           ${rLogoHtml}
           <span style="font-size:12px;font-weight:800;color:${rCol};min-width:70px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(r.name)}</span>
-          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:${rWrColBar};border-radius:5px"></div></div>
+          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:${rWrColText};min-width:38px;text-align:right">${r.wr!==null?r.wr+'%':'-'}</span>
           <span style="font-size:10.5px;color:var(--text3);min-width:64px;text-align:right">${r.w}승 ${r.l}패</span>
         </div>`;
