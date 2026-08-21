@@ -77,12 +77,11 @@ function statsTierRankHTML(){
 
   const css = `
     <style>
-      .sr-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(148,163,184,.18);border-radius:18px;overflow:hidden;box-shadow:0 14px 28px rgba(15,23,42,.05)}
-      .sr-table th,.sr-table td{padding:11px 10px;text-align:center;border-bottom:1px solid rgba(148,163,184,.12);vertical-align:middle}
-      .sr-table thead th{background:linear-gradient(135deg,#0f172a,#4338ca 52%,#7c3aed);color:#fff;font-weight:900;border-bottom:none}
-      .sr-row{background:rgba(255,255,255,.96)}
-      .sr-row:nth-child(even){background:#fbfdff}
-      .sr-row:hover{background:#eef6ff}
+      .sr-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;border:1px solid rgba(148,163,184,.18);border-radius:18px;overflow:hidden;box-shadow:0 14px 28px rgba(15,23,42,.05)}
+      .sr-table th,.sr-table td{padding:11px 10px;text-align:center;border-bottom:1px solid rgba(148,163,184,.12);vertical-align:middle;background:transparent}
+      .sr-table thead th{background:linear-gradient(135deg,#0f172a,#4338ca 52%,#7c3aed) !important;background-image:linear-gradient(135deg,#0f172a,#4338ca 52%,#7c3aed) !important;color:#fff !important;font-weight:900;border-bottom:none}
+      .sr-row{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#94a3b8) 16%,var(--white)) 0%,var(--white) 60%)}
+      .sr-row:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#94a3b8) 26%,var(--white)) 0%,#eef6ff 60%)}
       .sr-player{display:flex;gap:8px;align-items:center;justify-content:flex-start}
       .sr-name{font-weight:1000;color:var(--text2);cursor:pointer}
       .sr-univ{font-size:var(--fs-caption);font-weight:900;opacity:.85}
@@ -94,6 +93,8 @@ function statsTierRankHTML(){
       .sr-tag.b{border-color:rgba(245,158,11,.25);color:#b45309}
       .sr-det{display:none}
       .sr-det.open{display:table-row}
+      .sr-score-cell{text-align:center;padding-right:56px}
+      @media(max-width:820px){.sr-score-cell{padding-right:34px}}
       .sr-det td{padding:14px 12px;background:linear-gradient(175deg,#f8fbff,#eef4fb)}
       .sr-box{background:#fff;border:1px solid rgba(148,163,184,.18);border-radius:var(--r2);padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
       .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -103,10 +104,9 @@ function statsTierRankHTML(){
       .sr-log th,.sr-log td{padding:6px 8px;border-bottom:1px solid rgba(148,163,184,.12);text-align:center}
       .sr-muted{opacity:.65}
       body.dark .sr-table{border-color:#334155;box-shadow:0 14px 28px rgba(0,0,0,.22)}
-      body.dark .sr-table thead th{background:linear-gradient(135deg,#0f172a,#312e81 52%,#6d28d9)}
-      body.dark .sr-row{background:#0f172a}
-      body.dark .sr-row:nth-child(even){background:#132033}
-      body.dark .sr-row:hover{background:#17263c}
+      body.dark .sr-table thead th{background:linear-gradient(135deg,#0f172a,#312e81 52%,#6d28d9) !important;background-image:linear-gradient(135deg,#0f172a,#312e81 52%,#6d28d9) !important;color:#fff !important}
+      body.dark .sr-row{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#64748b) 24%,#0f172a) 0%,#0f172a 60%)}
+      body.dark .sr-row:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#64748b) 34%,#0f172a) 0%,#17263c 60%)}
       body.dark .sr-table td{border-color:#233247;color:#e2e8f0}
       body.dark .sr-box,body.dark .sr-log{background:#132033;border-color:#334155}
       body.dark .sr-det td{background:linear-gradient(175deg,#0f172a,#162235)}
@@ -128,9 +128,12 @@ function statsTierRankHTML(){
 
   const table = `<div class="ssec" style="padding:0;overflow:hidden">
     <table class="sr-table">
+      <colgroup>
+        <col style="width:70px"><col><col style="width:150px"><col style="width:260px">
+      </colgroup>
       <thead><tr>
         <th style="width:70px">순위</th>
-        <th style="text-align:left">선수</th>
+        <th style="text-align:left">스트리머</th>
         <th style="width:150px">종합 점수</th>
         <th style="width:260px">요약</th>
       </tr></thead>
@@ -142,7 +145,7 @@ function statsTierRankHTML(){
         const dormClass=r.dormant?'sr-muted':'';
         const pWR=(r.pWR*100)||0, iWR=(r.iWR*100)||0;
         return `
-          <tr class="sr-row ${dormClass}" onclick="statsRankToggle('${safe}')">
+          <tr class="sr-row ${dormClass}" style="--rowuniv:${gc(p.univ)}" onclick="statsRankToggle('${safe}')">
             <td><div class="sr-score" style="color:${idx<3?'#111827':'#4f46e5'}">${idx+1}</div></td>
             <td style="text-align:left">
               <div class="sr-player">
@@ -153,7 +156,7 @@ function statsTierRankHTML(){
                 </div>
               </div>
             </td>
-            <td>
+            <td class="sr-score-cell">
               <div class="sr-score">${r.total}</div>
               <div class="sr-mini">
                 <span class="sr-tag p" title="일반 점수">일반 ${r.practiceScore}</span>

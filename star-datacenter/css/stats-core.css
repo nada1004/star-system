@@ -53,23 +53,41 @@ body.dark .univ-roster-avatar{box-shadow:0 0 0 2px #0f172a,0 0 0 3.5px var(--acc
 body.dark .univ-roster-name{color:#e2e8f0}
 
 /* ── 대학 정보(정보탭) 히어로 헤더 — 로고 + 핵심 지표 칩 ── */
-.radar-hero{position:relative;padding:18px 20px 16px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,var(--accent,#2563eb)12,rgba(255,255,255,.98) 62%);border:1px solid var(--accent,#2563eb)26;box-shadow:0 4px 14px rgba(15,23,42,.05)}
-.radar-hero-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.radar-hero{position:relative;padding:18px 20px 16px;border-radius:22px;overflow:hidden;background:linear-gradient(150deg,color-mix(in srgb,var(--accent,#2563eb) 32%,var(--white)) 0%,color-mix(in srgb,var(--accent,#2563eb) 10%,var(--white)) 45%,var(--white) 85%);border:1px solid var(--accent,#2563eb)26;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.radar-hero::before{content:'';position:absolute;top:-46px;right:-36px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,var(--accent,#2563eb)70,transparent 72%);pointer-events:none;z-index:0}
+.radar-hero::after{content:'';position:absolute;bottom:-64px;left:-24px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,var(--accent,#2563eb)40,transparent 70%);pointer-events:none;z-index:0}
+.radar-hero-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .radar-hero-id{display:flex;align-items:center;gap:12px;min-width:0}
 .radar-hero-logo{width:52px;height:52px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0}
 .radar-hero-logo img{width:100%;height:100%;object-fit:contain}
 .radar-hero-eyebrow{font-size:10.5px;font-weight:900;letter-spacing:.06em;color:var(--accent,#2563eb);text-transform:uppercase}
 .radar-hero-name{font-size:21px;font-weight:950;letter-spacing:-.02em;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .radar-hero-select{appearance:none;padding:9px 32px 9px 14px;border-radius:999px;border:1.5px solid var(--accent,#2563eb)44;background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%2364748b"/></svg>') no-repeat right 13px center;font-size:12.5px;font-weight:800;color:var(--text1);cursor:pointer}
-.radar-hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--accent,#2563eb)2e}
+.radar-hero-chips{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--accent,#2563eb)2e}
 .radar-hero-chip{display:flex;flex-direction:column;gap:2px;padding:8px 14px;border-radius:14px;background:rgba(255,255,255,.85);border:1px solid rgba(148,163,184,.14);box-shadow:0 2px 6px rgba(15,23,42,.03)}
 .radar-hero-chip b{font-size:15px;font-weight:950;color:var(--text1)}
 .radar-hero-chip span{font-size:10px;font-weight:700;color:var(--text3)}
-body.dark .radar-hero{background:linear-gradient(135deg,var(--accent,#2563eb)22,rgba(15,23,42,.94) 62%);border-color:var(--accent,#2563eb)3d}
+body.dark .radar-hero{background:linear-gradient(150deg,color-mix(in srgb,var(--accent,#2563eb) 40%,#0f172a) 0%,color-mix(in srgb,var(--accent,#2563eb) 14%,#0f172a) 45%,#0f172a 85%);border-color:var(--accent,#2563eb)3d}
+body.dark .radar-hero::before{background:radial-gradient(circle,var(--accent,#2563eb)55,transparent 72%)}
+body.dark .radar-hero::after{background:radial-gradient(circle,var(--accent,#2563eb)30,transparent 70%)}
 body.dark .radar-hero-select{background-color:rgba(15,23,42,.6);border-color:var(--accent,#2563eb)55;color:#e2e8f0}
 body.dark .radar-hero-chip{background:rgba(15,23,42,.6);border-color:#334155}
 body.dark .radar-hero-chip b{color:#f1f5f9}
 @media(max-width:640px){.radar-hero-name{font-size:18px}.radar-hero-chips{gap:6px}.radar-hero-chip{padding:7px 11px}}
+
+/* ── 대학 정보 히어로 — 대학 선택 버튼형 피커(정보 영역 위에 항상 노출) ── */
+.radar-univ-picker-wrap{margin-bottom:12px}
+.radar-univ-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.radar-univ-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 5px 8px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;font-family:inherit}
+.radar-univ-btn:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(15,23,42,.1);border-color:var(--ubtn-col)}
+.radar-univ-btn:active{transform:translateY(0) scale(.96);transition-duration:.06s}
+.radar-univ-btn.is-sel{border-color:var(--ubtn-col);background:linear-gradient(180deg,color-mix(in srgb,var(--ubtn-col) 14%,var(--white)),var(--white));box-shadow:0 0 0 2px color-mix(in srgb,var(--ubtn-col) 30%,transparent)}
+.radar-univ-btn-logo{width:28px;height:28px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--surface);flex-shrink:0}
+.radar-univ-btn-logo img{width:100%;height:100%;object-fit:cover}
+.radar-univ-btn-name{font-size:10px;font-weight:800;color:var(--text2);max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radar-univ-btn.is-sel .radar-univ-btn-name{color:var(--ubtn-col)}
+body.dark .radar-univ-btn{background:rgba(15,23,42,.55);border-color:#334155}
+body.dark .radar-univ-btn.is-sel{background:linear-gradient(180deg,color-mix(in srgb,var(--ubtn-col) 24%,rgba(15,23,42,.7)),rgba(15,23,42,.7))}
 
 .univ-h2h-list{display:flex;flex-direction:column;gap:6px}
 .univ-h2h-row{display:grid;grid-template-columns:auto auto 1fr auto auto;grid-template-areas:"rank badge bar rec wr";gap:10px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.14);background-color:transparent;cursor:pointer;transition:.12s}

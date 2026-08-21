@@ -650,6 +650,26 @@ function _radarUnivLogoHTML(name, col){
   const src = iconUrl ? (typeof toHttpsUrl==='function'?toHttpsUrl(iconUrl):iconUrl) : '';
   return src ? `<img src="${src}" onerror="this.parentNode.innerHTML='🏛️'">` : `<span style="font-size:26px">🏛️</span>`;
 }
+// [UI개선] 대학 정보 히어로 - select 드롭다운 대신 항상 노출되는 버튼형 피커로 대체
+function _radarSelectUniv(name){
+  _radarSelUniv = name;
+  if(typeof render==='function') render();
+}
+function _radarUnivPickerGridHTML(univs){
+  return `<div class="radar-univ-picker-wrap">
+    <div class="radar-univ-picker-grid">
+      ${univs.map(u=>{
+        const uCol = gc(u.name) || '#64748b';
+        const isSel = u.name===_radarSelUniv;
+        const safeU = String(u.name||'').replace(/'/g,"\\'");
+        return `<button type="button" class="radar-univ-btn${isSel?' is-sel':''}" style="--ubtn-col:${uCol}" onclick="_radarSelectUniv('${safeU}')">
+          <span class="radar-univ-btn-logo">${_radarUnivLogoHTML(u.name,uCol)}</span>
+          <span class="radar-univ-btn-name">${escHTML(u.name)}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
 function statsRadarHTML(){
   const _players = Array.isArray(players) ? players : [];
   const {rows:_rows, scoreMap:_allScores} = getSortedRadarRows();
@@ -663,6 +683,7 @@ function statsRadarHTML(){
   const _totalGames=_rows.reduce((sum,row)=>sum+(row.scores.tot||0),0);
   const _wrRank = _rows.slice().sort((a,b)=>(b.scores.winrate||0)-(a.scores.winrate||0)).findIndex(r=>r.u.name===_radarSelUniv)+1;
   return`<div style="display:flex;flex-direction:column;gap:16px">
+  ${_radarUnivPickerGridHTML(univs)}
   <div class="radar-hero" id="stats-radar-sec" style="--accent:${_selectedColor}">
     <div class="radar-hero-top">
       <div class="radar-hero-id">
@@ -673,9 +694,6 @@ function statsRadarHTML(){
         </div>
       </div>
       <div class="stats-chart-actions no-export" style="align-items:center">
-        <select id="radar-sel" class="radar-hero-select" onchange="_radarSelUniv=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()">
-          ${univs.map(u=>`<option value="${escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
-        </select>
         <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
       </div>
     </div>
