@@ -555,7 +555,6 @@ function _prMapBarsHTML(mapStats, univName){
      - 링 색은 맵마다 승률에 따라 소속 대학색의 옅은/진한 톤으로 달라져서(고정 그라데이션이었던
        기존 방식과 달리) 맵별로 실제 성적 차이가 색으로도 드러남
      - auto-fit 그리드라 맵 개수가 늘어나도 자동으로 줄바꿈됨 */
-  const MEDALS=['🥇','🥈','🥉'];
   const univHex = (univName && typeof gc==='function') ? (gc(univName)||'#0d9488') : '#0d9488';
   const eligible = mapStats.filter(m=>m.tot>=2);
   let bestMap='', worstMap='';
@@ -564,11 +563,10 @@ function _prMapBarsHTML(mapStats, univName){
     if(sorted[0].wr>sorted[sorted.length-1].wr){ bestMap=sorted[0].map; worstMap=sorted[sorted.length-1].map; }
   }
   let h=`<div class="pr-gauge-grid">`;
-  mapStats.forEach((m,i)=>{
-    const medal = MEDALS[i] || '🗺️';
+  mapStats.forEach((m)=>{
     const color = _prTintByPercent(m.wr, univHex, 70).css;
     const badge = m.map===bestMap ? 'best' : m.map===worstMap ? 'worst' : '';
-    h+=_prGaugeCardHTML(m.map, m.w, m.l, medal, color, badge);
+    h+=_prGaugeCardHTML(m.map, m.w, m.l, '🗺️', color, badge);
   });
   h+=`</div>`;
   return h;
