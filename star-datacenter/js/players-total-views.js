@@ -29,7 +29,7 @@ function _buildGalleryView(rankMap){
   const _ggFallbackGradMode = localStorage.getItem('su_univ_header_gradient') || 'left-to-right';
   const _ggFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
   const _ggFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
-  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+  _getUnivs().filter(u=>!u.dissolved).forEach(u=>{
     if(totalUnivFilter && u.name!==totalUnivFilter) return;
     let up=_univScActiveMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
@@ -198,7 +198,7 @@ function _buildSimpleView(rankMap){
   let html='<div class="streamer-simple-list">';
   let anyShown=false;
   let _sRowIdx=0;
-  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+  _getUnivs().filter(u=>!u.dissolved).forEach(u=>{
     if(totalUnivFilter && u.name!==totalUnivFilter) return;
     let up=_univScMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);

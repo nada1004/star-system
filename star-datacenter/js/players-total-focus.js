@@ -232,7 +232,7 @@ function _buildFocusView(rankMap){
     if(groups.has(key)) groups.get(key).push(p);
     else groups.set(key,[p]);
   });
-  const orderedUnivs = (_getUnivs().filter(u=>isLoggedIn||!u.hidden).map(u=>u.name)).concat('무소속');
+  const orderedUnivs = (_getUnivs().filter(u=>!u.dissolved).map(u=>u.name)).concat('무소속');
   let listHtml = '<div class="streamer-focus-list">';
   let _fRowIdx=0;
   orderedUnivs.forEach(univName=>{

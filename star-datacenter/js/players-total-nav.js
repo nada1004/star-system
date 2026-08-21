@@ -36,6 +36,9 @@ if(typeof window!=='undefined') window._toggleStreamerMobileInfo = _toggleStream
 
 // 스트리머 탭: "🏫 대학 바로가기" — 대학을 고르면 해당 대학 소속만 필터링하고(모든 보기 모드 공통),
 // 현재 화면에 그 대학 섹션 헤더가 있으면(테이블/카드/심플/상세형 모두 헤더 존재) 그 위치로 스크롤 이동.
+// (2026-08-21) 스트리머탭은 브리핑탭(현황판)과 달리 hidden(숨김) 대학도 로그인 여부와
+// 무관하게 항상 전체 목록에 노출하는 게 의도된 동작이다(요청 확인) — 위 _visiblePlayers
+// 필터가 hidden/dissolved를 무시하는 것과 동일한 원칙.
 function _closeUnivShortcutPopover(){
   try{ const p=document.getElementById('streamer-univ-popover'); if(p) p.remove(); }catch(e){}
   try{ document.removeEventListener('mousedown', _univShortcutOutsideClick, true); }catch(e){}
@@ -53,7 +56,7 @@ function _toggleUnivShortcutPopover(btn){
   try{
     const _plU = (typeof players!=='undefined' && Array.isArray(players)) ? players : [];
     const _getUnivsU = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
-    const univs = _getUnivsU ? _getUnivsU().filter(u=>(typeof isLoggedIn!=='undefined'&&isLoggedIn)||!u.hidden) : [];
+    const univs = _getUnivsU ? _getUnivsU().filter(u=>!u.dissolved) : [];
     const counts = new Map();
     _plU.forEach(p=>{
       if(!p || p.retired || !p.univ) return;

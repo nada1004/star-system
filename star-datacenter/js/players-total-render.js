@@ -102,7 +102,10 @@ function rTotal(C,T){
     if(totalHideNoRecord && (Number(p.win||0)+Number(p.loss||0))<=0) return false;
     return true;
   });
-  const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
+  // (2026-08-21) hidden(숨김) 대학은 로그인 여부와 무관하게 항상 보여주되,
+  // dissolved(해체)된 대학은 계속 제외한다.
+  const _univDissolvedSet = new Set((typeof getAllUnivs==='function' ? getAllUnivs() : []).filter(u=>u.dissolved).map(u=>u.name));
+  const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(u=>u && u!=='무소속' && !_univDissolvedSet.has(u))).size;
   const _photoCount = _visiblePlayers.filter(p=>String(p.photo||'').trim()).length;
   const _roleCount = _visiblePlayers.filter(p=>p.role && roleIsMain(p.role)).length;
   const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
@@ -314,7 +317,7 @@ function rTotal(C,T){
   const _gFallbackGradMode = localStorage.getItem('su_univ_header_gradient') || 'left-to-right';
   const _gFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
   const _gFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
-  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+  _getUnivs().filter(u=>!u.dissolved).forEach(u=>{
     if(totalUnivFilter && u.name!==totalUnivFilter) return;
     const _isHiddenUniv=isLoggedIn&&u.hidden;
     let up=_univScMap.get(u.name) || [];
