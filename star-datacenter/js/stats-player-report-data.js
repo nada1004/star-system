@@ -74,7 +74,7 @@ try{
     '.pr-recent-wrap{margin-top:8px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding:9px 12px;border-radius:var(--r2);background:var(--surface);border:1px solid var(--border)}',
     '.pr-recent-lbl{font-size:11px;color:var(--text2);font-weight:800;display:inline-flex;align-items:center;gap:4px}',
     '.pr-recent-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:999px;background:var(--white);border:1px solid var(--border2);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);transition:.15s}',
-    '.pr-recent-chip:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue)}',
+    '.pr-recent-chip:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, white);border-color:var(--pr-accent,var(--blue));color:var(--pr-accent,var(--blue))}',
     '.pr-fav-chip{border-color:#f59e0b6b;background:#fffbeb;color:#92400e}',
     '.pr-fav-chip:hover{background:#fef3c7;border-color:#f59e0b;color:#92400e}',
     '.pr-mode-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:10px;padding:8px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border)}',
@@ -182,6 +182,42 @@ try{
     '@media (max-width:480px){.pr-bgstyle-row{gap:5px;padding:8px 10px}.pr-bgstyle-btn{padding:6px 9px;font-size:10.5px}}',
     '.pr-bg-loading .pr-img-preview-body img{opacity:.35}',
     '.pr-bg-loading .pr-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2)}',
+    /* ── 소속 대학 색상 테마: #pr-report-capture 안의 배경/박스/버튼을 --pr-accent(대학색)의 연한 톤으로
+       (2026-08-21 오전 진하게 재조정 → 2026-08-21 오후 "좀 더 연하게" 피드백으로 전체 비율 축소 재조정) ── */
+    '#pr-report-capture{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 4%, transparent);border-radius:22px}',
+    '#pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 9%, var(--white));border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 26%, var(--border))}',
+    '#pr-report-capture .ssec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 6%, var(--white))}',
+    /* 핵심 분석 & AI 코멘트 섹션은 대학색 대신 AI 코멘트 박스와 어울리는 별도 톤(인디고/보라 계열) 고정 사용 — ID 2개라 위 .ssec 규칙보다 항상 우선 적용됨 */
+    '#pr-report-capture #pr-sec-insights.ssec{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border-color:#e0e7ff}',
+    'body.dark #pr-report-capture #pr-sec-insights.ssec{background:linear-gradient(135deg,#1e2547,#241b47);border-color:#2d3f55}',
+    '#pr-report-capture .pr-info-card{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 10%, var(--white));border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 22%, var(--border))}',
+    '#pr-report-capture .pr-wr-card{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 9%, var(--white));border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 22%, var(--border))}',
+    '#pr-report-capture .pr-gauge-ring::before{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 9%, var(--white))}',
+    '#pr-report-capture .pr-chip-neutral{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 10%, var(--white))}',
+    '#pr-report-capture .pr-mtrend-summary,#pr-report-capture .pr-mode-legend{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, var(--white))}',
+    '#pr-report-capture .pr-empty-sec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 6%, var(--white))}',
+    /* .pr-btn-primary/.pr-period-btn.on은 자체 배경(var(--blue))+흰 글자 조합인데, ID로 스코프된 위 규칙이
+       클래스 2개짜리 .pr-btn.pr-btn-primary보다 우선순위가 높아 배경만 연하게 덮어써 흰 글자가 거의 안 보이던
+       버그가 있었음(2026-08-21) → 해당 버튼들은 :not()으로 제외해 원래 진한 배경+흰 글자 유지 */
+    '#pr-report-capture .pr-btn:not(.pr-btn-primary){background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, var(--white))}',
+    '#pr-report-capture .pr-btn:not(.pr-btn-primary):hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, var(--white))}',
+    '#pr-report-capture .pr-btn.pr-btn-ghost{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 6%, transparent)}',
+    '#pr-report-capture .pr-nav-chip{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, var(--white))}',
+    '#pr-report-capture .pr-period-btn:not(.on){background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, var(--white))}',
+    /* 최근 경기 리스트도 흰 배경만 있지 않도록 대학색 옅은 톤을 행 배경에 적용(행 자체 인라인 배경보다 우선되도록 !important) */
+    '#pr-report-capture .pr-recent-table tbody tr.pd-hist-row{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 5%, var(--white))!important}',
+    '#pr-report-capture .pr-recent-table tbody tr.pd-hist-row:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 14%, var(--white))!important}',
+    'body.dark #pr-report-capture{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, transparent)}',
+    'body.dark #pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 20%, #1e293b);border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 32%, rgba(148,163,184,.16))}',
+    'body.dark #pr-report-capture .ssec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 13%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-info-card,body.dark #pr-report-capture .pr-wr-card{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, #1e293b);border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 28%, #2d3f55)}',
+    'body.dark #pr-report-capture .pr-gauge-ring::before{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-chip-neutral,body.dark #pr-report-capture .pr-mtrend-summary,body.dark #pr-report-capture .pr-mode-legend,body.dark #pr-report-capture .pr-empty-sec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 14%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-btn:not(.pr-btn-primary){background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-btn:not(.pr-btn-primary):hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 22%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-nav-chip,body.dark #pr-report-capture .pr-period-btn:not(.on){background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, #1e293b)}',
+    'body.dark #pr-report-capture .pr-recent-table tbody tr.pd-hist-row{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, #1e293b)!important}',
+    'body.dark #pr-report-capture .pr-recent-table tbody tr.pd-hist-row:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 20%, #1e293b)!important}',
     /* ── 다크모드 보정: var()로 자동 대응되지 않는 하드코딩 파스텔톤 요소 ── */
     'body.dark .pr-hero{background:linear-gradient(135deg,rgba(30,41,59,.96),rgba(22,32,50,.92));border-color:rgba(148,163,184,.16)}',
     'body.dark .pr-ai-box{background:linear-gradient(135deg,#1e3a5f,#241b47);border-color:#2d3f55;border-left-color:#3b82f6}',
@@ -191,7 +227,8 @@ try{
     'body.dark .pr-highlight-row.pr-highlight-bad{background:#3a1414;border-left-color:#f87171}',
     'body.dark .pr-filter-pill.on{background:#3a1414;border-color:#f87171;color:#fca5a5}',
     'body.dark .pr-nav-more[open] .pr-nav-more-btn{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d)}',
-    'body.dark .pr-strip-toggle:hover,body.dark .pr-recent-chip:hover,body.dark .pr-nav-chip:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d)}',
+    'body.dark .pr-strip-toggle:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d)}',
+    'body.dark .pr-recent-chip:hover,body.dark .pr-nav-chip:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 20%, transparent);border-color:var(--pr-accent,var(--blue));color:var(--pr-accent,var(--blue))}',
     'body.dark .pr-empty-sec{background:var(--surface);border-color:var(--border2)}',
     'body.dark .pr-mtrend-note b{color:#4ade80}',
     '.pr-sec-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}',
@@ -220,12 +257,16 @@ try{
     'body.dark .pr-gauge-badge--worst{background:#4c1d1d;color:#fca5a5}',
     '.pr-bar-row{display:flex;align-items:center;gap:10px;padding:6px 0}',
     '.pr-bar-lbl{width:100px;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.pr-bar-track{flex:1;height:20px;border-radius:999px;background:var(--surface);overflow:hidden}',
+    '.pr-bar-track{position:relative;flex:1;height:20px;border-radius:999px;background:var(--surface);overflow:hidden}',
     '.pr-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;color:#fff;font-size:10px;font-weight:900;white-space:nowrap;transition:width .3s;text-shadow:0 1px 2px rgba(0,0,0,.45)}',
+    /* 맵별 성적 게이지: 그라데이션을 막대(fill) 자체가 아니라 트랙 전체(고정폭)에 깔아두고,
+       fill 폭만큼만 보이도록 오른쪽을 마스킹 — 막대 폭이 저마다 달라 그라데이션이 다시 늘어나며
+       맵마다 색이 들쭉날쭉(튀어)보이던 문제를 해결(2026-08-21) */
+    '.pr-bar-mask{position:absolute;top:0;right:0;bottom:0;background:var(--surface);border-radius:0 999px 999px 0;transition:left .3s}',
     '.pr-bar-rec{width:76px;flex-shrink:0;font-size:11px;color:var(--text2);font-weight:700;text-align:right}',
     /* 🎮 이스포츠 카드의 MATCH RECORD 칩 스타일을 리포트 본문(대회·모드별 성적)에도 그대로 재사용 */
     '.pr-mode-chip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}',
-    '.pr-mode-chip{position:relative;padding:14px 16px 14px 20px;border-radius:14px;overflow:hidden}',
+    '.pr-mode-chip{position:relative;padding:14px 16px 14px 20px;border-radius:16px;overflow:hidden}',
     '.pr-mode-chip-accent{position:absolute;left:0;top:0;bottom:0;width:5px}',
     '.pr-mode-chip-lbl{font-size:12px;font-weight:800;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.pr-mode-chip-row{display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap}',
@@ -248,14 +289,14 @@ try{
     '.pr-nav-bar{display:flex;gap:6px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 2px 14px;margin-bottom:4px}',
     '.pr-nav-bar::-webkit-scrollbar{display:none}',
     '.pr-nav-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.15s}',
-    '.pr-nav-chip:hover{background:var(--blue-l);border-color:var(--blue);color:var(--blue)}',
+    '.pr-nav-chip:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, white);border-color:var(--pr-accent,var(--blue));color:var(--pr-accent,var(--blue))}',
     '.pr-nav-more{position:relative;flex-shrink:0}',
     '.pr-nav-more-btn{list-style:none}',
     '.pr-nav-more-btn::-webkit-details-marker{display:none}',
-    '.pr-nav-more[open] .pr-nav-more-btn{background:var(--blue-l);border-color:var(--blue);color:var(--blue)}',
+    '.pr-nav-more[open] .pr-nav-more-btn{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 12%, white);border-color:var(--pr-accent,var(--blue));color:var(--pr-accent,var(--blue))}',
     '.pr-nav-more-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:20;display:flex;flex-direction:column;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh3);padding:6px;min-width:180px}',
     '.pr-nav-more-item{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}',
-    '.pr-nav-more-item:hover{background:var(--surface);color:var(--blue)}',
+    '.pr-nav-more-item:hover{background:var(--surface);color:var(--pr-accent,var(--blue))}',
     /* 전체 경기 테이블(최근전적) — 공용 행 빌더는 건드리지 않고 이 리포트 안에서만 왼쪽 컬러 악센트 + 호버 강조 */
     '.pr-recent-table table{border-collapse:separate;border-spacing:0}',
     '.pr-recent-table tbody tr.pd-hist-row{box-shadow:inset 3px 0 0 0 transparent;transition:background .12s}',
@@ -429,7 +470,9 @@ function _prOverallGaugeHTML(stats){
 /* 하위 호환용 (다른 곳에서 참조 시 전체+종족 게이지 그리드 · 최강/약점 종족전 배지 표시) */
 function _prWinRateCardsHTML(stats){
   const RACE_LABEL={P:'프로토스전',T:'테란전',Z:'저그전'};
-  const RACE_ICON={P:'🔵',T:'🔴',Z:'🟣'};
+  /* (2026-08-21) 원 이모지(🔵🔴🟣)가 실제 종족색(PR_RACE_COLOR: P=주황,T=파랑,Z=보라)과
+     안 맞아서, 게이지 링 색과 항상 일치하는 실제 색상 점으로 교체 */
+  const raceDot = r => `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${_prRaceColor(r)};vertical-align:middle"></span>`;
   const eligible=['P','T','Z'].map(r=>{
     const rv=stats.rv[r]; const t=rv.w+rv.l;
     return {r, tot:t, wr: t? Math.round(rv.w/t*100):0};
@@ -441,30 +484,29 @@ function _prWinRateCardsHTML(stats){
   }
   let h=`<div class="pr-gauge-grid">`;
   h+=_prGaugeCardHTML('전체 승률', stats.w, stats.l, '🎮');
-  h+=_prGaugeCardHTML(RACE_LABEL.P, stats.rv.P.w, stats.rv.P.l, RACE_ICON.P, _prRaceColor('P'), 'P'===bestR?'best':'P'===worstR?'worst':'');
-  h+=_prGaugeCardHTML(RACE_LABEL.T, stats.rv.T.w, stats.rv.T.l, RACE_ICON.T, _prRaceColor('T'), 'T'===bestR?'best':'T'===worstR?'worst':'');
-  h+=_prGaugeCardHTML(RACE_LABEL.Z, stats.rv.Z.w, stats.rv.Z.l, RACE_ICON.Z, _prRaceColor('Z'), 'Z'===bestR?'best':'Z'===worstR?'worst':'');
+  h+=_prGaugeCardHTML(RACE_LABEL.P, stats.rv.P.w, stats.rv.P.l, raceDot('P'), _prRaceColor('P'), 'P'===bestR?'best':'P'===worstR?'worst':'');
+  h+=_prGaugeCardHTML(RACE_LABEL.T, stats.rv.T.w, stats.rv.T.l, raceDot('T'), _prRaceColor('T'), 'T'===bestR?'best':'T'===worstR?'worst':'');
+  h+=_prGaugeCardHTML(RACE_LABEL.Z, stats.rv.Z.w, stats.rv.Z.l, raceDot('Z'), _prRaceColor('Z'), 'Z'===bestR?'best':'Z'===worstR?'worst':'');
   h+=`</div>`;
   return h;
 }
 /* ─── 종족 전적 (동일 종족전 포함 · 상대 종족별 전적 바) ─── */
 function _prRaceBarsHTML(stats){
   const RACE_LABEL={P:'프로토스전',T:'테란전',Z:'저그전'};
-  const RACE_ICON={P:'🔵',T:'🔴',Z:'🟣'};
   let h=`<div>`;
   ['P','T','Z'].forEach(r=>{
     const rv=stats.rv[r]; const tot=rv.w+rv.l; const wr= tot? Math.round(rv.w/tot*100):0;
     const baseColor=_prRaceColor(r);
-    // (개선) 종족색을 승률과 무관하게 고정으로 쓰던 것 → 대학 리포트/맵별 성적과 동일하게
-    // 승률이 낮으면 옅게, 높으면 진하게(HSL 틴트) 표현해서 색만 봐도 그 종족을 상대로
-    // 얼마나 강한지 바로 느껴지도록 개선. 배경 명도에 따라 바 안의 글씨색도 같이 맞춤.
-    const tint = (typeof _prTintByPercent==='function') ? _prTintByPercent(tot?wr:1, baseColor, 92) : {css:baseColor, light:40};
-    const fillColor = tint.css;
-    const fillTextColor = (typeof _prTintBarTextColor==='function') ? _prTintBarTextColor(tint.light) : '#fff';
-    const fillTextShadow = fillTextColor==='#fff' ? '0 1px 2px rgba(0,0,0,.45)' : 'none';
+    /* (2026-08-21) 라벨 앞 원 이모지(🔵🔴🟣)가 실제 종족 고유색(PR_RACE_COLOR)과
+       안 맞았던 문제 — 고정 이모지 대신 실제 색상값을 그대로 쓰는 점으로 교체해서
+       색이 바뀌어도 항상 일치하도록 함. */
+    const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${baseColor};margin-right:5px;vertical-align:middle"></span>`;
+    /* 대학 리포트 종족별 승률과 동일하게, 그 종족 고유색을 옅은 톤→진한 톤
+       그라데이션 필로 표현 — 승률과 무관하게 항상 "그 종족색"임이 분명하게 보이도록. */
+    const fillColor = `linear-gradient(90deg,color-mix(in srgb, ${baseColor} 45%, white),${baseColor})`;
     h+=`<div class="pr-bar-row">
-      <div class="pr-bar-lbl">${RACE_ICON[r]} ${escHTML(RACE_LABEL[r])}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${tot?Math.max(wr,10):0}%;background:${fillColor};color:${fillTextColor};text-shadow:${fillTextShadow}">${tot?_prWrIcon(wr)+' '+wr+'%':'-'}</div></div>
+      <div class="pr-bar-lbl">${dot}${escHTML(RACE_LABEL[r])}</div>
+      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${tot?Math.max(wr,10):0}%;background:${fillColor};color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${tot?_prWrIcon(wr)+' '+wr+'%':'-'}</div></div>
       <div class="pr-bar-rec"><span style="color:var(--score-win);font-weight:900">${rv.w}승</span> <span style="color:var(--score-lose);font-weight:900">${rv.l}패</span></div>
     </div>`;
   });
@@ -507,18 +549,26 @@ function _prEmptyStateHTML(msg, icon){
 }
 function _prMapBarsHTML(mapStats, univName){
   if(!mapStats.length) return _prEmptyStateHTML('맵 기록이 없습니다');
+  /* (2026-08-21) 가로 막대 리스트 → 원형 게이지 카드 그리드로 변경.
+     - 위쪽 승률/종족 섹션(_prWinRateCardsHTML)과 같은 pr-gauge-card 컴포넌트를 재사용해
+       리포트 전체의 시각 톤을 통일 (긴 막대 나열이 다 비슷해 보인다는 피드백 반영)
+     - 링 색은 맵마다 승률에 따라 소속 대학색의 옅은/진한 톤으로 달라져서(고정 그라데이션이었던
+       기존 방식과 달리) 맵별로 실제 성적 차이가 색으로도 드러남
+     - auto-fit 그리드라 맵 개수가 늘어나도 자동으로 줄바꿈됨 */
   const MEDALS=['🥇','🥈','🥉'];
-  /* (2026-08-21) 대학색 기반 옅은 틴트 대신, 요청받은 참고 이미지처럼
-     하늘색→보라색 고정 브랜드 그라데이션으로 통일 */
-  const GAUGE_GRADIENT = 'linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef)';
-  let h=`<div>`;
+  const univHex = (univName && typeof gc==='function') ? (gc(univName)||'#0d9488') : '#0d9488';
+  const eligible = mapStats.filter(m=>m.tot>=2);
+  let bestMap='', worstMap='';
+  if(eligible.length>=2){
+    const sorted=eligible.slice().sort((a,b)=>b.wr-a.wr);
+    if(sorted[0].wr>sorted[sorted.length-1].wr){ bestMap=sorted[0].map; worstMap=sorted[sorted.length-1].map; }
+  }
+  let h=`<div class="pr-gauge-grid">`;
   mapStats.forEach((m,i)=>{
-    const medal = MEDALS[i] || '';
-    h+=`<div class="pr-bar-row">
-      <div class="pr-bar-lbl" title="${escAttr(m.map)}">${medal?`<span style="margin-right:3px">${medal}</span>`:''}${escHTML(m.map)}</div>
-      <div class="pr-bar-track"><div class="pr-bar-fill" style="width:${Math.max(m.wr,10)}%;background:${GAUGE_GRADIENT};color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)">${_prWrIcon(m.wr)} ${m.wr}%</div></div>
-      <div class="pr-bar-rec">${m.w}승 ${m.l}패</div>
-    </div>`;
+    const medal = MEDALS[i] || '🗺️';
+    const color = _prTintByPercent(m.wr, univHex, 70).css;
+    const badge = m.map===bestMap ? 'best' : m.map===worstMap ? 'worst' : '';
+    h+=_prGaugeCardHTML(m.map, m.w, m.l, medal, color, badge);
   });
   h+=`</div>`;
   return h;

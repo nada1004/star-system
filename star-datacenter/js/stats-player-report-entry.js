@@ -48,7 +48,7 @@ function statsPlayerReportHTML(){
   const stats = _prRaceStats(histPeriod);
   const mapStats = _prMapStats(histPeriod);
 
-  h += `<div id="pr-report-capture">`;
+  h += `<div id="pr-report-capture" style="--pr-accent:${(p.univ && typeof gc==='function') ? (gc(p.univ)||'#2563eb') : '#2563eb'}">`;
   h += _prHeroHTML(p);
 
   h += _prSectionNavHTML();

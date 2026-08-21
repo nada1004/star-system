@@ -14,7 +14,7 @@ function _urInjectStyle(){
     '.ur-recent-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}',
     '.ur-recent-lbl{font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0}',
     '.ur-recent-chip{padding:4px 11px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;transition:border-color .12s,color .12s}',
-    '.ur-recent-chip:hover{border-color:var(--blue);color:var(--blue)}',
+    '.ur-recent-chip:hover{border-color:var(--ur-accent,var(--blue));color:var(--ur-accent,var(--blue))}',
     'body.dark .ur-recent-chip{background:rgba(15,23,42,.7);border-color:#334155;color:var(--text2)}',
     '.ur-univ-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}',
     '.ur-univ-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px 9px;border-radius:14px;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;transition:transform .14s,box-shadow .14s,border-color .14s;font-family:inherit}',
@@ -29,7 +29,7 @@ function _urInjectStyle(){
     'body.dark .ur-univ-btn.is-sel{background:linear-gradient(180deg,color-mix(in srgb,var(--ubtn-col) 22%,rgba(15,23,42,.7)),rgba(15,23,42,.7))}',
     '.ur-nav-bar{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 14px;padding:8px;border-radius:14px;background:var(--surface);border:1px solid var(--border2)}',
     '.ur-nav-chip{padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:transform .12s,box-shadow .12s,color .12s,border-color .12s}',
-    '.ur-nav-chip:hover{color:var(--blue);border-color:var(--blue);transform:translateY(-1px);box-shadow:0 4px 10px rgba(37,99,235,.15)}',
+    '.ur-nav-chip:hover{color:var(--ur-accent,var(--blue));border-color:var(--ur-accent,var(--blue));transform:translateY(-1px);box-shadow:0 4px 10px color-mix(in srgb, var(--ur-accent,#2563eb) 15%, transparent)}',
     'body.dark .ur-nav-bar{background:rgba(15,23,42,.5);border-color:#334155}',
     'body.dark .ur-nav-chip{background:rgba(15,23,42,.7);border-color:#334155;color:var(--text2)}',
     '.ur-trend-chart{display:flex;align-items:flex-end;gap:6px;height:96px;padding-top:6px;border-bottom:1.5px solid var(--border2)}',
@@ -46,8 +46,7 @@ function _urInjectStyle(){
     '.ur-two-col .ur-panel{margin-bottom:0}',
     '@media(max-width:860px){.ur-two-col{grid-template-columns:1fr}}',
     '.ur-empty{padding:60px 20px;text-align:center;color:var(--text2)}',
-    '.ur-hero{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding:22px 24px;border-radius:24px;border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 32px rgba(15,23,42,.06);margin:14px 0;position:relative;overflow:hidden;backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3)}',
-    '.ur-hero::before{content:"";position:absolute;top:-40%;right:-10%;width:60%;height:180%;background:radial-gradient(circle,var(--ur-hero-glow,rgba(148,163,184,.16)) 0%,transparent 70%);pointer-events:none}',
+    '.ur-hero{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding:22px 24px;border-radius:20px;border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 32px rgba(15,23,42,.06);margin:14px 0;position:relative;overflow:hidden}',
     '.ur-hero::after{content:"";position:absolute;left:0;top:0;width:5px;height:100%;background:var(--ur-hero-accent,transparent)}',
     '.ur-hero-logo{width:72px;height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;position:relative;z-index:1}',
     '.ur-hero>div:not(.ur-hero-logo),.ur-hero-actions{position:relative;z-index:1}',
@@ -66,7 +65,7 @@ function _urInjectStyle(){
     '.ur-kpi{border-radius:16px;padding:13px 10px;text-align:center;border:1px solid rgba(148,163,184,.16);background:var(--white);box-shadow:0 10px 18px rgba(15,23,42,.04)}',
     '.ur-kpi-num{font-size:20px;font-weight:900;line-height:1.1}',
     '.ur-kpi-lbl{font-size:10.5px;font-weight:700;color:var(--text3);margin-top:3px}',
-    '.ur-panel{background:var(--white);border:1px solid rgba(148,163,184,.16);border-radius:20px;padding:16px;box-shadow:0 14px 26px rgba(15,23,42,.04);margin-bottom:14px}',
+    '.ur-panel{background:var(--white);border:1px solid rgba(148,163,184,.16);border-radius:18px;padding:16px;box-shadow:0 14px 26px rgba(15,23,42,.04);margin-bottom:14px}',
     '.ur-panel-title{font-size:14px;font-weight:900;color:var(--text1);margin-bottom:12px;display:flex;align-items:center;gap:6px}',
     '.ur-roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}',
     '.ur-roster-card{position:relative;aspect-ratio:.78;border-radius:16px;overflow:hidden;cursor:pointer;background:#0b1120;isolation:isolate;transition:transform .18s ease,box-shadow .18s ease}',
@@ -163,7 +162,33 @@ function _urInjectStyle(){
     'body.dark .ur-recent-table td{border-bottom-color:#334155}',
     '.ur-bg-loading .ur-img-preview-body{position:relative}',
     '.ur-bg-loading .ur-img-preview-body img{opacity:.35}',
-    '.ur-bg-loading .ur-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.15)}'
+    '.ur-bg-loading .ur-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.15)}',
+    /* ── 소속 대학 색상 테마: #ur-report-capture 안의 배경/박스/버튼/메뉴를 --ur-accent(대학색)의 연한 톤으로
+       (2026-08-21 "좀 더 연하게" 피드백으로 비율 축소 재조정) ── */
+    '#ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 4%, transparent);border-radius:22px}',
+    '#ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 6%, var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 18%, rgba(148,163,184,.16))}',
+    /* 핵심 분석 & AI 코멘트 패널은 대학색 대신 AI 코멘트와 어울리는 별도 톤(인디고/보라 계열) 고정 사용 — ID 2개라 위 .ur-panel 규칙보다 항상 우선 적용됨 */
+    '#ur-report-capture #ur-sec-insights.ur-panel{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border-color:#e0e7ff}',
+    'body.dark #ur-report-capture #ur-sec-insights.ur-panel{background:linear-gradient(135deg,#1e2547,#241b47)!important;border-color:#2d3f55!important}',
+    '#ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 10%, var(--white));border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 20%, rgba(148,163,184,.16))}',
+    /* .ur-btn-primary는 자체 배경(var(--blue))+흰 글자 조합인데, ID로 스코프된 아래 규칙이
+       클래스 2개짜리 .ur-btn.ur-btn-primary보다 우선순위가 높아 배경만 연하게 덮어써 흰 글자가 거의 안 보이던
+       버그가 있었음(2026-08-21) → :not()으로 제외해 원래 진한 배경+흰 글자 유지 */
+    '#ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
+    '#ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 16%, var(--white))}',
+    '#ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 5%, var(--surface))}',
+    '#ur-report-capture .ur-nav-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
+    '#ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--white))}',
+    '#ur-report-capture .ur-list-box{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 4%, transparent)}',
+    '#ur-report-capture .ur-tier-roster-headrow,#ur-report-capture .ur-tier-roster-tierbar,#ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, var(--surface))}',
+    'body.dark #ur-report-capture{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 7%, transparent)}',
+    'body.dark #ur-report-capture .ur-panel{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 13%, #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 24%, #334155)!important}',
+    'body.dark #ur-report-capture .ur-kpi{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 17%, #1e293b)!important;border-color:color-mix(in srgb, var(--ur-accent,var(--blue)) 26%, #334155)!important}',
+    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary){background:color-mix(in srgb, var(--ur-accent,var(--blue)) 12%, #1e293b)!important}',
+    'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 20%, #1e293b)!important}',
+    'body.dark #ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 9%, rgba(15,23,42,.5))}',
+    'body.dark #ur-report-capture .ur-nav-chip,body.dark #ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 12%, rgba(15,23,42,.7))}',
+    'body.dark #ur-report-capture .ur-tier-roster-headrow,body.dark #ur-report-capture .ur-tier-roster-tierbar,body.dark #ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 11%, rgba(15,23,42,.5))}'
   ].join('');
   document.head.appendChild(s);
 }
@@ -555,8 +580,8 @@ function statsUnivReportHTML(){
     ? `<img src="${logoSrc}" onerror="this.parentNode.style.display='none'">`
     : `<span style="font-size:26px">🏫</span>`;
 
-  h += `<div id="ur-report-capture">`;
-  h += `<div class="ur-hero" style="background:linear-gradient(135deg,${col}22,${col}08);border-color:${col}33;--ur-hero-glow:${col}2e;--ur-hero-accent:${col}">
+  h += `<div id="ur-report-capture" style="--ur-accent:${col}">`;
+  h += `<div class="ur-hero" style="background:linear-gradient(135deg,${col}22,${col}08);border-color:${col}33;--ur-hero-accent:${col}">
     <div class="ur-hero-logo">${logoHtml}</div>
     <div style="min-width:0;flex:1">
       <div class="ur-hero-name" style="color:${col}">${escHTML(univName)}</div>
@@ -630,7 +655,7 @@ function statsUnivReportHTML(){
             <span style="font-size:12px;font-weight:800;color:${c}">${l}</span>
             <span style="font-size:12px;font-weight:900;color:${c}">${wr!==null?wr+'%':'-'}<span style="font-weight:600;color:var(--text3);margin-left:5px">${rec.w}승 ${rec.l}패</span></span>
           </div>
-          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px;transition:width .6s ease"></div></div>
+          <div class="ur-bar-track"><div style="width:${wr??0}%;height:100%;background:linear-gradient(90deg,color-mix(in srgb, ${c} 45%, white),${c});border-radius:999px;transition:width .6s ease"></div></div>
         </div>`;
       }).join('')}
     </div>
@@ -725,7 +750,7 @@ function statsUnivReportHTML(){
           <span style="width:20px;text-align:center;font-size:12px;font-weight:900;color:var(--text3);flex-shrink:0">${medal}</span>
           ${_urAvatarHTML(p, col, 32)}
           <span style="font-size:12px;font-weight:800;color:${col};min-width:64px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(p.name||'')}</span>
-          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px"></div></div>
+          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:linear-gradient(90deg,#22d3ee,#38bdf8,#3b82f6,#6366f1);border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:var(--text2);flex-shrink:0">${x.win}승 ${x.loss}패</span>
           <span style="font-size:11.5px;font-weight:900;color:${wrColText};min-width:36px;text-align:right;flex-shrink:0">${x.wr}%</span>
         </div>`;
@@ -782,7 +807,7 @@ function statsUnivReportHTML(){
         return `<div class="ur-rival-row${i%2?' is-alt':''}" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeRival}')">
           ${rLogoHtml}
           <span style="font-size:12px;font-weight:800;color:${rCol};min-width:70px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(r.name)}</span>
-          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6,#d946ef);border-radius:999px"></div></div>
+          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:linear-gradient(90deg,#22d3ee,#38bdf8,#3b82f6,#6366f1);border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:${rWrColText};min-width:38px;text-align:right">${r.wr!==null?r.wr+'%':'-'}</span>
           <span style="font-size:10.5px;color:var(--text3);min-width:64px;text-align:right">${r.w}승 ${r.l}패</span>
         </div>`;
