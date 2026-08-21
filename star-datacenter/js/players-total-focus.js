@@ -54,7 +54,7 @@ function _buildFocusCardDetail(selected, opts){
           </div>`).join('')}
         <div class="streamer-focus-card2-actions">
           <button class="pill on" data-tp-action="open-player" data-tp-player="${selAttr}" style="border:none;background:${selColor}">상세 열기</button>
-          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
+          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${_safeJsName(selected.name)}')">✏️ 수정</button>` : ''}
           ${_showPosNudge ? (
             _autoFitOn
               ? `<button type="button" class="pill" onclick="event.stopPropagation();_focusPhoto2EnableManual()" style="padding:3px 10px;font-size:var(--fs-caption)" title="아래 이미지를 마우스/터치로 드래그해 이 스트리머만의 위치를 직접 잡을 수 있습니다">🎯 위치 직접 조정</button>`
@@ -253,7 +253,7 @@ function _buildFocusView(rankMap){
       const games = win + loss;
       const wr = games ? Math.round(win/games*100) : null;
       const actMeta = _getStreamerActivityMeta(p);
-      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+      const _pSafe=_safeJsName(p.name);
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrc = String(p.photo||'').trim();
       const _isActive = !!(selected && selected.name===p.name);
@@ -289,9 +289,7 @@ function _buildFocusView(rankMap){
   const lastMatch = lastRec ? (lastRec.date || '') : '';
   const selUniv = selected.univ || '무소속';
   const selColor = (typeof gc==='function' ? gc(selUniv) : '#2563eb') || '#2563eb';
-  const selAttr = (typeof escAttr==='function')
-    ? escAttr(String(selected.name||'').replace(/[\r\n]+/g,' '))
-    : String(selected.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+  const selAttr = _safeAttrName(selected.name);
   const recentList = selHistSorted.slice(0, 10);
   const recentDesc = recentList.length
     ? `<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;padding-right:6px">${recentList.map(h=>{
@@ -345,7 +343,7 @@ function _buildFocusView(rankMap){
         <div class="streamer-focus-desc">${selUniv} 소속으로 현재 ${selGames ? `${selGames}전 ${selWin}승 ${selLoss}패` : '공식 기록이 아직 없고'}${selWr==null ? '' : `, 승률 ${selWr}%`} 상태입니다.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="pill on" data-tp-action="open-player" data-tp-player="${selAttr}" style="border:none">상세 열기</button>
-          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
+          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${_safeJsName(selected.name)}')">✏️ 수정</button>` : ''}
         </div>
       </div>
     </div>

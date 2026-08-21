@@ -2,6 +2,31 @@
    선수(전체) - 메인 렌더러 rTotal (players-streamer-views.js 에서 분리, 2026-07-30)
    ══════════════════════════════════════════════════════════════ */
 
+/* (2026-08-21) 카드형/상세형/심플형 뷰가 추가될 때마다 "아이콘 주입 →
+   검색 필터 재적용 → 검색창 포커스" 6줄을 매번 그대로 복붙해왔던 걸
+   공통 헬퍼로 통합. 리스트(table) 뷰는 구조가 완전히 달라 그대로 둔다. */
+/* (2026-08-21) escJS/escAttr 폴백 체인이 players-total-views.js, players-total-focus.js
+   에 걸쳐 선수 이름/대학 이름 각각 여러 번 그대로 복붙돼 있던 걸 공통 헬퍼로 통합.
+   같은 청크(chunk-board)로 항상 같이 로드되는 파일들이라 여기 한 곳에 둔다. */
+function _safeJsName(name){
+  return (typeof escJS==='function') ? escJS(name||'') : String(name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+}
+function _safeAttrName(name){
+  return (typeof escAttr==='function')
+    ? escAttr(String(name||'').replace(/[\r\n]+/g,' '))
+    : String(name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+}
+
+function _finishStreamerAltViewRender(C, opts){
+  opts = opts || {};
+  if(opts.syncSelected && typeof _syncTpSelectedCards==='function') _syncTpSelectedCards();
+  injectUnivIcons(C);
+  requestAnimationFrame(()=>injectUnivIcons(C));
+  totalApplySearchFilter();
+  const si=C.querySelector('#total-search');
+  if(si&&totalSearch){ si.focus(); si.setSelectionRange(si.value.length,si.value.length); }
+}
+
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
@@ -11,7 +36,7 @@ function rTotal(C,T){
   if (window.TabVis && typeof window.TabVis.visible === 'function' && !window.TabVis.visible('total.mode.' + totalViewMode)) {
     totalViewMode = 'table';
   }
-  let _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  let _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   let _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   let _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
   // TabVis: 디자인/레이아웃/UI 스킨이 OFF(비로그인 숨김)면 비로그인 사용자에게는 기본값으로 표시
@@ -249,12 +274,7 @@ function rTotal(C,T){
       ${_renderTopChrome('카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.', true)}
       <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
     </div>`;
-    _syncTpSelectedCards();
-    injectUnivIcons(C);
-    requestAnimationFrame(()=>injectUnivIcons(C));
-    totalApplySearchFilter();
-    const si=C.querySelector('#total-search');
-    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    _finishStreamerAltViewRender(C, {syncSelected:true});
     return;
   }
   if(totalViewMode==='focus'){
@@ -262,11 +282,7 @@ function rTotal(C,T){
       ${_renderTopChrome('상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.', false)}
       ${_buildFocusView(_rankMap)}
     </div>`;
-    injectUnivIcons(C);
-    requestAnimationFrame(()=>injectUnivIcons(C));
-    totalApplySearchFilter();
-    const si=C.querySelector('#total-search');
-    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    _finishStreamerAltViewRender(C);
     return;
   }
   if(totalViewMode==='simple'){
@@ -274,11 +290,7 @@ function rTotal(C,T){
       ${_renderTopChrome('심플형은 불필요한 여백과 장식을 덜어내고 순위·이름·티어·승률만 한 줄로 빠르게 훑어볼 수 있도록 구성했습니다.', false)}
       <div class="streamer-content-card">${_buildSimpleView(_rankMap)}</div>
     </div>`;
-    injectUnivIcons(C);
-    requestAnimationFrame(()=>injectUnivIcons(C));
-    totalApplySearchFilter();
-    const si=C.querySelector('#total-search');
-    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    _finishStreamerAltViewRender(C);
     return;
   }
 

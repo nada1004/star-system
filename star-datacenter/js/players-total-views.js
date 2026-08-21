@@ -100,7 +100,7 @@ function _buildGalleryView(rankMap){
         _gTextHtml = `<span style="${_gTextBaseStyle}margin-left:auto;">${_gHdrText}</span>`;
       }
     }
-    const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+    const _uSafe=_safeJsName(u.name);
     html+=`<div class="streamer-gallery-head" data-gallery-univ-header="${u.name}" style="background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;margin-top:6px;">
       ${_gHdrTextPos === 'left' ? _gTextHtml : ''}
       <span class="ubadge streamer-gallery-univ clickable-univ" data-icon-done="1" onclick="event.stopPropagation();openUnivModal('${_uSafe}')" style="color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-sm)">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
@@ -116,12 +116,10 @@ function _buildGalleryView(rankMap){
       const points = Number(p.points||0);
       const elo = Number(p.elo||ELO_DEFAULT);
       const clr=RACE_CLR[p.race]||'#64748b';
-      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-      const _pAttr=(typeof escAttr==='function')
-        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+      const _pSafe=_safeJsName(p.name);
+      const _pAttr=_safeAttrName(p.name);
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-      const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+      const _uSafe=_safeJsName(u.name);
       const actMeta = _getStreamerActivityMeta(p);
       let _gMvpStats=null;
       try{ _gMvpStats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null; }catch(e){}
@@ -209,7 +207,7 @@ function _buildSimpleView(rankMap){
     if(!up.length) return;
     anyShown=true;
     const sorted=[...up].sort((a,b)=>getRoleOrder(a.role,a)-getRoleOrder(b.role,b)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
-    const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+    const _uSafe=_safeJsName(u.name);
     html+=`<div class="streamer-simple-head" data-simple-univ-header="${u.name}" style="--c:${u.color||'#6366f1'}">
       <span class="streamer-simple-univ clickable-univ" onclick="openUnivModal('${_uSafe}')">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px'))}${u.name}</span>
       <span class="streamer-simple-univ-count">${up.length}명</span>
@@ -219,10 +217,8 @@ function _buildSimpleView(rankMap){
       const loss = Number(p.loss||0);
       const games = win + loss;
       const wr = games?Math.round(win/games*100):null;
-      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-      const _pAttr=(typeof escAttr==='function')
-        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+      const _pSafe=_safeJsName(p.name);
+      const _pAttr=_safeAttrName(p.name);
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():'';
       if(photoSrcRaw) _simplePhotoUrls.push(photoSrcRaw);

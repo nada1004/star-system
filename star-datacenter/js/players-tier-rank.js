@@ -180,6 +180,32 @@ function rTier(C,T){
   }catch(e){
     _tierRecByName = {};
   }
+  /* (2026-08-21) 뷰(포디움/컴팩트)마다 메달 이모지 로직을 각자 다른 방식(삼항 체인 vs
+     배열 인덱싱)으로 새로 짜뒀던 걸 공통 헬퍼로 통합. 순위(1-based)를 넣으면
+     1~3위는 메달, 그 외엔 순위 숫자 문자열을 반환한다. */
+  function _tierMedal(rank){
+    return rank===1 ? '🥇' : rank===2 ? '🥈' : rank===3 ? '🥉' : String(rank);
+  }
+  /* (2026-08-21) 사진 URL/이니셜 폴백 5줄이 포디움·포디움-나머지·티어그룹·매거진
+     4곳에 토씨 하나 안 틀리고 그대로 복붙돼 있던 걸 공통 헬퍼로 통합. */
+  function _tierPhotoInfo(p){
+    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
+    const _photoUrl = _photoRaw ? (typeof toHttpsUrl==='function'?toHttpsUrl(_photoRaw):_photoRaw) : '';
+    const _initial = String(p.name||'-').trim().slice(0,1);
+    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
+    const _hasPhoto = !!_photoUrl;
+    return { _photoUrl, _initial, _2ndImg, _hasPhoto };
+  }
+  /* (2026-08-21) HTML 속성용 이름 이스케이프 3줄이 6곳(table/podium/podium-rest/
+     compact/tier-group/magazine)에 그대로 복붙돼 있던 걸 공통 헬퍼로 통합. */
+  function _tierAttrName(p){
+    return (typeof escAttr==='function')
+      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
+      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+  }
+  function _tierJsName(p){
+    return (typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  }
   function _tierWL(p){
     const name = p && p.name;
     const s = (name && _tierRecByName) ? _tierRecByName[name] : null;
@@ -975,10 +1001,8 @@ function rTier(C,T){
     else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_isMb?12:13}px">${i+1}위</span>`;
     const extraVal=_getExtraVal(p);
     const univIconHTML=_getUnivIconHTML(p);
-    const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+    const _pSafe=_tierJsName(p);
+    const _pAttr=_tierAttrName(p);
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     const _clickHist = (_canGoHist && _modePick) ? `onclick="event.stopPropagation();tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     const _actHTML=_getActHTML(p);
@@ -1034,16 +1058,10 @@ function rTier(C,T){
     const col=_getUnivColor(p.univ);
     const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
     const extraVal=_getExtraVal(p);
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-    const medal = place===1 ? '🥇' : (place===2 ? '🥈' : '🥉');
+    const _pAttr=_tierAttrName(p);
+    const medal = _tierMedal(place);
     const headline = place===1 ? '현재 1위 시드' : (place===2 ? '추격 중인 상위권' : '포디움 마감권');
-    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
-    const _photoUrl = _photoRaw ? (typeof toHttpsUrl==='function'?toHttpsUrl(_photoRaw):_photoRaw) : '';
-    const _initial = String(p.name||'-').trim().slice(0,1);
-    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-    const _hasPhoto = !!_photoUrl;
+    const { _photoUrl, _initial, _2ndImg, _hasPhoto } = _tierPhotoInfo(p);
     return `<article class="tier-podium-card place-${place} ${_hasPhoto?'ph-swap':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border:2.5px solid ${col}">
       ${_hasPhoto?`<img class="tier-podium-bg" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
       ${_2ndImg}
@@ -1093,14 +1111,8 @@ function rTier(C,T){
     rest.forEach((p,i)=>{
       const ri=i+4; const col=_getUnivColor(p.univ);
       const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
-      const _pAttr=(typeof escAttr==='function')
-        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
-      const _photoUrl = _photoRaw ? (typeof toHttpsUrl==='function'?toHttpsUrl(_photoRaw):_photoRaw) : '';
-      const _initial = String(p.name||'-').trim().slice(0,1);
-      const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-      const _hasPhoto = !!_photoUrl;
+      const _pAttr=_tierAttrName(p);
+      const { _photoUrl, _initial, _2ndImg, _hasPhoto } = _tierPhotoInfo(p);
       h+=`<article class="tier-podium-rest-item ${_hasPhoto?'ph-swap':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border:2px solid ${col}">
         ${_hasPhoto?`<img class="tier-podium-rest-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
         ${_2ndImg}
@@ -1144,12 +1156,10 @@ function rTier(C,T){
     </div>`;
   list.forEach((p,i)=>{
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
-    const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+    const _pSafe=_tierJsName(p);
+    const _pAttr=_tierAttrName(p);
     const extraVal=_getExtraVal(p); const _actHTML=_getActHTML(p);
-    const _rankMain=i<3?['🥇','🥈','🥉'][i]:`${i+1}`;
+    const _rankMain=_tierMedal(i+1);
     h+=`<div class="tier-compact-item ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col}">
       <div class="tier-compact-rankbox">
         <span class="tier-compact-rank">${_rankMain}</span>
@@ -1209,14 +1219,8 @@ function rTier(C,T){
       <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'104px':(_isMb?'130px':'160px')},1fr));gap:var(--su-tier-card-gap, ${_isNarrow?'5px':(_isMb?'6px':'8px')})">`;
     grp.players.forEach(({p,i})=>{
       const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
-      const _pAttr=(typeof escAttr==='function')
-        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
-      const _photoUrl = _photoRaw ? (typeof toHttpsUrl==='function'?toHttpsUrl(_photoRaw):_photoRaw) : '';
-      const _initial = String(p.name||'-').trim().slice(0,1);
-      const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-      const _hasPhoto = !!_photoUrl;
+      const _pAttr=_tierAttrName(p);
+      const { _photoUrl, _initial, _2ndImg, _hasPhoto } = _tierPhotoInfo(p);
       h+=`<div class="tier-group-card ${_hasPhoto?'ph-swap':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border:2px solid ${col}">
         ${_hasPhoto?`<img class="tier-group-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
         ${_2ndImg}
@@ -1243,14 +1247,8 @@ function rTier(C,T){
   h=`<div class="tier-content-card"><div class="tier-mag-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'220px')},1fr));gap:var(--su-tier-card-gap, ${_isNarrow?'8px':(_isMb?'12px':'20px')})">`;
   list.forEach((p,i)=>{
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
-    const _pAttr=(typeof escAttr==='function')
-      ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-      : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-    const _photoRaw = p.photo || (window.playerPhotos && window.playerPhotos[p.name]) || '';
-    const _photoUrl = _photoRaw ? (typeof toHttpsUrl==='function'?toHttpsUrl(_photoRaw):_photoRaw) : '';
-    const _initial = String(p.name||'-').trim().slice(0,1);
-    const _2ndImg = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile) : '';
-    const _hasPhoto = !!_photoUrl;
+    const _pAttr=_tierAttrName(p);
+    const { _photoUrl, _initial, _2ndImg, _hasPhoto } = _tierPhotoInfo(p);
     const extraVal=_getExtraVal(p);
     h+=`<div class="tier-mag-card ${_hasPhoto?'ph-swap':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};box-shadow:0 0 0 2px ${col}45,0 14px 30px rgba(15,23,42,.16)">
       ${_hasPhoto?`<img class="tier-mag-photo" src="${_photoUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}

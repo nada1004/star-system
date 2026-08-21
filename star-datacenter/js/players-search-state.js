@@ -50,7 +50,7 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-univ-popover-cnt{flex-shrink:0;font-size:var(--fs-caption);font-weight:800;color:var(--text3)}',
     '.streamer-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(248,250,252,.94);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-caption);font-weight:800;color:var(--text2)}',
     '.streamer-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}',
-    '.streamer-kpi-card{padding:14px 15px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 14px 28px rgba(15,23,42,.05)}',
+    '.streamer-kpi-card,.streamer-quickstat{padding:14px 15px;border-radius:20px;box-shadow:0 14px 28px rgba(15,23,42,.05)}',
     '.streamer-kpi-label{font-size:var(--fs-caption);font-weight:900;letter-spacing:.04em;color:var(--text3)}',
     '.streamer-kpi-value{margin-top:8px;font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
     '.streamer-kpi-sub{margin-top:5px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
@@ -58,7 +58,6 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-topgrid-main,.streamer-topgrid-side,.streamer-topstack,.streamer-showcase-shell{display:flex;flex-direction:column;gap:14px}',
     '.streamer-topstack-body,.streamer-showcase-rail{display:flex;flex-direction:column;gap:14px}',
     '.streamer-quickrail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}',
-    '.streamer-quickstat{padding:14px 15px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 14px 28px rgba(15,23,42,.05)}',
     '.streamer-quickstat-label{font-size:var(--fs-caption);font-weight:900;letter-spacing:.04em;color:var(--text3)}',
     '.streamer-quickstat-value{margin-top:8px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
     '.streamer-quickstat-sub{margin-top:5px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
@@ -134,7 +133,11 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-gallery-stat-value--muted{color:rgba(255,255,255,.82);font-size:var(--fs-caption);font-weight:800}',
     '.streamer-gallery-univ-chip,.streamer-gallery-stat,.streamer-gallery-stat *{user-select:none;-webkit-user-select:none}',
     '.streamer-focus-layout{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px;align-items:start}',
-    '.streamer-focus-sidebar,.streamer-focus-main{padding:14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
+    /* (2026-08-21) 카드 4종(kpi/quickstat/focus-sidebar/focus-main)이 전부 같은
+       흰색 그라데이션+테두리 레시피를 각자 새로 정의하고 있던 걸 공통 클래스로 통합.
+       패딩/라운드/그림자 크기만 카드 종류별로 다르게 얹는다. */
+    '.streamer-kpi-card,.streamer-quickstat,.streamer-focus-sidebar,.streamer-focus-main{background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16)}',
+    '.streamer-focus-sidebar,.streamer-focus-main{padding:14px;border-radius:22px;box-shadow:0 16px 30px rgba(15,23,42,.05)}',
     '.streamer-focus-section-title{font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px;letter-spacing:-.02em}',
     '.streamer-focus-list{display:flex;flex-direction:column;gap:14px;max-height:900px;overflow:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:rgba(100,116,139,.35) transparent}',
     '.streamer-focus-list::-webkit-scrollbar{width:7px}',
@@ -213,64 +216,6 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-shell[data-st-mode="obsidian"] .streamer-hero-badge,.streamer-shell[data-st-mode="obsidian"] .streamer-summary-chip,.streamer-shell[data-st-mode="obsidian"] .streamer-search,.streamer-shell[data-st-mode="obsidian"] .streamer-elo-chip,.streamer-shell[data-st-mode="obsidian"] .streamer-act-chip,.streamer-shell[data-st-mode="obsidian"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="obsidian"] .streamer-kpi-card,.streamer-shell[data-st-mode="obsidian"] .streamer-table thead th,.streamer-shell[data-st-mode="obsidian"] .streamer-table tbody td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;color:#e2e8f0}',
     '.streamer-shell[data-st-mode="obsidian"] .streamer-toolbar-card .pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     '.streamer-shell[data-st-mode="obsidian"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#312e81,#1d4ed8);border-color:#6366f1;color:#eff6ff}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-hero{background:linear-gradient(135deg,#22d3ee,#a78bfa,#fb7185);border-color:rgba(255,255,255,.14);box-shadow:0 22px 44px rgba(99,102,241,.16)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-hero-kicker,.streamer-shell[data-st-mode="aurora"] .streamer-hero-title,.streamer-shell[data-st-mode="aurora"] .streamer-hero-desc{color:#fff}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-hero-badge{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.24);color:#fff;backdrop-filter:blur(10px)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#7c3aed,#06b6d4);border-color:#7c3aed;box-shadow:0 14px 28px rgba(124,58,237,.22)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-toolbar-card,.streamer-shell[data-st-mode="aurora"] .streamer-content-card,.streamer-shell[data-st-mode="aurora"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="aurora"] .streamer-focus-main{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(243,244,255,.96));border-color:rgba(167,139,250,.18);box-shadow:0 18px 38px rgba(99,102,241,.10)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-search,.streamer-shell[data-st-mode="aurora"] .streamer-summary-chip,.streamer-shell[data-st-mode="aurora"] .streamer-elo-chip,.streamer-shell[data-st-mode="aurora"] .streamer-act-chip,.streamer-shell[data-st-mode="aurora"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="aurora"] .streamer-table thead th,.streamer-shell[data-st-mode="aurora"] .streamer-table tbody td,.streamer-shell[data-st-mode="aurora"] .streamer-kpi-card,.streamer-shell[data-st-mode="aurora"] .streamer-quickstat,.streamer-shell[data-st-mode="aurora"] .streamer-focus-stat,.streamer-shell[data-st-mode="aurora"] .streamer-focus-note{background:linear-gradient(180deg,#ffffff,#f5f3ff);border-color:rgba(167,139,250,.18)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-univ-banner{box-shadow:0 18px 36px rgba(124,58,237,.16);outline:1px solid rgba(255,255,255,.18)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-gallery-head{box-shadow:0 18px 36px rgba(124,58,237,.16);outline:1px solid rgba(255,255,255,.18)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-gallery-stat{background:rgba(91,33,182,.34);border-color:rgba(255,255,255,.18)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-table tbody tr{box-shadow:0 18px 34px rgba(124,58,237,.12)}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-name-link{color:#6d28d9}',
-    '.streamer-shell[data-st-mode="aurora"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(34,211,238,.86),rgba(124,58,237,.84),rgba(244,114,182,.82));box-shadow:0 24px 48px rgba(124,58,237,.18)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-hero{background:linear-gradient(135deg,#fff1f2,#ffe4e6,#fef3c7);border-color:rgba(251,113,133,.18);box-shadow:0 22px 44px rgba(244,114,182,.12)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-hero-title{color:#9f1239}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#fb7185,#f59e0b);border-color:#fb7185;box-shadow:0 14px 28px rgba(251,113,133,.22)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-toolbar-card,.streamer-shell[data-st-mode="blush"] .streamer-content-card,.streamer-shell[data-st-mode="blush"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="blush"] .streamer-focus-main{background:linear-gradient(180deg,#fffafb,#fff1f2);border-color:rgba(251,113,133,.16);box-shadow:0 18px 38px rgba(244,114,182,.09)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-search,.streamer-shell[data-st-mode="blush"] .streamer-summary-chip,.streamer-shell[data-st-mode="blush"] .streamer-elo-chip,.streamer-shell[data-st-mode="blush"] .streamer-act-chip,.streamer-shell[data-st-mode="blush"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="blush"] .streamer-table thead th,.streamer-shell[data-st-mode="blush"] .streamer-table tbody td,.streamer-shell[data-st-mode="blush"] .streamer-kpi-card,.streamer-shell[data-st-mode="blush"] .streamer-quickstat,.streamer-shell[data-st-mode="blush"] .streamer-focus-stat,.streamer-shell[data-st-mode="blush"] .streamer-focus-note{background:linear-gradient(180deg,#ffffff,#fff1f2);border-color:rgba(251,113,133,.14)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-univ-banner,.streamer-shell[data-st-mode="blush"] .streamer-gallery-head{box-shadow:0 18px 36px rgba(251,113,133,.16)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-gallery-stat{background:rgba(157,23,77,.32);border-color:rgba(255,255,255,.16)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-table tbody tr{box-shadow:0 18px 34px rgba(251,113,133,.10)}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-name-link{color:#be185d}',
-    '.streamer-shell[data-st-mode="blush"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(251,113,133,.92),rgba(244,114,182,.84),rgba(251,191,36,.78));box-shadow:0 24px 48px rgba(251,113,133,.18)}',
-    /* [큐트 모드] 핑크/민트/버터 파스텔 톤 + 넉넉한 라운드로 사랑스러운 분위기 */
-    '.streamer-shell[data-st-mode="cute"] .streamer-hero{background:linear-gradient(135deg,#ffd6ec,#c9f7f0 55%,#fff6b7);border-color:rgba(244,114,182,.28);box-shadow:0 22px 44px rgba(244,114,182,.16);border-radius:28px}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-hero-kicker,.streamer-shell[data-st-mode="cute"] .streamer-hero-title{color:#9d174d}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-hero-desc{color:#831843}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-hero-badge{background:rgba(255,255,255,.62);border-color:rgba(244,114,182,.32);color:#9d174d;border-radius:999px}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card,.streamer-shell[data-st-mode="cute"] .streamer-content-card,.streamer-shell[data-st-mode="cute"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="cute"] .streamer-focus-main{background:linear-gradient(180deg,#fffdfb,#fff0f7);border-color:rgba(244,114,182,.2);border-radius:24px;box-shadow:0 18px 36px rgba(244,114,182,.12)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card .pill{border-radius:999px}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#fb7185,#f9a8d4);border-color:#fb7185;color:#fff;box-shadow:0 14px 28px rgba(251,113,133,.24)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-search,.streamer-shell[data-st-mode="cute"] .streamer-summary-chip,.streamer-shell[data-st-mode="cute"] .streamer-elo-chip,.streamer-shell[data-st-mode="cute"] .streamer-act-chip,.streamer-shell[data-st-mode="cute"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="cute"] .streamer-table thead th,.streamer-shell[data-st-mode="cute"] .streamer-table tbody td,.streamer-shell[data-st-mode="cute"] .streamer-kpi-card,.streamer-shell[data-st-mode="cute"] .streamer-quickstat,.streamer-shell[data-st-mode="cute"] .streamer-focus-stat,.streamer-shell[data-st-mode="cute"] .streamer-focus-note{background:linear-gradient(180deg,#ffffff,#fff5fa);border-color:rgba(244,114,182,.16);border-radius:var(--r2)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-table tbody tr{box-shadow:0 16px 30px rgba(244,114,182,.10);border-radius:20px}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-avatar{box-shadow:0 0 0 3px #ffe4f2,0 4px 10px rgba(244,114,182,.22)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-name-link{color:#be185d}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-univ-banner,.streamer-shell[data-st-mode="cute"] .streamer-gallery-head{box-shadow:0 18px 36px rgba(244,114,182,.16)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-gallery-stat{background:rgba(157,23,77,.3);border-color:rgba(255,255,255,.2)}',
-    '.streamer-shell[data-st-mode="cute"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(255,214,236,.92),rgba(201,247,240,.84),rgba(255,246,183,.78));box-shadow:0 24px 48px rgba(244,114,182,.18)}',
-    'body.dark .streamer-shell[data-st-mode="cute"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="cute"] .streamer-content-card{background:linear-gradient(180deg,#1a1025,#241226);border-color:rgba(244,114,182,.22)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-hero{background:linear-gradient(135deg,#fdfcf9,#f2e9d8,#e6d8bd);border-color:rgba(180,130,50,.18);box-shadow:0 22px 44px rgba(120,75,40,.12)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-hero-title{color:#4b3621}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#b45309,#4b3621);border-color:#b45309;color:#fff}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-toolbar-card,.streamer-shell[data-st-mode="paper"] .streamer-content-card,.streamer-shell[data-st-mode="paper"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="paper"] .streamer-focus-main{background:linear-gradient(180deg,#fffdf8,#f6efe0);border-color:rgba(180,130,50,.16);box-shadow:0 18px 38px rgba(120,75,40,.09)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-search,.streamer-shell[data-st-mode="paper"] .streamer-summary-chip,.streamer-shell[data-st-mode="paper"] .streamer-elo-chip,.streamer-shell[data-st-mode="paper"] .streamer-act-chip,.streamer-shell[data-st-mode="paper"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="paper"] .streamer-table thead th,.streamer-shell[data-st-mode="paper"] .streamer-table tbody td,.streamer-shell[data-st-mode="paper"] .streamer-kpi-card,.streamer-shell[data-st-mode="paper"] .streamer-quickstat,.streamer-shell[data-st-mode="paper"] .streamer-focus-stat,.streamer-shell[data-st-mode="paper"] .streamer-focus-note{background:linear-gradient(180deg,#fffefb,#f5efe4);border-color:rgba(180,130,50,.14)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-univ-banner,.streamer-shell[data-st-mode="paper"] .streamer-gallery-head{box-shadow:0 18px 34px rgba(120,75,40,.14)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-gallery-stat{background:rgba(75,54,33,.34);border-color:rgba(255,255,255,.16)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-table tbody tr{box-shadow:0 18px 30px rgba(120,75,40,.09)}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-name-link{color:#92400e}',
-    '.streamer-shell[data-st-mode="paper"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(146,64,14,.92),rgba(120,53,15,.84),rgba(217,119,6,.80));box-shadow:0 24px 48px rgba(120,75,40,.16)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-hero{background:linear-gradient(135deg,#f8fafc,#e2e8f0);border-color:rgba(15,23,42,.12);box-shadow:0 18px 40px rgba(15,23,42,.08)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-hero-title{color:#0f172a}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-toolbar-card .pill.on{background:#0f172a;border-color:#0f172a;color:#fff}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-toolbar-card,.streamer-shell[data-st-mode="mono"] .streamer-content-card,.streamer-shell[data-st-mode="mono"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="mono"] .streamer-focus-main{background:linear-gradient(180deg,#ffffff,#f8fafc);border-color:rgba(15,23,42,.10);box-shadow:0 18px 34px rgba(15,23,42,.06)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-search,.streamer-shell[data-st-mode="mono"] .streamer-summary-chip,.streamer-shell[data-st-mode="mono"] .streamer-elo-chip,.streamer-shell[data-st-mode="mono"] .streamer-act-chip,.streamer-shell[data-st-mode="mono"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="mono"] .streamer-table thead th,.streamer-shell[data-st-mode="mono"] .streamer-table tbody td,.streamer-shell[data-st-mode="mono"] .streamer-kpi-card,.streamer-shell[data-st-mode="mono"] .streamer-quickstat,.streamer-shell[data-st-mode="mono"] .streamer-focus-stat,.streamer-shell[data-st-mode="mono"] .streamer-focus-note{background:linear-gradient(180deg,#ffffff,#f8fafc);border-color:rgba(15,23,42,.10);color:#0f172a}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-univ-banner,.streamer-shell[data-st-mode="mono"] .streamer-gallery-head{box-shadow:0 16px 28px rgba(15,23,42,.10)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-gallery-stat{background:rgba(15,23,42,.42);border-color:rgba(255,255,255,.18)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-table tbody tr{box-shadow:0 16px 26px rgba(15,23,42,.08)}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-name-link{color:#111827}',
-    '.streamer-shell[data-st-mode="mono"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(15,23,42,.94),rgba(51,65,85,.86));box-shadow:0 24px 46px rgba(15,23,42,.18)}',
     '.streamer-shell[data-st-layout="compact"]{gap:10px}',
     '.streamer-shell[data-st-layout="compact"] .streamer-topgrid{grid-template-columns:minmax(0,1.45fr) minmax(250px,.75fr);gap:12px}',
     '.streamer-shell[data-st-layout="compact"] .streamer-hero{padding:14px 16px;border-radius:18px}',
@@ -394,14 +339,14 @@ if(typeof window!=='undefined'){ window._toggleModePopover=_toggleModePopover; w
 window.cfgSetStreamerTabVisual = function(type, value){
   try{
     if(type==='design'){
-      localStorage.setItem('su_streamer_tab_design_mode', ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(value)?value:'classic');
+      localStorage.setItem('su_streamer_tab_design_mode', ['classic','glass','vivid','obsidian'].includes(value)?value:'classic');
     }else if(type==='layout'){
       localStorage.setItem('su_streamer_tab_layout_mode', ['default','compact','cozy','showcase'].includes(value)?value:'default');
     }else if(type==='ui'){
       localStorage.setItem('su_streamer_tab_ui_mode', ['standard','pill','minimal','photocard'].includes(value)?value:'standard');
     }else if(type==='preset'){
       if(value==='photocard'){
-        localStorage.setItem('su_streamer_tab_design_mode','blush');
+        localStorage.setItem('su_streamer_tab_design_mode','glass');
         localStorage.setItem('su_streamer_tab_layout_mode','cozy');
         localStorage.setItem('su_streamer_tab_ui_mode','photocard');
       }else if(value==='broadcast'){
@@ -412,14 +357,6 @@ window.cfgSetStreamerTabVisual = function(type, value){
         localStorage.setItem('su_streamer_tab_design_mode','obsidian');
         localStorage.setItem('su_streamer_tab_layout_mode','compact');
         localStorage.setItem('su_streamer_tab_ui_mode','minimal');
-      }else if(value==='aurora'){
-        localStorage.setItem('su_streamer_tab_design_mode','aurora');
-        localStorage.setItem('su_streamer_tab_layout_mode','default');
-        localStorage.setItem('su_streamer_tab_ui_mode','pill');
-      }else if(value==='cute'){
-        localStorage.setItem('su_streamer_tab_design_mode','cute');
-        localStorage.setItem('su_streamer_tab_layout_mode','cozy');
-        localStorage.setItem('su_streamer_tab_ui_mode','photocard');
       }
     }
   }catch(e){}
@@ -437,19 +374,14 @@ window.cfgSetStreamerTabVisual = function(type, value){
 };
 
 window.renderCfgStreamerTabStyleSection = function(_scfgD){
-  const dm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const dm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const lm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const um = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
   const modeCards = [
     ['classic','클래식','기본형 라이트 UI','linear-gradient(135deg,#ffffff,#e2e8f0)'],
     ['glass','글래스','유리 질감과 밝은 카드층','linear-gradient(135deg,#dbeafe,#ecfeff)'],
     ['vivid','비비드','방송형 블루/퍼플 강조','linear-gradient(135deg,#1d4ed8,#7c3aed)'],
-    ['aurora','오로라','민트/라벤더/핑크 그라디언트','linear-gradient(135deg,#22d3ee,#a78bfa,#fb7185)'],
-    ['blush','블러시','핑크/크림 포토카드 톤','linear-gradient(135deg,#fff1f2,#ffe4e6,#fef3c7)'],
-    ['paper','페이퍼','종이 질감의 웜톤','linear-gradient(135deg,#fdfcf9,#f2e9d8,#e6d8bd)'],
-    ['mono','모노','무채색 라이트 UI','linear-gradient(135deg,#f8fafc,#e2e8f0)'],
-    ['obsidian','옵시디언','다크 프리미엄 톤','linear-gradient(135deg,#020617,#312e81)'],
-    ['cute','큐트','핑크/민트/버터 파스텔의 사랑스러운 톤','linear-gradient(135deg,#ffd6ec,#c9f7f0,#fff6b7)']
+    ['obsidian','옵시디언','다크 프리미엄 톤','linear-gradient(135deg,#020617,#312e81)']
   ];
   const layoutCards = [
     ['default','기본형','현재 균형형 배치','linear-gradient(180deg,#fff 0 40%,#eff6ff 40% 100%)'],
@@ -471,8 +403,6 @@ window.renderCfgStreamerTabStyleSection = function(_scfgD){
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','photocard')">포토카드형</button>
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','broadcast')">방송형</button>
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','dark')">다크형</button>
-        <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','aurora')">오로라형</button>
-        <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','cute')">🌸 큐트형</button>
       </div>
     </div>
     <div style="margin-bottom:14px">
