@@ -570,6 +570,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       }
       const _prevIndM = Array.isArray(indM) ? indM : [];
       const _prevGjM  = Array.isArray(gjM) ? gjM : [];
+      // [FIX-DATA-LOSS] proTourneys/curProComp/boardOrder/boardPlayerOrder가
+      // 대입 목록에서 누락되어 있었음. 클라우드에서 정상적으로 fetch는 되지만
+      // 화면이 쓰는 전역 변수에는 절대 반영되지 않아, 이 상태에서 저장(fbCloudSave)이
+      // 한 번이라도 일어나면 전체 스냅샷 덮어쓰기 방식 때문에 클라우드의 정상
+      // 프로리그 대회 데이터가 빈 값으로 통째로 지워지는 사고로 이어졌음.
+      const _prevProTourneys = Array.isArray(window.proTourneys) ? window.proTourneys : (Array.isArray(proTourneys) ? proTourneys : []);
+      const _prevCurProComp = (typeof curProComp === 'string' && curProComp) ? curProComp : (window.curProComp || '');
+      const _prevBoardOrder = Array.isArray(window.boardOrder) ? window.boardOrder : (Array.isArray(boardOrder) ? boardOrder : []);
+      const _prevBoardPlayerOrder = (window.boardPlayerOrder && typeof window.boardPlayerOrder === 'object') ? window.boardPlayerOrder : (boardPlayerOrder || {});
       players  = d.players  || d.player  || [];
       players  = _mergePlayerPhotosIntoPlayers(players, d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null);
       try{ window.players = players; }catch(e){}
@@ -587,6 +596,14 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       ttM      = d.ttM      || d.tt      || [];
       indM     = Array.isArray(d.indM) ? d.indM : (Array.isArray(d.ind) ? d.ind : _prevIndM);
       gjM      = Array.isArray(d.gjM) ? d.gjM : _prevGjM;
+      // [FIX-DATA-LOSS] 아래 4줄이 원래 없었음 — 자세한 내용은 위 _prevProTourneys 선언부 주석 참고
+      proTourneys = Array.isArray(d.proTourneys) ? d.proTourneys : _prevProTourneys;
+      if((!proTourneys || !proTourneys.length) && _prevProTourneys.length) proTourneys = _prevProTourneys;
+      curProComp = (typeof d.curProComp === 'string' && d.curProComp) ? d.curProComp : _prevCurProComp;
+      boardOrder = Array.isArray(d.boardOrder) ? d.boardOrder : _prevBoardOrder;
+      if((!boardOrder || !boardOrder.length) && _prevBoardOrder.length) boardOrder = _prevBoardOrder;
+      boardPlayerOrder = (d.boardPlayerOrder && typeof d.boardPlayerOrder === 'object' && Object.keys(d.boardPlayerOrder).length) ? d.boardPlayerOrder : _prevBoardPlayerOrder;
+      try{ window.proTourneys = proTourneys; window.curProComp = curProComp; window.boardOrder = boardOrder; window.boardPlayerOrder = boardPlayerOrder; }catch(e){}
       if((!indM || !indM.length) && _prevIndM.length) indM = _prevIndM;
       if((!gjM || !gjM.length) && _prevGjM.length) gjM = _prevGjM;
       try{ window.indM = indM; }catch(e){}
