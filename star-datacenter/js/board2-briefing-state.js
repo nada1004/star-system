@@ -79,7 +79,7 @@ function _b2MvpFxLoad() {
   }
 }
 // ── 브리핑 탭 전체 디자인 테마 (설정탭에서 선택, MVP 카드 외 헤더/카드/색감 톤 전체에 적용) ──
-const _B2_BRIEFING_THEMES = ['classic', 'minimal', 'vivid', 'mono', 'elegant', 'pastel', 'luxury', 'sports', 'esports', 'pop', 'nature', 'ocean', 'sunset', 'neon'];
+const _B2_BRIEFING_THEMES = ['classic', 'custom', 'minimal', 'vivid', 'mono', 'elegant', 'pastel', 'luxury', 'sports', 'esports', 'pop', 'nature', 'ocean', 'sunset', 'neon'];
 function _b2BriefingThemeLoad() {
   try {
     const v = localStorage.getItem('su_b2_briefing_theme');
@@ -87,6 +87,22 @@ function _b2BriefingThemeLoad() {
   } catch (e) {
     return 'classic';
   }
+}
+/* custom 선택 시 data-theme="classic" 기본 토큰 위에, 사용자가 고른 색을
+   --b2w-accent/--b2w-accent-strong/--b2w-accent2/--b2w-accent-border/
+   --b2w-accent-shadow(-strong)만 인라인으로 덮어쓴다. 나머지(paper/tag 등)는
+   전부 color-mix(var(--b2w-accent) ...)로 이미 accent에서 파생되므로 자동 반영됨. */
+function _b2WrapAttrs(){
+  const t=_b2BriefingThemeLoad();
+  if(t==='custom'){
+    let c='#2563eb';
+    try{ const v=localStorage.getItem('su_b2_custom_accent'); if(v && /^#[0-9a-fA-F]{6}$/.test(v)) c=v; }catch(e){}
+    const strong=(typeof _briefLighten==='function')?_briefLighten(c,-0.22):c;
+    const c2=(typeof _briefLighten==='function')?_briefLighten(c,-0.05):c;
+    const rgb=(typeof _briefHexToRgb==='function')?_briefHexToRgb(c):'37,99,235';
+    return `data-theme="classic" style="--b2w-accent:${c};--b2w-accent-strong:${strong};--b2w-accent-soft:rgba(${rgb},.08);--b2w-accent2:${c2};--b2w-accent-border:rgba(${rgb},.20);--b2w-accent-shadow:rgba(${rgb},.10);--b2w-accent-shadow-strong:rgba(${rgb},.16);"`;
+  }
+  return `data-theme="${t}"`;
 }
 function _b2IsValidDateStr(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim());

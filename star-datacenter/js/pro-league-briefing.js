@@ -107,12 +107,30 @@ function _plbPeriodBarHTML(){
 
 /* 프로리그 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plb_briefing_theme)
    classic(기본)은 별도 data-theme 없이 .plb-wrap 기본 토큰(다크 네이비+시안/골드)을 그대로 사용 */
-const _PLB_BRIEFING_THEMES=['classic','crimson','emerald','violet','mono','amber','ice','indigo'];
+const _PLB_BRIEFING_THEMES=['classic','custom','crimson','emerald','violet','mono','amber','ice','indigo'];
 function _plbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_plb_briefing_theme'); return _PLB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
 }
+function _briefLighten(hex, amt){
+  try{
+    const h=String(hex||'').replace('#','');
+    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    const mix=(c)=>Math.round(c+(255-c)*amt);
+    const to=(n)=>String(Math.max(0,Math.min(255,n)).toString(16)).padStart(2,'0');
+    return `#${to(mix(r))}${to(mix(g))}${to(mix(b))}`;
+  }catch(e){ return hex||'#94a3b8'; }
+}
+function _briefHexToRgb(hex){
+  try{ const h=String(hex||'').replace('#',''); return `${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)}`; }catch(e){ return '148,163,184'; }
+}
 function _plbWrapAttr(){
   const t=_plbBriefingThemeLoad();
+  if(t==='custom'){
+    let c='#38bdf8';
+    try{ const v=localStorage.getItem('su_plb_custom_accent'); if(v && /^#[0-9a-fA-F]{6}$/.test(v)) c=v; }catch(e){}
+    const c2=_briefLighten(c,0.30);
+    return ` style="--plb-accent:${c};--plb-accent-rgb:${_briefHexToRgb(c)};--plb-accent2:${c2};"`;
+  }
   return t!=='classic'?` data-theme="${t}"`:'';
 }
 

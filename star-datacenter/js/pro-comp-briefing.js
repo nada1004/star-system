@@ -200,12 +200,18 @@ function _pcbUnivStats(playerStats){
 
 /* 프로리그 대회 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_pcb_briefing_theme)
    classic(기본)은 별도 data-theme 없이 .pcb-wrap 기본 토큰(딥퍼플+골드)을 그대로 사용 */
-const _PCB_BRIEFING_THEMES=['classic','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'];
+const _PCB_BRIEFING_THEMES=['classic','custom','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'];
 function _pcbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_pcb_briefing_theme'); return _PCB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
 }
 function _pcbWrapAttr(){
   const t=_pcbBriefingThemeLoad();
+  if(t==='custom'){
+    let c='#a855f7';
+    try{ const v=localStorage.getItem('su_pcb_custom_accent'); if(v && /^#[0-9a-fA-F]{6}$/.test(v)) c=v; }catch(e){}
+    const rgb=(typeof _briefHexToRgb==='function')?_briefHexToRgb(c):'168,85,247';
+    return ` style="--pcb-accent:${c};--pcb-accent-rgb:${rgb};--pcb-accent2:${(typeof _briefLighten==='function')?_briefLighten(c,-0.15):c};"`;
+  }
   return t!=='classic'?` data-theme="${t}"`:'';
 }
 

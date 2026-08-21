@@ -314,7 +314,7 @@ function _b2WeeklyBriefingView() {
     const _archiveUnivFilter = window._b2MvpArchiveUniv || '전체';
 
     // ── 헤더 컨트롤
-    h += `<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
+    h += `<div class="b2w2-wrap" id="b2w2-export-root" ${(typeof _b2WrapAttrs==='function')?_b2WrapAttrs():`data-theme="${_b2BriefingThemeLoad()}"`}>
       <div class="b2w2-masthead">
         <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
         <span>${_isArchive ? `${fmtDate(_B2_MVP_SEASON_START)} ~ 현재` : `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행`}</span>

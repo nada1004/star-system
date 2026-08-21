@@ -108,13 +108,38 @@ function _plgbPeriodBarHTML(){
 
 /* 프로리그 끝장전 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택, su_plgb_briefing_theme)
    classic(기본)은 별도 data-theme 없이 .plgb-wrap 기본 토큰(다크 차콜+에메랄드/앰버)을 그대로 사용 */
-const _PLGB_BRIEFING_THEMES=['classic','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'];
+const _PLGB_BRIEFING_THEMES=['classic','custom','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'];
 function _plgbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_plgb_briefing_theme'); return _PLGB_BRIEFING_THEMES.includes(v)?v:'classic'; }catch(e){ return 'classic'; }
 }
 function _plgbWrapAttr(){
   const t=_plgbBriefingThemeLoad();
+  if(t==='custom'){
+    let c='#10b981';
+    try{ const v=localStorage.getItem('su_plgb_custom_accent'); if(v && /^#[0-9a-fA-F]{6}$/.test(v)) c=v; }catch(e){}
+    const accent2=_deriveComplementary(c);
+    const rgb=(typeof _briefHexToRgb==='function')?_briefHexToRgb(c):'16,185,129';
+    const rgb2=(typeof _briefHexToRgb==='function')?_briefHexToRgb(accent2):'245,158,11';
+    return ` style="--plgb-accent:${c};--plgb-accent-rgb:${rgb};--plgb-accent2:${accent2};--plgb-accent2-rgb:${rgb2};"`;
+  }
   return t!=='classic'?` data-theme="${t}"`:'';
+}
+/* 끝장전 브리핑은 accent(주) + accent2(보조, 보색 계열) 2색을 쓰는 대결 톤이라
+   단일 커스텀 색에서 각도를 튼 보색을 만들어 자동으로 채워준다 */
+function _deriveComplementary(hex){
+  try{
+    const h=String(hex||'').replace('#','');
+    let r=parseInt(h.slice(0,2),16)/255, g=parseInt(h.slice(2,4),16)/255, b=parseInt(h.slice(4,6),16)/255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b); let hh=0,s=0,l=(max+min)/2;
+    if(max!==min){ const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+      switch(max){ case r: hh=(g-b)/d+(g<b?6:0); break; case g: hh=(b-r)/d+2; break; case b: hh=(r-g)/d+4; break; } hh/=6; }
+    hh=(hh+0.5)%1; // 180도 회전 = 보색
+    const hue2rgb=(p,q,t)=>{ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6)return p+(q-p)*6*t; if(t<1/2)return q; if(t<2/3)return p+(q-p)*(2/3-t)*6; return p; };
+    const q=l<0.5?l*(1+s):l+s-l*s, p=2*l-q;
+    const rr=Math.round(hue2rgb(p,q,hh+1/3)*255), gg=Math.round(hue2rgb(p,q,hh)*255), bb=Math.round(hue2rgb(p,q,hh-1/3)*255);
+    const to=(n)=>String(n.toString(16)).padStart(2,'0');
+    return `#${to(rr)}${to(gg)}${to(bb)}`;
+  }catch(e){ return '#f59e0b'; }
 }
 
 function _plgbEmpty(msg){ return `<div class="plgb-empty">${_cbEsc(msg)}</div>`; }

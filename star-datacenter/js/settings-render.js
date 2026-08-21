@@ -143,13 +143,18 @@ function rCfg(C,T){
   const _mvpFxStyle = (()=>{ const v=localStorage.getItem('su_b2mvp_fx_style'); return ['fade','vignette','topbottom','tint','spotlight','noir','diagonal','glass','none'].includes(v) ? v : 'fade'; })();
   const _mvpFxIntensity = (()=>{ const n=parseInt(localStorage.getItem('su_b2mvp_fx_intensity'),10); return Number.isFinite(n) ? Math.max(0,Math.min(100,n)) : 45; })();
   const _mvpDesignMode = (()=>{ const v=localStorage.getItem('su_b2mvp_design_mode'); return ['photo','panel','frame','glasscard','border','ribbon','split','poster'].includes(v) ? v : 'photo'; })();
-  const _briefingTheme = (()=>{ const v=localStorage.getItem('su_b2_briefing_theme'); return ['classic','minimal','vivid','mono','elegant','pastel','luxury','sports','esports','pop','nature','ocean','sunset','neon'].includes(v) ? v : 'classic'; })();
-  const _plbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plb_briefing_theme'); return ['classic','crimson','emerald','violet','mono','amber','ice','indigo'].includes(v) ? v : 'classic'; })();
-  const _plgbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plgb_briefing_theme'); return ['classic','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'].includes(v) ? v : 'classic'; })();
-  const _pcbBriefingTheme = (()=>{ const v=localStorage.getItem('su_pcb_briefing_theme'); return ['classic','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'].includes(v) ? v : 'classic'; })();
-  const _cbBriefingTheme = (()=>{ const v=localStorage.getItem('su_cb_briefing_theme'); return ['auto','mono','navy','crimson','forest','luxury','rose','teal','amber'].includes(v) ? v : 'auto'; })();
+  const _briefingTheme = (()=>{ const v=localStorage.getItem('su_b2_briefing_theme'); return ['classic','custom','minimal','vivid','mono','elegant','pastel','luxury','sports','esports','pop','nature','ocean','sunset','neon'].includes(v) ? v : 'classic'; })();
+  const _plbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plb_briefing_theme'); return ['classic','custom','crimson','emerald','violet','mono','amber','ice','indigo'].includes(v) ? v : 'classic'; })();
+  const _plgbBriefingTheme = (()=>{ const v=localStorage.getItem('su_plgb_briefing_theme'); return ['classic','custom','crimson-duel','azure-duel','violet-duel','mono-duel','gold-duel','rose-duel','jade-duel'].includes(v) ? v : 'classic'; })();
+  const _pcbBriefingTheme = (()=>{ const v=localStorage.getItem('su_pcb_briefing_theme'); return ['classic','custom','crimson-gold','sapphire','emerald-gold','obsidian','topaz','peridot','rose-gold'].includes(v) ? v : 'classic'; })();
+  const _cbBriefingTheme = (()=>{ const v=localStorage.getItem('su_cb_briefing_theme'); return ['auto','custom','mono','navy','crimson','forest','luxury','rose','teal','amber'].includes(v) ? v : 'auto'; })();
   const _ttbBriefingTheme = (()=>{ const v=localStorage.getItem('su_ttb_briefing_theme'); return ['dynamic','custom','sage','slate','plum','sand','mono','rose'].includes(v) ? v : 'dynamic'; })();
   const _ttbCustomAccent = (()=>{ const v=localStorage.getItem('su_ttb_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#64748b'; })();
+  const _b2CustomAccent = (()=>{ const v=localStorage.getItem('su_b2_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#2563eb'; })();
+  const _plbCustomAccent = (()=>{ const v=localStorage.getItem('su_plb_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#38bdf8'; })();
+  const _plgbCustomAccent = (()=>{ const v=localStorage.getItem('su_plgb_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#10b981'; })();
+  const _pcbCustomAccent = (()=>{ const v=localStorage.getItem('su_pcb_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#a855f7'; })();
+  const _cbCustomAccent = (()=>{ const v=localStorage.getItem('su_cb_custom_accent'); return /^#[0-9a-fA-F]{6}$/.test(v||'') ? v : '#0369a1'; })();
   // 🖱️ 라인업 호버 팝업 스타일 (js/board2-univ-views-lineup.js의 _b2LcHoverTipStyle()와 허용값을 동일하게 유지)
   // [FIX-CFG-LCHOVER-WHITELIST] (2026-08-18) 이 화이트리스트가 실제 팝업 구현(_B2LC_HOVERTIP_STYLES)보다
   // 오래돼서 5개만 들어있었다 → gradient/soft/outline/retro/cyber/paper 등을 고르면 즉시 저장은 되지만
@@ -297,7 +302,7 @@ function rCfg(C,T){
     </div>
   `).join('');
 
-  const ctx = {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_ttbBriefingTheme,_ttbCustomAccent,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml};
+  const ctx = {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_ttbBriefingTheme,_ttbCustomAccent,_b2CustomAccent,_plbCustomAccent,_plgbCustomAccent,_pcbCustomAccent,_cbCustomAccent,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml};
   let h = _cfgSecGroup1(ctx) + _cfgSecGroup2(ctx) + _cfgSecGroup3(ctx) + _cfgSecGroup4(ctx);
 setTimeout(()=>{
     // [FIX-UX-1] 설정탭이 다시 그려질 때 사용자가 펼쳐뒀던 <details class="cfg-grp"> 패널을

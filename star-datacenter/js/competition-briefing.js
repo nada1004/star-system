@@ -339,7 +339,7 @@ function _cbInjectShellStyle(){
    파스텔 톤(tone-mt/tone-pc/tone-lv)을 그대로 사용. 그 외 값을 고르면
    종류와 무관하게 해당 팔레트로 고정된다(_cbInjectShellStyle의
    .cbs-wrap[data-theme="..."] 오버라이드가 .tone-* 보다 뒤에 선언되어 우선 적용). */
-const _CB_BRIEFING_THEMES=['auto','mono','navy','crimson','forest','luxury','rose','teal','amber'];
+const _CB_BRIEFING_THEMES=['auto','custom','mono','navy','crimson','forest','luxury','rose','teal','amber'];
 function _cbBriefingThemeLoad(){
   try{ const v=localStorage.getItem('su_cb_briefing_theme'); return _CB_BRIEFING_THEMES.includes(v)?v:'auto'; }catch(e){ return 'auto'; }
 }
@@ -457,7 +457,16 @@ function _cbShell(kicker,title,desc,metaKicker,headline,cells,body,tn){
   _cbInjectShellStyle();
   const tone=_cbToneOf(kicker);
   const _cbTheme=(typeof _cbBriefingThemeLoad==='function')?_cbBriefingThemeLoad():'auto';
-  const _cbThemeAttr=_cbTheme!=='auto'?` data-theme="${_cbTheme}"`:'';
+  let _cbThemeAttr=_cbTheme!=='auto'?` data-theme="${_cbTheme}"`:'';
+  if(_cbTheme==='custom'){
+    let c='#0369a1';
+    try{ const v=localStorage.getItem('su_cb_custom_accent'); if(v && /^#[0-9a-fA-F]{6}$/.test(v)) c=v; }catch(e){}
+    const c2=(typeof _briefLighten==='function')?_briefLighten(c,0.18):c;
+    const soft=(typeof _briefLighten==='function')?_briefLighten(c,0.62):c;
+    const bg=(typeof _briefLighten==='function')?_briefLighten(c,0.92):c;
+    const rgb=(typeof _briefHexToRgb==='function')?_briefHexToRgb(c):'3,105,161';
+    _cbThemeAttr=` style="--cbs-accent:${c};--cbs-accent-2:${c2};--cbs-accent-soft:${soft};--cbs-accent-bg:${bg};--cbs-glow:rgba(${rgb},.28);"`;
+  }
   const issue=`VOL.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}`;
   return `<div class="cbs-wrap ${tone}"${_cbThemeAttr}>
     <div class="cbs-metabar">

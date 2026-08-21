@@ -1,6 +1,6 @@
 // settings-render.js에서 분리됨 (설정 탭 렌더링 — 메뉴정리/이미지설정/경기상세/스트리머·대학상세디자인/FAB/현황판칩/구현황판/브리핑효과)
 function _cfgSecGroup4(ctx){
-  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_ttbBriefingTheme,_ttbCustomAccent,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
+  const {isLoggedIn,isSubAdmin,_escHTML,_escJS,_escAttr,esc,_players,localStorage,notices,univCfg,_catSecs,_cfgCats,_cfgCatIcons,_catLabel,_cfgCatDesc,_cfgSecTitle,typeOpts,_curSecs,_regBtn,_menuBtn,_afOn,_rcOn,_rcAccent,_rcBg,_rcHd,_rcIc,_rcUnivFont,_ymScale,_rcMemoOn,_sfxOn,_sfxMode,_sfxInt,_sfxLen,_sfxTail,_sfxSoft,_sfxEdge,_avaScale,_mvpFxOn,_mvpFxStyle,_mvpFxIntensity,_mvpDesignMode,_briefingTheme,_plbBriefingTheme,_plgbBriefingTheme,_pcbBriefingTheme,_cbBriefingTheme,_ttbBriefingTheme,_ttbCustomAccent,_b2CustomAccent,_plbCustomAccent,_plgbCustomAccent,_pcbCustomAccent,_cbCustomAccent,_lcHoverStyle,_cfgSecDescFallback,_cfgSecDesc,_getCfgSecDesc,_secButtons,_catCardAccents,_catCardsHtml,_secBtnColors,_secBtnIcColors,_secButtonsHtml,_cfgHeroStats,_cfgHeroStatsHtml} = ctx;
   return `${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">카테고리 이동 + 섹션 순서 변경을 직접 정리할 수 있습니다. 변경 즉시 저장되며 새로고침 없이 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
@@ -441,6 +441,7 @@ function _cfgSecGroup4(ctx){
         <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
           onchange="localStorage.setItem('su_b2_briefing_theme',this.value);render()">
           <option value="classic" ${_briefingTheme==='classic'?'selected':''}>클래식 (기본 · 신문/매거진 톤)</option>
+          <option value="custom" ${_briefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
           <option value="minimal" ${_briefingTheme==='minimal'?'selected':''}>미니멀 (그레이 톤 · 절제된 강조)</option>
           <option value="vivid" ${_briefingTheme==='vivid'?'selected':''}>비비드 (보라·핑크 포인트 컬러)</option>
           <option value="mono" ${_briefingTheme==='mono'?'selected':''}>모노 (세피아 신문지 느낌)</option>
@@ -456,6 +457,11 @@ function _cfgSecGroup4(ctx){
           <option value="neon" ${_briefingTheme==='neon'?'selected':''}>네온 (화려한 · 시안·마젠타)</option>
         </select>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">헤더, 카드 테두리, 포인트 색상 등 브리핑 탭 전체 색감 톤이 바뀝니다.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" value="${_b2CustomAccent}" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_b2_custom_accent',this.value);localStorage.setItem('su_b2_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">색을 고르면 자동으로 "직접 선택"으로 전환됩니다.</div>
+        </div>
       </div>
       <hr style="border:none;border-top:1px solid var(--border);margin:0">
       <div>
@@ -463,6 +469,7 @@ function _cfgSecGroup4(ctx){
         <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
           onchange="localStorage.setItem('su_plb_briefing_theme',this.value);render()">
           <option value="classic" ${_plbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 다크 네이비 + 시안/골드)</option>
+          <option value="custom" ${_plbBriefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
           <option value="crimson" ${_plbBriefingTheme==='crimson'?'selected':''}>크림슨 (레드 스코어보드 톤)</option>
           <option value="emerald" ${_plbBriefingTheme==='emerald'?'selected':''}>에메랄드 (그린·라임 포인트)</option>
           <option value="violet" ${_plbBriefingTheme==='violet'?'selected':''}>바이올렛 (퍼플·시안 네온)</option>
@@ -471,12 +478,18 @@ function _cfgSecGroup4(ctx){
           <option value="ice" ${_plbBriefingTheme==='ice'?'selected':''}>아이스 (시원한 아이스블루)</option>
           <option value="indigo" ${_plbBriefingTheme==='indigo'?'selected':''}>인디고 (인디고·마젠타 네온)</option>
         </select>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" value="${_plbCustomAccent}" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_plb_custom_accent',this.value);localStorage.setItem('su_plb_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">색을 고르면 자동으로 "직접 선택"으로 전환됩니다.</div>
+        </div>
       </div>
       <div>
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🔥 프로리그 끝장전 브리핑 디자인 테마</label>
         <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
           onchange="localStorage.setItem('su_plgb_briefing_theme',this.value);render()">
           <option value="classic" ${_plgbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 다크 차콜 + 에메랄드/앰버)</option>
+          <option value="custom" ${_plgbBriefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
           <option value="crimson-duel" ${_plgbBriefingTheme==='crimson-duel'?'selected':''}>크림슨 결투 (레드·앰버 다이나믹)</option>
           <option value="azure-duel" ${_plgbBriefingTheme==='azure-duel'?'selected':''}>애저 결투 (블루·인디고 쿨톤)</option>
           <option value="violet-duel" ${_plgbBriefingTheme==='violet-duel'?'selected':''}>바이올렛 결투 (퍼플·핑크 네온)</option>
@@ -485,12 +498,18 @@ function _cfgSecGroup4(ctx){
           <option value="rose-duel" ${_plgbBriefingTheme==='rose-duel'?'selected':''}>로즈 결투 (로즈핑크·오렌지)</option>
           <option value="jade-duel" ${_plgbBriefingTheme==='jade-duel'?'selected':''}>제이드 결투 (민트·블루 쿨톤)</option>
         </select>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" value="${_plgbCustomAccent}" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_plgb_custom_accent',this.value);localStorage.setItem('su_plgb_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">색을 고르면 자동으로 "직접 선택"으로 전환됩니다. 보조색(대결 상대편 색)은 자동으로 보색을 계산해서 채워줍니다.</div>
+        </div>
       </div>
       <div>
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🏆 프로리그 대회 브리핑 디자인 테마</label>
         <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
           onchange="localStorage.setItem('su_pcb_briefing_theme',this.value);render()">
           <option value="classic" ${_pcbBriefingTheme==='classic'?'selected':''}>클래식 (기본 · 딥퍼플 + 골드)</option>
+          <option value="custom" ${_pcbBriefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
           <option value="crimson-gold" ${_pcbBriefingTheme==='crimson-gold'?'selected':''}>크림슨 골드 (레드 + 트로피 골드)</option>
           <option value="sapphire" ${_pcbBriefingTheme==='sapphire'?'selected':''}>사파이어 (딥블루 + 실버)</option>
           <option value="emerald-gold" ${_pcbBriefingTheme==='emerald-gold'?'selected':''}>에메랄드 골드 (딥그린 + 골드)</option>
@@ -499,12 +518,18 @@ function _cfgSecGroup4(ctx){
           <option value="peridot" ${_pcbBriefingTheme==='peridot'?'selected':''}>페리도트 (연둣빛 그린 + 라임)</option>
           <option value="rose-gold" ${_pcbBriefingTheme==='rose-gold'?'selected':''}>로즈 골드 (마젠타 + 핑크골드)</option>
         </select>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" value="${_pcbCustomAccent}" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_pcb_custom_accent',this.value);localStorage.setItem('su_pcb_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">색을 고르면 자동으로 "직접 선택"으로 전환됩니다.</div>
+        </div>
       </div>
       <div>
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎪 대회 브리핑 디자인 테마</label>
         <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
           onchange="localStorage.setItem('su_cb_briefing_theme',this.value);render()">
           <option value="auto" ${_cbBriefingTheme==='auto'?'selected':''}>자동 (기본 · 조별리그/토너먼트/대회별 파스텔 톤)</option>
+          <option value="custom" ${_cbBriefingTheme==='custom'?'selected':''}>🎨 직접 선택 (아래에서 원하는 색 지정)</option>
           <option value="mono" ${_cbBriefingTheme==='mono'?'selected':''}>모노 (세피아 신문지 톤)</option>
           <option value="navy" ${_cbBriefingTheme==='navy'?'selected':''}>네이비 (블루 포인트)</option>
           <option value="crimson" ${_cbBriefingTheme==='crimson'?'selected':''}>크림슨 (레드 포인트)</option>
@@ -515,6 +540,11 @@ function _cfgSecGroup4(ctx){
           <option value="amber" ${_cbBriefingTheme==='amber'?'selected':''}>앰버 (골드·세피아 포인트)</option>
         </select>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">자동은 조별리그/토너먼트/대회 종류에 따라 톤이 자동으로 바뀌고, 그 외를 고르면 종류와 무관하게 항상 같은 색으로 고정됩니다.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--white);border:1px solid var(--border2);border-radius:8px">
+          <input type="color" value="${_cbCustomAccent}" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer"
+            onchange="localStorage.setItem('su_cb_custom_accent',this.value);localStorage.setItem('su_cb_briefing_theme','custom');render()">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">색을 고르면 자동으로 "직접 선택"으로 전환됩니다.</div>
+        </div>
       </div>
       <div>
         <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎯 티어대회 브리핑 디자인 테마</label>
@@ -585,7 +615,7 @@ function _cfgSecGroup4(ctx){
         </select>
       </div>
       <button class="btn btn-w btn-xs" style="align-self:flex-start"
-        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');localStorage.removeItem('su_plb_briefing_theme');localStorage.removeItem('su_plgb_briefing_theme');localStorage.removeItem('su_pcb_briefing_theme');localStorage.removeItem('su_cb_briefing_theme');localStorage.removeItem('su_ttb_briefing_theme');localStorage.removeItem('su_ttb_custom_accent');render()">↩️ 기본값으로 초기화</button>
+        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');localStorage.removeItem('su_plb_briefing_theme');localStorage.removeItem('su_plgb_briefing_theme');localStorage.removeItem('su_pcb_briefing_theme');localStorage.removeItem('su_cb_briefing_theme');localStorage.removeItem('su_ttb_briefing_theme');localStorage.removeItem('su_ttb_custom_accent');localStorage.removeItem('su_b2_custom_accent');localStorage.removeItem('su_plb_custom_accent');localStorage.removeItem('su_plgb_custom_accent');localStorage.removeItem('su_pcb_custom_accent');localStorage.removeItem('su_cb_custom_accent');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
   ${_scfgD('lineuphover','🖱️ 라인업 호버 팝업 스타일')}
