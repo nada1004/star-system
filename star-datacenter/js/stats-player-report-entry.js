@@ -48,7 +48,7 @@ function statsPlayerReportHTML(){
   const stats = _prRaceStats(histPeriod);
   const mapStats = _prMapStats(histPeriod);
 
-  h += `<div id="pr-report-capture" style="--pr-accent:${(p.univ && typeof gc==='function') ? (gc(p.univ)||'#2563eb') : '#2563eb'}">`;
+  h += `<div id="pr-report-capture" style="--pr-accent:${(p.univ && typeof gcReport==='function') ? (gcReport(p.univ,'streamer')||'#2563eb') : (p.univ && typeof gc==='function' ? (gc(p.univ)||'#2563eb') : '#2563eb')}">`;
   h += _prHeroHTML(p);
 
   h += _prSectionNavHTML();
@@ -271,7 +271,7 @@ function _prHexToRgba(hex, a){
   }catch(e){ return `rgba(37,99,235,${a})`; }
 }
 function _prStyleFrameColor(style, p){
-  if(style==='univ') return (p && p.univ && typeof gc==='function') ? (gc(p.univ)||'#6366f1') : '#6366f1';
+  if(style==='univ') return (p && p.univ && typeof gcReport==='function') ? (gcReport(p.univ,'streamer')||'#6366f1') : (p && p.univ && typeof gc==='function' ? (gc(p.univ)||'#6366f1') : '#6366f1');
   if(style==='report') return '#0f172a';
   if(style==='esports') return '#22d3ee';
   if(style==='magazine') return '#111827';
@@ -612,7 +612,7 @@ async function _prBuildCardData(p){
   const univLogoUrl0 = univLogoRaw.icon || univLogoRaw.img || '';
   const univLogoUrl = univLogoUrl0 ? ((typeof toHttpsUrl==='function') ? toHttpsUrl(univLogoUrl0) : univLogoUrl0) : '';
   const univLogoImg = univLogoUrl ? await _prLoadImageEl(univLogoUrl) : null;
-  const univColor = (p.univ && typeof gc==='function') ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb';
+  const univColor = (p.univ && typeof gcReport==='function') ? (gcReport(p.univ,'streamer')||'#3b5bdb') : (p.univ && typeof gc==='function' ? (gc(p.univ)||'#3b5bdb') : '#3b5bdb');
   // 스트리머 상세 팝업과 동일한 ELO 등급(LEGEND/MASTER/DIAMOND/GOLD/SILVER/BRONZE)
   const eloValForGrade = Number(p.elo||1200);
   const eloGrade = eloValForGrade>=1500?'LEGEND':eloValForGrade>=1400?'MASTER':eloValForGrade>=1300?'DIAMOND':eloValForGrade>=1200?'GOLD':eloValForGrade>=1100?'SILVER':'BRONZE';

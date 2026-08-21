@@ -188,7 +188,44 @@ function _urInjectStyle(){
     'body.dark #ur-report-capture .ur-btn:not(.ur-btn-primary):hover{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 20%, #1e293b)!important}',
     'body.dark #ur-report-capture .ur-nav-bar{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 9%, rgba(15,23,42,.5))}',
     'body.dark #ur-report-capture .ur-nav-chip,body.dark #ur-report-capture .ur-recent-chip{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 12%, rgba(15,23,42,.7))}',
-    'body.dark #ur-report-capture .ur-tier-roster-headrow,body.dark #ur-report-capture .ur-tier-roster-tierbar,body.dark #ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 11%, rgba(15,23,42,.5))}'
+    'body.dark #ur-report-capture .ur-tier-roster-headrow,body.dark #ur-report-capture .ur-tier-roster-tierbar,body.dark #ur-report-capture .ur-roster-sort{background:color-mix(in srgb, var(--ur-accent,var(--blue)) 11%, rgba(15,23,42,.5))}',
+    /* ── 대학 리포트 전용 효과 (설정탭 "🎨 리포트 색상 & 효과"에서 선택, 로스터 카드 사진/이름에 적용) ── */
+    '.ur-roster-card.urfx-photo-glow{box-shadow:0 0 0 1.5px var(--ur-accent,#64748b),0 0 26px 4px color-mix(in srgb, var(--ur-accent,#64748b) 55%, transparent),0 8px 18px rgba(15,23,42,.12)!important}',
+    '.ur-roster-card.urfx-photo-shadow{box-shadow:0 0 0 1.5px color-mix(in srgb, var(--ur-accent,#64748b) 40%, transparent),0 22px 36px rgba(15,23,42,.4)!important}',
+    '.ur-roster-card.urfx-photo-ring{box-shadow:0 0 0 3px var(--ur-accent,#64748b),0 8px 18px rgba(15,23,42,.14)!important}',
+    '.ur-roster-card.urfx-photo-shine::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:urfxShine 2.8s ease-in-out infinite;pointer-events:none;z-index:2}',
+    '.ur-roster-card.urfx-photo-grayscale .ur-roster-photo{filter:grayscale(1) contrast(1.05)}',
+    '.ur-roster-card.urfx-photo-grayscale:hover .ur-roster-photo{filter:grayscale(0)}',
+    '.ur-roster-card.urfx-photo-vignette::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,transparent 40%,rgba(0,0,0,.45) 100%);pointer-events:none;z-index:1}',
+    '.ur-roster-card.urfx-photo-sparkle::before,.ur-roster-card.urfx-photo-sparkle::after{content:"✦";position:absolute;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.95);pointer-events:none;z-index:2;animation:urfxSparkle 1.8s ease-in-out infinite}',
+    '.ur-roster-card.urfx-photo-sparkle::before{top:8px;right:8px;font-size:16px;animation-delay:0s}',
+    '.ur-roster-card.urfx-photo-sparkle::after{top:34px;right:22px;font-size:11px;animation-delay:.6s}',
+    '.ur-roster-card.urfx-photo-pulse{animation:urfxCardPulse 2.2s ease-in-out infinite}',
+    '.ur-roster-card.urfx-photo-float{animation:urfxCardFloat 3.4s ease-in-out infinite}',
+    '.ur-roster-card.urfx-photo-frame{box-shadow:0 0 0 2px var(--white),0 0 0 5px var(--ur-accent,#64748b),0 8px 18px rgba(15,23,42,.14)!important}',
+    '.ur-roster-card.urfx-photo-spotlight::before{content:"";position:absolute;left:50%;top:-20%;width:200%;height:200%;transform:translateX(-50%);background:radial-gradient(circle,color-mix(in srgb, var(--ur-accent,#64748b) 55%, transparent) 0%,transparent 60%);filter:blur(4px);z-index:1;pointer-events:none;animation:urfxSpotlight 3s ease-in-out infinite}',
+    '@keyframes urfxSparkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}',
+    '@keyframes urfxCardPulse{0%,100%{box-shadow:0 0 0 1.5px color-mix(in srgb, var(--ur-accent,#64748b) 20%, transparent),0 8px 18px rgba(15,23,42,.08)}50%{box-shadow:0 0 0 3px var(--ur-accent,#64748b),0 0 22px 4px color-mix(in srgb, var(--ur-accent,#64748b) 50%, transparent)}}',
+    '@keyframes urfxCardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+    '@keyframes urfxSpotlight{0%,100%{opacity:.4}50%{opacity:.9}}',
+    '@keyframes urfxShine{0%{left:-60%}55%{left:130%}100%{left:130%}}',
+    '.urfx-name-outline{-webkit-text-stroke:1px rgba(0,0,0,.5)}',
+    '.urfx-name-glow{text-shadow:0 0 8px var(--ur-accent,#fff),0 0 18px var(--ur-accent,#fff),0 2px 8px rgba(0,0,0,.5)!important}',
+    '.urfx-name-gradient{background:linear-gradient(92deg,#fff 0%,var(--ur-accent,#fff) 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none!important}',
+    '.urfx-name-shadow3d{text-shadow:1px 1px 0 rgba(0,0,0,.6),2px 2px 0 rgba(0,0,0,.5),3px 3px 6px rgba(0,0,0,.4)!important}',
+    '.urfx-name-neon{text-shadow:0 0 6px currentColor,0 0 14px var(--ur-accent,#fff),0 0 28px var(--ur-accent,#fff),0 2px 8px rgba(0,0,0,.5)!important}',
+    '.urfx-name-shimmer{background:linear-gradient(100deg,#fff 30%,var(--ur-accent,#fff) 45%,#fff 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:urfxShimmer 2.6s linear infinite;text-shadow:none!important}',
+    '@keyframes urfxShimmer{0%{background-position:200% 0}100%{background-position:-20% 0}}',
+    '.urfx-name-fire{background:linear-gradient(180deg,#fff58a 0%,#ffb703 35%,#fb5607 65%,#d00000 100%);background-size:100% 220%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:urfxFire 1.8s ease-in-out infinite;text-shadow:0 4px 16px rgba(251,86,7,.4)!important}',
+    '.urfx-name-ice{background:linear-gradient(100deg,#e0f7ff 0%,#7dd3fc 45%,#38bdf8 65%,#e0f7ff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:urfxIce 3.4s linear infinite;text-shadow:0 0 14px rgba(125,211,252,.5)!important}',
+    '.urfx-name-holo{background:linear-gradient(92deg,#ff8fab,#ffd97d,#8affc1,#8ec5fc,#c8a2ff,#ff8fab);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:urfxHolo 5s linear infinite;text-shadow:none!important}',
+    '.urfx-name-metallic{background:linear-gradient(100deg,#fef3c7 0%,#fbbf24 20%,#fef9c3 40%,#d97706 60%,#fef3c7 80%,#fbbf24 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:urfxMetallic 3.2s linear infinite;text-shadow:none!important}',
+    '.urfx-name-pulse{animation:urfxNamePulse 2s ease-in-out infinite}',
+    '@keyframes urfxFire{0%,100%{background-position:0 20%}50%{background-position:0 80%}}',
+    '@keyframes urfxIce{0%{background-position:0 0}100%{background-position:220% 0}}',
+    '@keyframes urfxHolo{0%{background-position:0 0}100%{background-position:280% 0}}',
+    '@keyframes urfxMetallic{0%{background-position:0 0}100%{background-position:260% 0}}',
+    '@keyframes urfxNamePulse{0%,100%{text-shadow:0 0 4px var(--ur-accent,#fff)}50%{text-shadow:0 0 16px var(--ur-accent,#fff),0 0 30px var(--ur-accent,#fff)}}'
   ].join('');
   document.head.appendChild(s);
 }
@@ -471,7 +508,7 @@ function statsUnivReportHTML(){
       </div>`:''}
       <div id="ur-univ-picker-grid" class="ur-univ-picker-grid">
         ${allUnivList.map(u=>{
-          const uCol = (typeof gc==='function' ? gc(u.name) : '') || '#64748b';
+          const uCol = (typeof gcReport==='function' ? gcReport(u.name,'univ') : (typeof gc==='function' ? gc(u.name) : '')) || '#64748b';
           const uIconUrl = u.icon || u.img || (typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[u.name]:'') || '';
           const uLogoSrc = uIconUrl ? (typeof toHttpsUrl==='function'?toHttpsUrl(uIconUrl):uIconUrl) : '';
           const isSel = u.name===univName;
@@ -492,7 +529,10 @@ function statsUnivReportHTML(){
     return h;
   }
 
-  const col = (typeof gc==='function' ? gc(univName) : '') || '#64748b';
+  const col = (typeof gcReport==='function' ? gcReport(univName,'univ') : (typeof gc==='function' ? gc(univName) : '')) || '#64748b';
+  const _urFx = (typeof getReportFx==='function') ? getReportFx('univ') : {photoFx:'none',nameFx:'none'};
+  const _urPhotoFxCls = _urFx.photoFx && _urFx.photoFx!=='none' ? ` urfx-photo-${_urFx.photoFx}` : '';
+  const _urNameFxCls = _urFx.nameFx && _urFx.nameFx!=='none' ? ` urfx-name-${_urFx.nameFx}` : '';
   const _dissOwn = !!(uCfg.dissolved || uCfg.hidden);
   const allMembers = (players||[]).filter(p => p && !p.hidden && !p.retired && !p.hideFromBoard && String(p?.univ||'').trim()===univName);
   const hasRoleFn = (typeof _b2HasRole==='function') ? _b2HasRole : (()=>false);
@@ -581,10 +621,10 @@ function statsUnivReportHTML(){
     : `<span style="font-size:26px">🏫</span>`;
 
   h += `<div id="ur-report-capture" style="--ur-accent:${col}">`;
-  h += `<div class="ur-hero" style="background:linear-gradient(135deg,${col}22,${col}08);border-color:${col}33;--ur-hero-accent:${col}">
+  h += `<div class="ur-hero" style="background:linear-gradient(135deg,${col}40,${col}18);border-color:${col}55;--ur-hero-accent:${col}">
     <div class="ur-hero-logo">${logoHtml}</div>
     <div style="min-width:0;flex:1">
-      <div class="ur-hero-name" style="color:${col}">${escHTML(univName)}</div>
+      <div class="ur-hero-name${_urNameFxCls}" style="color:${col}">${escHTML(univName)}</div>
       <div class="ur-hero-badges">
         <span class="ur-badge">👥 총원 ${allMembers.length}명</span>
         <span class="ur-badge">일반 ${tieredMembers.length}명 · 직책 ${roledMembers.length}명</span>
@@ -750,7 +790,7 @@ function statsUnivReportHTML(){
           <span style="width:20px;text-align:center;font-size:12px;font-weight:900;color:var(--text3);flex-shrink:0">${medal}</span>
           ${_urAvatarHTML(p, col, 32)}
           <span style="font-size:12px;font-weight:800;color:${col};min-width:64px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(p.name||'')}</span>
-          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:linear-gradient(90deg,#22d3ee,#38bdf8,#3b82f6,#6366f1);border-radius:999px"></div></div>
+          <div class="ur-bar-track" style="margin:0 6px"><div style="width:${x.wr}%;height:100%;background:linear-gradient(90deg,color-mix(in srgb, ${col} 45%, white),${col});border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:var(--text2);flex-shrink:0">${x.win}승 ${x.loss}패</span>
           <span style="font-size:11.5px;font-weight:900;color:${wrColText};min-width:36px;text-align:right;flex-shrink:0">${x.wr}%</span>
         </div>`;
@@ -807,7 +847,7 @@ function statsUnivReportHTML(){
         return `<div class="ur-rival-row${i%2?' is-alt':''}" onclick="if(typeof openUnivModal==='function')openUnivModal('${safeRival}')">
           ${rLogoHtml}
           <span style="font-size:12px;font-weight:800;color:${rCol};min-width:70px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(r.name)}</span>
-          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:linear-gradient(90deg,#22d3ee,#38bdf8,#3b82f6,#6366f1);border-radius:999px"></div></div>
+          <div class="ur-bar-track"><div style="width:${r.wr??0}%;height:100%;background:linear-gradient(90deg,color-mix(in srgb, ${col} 45%, white),${col});border-radius:999px"></div></div>
           <span style="font-size:11.5px;font-weight:900;color:${rWrColText};min-width:38px;text-align:right">${r.wr!==null?r.wr+'%':'-'}</span>
           <span style="font-size:10.5px;color:var(--text3);min-width:64px;text-align:right">${r.w}승 ${r.l}패</span>
         </div>`;
@@ -873,12 +913,12 @@ function statsUnivReportHTML(){
         const _2ndRoster = (hasPhoto && typeof _phSwap2ndHTML==='function' && p.secondProfileFile)
           ? _phSwap2ndHTML(p.secondProfileFile, {extraClass:'ur-roster-photo', style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1'})
           : '';
-        return `<div class="ur-roster-card${_2ndRoster?' ph-swap':''}" style="box-shadow:0 0 0 1.5px ${col}33,0 8px 18px rgba(15,23,42,.08)" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')">
+        return `<div class="ur-roster-card${_2ndRoster?' ph-swap':''}${_urPhotoFxCls}" style="box-shadow:0 0 0 1.5px ${col}33,0 8px 18px rgba(15,23,42,.08)" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${safeName}')">
           ${hasPhoto?`<img class="ur-roster-photo" src="${photoUrl}" data-orig="${photoOrig}" loading="lazy" alt="${escHTML(p.name||'')}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">`:''}
           ${_2ndRoster}
           <div class="ur-roster-fallback" style="${hasPhoto?'display:none':'display:flex'};background:${col}">${initials}</div>
           <div class="ur-roster-bottom">
-            <span class="ur-roster-name">${rIco?rIco+' ':''}${escHTML(p.name||'')}</span>
+            <span class="ur-roster-name${_urNameFxCls}">${rIco?rIco+' ':''}${escHTML(p.name||'')}</span>
             ${p.role?`<span class="ur-roster-tier" style="background:${col}cc;color:#fff">${escHTML(p.role)}</span>`:(p.tier?`<span class="ur-roster-tier" style="background:${tc};color:${tcol}">${escHTML(p.tier)}</span>`:'')}
           </div>
         </div>`;
@@ -1109,7 +1149,7 @@ function _urHexToRgba(hex, a){
   }catch(e){ return `rgba(37,99,235,${a})`; }
 }
 function _urStyleFrameColor(style, univName){
-  if (style==='univ') return (univName && typeof gc==='function') ? (gc(univName)||'#6366f1') : '#6366f1';
+  if (style==='univ') return (univName && typeof gcReport==='function') ? (gcReport(univName,'univ')||'#6366f1') : (univName && typeof gc==='function' ? (gc(univName)||'#6366f1') : '#6366f1');
   if (style==='report') return '#0f172a';
   return null;
 }

@@ -191,7 +191,7 @@ function _prMonthlyTrendHTML(p){
     }
   }
   /* ── 라인(추이) 차트 렌더 ── */
-  const uColor = (typeof gc==='function') ? gc(p.univ||'') : '#6366f1';
+  const uColor = (typeof gcReport==='function') ? gcReport(p.univ||'','streamer') : ((typeof gc==='function') ? gc(p.univ||'') : '#6366f1');
   const lineColor = uColor;
   const pctColor = (typeof univTextColor==='function') ? univTextColor(p.univ||'') : uColor;
   const n = recs.length;
@@ -477,10 +477,13 @@ function _prHeroHTML(p){
   const RACE_KO={T:'테란',Z:'저그',P:'프로토스',N:'무종족'};
   const rankInfo=_prTierRank(p);
   const eloBoardUrl = `https://eloboard.com/?s=${encodeURIComponent(p.name)}`;
+  const _prFx = (typeof getReportFx==='function') ? getReportFx('streamer') : {photoFx:'none',nameFx:'none'};
+  const _prPhotoFxCls = _prFx.photoFx && _prFx.photoFx!=='none' ? ` prfx-photo-${_prFx.photoFx}` : '';
+  const _prNameFxCls = _prFx.nameFx && _prFx.nameFx!=='none' ? ` prfx-name-${_prFx.nameFx}` : '';
   return `<div class="pr-hero">
-    <div class="pr-hero-photo" style="box-shadow:0 0 0 3px var(--white),var(--sh2)" onclick="openPlayerModal('${escJS(p.name)}')" title="상세 프로필 보기">${getPlayerPhotoHTML(p.name,'124px','object-fit:cover;object-position:center;')}</div>
+    <div class="pr-hero-photo${_prPhotoFxCls}" style="box-shadow:0 0 0 3px var(--white),var(--sh2)" onclick="openPlayerModal('${escJS(p.name)}')" title="상세 프로필 보기">${getPlayerPhotoHTML(p.name,'124px','object-fit:cover;object-position:center;')}</div>
     <div style="flex:1;min-width:200px">
-      <div class="pr-hero-name">${escHTML(p.name)} <span class="rbadge r${p.race||''}">${RACE_KO[p.race]||p.race||''}</span></div>
+      <div class="pr-hero-name${_prNameFxCls}">${escHTML(p.name)} <span class="rbadge r${p.race||''}">${RACE_KO[p.race]||p.race||''}</span></div>
       <div class="pr-hero-wr-row">
         ${(typeof _prLevelBadgeHTML==='function') ? _prLevelBadgeHTML(p) : ''}
         ${(()=>{
@@ -494,7 +497,7 @@ function _prHeroHTML(p){
       <div class="pr-hero-meta">
         ${(()=>{
           const uName = p.univ||'';
-          const uColor = (typeof gc==='function') ? gc(uName) : '#6b7280';
+          const uColor = (typeof gcReport==='function') ? gcReport(uName,'streamer') : ((typeof gc==='function') ? gc(uName) : '#6b7280');
           const uIcon = (typeof gUI==='function') ? gUI(uName,'1.05em') : '';
           return `<span class="pr-chip" style="cursor:pointer;background:${uColor};color:#fff;border-color:${uColor}" onclick="if(typeof openUnivModal==='function')openUnivModal('${escJS(uName)}')">${uIcon}${escHTML(uName||'-')}</span>`;
         })()}

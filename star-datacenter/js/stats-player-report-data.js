@@ -183,9 +183,10 @@ try{
     '.pr-bg-loading .pr-img-preview-body img{opacity:.35}',
     '.pr-bg-loading .pr-img-preview-body::after{content:"이미지 생성 중...";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:var(--text2);background:var(--white);padding:8px 14px;border-radius:999px;box-shadow:var(--sh2)}',
     /* ── 소속 대학 색상 테마: #pr-report-capture 안의 배경/박스/버튼을 --pr-accent(대학색)의 연한 톤으로
-       (2026-08-21 오전 진하게 재조정 → 2026-08-21 오후 "좀 더 연하게" 피드백으로 전체 비율 축소 재조정) ── */
+       (2026-08-21 오전 진하게 재조정 → 2026-08-21 오후 "좀 더 연하게" 피드백으로 전체 비율 축소 재조정
+        → 2026-08-21 저녁 상단 히어로(로고 영역)만 "좀 더 진하게" 피드백으로 .pr-hero만 재조정) ── */
     '#pr-report-capture{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 4%, transparent);border-radius:22px}',
-    '#pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 9%, var(--white));border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 26%, var(--border))}',
+    '#pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, var(--white));border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 34%, var(--border))}',
     '#pr-report-capture .ssec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 6%, var(--white))}',
     /* 핵심 분석 & AI 코멘트 섹션은 대학색 대신 AI 코멘트 박스와 어울리는 별도 톤(인디고/보라 계열) 고정 사용 — ID 2개라 위 .ssec 규칙보다 항상 우선 적용됨 */
     '#pr-report-capture #pr-sec-insights.ssec{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border-color:#e0e7ff}',
@@ -208,7 +209,7 @@ try{
     '#pr-report-capture .pr-recent-table tbody tr.pd-hist-row{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 5%, var(--white))!important}',
     '#pr-report-capture .pr-recent-table tbody tr.pd-hist-row:hover{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 14%, var(--white))!important}',
     'body.dark #pr-report-capture{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 7%, transparent)}',
-    'body.dark #pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 20%, #1e293b);border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 32%, rgba(148,163,184,.16))}',
+    'body.dark #pr-report-capture .pr-hero{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 28%, #1e293b);border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 40%, rgba(148,163,184,.16))}',
     'body.dark #pr-report-capture .ssec{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 13%, #1e293b)}',
     'body.dark #pr-report-capture .pr-info-card,body.dark #pr-report-capture .pr-wr-card{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, #1e293b);border-color:color-mix(in srgb, var(--pr-accent,var(--blue)) 28%, #2d3f55)}',
     'body.dark #pr-report-capture .pr-gauge-ring::before{background:color-mix(in srgb, var(--pr-accent,var(--blue)) 16%, #1e293b)}',
@@ -240,7 +241,10 @@ try{
     '.pr-info-lbl{font-size:11px;color:var(--text2);font-weight:800;margin-top:5px}',
     '.pr-gauge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px}',
     '.pr-gauge-card{text-align:center}',
-    '.pr-gauge-ring{width:92px;height:92px;border-radius:50%;margin:0 auto 8px;position:relative;--wrp:0;animation:pr-gauge-fill 1s cubic-bezier(.16,1,.3,1) forwards}',
+    /* (2026-08-21) 얇은 중립색 테두리 고정 추가 — 링 색이 배경(카드/페이지)과 비슷한 톤일 때도
+       원형 경계 자체는 항상 또렷하게 구분되도록 함 (대학색이 배경과 가까운 웜톤일 때 카드가
+       배경에 묻혀 보이던 문제 보완) */
+    '.pr-gauge-ring{width:92px;height:92px;border-radius:50%;margin:0 auto 8px;position:relative;--wrp:0;animation:pr-gauge-fill 1s cubic-bezier(.16,1,.3,1) forwards;box-shadow:0 0 0 1px var(--border)}',
     '.pr-gauge-ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--white)}',
     '@keyframes pr-gauge-fill{to{--wrp:var(--wr-target)}}',
     '@media(prefers-reduced-motion:reduce){.pr-gauge-ring{animation:none;--wrp:var(--wr-target)}}',
@@ -318,7 +322,50 @@ try{
     '  .pr-recent-table tbody td:nth-child(3){order:-1;width:100%;margin-bottom:2px}',
     '  .pr-recent-table tbody td.ph-col-map:not(:empty)::before{content:"🗺️ ";opacity:.6}',
     '  .pr-recent-table tbody td.ph-col-elo::before{content:"ELO ";font-size:10px;color:var(--text2);opacity:.8}',
-    '}'
+    '}',
+    /* ── 스트리머 리포트 전용 효과 (설정탭 "🎨 리포트 색상 & 효과"에서 선택, 히어로 프로필 사진/이름에 적용) ── */
+    '.pr-hero-photo.prfx-photo-glow{position:relative;box-shadow:0 0 0 3px var(--white),0 0 26px 4px color-mix(in srgb, var(--pr-accent,#2563eb) 55%, transparent)!important}',
+    '.pr-hero-photo.prfx-photo-shadow{position:relative;box-shadow:0 0 0 3px var(--white),0 22px 36px rgba(15,23,42,.4)!important}',
+    '.pr-hero-photo.prfx-photo-ring{position:relative;box-shadow:0 0 0 3px var(--white),0 0 0 6px var(--pr-accent,#2563eb)!important}',
+    '.pr-hero-photo.prfx-photo-shine{position:relative}',
+    '.pr-hero-photo.prfx-photo-shine::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-18deg);animation:prfxShine 2.8s ease-in-out infinite;pointer-events:none;z-index:2}',
+    '.pr-hero-photo.prfx-photo-grayscale img{filter:grayscale(1) contrast(1.05)}',
+    '.pr-hero-photo.prfx-photo-grayscale:hover img{filter:grayscale(0)}',
+    '.pr-hero-photo.prfx-photo-vignette{position:relative}',
+    '.pr-hero-photo.prfx-photo-vignette::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,transparent 40%,rgba(0,0,0,.4) 100%);pointer-events:none;z-index:1}',
+    '.pr-hero-photo.prfx-photo-sparkle{position:relative}',
+    '.pr-hero-photo.prfx-photo-sparkle::before,.pr-hero-photo.prfx-photo-sparkle::after{content:"✦";position:absolute;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.95);pointer-events:none;z-index:2;animation:prfxSparkle 1.8s ease-in-out infinite}',
+    '.pr-hero-photo.prfx-photo-sparkle::before{top:6px;right:6px;font-size:16px;animation-delay:0s}',
+    '.pr-hero-photo.prfx-photo-sparkle::after{top:28px;right:20px;font-size:11px;animation-delay:.6s}',
+    '.pr-hero-photo.prfx-photo-pulse{animation:prfxPhotoPulse 2.2s ease-in-out infinite}',
+    '.pr-hero-photo.prfx-photo-float{animation:prfxPhotoFloat 3.4s ease-in-out infinite}',
+    '.pr-hero-photo.prfx-photo-frame{box-shadow:0 0 0 3px var(--white),0 0 0 6px var(--pr-accent,#2563eb)!important}',
+    '.pr-hero-photo.prfx-photo-spotlight{position:relative}',
+    '.pr-hero-photo.prfx-photo-spotlight::before{content:"";position:absolute;left:50%;top:-20%;width:200%;height:200%;transform:translateX(-50%);background:radial-gradient(circle,color-mix(in srgb, var(--pr-accent,#2563eb) 55%, transparent) 0%,transparent 60%);filter:blur(4px);z-index:1;pointer-events:none;animation:prfxSpotlight 3s ease-in-out infinite}',
+    '@keyframes prfxSparkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}',
+    '@keyframes prfxPhotoPulse{0%,100%{box-shadow:0 0 0 3px var(--white),var(--sh2)}50%{box-shadow:0 0 0 3px var(--white),0 0 22px 4px color-mix(in srgb, var(--pr-accent,#2563eb) 55%, transparent)}}',
+    '@keyframes prfxPhotoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+    '@keyframes prfxSpotlight{0%,100%{opacity:.4}50%{opacity:.9}}',
+    '@keyframes prfxShine{0%{left:-60%}55%{left:130%}100%{left:130%}}',
+    '.prfx-name-outline{-webkit-text-stroke:1px rgba(0,0,0,.4)}',
+    '.prfx-name-glow{text-shadow:0 0 8px var(--pr-accent,#2563eb),0 0 18px var(--pr-accent,#2563eb)!important}',
+    '.prfx-name-gradient{background:linear-gradient(92deg,var(--text1) 0%,var(--pr-accent,#2563eb) 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none!important}',
+    '.prfx-name-shadow3d{text-shadow:1px 1px 0 rgba(0,0,0,.35),2px 2px 0 rgba(0,0,0,.25),3px 3px 6px rgba(0,0,0,.25)!important}',
+    '.prfx-name-neon{text-shadow:0 0 6px currentColor,0 0 14px var(--pr-accent,#2563eb),0 0 28px var(--pr-accent,#2563eb)!important}',
+    '.prfx-name-shimmer{background:linear-gradient(100deg,var(--text1) 30%,var(--pr-accent,#2563eb) 45%,var(--text1) 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:prfxShimmer 2.6s linear infinite;text-shadow:none!important}',
+    '@keyframes prfxShimmer{0%{background-position:200% 0}100%{background-position:-20% 0}}',
+    '.prfx-name-fire{background:linear-gradient(180deg,#fff58a 0%,#ffb703 35%,#fb5607 65%,#d00000 100%);background-size:100% 220%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:prfxFire 1.8s ease-in-out infinite;text-shadow:0 4px 16px rgba(251,86,7,.4)!important}',
+    '.prfx-name-ice{background:linear-gradient(100deg,#e0f7ff 0%,#7dd3fc 45%,#38bdf8 65%,#e0f7ff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:prfxIce 3.4s linear infinite;text-shadow:0 0 14px rgba(125,211,252,.5)!important}',
+    '.prfx-name-holo{background:linear-gradient(92deg,#ff8fab,#ffd97d,#8affc1,#8ec5fc,#c8a2ff,#ff8fab);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:prfxHolo 5s linear infinite;text-shadow:none!important}',
+    '.prfx-name-metallic{background:linear-gradient(100deg,#fef3c7 0%,#fbbf24 20%,#fef9c3 40%,#d97706 60%,#fef3c7 80%,#fbbf24 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:prfxMetallic 3.2s linear infinite;text-shadow:none!important}',
+    '.prfx-name-pulse{animation:prfxNamePulse 2s ease-in-out infinite}',
+    '@keyframes prfxFire{0%,100%{background-position:0 20%}50%{background-position:0 80%}}',
+    '@keyframes prfxIce{0%{background-position:0 0}100%{background-position:220% 0}}',
+    '@keyframes prfxHolo{0%{background-position:0 0}100%{background-position:280% 0}}',
+    '@keyframes prfxMetallic{0%{background-position:0 0}100%{background-position:260% 0}}',
+    '@keyframes prfxNamePulse{0%,100%{text-shadow:0 0 4px var(--pr-accent,#2563eb)}50%{text-shadow:0 0 16px var(--pr-accent,#2563eb),0 0 30px var(--pr-accent,#2563eb)}}',
+    /* 그라데이션/시머/파이어/아이스/홀로/메탈릭 효과는 -webkit-text-fill-color가 자식(종족 배지)까지 상속돼 배지 글자가 함께 투명해지는 문제 방지 */
+    '.prfx-name-gradient .rbadge,.prfx-name-shimmer .rbadge,.prfx-name-fire .rbadge,.prfx-name-ice .rbadge,.prfx-name-holo .rbadge,.prfx-name-metallic .rbadge{-webkit-text-fill-color:currentColor}'
   ].join('\n');
   document.head.appendChild(s);
 })();
@@ -555,7 +602,7 @@ function _prMapBarsHTML(mapStats, univName){
      - 링 색은 맵마다 승률에 따라 소속 대학색의 옅은/진한 톤으로 달라져서(고정 그라데이션이었던
        기존 방식과 달리) 맵별로 실제 성적 차이가 색으로도 드러남
      - auto-fit 그리드라 맵 개수가 늘어나도 자동으로 줄바꿈됨 */
-  const univHex = (univName && typeof gc==='function') ? (gc(univName)||'#0d9488') : '#0d9488';
+  const univHex = (univName && typeof gcReport==='function') ? (gcReport(univName,'streamer')||'#0d9488') : (univName && typeof gc==='function' ? (gc(univName)||'#0d9488') : '#0d9488');
   const eligible = mapStats.filter(m=>m.tot>=2);
   let bestMap='', worstMap='';
   if(eligible.length>=2){
@@ -564,7 +611,11 @@ function _prMapBarsHTML(mapStats, univName){
   }
   let h=`<div class="pr-gauge-grid">`;
   mapStats.forEach((m)=>{
-    const color = _prTintByPercent(m.wr, univHex, 70).css;
+    /* (2026-08-21) maxLight 70→55: 승률 낮은 맵의 링 색이 너무 옅어져 카드/페이지 배경(웜톤)과
+       구분이 안 되던 문제 보완 — 최저 승률(1%)에서도 최소한의 선명도를 유지.
+       색상 자체는 다른 섹션과 동일하게 항상 그 대학 고유색(univHex) 그대로 사용 — 프로토스색과
+       겹친다고 다른 색으로 바꿔버리면 오히려 "대학색이 아닌 색"이 나와 더 이상해 보임(되돌림). */
+    const color = _prTintByPercent(m.wr, univHex, 55).css;
     const badge = m.map===bestMap ? 'best' : m.map===worstMap ? 'worst' : '';
     h+=_prGaugeCardHTML(m.map, m.w, m.l, '🗺️', color, badge);
   });

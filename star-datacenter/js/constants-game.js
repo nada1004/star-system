@@ -92,6 +92,64 @@ function getRankChangeBadge(playerName, currentRank) {
 }
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
+
+// ── 리포트 전용 색상 오버라이드 (스트리머 리포트 / 대학 리포트) ──
+// 대학 설정의 고정 대학색(gc())과 무관하게, 두 리포트 화면에서만 대학별로 다른 강조색을
+// 쓰고 싶을 때를 위한 레이어. 설정탭 "🎨 리포트 색상 & 효과"에서 저장/초기화한다.
+// kind: 'univ'(대학 리포트) | 'streamer'(스트리머 리포트)
+function _reportColorKey(kind){ return kind==='streamer' ? 'su_sr_color_overrides' : 'su_ur_color_overrides'; }
+function _reportFxKey(kind){ return kind==='streamer' ? 'su_sr_fx' : 'su_ur_fx'; }
+function _reportColorOnKey(kind){ return kind==='streamer' ? 'su_sr_color_on' : 'su_ur_color_on'; }
+function getReportColorOn(kind){
+  try{ return (localStorage.getItem(_reportColorOnKey(kind)) ?? '1') !== '0'; }catch(e){ return true; }
+}
+function setReportColorOn(kind, on){
+  try{ localStorage.setItem(_reportColorOnKey(kind), on ? '1' : '0'); }catch(e){}
+}
+function gcReport(n, kind){
+  if(!getReportColorOn(kind)) return '#64748b';
+  try{
+    const map = J(_reportColorKey(kind)) || {};
+    const v = n ? map[n] : '';
+    if(v && /^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  }catch(e){}
+  return gc(n);
+}
+function getReportFx(kind){
+  try{
+    const v = J(_reportFxKey(kind)) || {};
+    return { photoFx: v.photoFx || 'none', nameFx: v.nameFx || 'none' };
+  }catch(e){ return { photoFx:'none', nameFx:'none' }; }
+}
+function setReportColor(kind, univName, hex){
+  if(!univName) return;
+  try{
+    const key = _reportColorKey(kind);
+    const map = J(key) || {};
+    if(hex && /^#[0-9a-fA-F]{6}$/.test(hex)) map[univName] = hex; else delete map[univName];
+    _lsSave(key, map);
+  }catch(e){}
+}
+function resetReportColorAll(kind){
+  try{ _lsSave(_reportColorKey(kind), {}); }catch(e){}
+}
+function setReportFx(kind, prop, value){
+  try{
+    const key = _reportFxKey(kind);
+    const v = J(key) || {};
+    v[prop] = value || 'none';
+    _lsSave(key, v);
+  }catch(e){}
+}
+try{
+  window.gcReport = gcReport;
+  window.getReportFx = getReportFx;
+  window.setReportColor = setReportColor;
+  window.resetReportColorAll = resetReportColorAll;
+  window.setReportFx = setReportFx;
+  window.getReportColorOn = getReportColorOn;
+  window.setReportColorOn = setReportColorOn;
+}catch(e){}
 function _univIconTag(name,size){
   if(!name) return '';
   const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';

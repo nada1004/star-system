@@ -594,6 +594,88 @@ function _cfgSecGroup4(ctx){
       <button class="btn btn-w btn-xs" style="align-self:flex-start" onclick="localStorage.removeItem('su_b2lc_hovertip_style');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
+  ${(()=>{
+    const _rcolUr = (typeof J==='function' ? (J('su_ur_color_overrides')||{}) : {});
+    const _rcolSr = (typeof J==='function' ? (J('su_sr_color_overrides')||{}) : {});
+    const _rfxUr = (typeof getReportFx==='function') ? getReportFx('univ') : {photoFx:'none',nameFx:'none'};
+    const _rfxSr = (typeof getReportFx==='function') ? getReportFx('streamer') : {photoFx:'none',nameFx:'none'};
+    const _rOnUr = (typeof getReportColorOn==='function') ? getReportColorOn('univ') : true;
+    const _rOnSr = (typeof getReportColorOn==='function') ? getReportColorOn('streamer') : true;
+    const _rPhotoOpts = [['none','없음'],['glow','글로우'],['shadow','진한 그림자'],['ring','컬러 링'],['shine','샤인(스윕)'],['grayscale','흑백(호버시 컬러)'],['vignette','비네트'],['sparkle','스파클(반짝)'],['pulse','펄스(맥동)'],['float','플로트(둥실)'],['frame','더블 프레임'],['spotlight','스포트라이트']];
+    const _rNameOpts = [['none','없음'],['outline','아웃라인'],['glow','글로우'],['gradient','그라디언트'],['shadow3d','3D 그림자'],['neon','네온'],['shimmer','시머(반짝임)'],['fire','파이어'],['ice','아이스'],['holo','홀로그램'],['metallic','메탈릭'],['pulse','펄스(맥동)']];
+    const _fxSelectHTML = (kind, label, prop, opts, cur) => `
+      <div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">${label}</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)"
+          onchange="setReportFx('${kind}','${prop}',this.value);render()">
+          ${opts.map(([v,l])=>`<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>`;
+    const _univRowsHTML = (univCfg||[]).filter(u=>u && !u.hidden).map(u=>{
+      const base = (typeof gc==='function') ? gc(u.name) : '#6b7280';
+      const urHex = /^#[0-9a-fA-F]{6}$/.test(_rcolUr[u.name]||'') ? _rcolUr[u.name] : base;
+      const srHex = /^#[0-9a-fA-F]{6}$/.test(_rcolSr[u.name]||'') ? _rcolSr[u.name] : base;
+      const safeU = String(u.name||'').replace(/'/g,"\\'");
+      const urCustom = !!_rcolUr[u.name];
+      const srCustom = !!_rcolSr[u.name];
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+        <span style="width:14px;height:14px;border-radius:50%;background:${base};flex-shrink:0;box-shadow:0 0 0 1px var(--border2)" title="대학 고정색 ${base}"></span>
+        <span style="flex:1;min-width:0;font-size:var(--fs-sm);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHTML(u.name)}</span>
+        <span style="display:flex;align-items:center;gap:4px">
+          <input type="color" value="${urHex}" title="대학 리포트 색" style="width:28px;height:26px;border:1px solid var(--border2);border-radius:6px;padding:0;cursor:pointer" onchange="setReportColor('univ','${safeU}',this.value);render()">
+          ${urCustom?`<button class="btn btn-w btn-xs" title="초기화(대학 고정색으로)" onclick="setReportColor('univ','${safeU}','');render()">↩️</button>`:''}
+        </span>
+        <span style="display:flex;align-items:center;gap:4px">
+          <input type="color" value="${srHex}" title="스트리머 리포트 색" style="width:28px;height:26px;border:1px solid var(--border2);border-radius:6px;padding:0;cursor:pointer" onchange="setReportColor('streamer','${safeU}',this.value);render()">
+          ${srCustom?`<button class="btn btn-w btn-xs" title="초기화(대학 고정색으로)" onclick="setReportColor('streamer','${safeU}','');render()">↩️</button>`:''}
+        </span>
+      </div>`;
+    }).join('');
+    return `${_scfgD('reportstyle','🎨 리포트 색상 & 효과 (스트리머/대학)')}
+    <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">통계탭의 📺 스트리머 리포트 · 🏛️ 대학 리포트 화면에만 적용되는 강조색과 사진/이름 효과입니다. 대학 설정(🏛️ 대학)의 고정 대학색과는 별개로 동작하며, 여기서 바꿔도 다른 탭(현황판/대학상세 등)의 대학색은 그대로 유지됩니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:18px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" style="width:15px;height:15px" ${_rOnUr?'checked':''} onchange="setReportColorOn('univ',this.checked);render()">
+          🏛️ 대학 리포트에 대학 색상 효과 사용
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" style="width:15px;height:15px" ${_rOnSr?'checked':''} onchange="setReportColorOn('streamer',this.checked);render()">
+          📺 스트리머 리포트에 대학 색상 효과 사용
+        </label>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:-10px">끄면 해당 리포트는 대학과 무관하게 중립 회색 톤으로만 표시됩니다(아래 대학별 색상 지정도 무시됨).</div>
+      <div>
+        <div style="font-size:var(--fs-sm);font-weight:900;margin-bottom:8px">🏛️ 대학 리포트 효과</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${_fxSelectHTML('univ','로스터 사진 효과','photoFx',_rPhotoOpts,_rfxUr.photoFx)}
+          ${_fxSelectHTML('univ','이름 효과','nameFx',_rNameOpts,_rfxUr.nameFx)}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:var(--fs-sm);font-weight:900;margin-bottom:8px">📺 스트리머 리포트 효과</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${_fxSelectHTML('streamer','프로필 사진 효과','photoFx',_rPhotoOpts,_rfxSr.photoFx)}
+          ${_fxSelectHTML('streamer','이름 효과','nameFx',_rNameOpts,_rfxSr.nameFx)}
+        </div>
+      </div>
+      <div style="${(_rOnUr||_rOnSr)?'':'opacity:.45;pointer-events:none'}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="font-size:var(--fs-sm);font-weight:900">🎨 대학별 리포트 색상</div>
+          <span style="flex:1"></span>
+          <button class="btn btn-w btn-xs" onclick="if(confirm('대학 리포트 색상을 모두 초기화할까요?')){resetReportColorAll('univ');render()}">대학 리포트 전체 초기화</button>
+          <button class="btn btn-w btn-xs" onclick="if(confirm('스트리머 리포트 색상을 모두 초기화할까요?')){resetReportColorAll('streamer');render()}">스트리머 리포트 전체 초기화</button>
+        </div>
+        <div style="display:flex;gap:10px;padding:0 10px 6px;font-size:10px;color:var(--gray-l);font-weight:700">
+          <span style="flex:1"></span><span style="width:64px;text-align:center">대학리포트</span><span style="width:64px;text-align:center">스트리머리포트</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto">
+          ${_univRowsHTML || `<div style="font-size:var(--fs-sm);color:var(--gray-l)">등록된 대학이 없습니다</div>`}
+        </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
   </div>
   `;
 }

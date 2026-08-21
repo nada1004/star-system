@@ -84,6 +84,7 @@ function rCfg(C,T){
     pdModeBadge:'🎨 최근 경기 종목 배지 색상',
     pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)', ud:'🏫 대학 상세(팝업) 디자인',
     streamerheader:'🎓 스트리머탭 대학 헤더',
+    reportstyle:'🎨 리포트 색상 & 효과 (스트리머/대학)',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     briefingfx:'🎞️ 브리핑 디자인 & 효과',
