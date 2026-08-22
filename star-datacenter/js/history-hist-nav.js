@@ -46,16 +46,6 @@ function rHist(C,T){
       });
     }
   }catch(e){}
-  // (요청사항) 관리자 전용 외부 자료 탭
-  try{
-    if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
-      tabDefs.push({id:'ext', grp:'외부', lbl:'📎', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext','📎'):'📎')});
-      // 외부2: 관리자 전용(iframe)
-      tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext2','🌐 외부2'):'🌐 외부2')});
-      // 외부3: 관리자 전용(iframe, 페이지 이동 지원)
-      tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext3','🌐 외부3'):'🌐 외부3')});
-    }
-  }catch(e){}
   // (설정) 🧷 탭/모드 표시 관리에서 hist.sub.<id> 키로 서브탭별 노출 on/off 관리 (비로그인 숨김)
   if(window.TabVis && typeof window.TabVis.filterDefs === 'function'){
     tabDefs = window.TabVis.filterDefs(tabDefs, 'hist.sub');
@@ -90,6 +80,11 @@ function rHist(C,T){
     histSub='all';
     try{ openDetails={}; }catch(e){}
   }
+  // (삭제됨) 외부 / 외부2 / 외부3 탭 — 과거 저장된 값이 남아있으면 "전체 통합"으로 귀속
+  if(histSub==='ext' || histSub==='ext2' || histSub==='ext3'){
+    histSub='all';
+    try{ openDetails={}; }catch(e){}
+  }
   const needDateFilter=['mini','civil','ck','univm','comp','tourney','tourney-gen','tourney-league','tourney-bkt','pro','ind','gj','progj','tiertour','tiertour-gen','tiertour-league','tiertour-bkt','procomp','all'].includes(histSub);
   const _histBulkKeyTop = (()=>{
     if(!isLoggedIn) return '';
@@ -109,22 +104,12 @@ function rHist(C,T){
     h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
   }
   grps.forEach(g=>{
-    const isOn=(g==='외부') ? (histSub==='ext') : (curTab.grp===g);
+    const isOn=(curTab.grp===g);
     const firstId=tabDefs.find(t=>t.grp===g).id;
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
     const _lastId=_histLastByGroup?.[g];
-    const targetId=(g==='외부') ? firstId : ((typeof _lastId==='string' && tabDefs.some(t=>t.id===_lastId && t.grp===g)) ? _lastId : firstId);
+    const targetId=(typeof _lastId==='string' && tabDefs.some(t=>t.id===_lastId && t.grp===g)) ? _lastId : firstId;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${targetId}';openDetails={};render()">${gLbl}</button>`;
-    // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
-    if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
-      const isOn2=(histSub==='ext2');
-      h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext2','외부2') : '외부2'}</button>`;
-    }
-    // '외부' 우측에 '외부3' 버튼 노출(관리자 전용)
-    if(g==='외부' && tabDefs.some(t=>t.id==='ext3')){
-      const isOn3=(histSub==='ext3');
-      h+=`<button class="pill ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext3';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext3','외부3') : '외부3'}</button>`;
-    }
   });
   h+=`  </div>`;
   h+=`</div>`;
@@ -134,7 +119,7 @@ function rHist(C,T){
   // 선택 그룹 내 탭 + 기간 필터는 필터가 열렸을 때만 표시
   const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  if((_enableSubFilter?window._histFilterOpen:true) && grpTabs.length>1 && curTab.grp!=='외부'){
+  if((_enableSubFilter?window._histFilterOpen:true) && grpTabs.length>1){
     // (요청사항) "우측 끝 고정"이 아니라, 하위메뉴 버튼 "바로 우측"에
     // 연도/월 + 최신/오래된순이 이어서 붙어야 함 (한 줄 드래그 메뉴)
     const _hasCtrl = needDateFilter && (typeof buildYearMonthFilterControls==='function');
@@ -194,21 +179,6 @@ function rHist(C,T){
       h+=`</div>`;
     }
     h+=`</div>`;
-  }
-  if(histSub==='ext'){
-    h+=histExternalHTML();
-    C.innerHTML=h;
-    return;
-  }
-  if(histSub==='ext2'){
-    h+=histExternal2HTML();
-    C.innerHTML=h;
-    return;
-  }
-  if(histSub==='ext3'){
-    h+=histExternal3HTML();
-    C.innerHTML=h;
-    return;
   }
   if(histSub==='all') h+=histAllHTML();
   else if(histSub==='civil') h+=(typeof histTabWithViewModes==='function')
@@ -295,13 +265,6 @@ function rHist(C,T){
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
 }
-
-// ─────────────────────────────────────────────────────────────
-// 관리자 전용: 외부 자료(붙여넣기 파싱)
-// - eloboard 페이지를 자동 수집하는 대신, 표를 복사→붙여넣기 해서 파싱
-// - 날짜/승자/패자/맵/ELO/경기방식 컬럼으로 정규화
-// ─────────────────────────────────────────────────────────────
-// 외부 / 외부2 / 외부3 컨트롤러는 `js/history-external-ui.js`로 분리
 
 
 /* ══════════════════════════════════════

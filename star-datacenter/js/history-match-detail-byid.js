@@ -304,6 +304,4 @@ window._openMatchDetailByMatchId = function(matchId, modeLabel, silent){
   }
 };
 
-// 외부 프록시 프리셋 UI는 `js/history-external-ui.js`로 분리
-
 // 스트리머 상세의 history 한 줄 정보(날짜/상대/맵/모드)만으로도 경기 상세 찾기

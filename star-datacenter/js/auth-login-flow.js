@@ -219,13 +219,6 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    // 외부 대진기록은 현재 IndexedDB + localStorage(meta) 구조를 우선 사용
-    const histExtState = (typeof _histExtLoad==='function')
-      ? (_histExtLoad() || {})
-      : {items:[],raw:'',mode:'today',today:'',sourceSel:'',keyword:''};
-    const histExtProxyPresets = localStorage.getItem('su_hist_ext_proxy_presets_v1') || '';
-    const histExtProxyPresetSel = localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '';
-
     // (중요) 티어대회 기록(ttM) 및 기타 누락 데이터도 백업에 포함
     const payload = {
       players, univCfg, maps, tourD,
@@ -243,9 +236,7 @@ function doExport(){
       playerStatusExpiry: (typeof playerStatusExpiry!=='undefined' ? playerStatusExpiry : {}),
       customStatusIcons: (typeof _customStatusIcons!=='undefined' ? _customStatusIcons : []),
       boardOrder, boardPlayerOrder,
-      seasons, calScheduled,
-      // 외부 탭 데이터
-      histExtState, histExtProxyPresets, histExtProxyPresetSel
+      seasons, calScheduled
     };
     const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
@@ -275,30 +266,6 @@ function doFile(inp){
       tourneys=d.tourneys||[];
       // 🎯 티어대회 기록 복원(있으면 그대로 사용, 없으면 아래에서 tourneys로 마이그레이션)
       if(d.ttM!==undefined) ttM=d.ttM||[];
-      // 외부 대진기록 복원
-      if(d.histExtState!==undefined){
-        try{
-          if(typeof _histExtSave==='function') _histExtSave(d.histExtState||{items:[],raw:'',mode:'today',today:'',sourceSel:'',keyword:''});
-          else localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExtState||{}));
-        }catch(e){
-          console.warn('[doFile] histExtState 복원 실패:', e.message);
-        }
-      }else if(d.histExtRaw!==undefined){
-        try{ localStorage.setItem('su_hist_ext_data_v1', String(d.histExtRaw||'')); }catch(e){
-          console.warn('[doFile] histExtRaw localStorage 저장 실패:', e.message);
-        }
-      }else if(d.histExt){
-        // 구버전 호환: histExt 객체 형태면 JSON 문자열로 저장
-        try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){
-          console.warn('[doFile] histExt localStorage 저장 실패:', e.message);
-        }
-      }
-      if(d.histExtProxyPresets!==undefined){
-        try{ localStorage.setItem('su_hist_ext_proxy_presets_v1', String(d.histExtProxyPresets||'')); }catch(e){}
-      }
-      if(d.histExtProxyPresetSel!==undefined){
-        try{ localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(d.histExtProxyPresetSel||'')); }catch(e){}
-      }
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
       if(d.gjM!==undefined) gjM=d.gjM||[];

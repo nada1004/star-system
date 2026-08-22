@@ -409,8 +409,6 @@ function _histSearchTeamText(names){
    대전기록 액션 메뉴(⋯)
    - (개선) 아이콘 버튼(복사/공유/상세/수정/삭제/이동)을 한 곳에 모아 UI 복잡도 감소
 ══════════════════════════════════════ */
-// 대전기록 > 외부2 (관리자 전용, iframe)
-// 외부2 / 외부3 UI는 `js/history-external-ui.js`로 분리
 
 function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
   if(!m.sets||!m.sets[si])return`<div style="font-size:var(--fs-caption);color:var(--gray-l)">세트 기록 없음</div>`;

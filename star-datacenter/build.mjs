@@ -184,8 +184,6 @@ const MATCH_FILES = [
   'js/competition-normal-matches-util.js',
   'js/history-share.js',
   'js/history-action-utils.js',
-  'js/history-external-utils.js',
-  'js/history-external-ui.js',
   'js/history-hist-nav.js',
   'js/history-bulk-map.js',
   'js/history-all-html.js',

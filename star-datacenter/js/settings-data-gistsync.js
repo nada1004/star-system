@@ -109,7 +109,7 @@ function renderStorageInfo(){
   if(!el)return;
   try{
     let total=0;const rows=[];
-    const LEGACY_KEYS=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_hist_ext_data_v1'];
+    const LEGACY_KEYS=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
     const legacyRows=[];
     for(let i=0;i<localStorage.length;i++){
       const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
@@ -127,7 +127,6 @@ function renderStorageInfo(){
       try{ return new Blob([JSON.stringify(v??null)]).size; }catch(e){ return 0; }
     };
     const matchMeta = (()=>{ try{ return JSON.parse(localStorage.getItem('su_match_store_meta_v1')||'null')||{}; }catch(e){ return {}; } })();
-    const histMeta = (()=>{ try{ return JSON.parse(localStorage.getItem('su_hist_ext_meta_v1')||'null')||{}; }catch(e){ return {}; } })();
     const backendBadge = (label, backend) => {
       const isIdb = backend==='indexedDB';
       const text = backend==='localStorage' ? 'localStorage fallback' : isIdb ? 'IndexedDB' : '미확인';
@@ -139,7 +138,6 @@ function renderStorageInfo(){
       </div>`;
     };
     const matchSnap = (window.MatchStore && typeof window.MatchStore.snapshot==='function') ? window.MatchStore.snapshot() : null;
-    const histExtSnap = (typeof window._histExtLoad==='function') ? _histExtLoad() : null;
     const idbRows = [];
     if(matchSnap){
       const matchBytes = enc(matchSnap);
@@ -149,11 +147,6 @@ function renderStorageInfo(){
         (matchSnap.tourneys?.length||0)+(matchSnap.ttM?.length||0)+(matchSnap.indM?.length||0)+
         (matchSnap.gjM?.length||0);
       idbRows.push({label:'경기 기록 원본', bytes:matchBytes, count:matchCount});
-    }
-    if(histExtSnap){
-      const extBytes = enc(histExtSnap);
-      const extCount = Array.isArray(histExtSnap.items) ? histExtSnap.items.length : 0;
-      idbRows.push({label:'외부탭 기록', bytes:extBytes, count:extCount});
     }
     const idbTotal = idbRows.reduce((s,r)=>s+r.bytes,0);
     const LABELS={
@@ -168,9 +161,7 @@ function renderStorageInfo(){
       'su_ttm':'티어대회(레거시)',
       'su_indm':'개인전(레거시)',
       'su_gjm':'끝장전(레거시)',
-      'su_hist_ext_data_v1':'외부탭 데이터(레거시)',
       'su_match_store_meta_v1':'경기기록 IndexedDB 메타',
-      'su_hist_ext_meta_v1':'외부탭 IndexedDB 메타',
       'su_mb':'회원관리',
       'su_notices':'공지',
       'su_psi':'상태아이콘'
@@ -190,7 +181,6 @@ function renderStorageInfo(){
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">기본 저장소는 <b>IndexedDB</b>이며, 아래 localStorage 사용량은 주로 설정/레거시 키 기준입니다. IndexedDB가 불가능한 환경에서만 localStorage fallback이 사용됩니다.</div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       ${backendBadge('경기 기록 저장소', matchMeta.backend||'')}
-      ${backendBadge('외부탭 기록 저장소', histMeta.backend||'')}
     </div>
     ${idbRows.length?`<div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:var(--r)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
@@ -235,7 +225,7 @@ function renderStorageInfo(){
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:var(--fs-sm)">사용량 계산 불가</div>';}
 }
 function cleanupLegacyMatchStorageKeys(){
-  const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_hist_ext_data_v1'];
+  const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
   let removed=0;
   keys.forEach(k=>{
     try{
@@ -254,10 +244,6 @@ async function rebuildIndexedDbStores(){
     if(window.MatchStore && typeof window.MatchStore.rebuild==='function'){
       const r=await window.MatchStore.rebuild();
       msgs.push(`경기 기록: ${r.backend||'unknown'}`);
-    }
-    if(window.HistoryExternalUtils && typeof window.HistoryExternalUtils.rebuildStorage==='function'){
-      const r=await window.HistoryExternalUtils.rebuildStorage();
-      msgs.push(`외부탭: ${r.backend||'unknown'}`);
     }
     renderStorageInfo();
     alert(`재빌드를 완료했습니다.\n${msgs.join('\n')}`);

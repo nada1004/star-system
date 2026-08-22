@@ -81,20 +81,7 @@ function onGlobalSearch(val){
     const genderMatch = !genderFilter || p.gender===genderFilter;
     return nameMatch && raceMatch && genderMatch;
   }).slice(0,18);
-  // 외부 대진기록(History > 외부탭)도 함께 검색
-  let extResults = [];
-  try{
-    // history-core.js의 데이터는 관리자 탭에서 관리되지만, 검색은 read-only로 누구나 가능하게 처리(데이터가 없으면 0건)
-    const items = (typeof _histExtGetViewItems==='function')
-      ? (_histExtGetViewItems()||[])
-      : (typeof _histExtLoad==='function' ? ((_histExtLoad()||{}).items||[]) : []);
-    extResults = (items||[]).filter(it=>{
-      const blob = `${it.source||''} ${it.date||''} ${it.winner||''} ${it.loser||''} ${it.map||''} ${it.elo||''} ${it.type||''} ${it.memo||''}`.toLowerCase();
-      return nameTokens.length===0 ? blob.includes(q) : nameTokens.every(t=>blob.includes(t));
-    }).slice(0,10);
-  }catch(e){}
-
-  if(results.length===0 && extResults.length===0){
+  if(results.length===0){
     drop.innerHTML=`<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:var(--fs-sm)">
       <div style="font-size:20px;margin-bottom:6px">🔍</div>
       검색 결과 없음<br>
@@ -114,7 +101,6 @@ function onGlobalSearch(val){
   };
   const mainQ=nameTokens.join(' ');
   window._gsResults = results;
-  window._gsExtResults = extResults;
   window._gsQuery = val.trim();
   let html = '';
   if(results.length){
@@ -152,24 +138,6 @@ function onGlobalSearch(val){
     </div>`;
     }).join('');
   }
-  if(extResults.length){
-    const sep = results.length ? `<div style="height:8px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)"></div>` : '';
-    html += sep;
-    html += `<div style="padding:6px 12px 4px;font-size:10px;font-weight:900;color:var(--gray-l);letter-spacing:.5px;border-bottom:1px solid var(--border)">📎 외부 대진기록 ${extResults.length}건</div>` +
-      extResults.map((it,ei)=>{
-        const line = `${it.winner||''} vs ${it.loser||''}`;
-        const sub  = `${it.date||''}${it.map?` · ${it.map}`:''}${it.source?` · ${it.source}`:''}`;
-        return `<div data-gsextidx="${ei}" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center"
-          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''"
-          onclick="(function(el){globalSearchSelectExt(+el.dataset.gsextidx);}).call(this,this)">
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(line, mainQ||q)}</div>
-            <div style="font-size:var(--fs-caption);color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(sub, mainQ||q)}</div>
-          </div>
-          <div style="flex-shrink:0;font-size:10px;color:var(--blue);font-weight:800">열기</div>
-        </div>`;
-      }).join('');
-  }
   drop.innerHTML = html;
   drop.style.display='block';
 }
@@ -181,50 +149,10 @@ function globalSearchSelect(name){
   openPlayerModal(name);
 }
 
-function globalSearchSelectExt(idx){
-  const it = window._gsExtResults && window._gsExtResults[idx];
-  document.getElementById('globalSearch').value='';
-  document.getElementById('globalSearchDrop').style.display='none';
-  window._gsResults = null;
-  if(!it) return;
-  // (요청사항) 외부탭 접근은 관리자만 허용. 일반 사용자는 상세 팝업만 노출.
-  const canOpenExtTab = (typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
-  if(canOpenExtTab){
-    try{ curTab='hist'; histSub='ext'; }catch(e){}
-    try{ if(typeof window.histExtSetKeyword==='function') window.histExtSetKeyword(window._gsQuery||''); }catch(e){}
-    try{ render(); }catch(e){}
-    return;
-  }
-  // read-only 상세 모달
-  try{
-    const old=document.getElementById('_gsExtModal'); if(old) old.remove();
-    const modal=document.createElement('div');
-    modal.id='_gsExtModal';
-    modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-    const line=`${it.winner||''} vs ${it.loser||''}`;
-    const sub=`${it.date||''}${it.map?` · ${it.map}`:''}${it.elo?` · ELO ${it.elo}`:''}${it.type?` · ${it.type}`:''}`;
-    const memo=(it.memo||'').trim();
-    const src=(it.source||'').trim();
-    modal.innerHTML=`<div style="background:var(--white);border-radius:var(--r2);padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-      <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
-      <div style="font-weight:900;font-size:var(--fs-base);color:var(--text);margin-bottom:4px">${line}</div>
-      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
-      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:var(--fs-sm);line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
-      </div>
-      <div style="margin-top:8px;font-size:10px;color:var(--gray-l);text-align:center">※ 외부탭은 관리자만 접근 가능합니다</div>
-    </div>`;
-    modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
-    document.body.appendChild(modal);
-  }catch(e){}
-}
-
 // Lazy 로더가 먼저 프록시를 등록하는 경로에서도 실제 구현을 전역에 확실히 연결한다.
 try{
   window.onGlobalSearch = onGlobalSearch;
   window.globalSearchSelect = globalSearchSelect;
-  window.globalSearchSelectExt = globalSearchSelectExt;
   window.rStats = rStats;
 }catch(e){}
 

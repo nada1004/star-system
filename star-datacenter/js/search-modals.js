@@ -303,12 +303,7 @@ function openTTPasteModal() {
   if (sel) { sel.value = 'mini'; sel.style.display = 'none'; }
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
-  // (요청사항) "구분(일반/조별/토너)" 선택은 대전기록-외부 자동인식에서만 노출
-  // - 티어대회 탭 내부 자동인식에서는 불필요한 선택 UI가 떠서 혼란을 유발
-  const _fromHistExt = !!window._pasteFromHistExt;
-  if (hint) hint.innerHTML = _fromHistExt
-    ? '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span> <span style="color:var(--gray-l);font-weight:600">(외부 자동인식: 일반/조별/토너 선택)</span>'
-    : '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) {
     const inp = compWrap.querySelector('#paste-comp-name');
@@ -316,20 +311,12 @@ function openTTPasteModal() {
     compWrap.style.display = 'flex';
   }
   _updatePasteTeamNameFields('mini');
-  // (요청사항) 티어대회 구분(일반/조별리그/토너먼트)
+  // 티어대회 구분(일반/조별리그/토너먼트) UI는 항상 숨김
   try{
     const stWrap = document.getElementById('paste-tt-stage-wrap');
+    if(stWrap) stWrap.style.display = 'none';
     const stSel = document.getElementById('paste-tt-stage');
-    if(stWrap) stWrap.style.display = _fromHistExt ? 'flex' : 'none';
-    // 외부 자동인식일 때만 기억값을 사용
-    const saved = _fromHistExt ? (localStorage.getItem('su_tt_paste_stage') || 'general') : 'general';
-    if(stSel){
-      stSel.value = saved;
-      stSel.onchange = function(){
-        if(!_fromHistExt) return;
-        try{ localStorage.setItem('su_tt_paste_stage', this.value); }catch(e){}
-      };
-    }
+    if(stSel) stSel.value = 'general';
   }catch(e){}
 }
 
