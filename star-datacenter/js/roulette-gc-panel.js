@@ -219,13 +219,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
-  <div class="gc-stage-card gc-duck-root">
-    <div class="gc-stage-head">
-      <div>
-        <div class="gc-stage-title">🐥 오리 경주 추첨</div>
-        <div class="gc-stage-desc">보기 좋은 카드형 레이아웃으로 감싸서, 경주 화면이 더 또렷하게 보이도록 정리했습니다.</div>
-      </div>
-    </div>
+  <div class="gc-duck-root">
     <div id="dr-root"></div>
   </div>
 </div>`;
