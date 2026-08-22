@@ -13,6 +13,16 @@
 ══════════════════════════════════════ */
 
 /* ─── 상태 (var 사용 — 지연 로딩 재실행 시 재선언 충돌 방지) ─── */
+/* 히어로 액션 아이콘: 이모지 대신 SVG 사용(OS/폰트별 이모지 렌더링 편차로 흐리게 보이는 문제 방지) */
+window._prIcon = {
+  starOn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>',
+  starOff: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>',
+  link: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  volume: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+  pause: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+  camera: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+};
 if(window._prName===undefined) window._prName = '';
 if(window._prPeriod===undefined) window._prPeriod = 'all'; // 30 | 90 | season | all
 if(window._prExcludeMini===undefined) window._prExcludeMini = false;
@@ -105,7 +115,7 @@ try{
     '.pr-btn.pr-btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}',
     '.pr-btn.pr-btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2)}',
     '.pr-btn.pr-btn-ghost:hover{background:var(--surface);color:var(--text2)}',
-    '.pr-btn-iconOnly{width:36px;height:36px;padding:0;justify-content:center;border-radius:11px;font-size:15px}',
+    '.pr-btn-iconOnly{width:36px;height:36px;padding:0;justify-content:center;border-radius:11px;font-size:15px;line-height:1}',
     '.pr-btn-iconOnly span{display:none}',
     '.pr-period-bar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}',
     '.pr-period-btn{padding:7px 16px;border-radius:999px;border:1px solid var(--border2);background:var(--white);font-size:12px;font-weight:800;cursor:pointer;color:var(--text2)}',

@@ -210,7 +210,8 @@ function _prSpeakBtnLabel(){
   if(!btn) return;
   const speaking = !!(window.SUTTS && window.SUTTS.isSpeaking());
   const paused = !speaking && !!(window.SUTTS && window.SUTTS.isPaused && window.SUTTS.isPaused());
-  btn.innerHTML = speaking ? '⏸<span>일시정지</span>' : (paused ? '▶<span>이어듣기</span>' : '🔊<span>음성듣기</span>');
+  const icons = window._prIcon || {};
+  btn.innerHTML = speaking ? `${icons.pause||'⏸'}<span>일시정지</span>` : (paused ? `${icons.play||'▶'}<span>이어듣기</span>` : `${icons.volume||'🔊'}<span>음성듣기</span>`);
 }
 function _prToggleSpeak(){
   if(!window.SUTTS || !('speechSynthesis' in window)){ alert('이 브라우저는 음성 안내를 지원하지 않습니다.'); return; }
