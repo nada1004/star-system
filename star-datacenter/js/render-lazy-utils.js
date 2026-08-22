@@ -156,7 +156,7 @@ async function _ensureRouletteLoaded(){
     'js/photo-quiz-game.js?v=20260728-photofix1',
     'js/memory-match-game.js?v=20260728-photofix1',
     'js/mole-whack-game.js?v=20260728-photofix1',
-    'js/claw-machine-game.js?v=20260822-clawmachine8',
+    'js/claw-machine-game.js?v=20260822-clawstyle1',
     'js/omok-game.js?v=20260728-om-diff5',
     'js/janggi-game.js?v=20260812-jg1',
     'js/othello-game.js?v=20260812-ot1',

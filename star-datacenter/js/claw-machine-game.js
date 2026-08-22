@@ -37,29 +37,28 @@
 .cw-side{position:relative;width:236px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;z-index:1}
 .cw-title-row{display:flex;align-items:center;gap:10px}
 .cw-title-emoji{font-size:26px;filter:drop-shadow(0 2px 4px rgba(142,42,31,.4))}
-.cw-title{font-size:17px;font-weight:950;letter-spacing:-.02em;color:var(--cw-ink)}
+.cw-title{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--cw-ink)}
 .cw-desc{font-size:11.5px;line-height:1.6;color:var(--cw-ink2);word-break:keep-all}
 
 .cw-diff-bar{display:flex;gap:6px}
 .cw-diff-pill{
-  flex:1;padding:8px 4px;border-radius:12px;border:2px solid var(--cw-shell-deep);
+  flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--cw-shell-deep);
   background:var(--cw-cream);color:var(--cw-ink2);
-  font-size:11px;font-weight:900;cursor:pointer;font-family:inherit;transition:.12s;text-align:center;
-  box-shadow:0 2px 0 rgba(0,0,0,.08);
+  font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;text-align:center;
 }
-.cw-diff-pill:hover{transform:translateY(-1px);color:var(--cw-red)}
-.cw-diff-pill:active{transform:translateY(1px)}
-.cw-diff-pill.on{background:var(--cw-red);border-color:var(--cw-red-dark);color:#fff;box-shadow:0 3px 0 var(--cw-red-dark)}
+.cw-diff-pill:hover{color:var(--cw-red)}
+.cw-diff-pill.on{background:var(--cw-red);border-color:var(--cw-red-dark);color:#fff}
+.cw-diff-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.cw-diff-pill.on .cw-diff-dot{background:#fff!important}
 .cw-diff-hint{font-size:10.5px;color:var(--cw-ink2);line-height:1.5;margin-top:-2px}
 
 .cw-scoreboard{
-  border-radius:10px;padding:10px 12px;background:linear-gradient(180deg,#241a12,#150e09);
-  box-shadow:inset 0 0 0 2px #000,inset 0 3px 6px rgba(0,0,0,.55),0 6px 14px rgba(60,35,10,.3);
+  border-radius:10px;padding:10px 12px;background:#1c140d;border:1px solid #000;
   display:flex;flex-direction:column;gap:8px;
 }
 .cw-score-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 .cw-score-item{display:flex;flex-direction:column;gap:1px}
-.cw-score-label{font-size:9px;font-weight:800;letter-spacing:.08em;color:#c9a876;text-transform:uppercase}
+.cw-score-label{font-size:9px;font-weight:700;letter-spacing:.08em;color:#c9a876;text-transform:uppercase}
 .cw-score-value{font-family:'Courier New',ui-monospace,monospace;font-size:19px;font-weight:900;color:var(--cw-gold);letter-spacing:.01em;text-shadow:0 0 5px rgba(201,127,29,.5)}
 .cw-score-value.is-win{color:#8fcb86;text-shadow:0 0 5px rgba(143,203,134,.5)}
 .cw-coin-row{display:flex;flex-wrap:wrap;gap:3px}
@@ -67,7 +66,7 @@
 .cw-coin-pip.is-used{opacity:.22;filter:grayscale(1)}
 
 .cw-collected{display:flex;flex-wrap:wrap;gap:5px;min-height:26px}
-.cw-collected-chip{width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid var(--cw-teal);box-shadow:0 2px 5px rgba(0,0,0,.25)}
+.cw-collected-chip{width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid var(--cw-teal)}
 .cw-collected-chip img{width:100%;height:100%;object-fit:cover;display:block}
 .cw-collected-chip.is-fallback{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;background:var(--cw-teal-dark)}
 .cw-collected-empty{font-size:11px;color:var(--cw-ink3)}
@@ -75,18 +74,18 @@
 .cw-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
 .cw-btn-primary{
   width:100%;padding:13px 14px;border-radius:999px;border:none;cursor:pointer;font-family:inherit;
-  font-size:14px;font-weight:950;color:#fff;letter-spacing:-.01em;
+  font-size:14px;font-weight:800;color:#fff;letter-spacing:-.01em;
   background:radial-gradient(120% 160% at 50% -20%,var(--cw-red-light),var(--cw-red) 58%,var(--cw-red-dark));
-  box-shadow:0 5px 0 var(--cw-red-dark),0 10px 18px rgba(70,25,18,.32),inset 0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 5px 0 var(--cw-red-dark);
   transition:transform .1s;
 }
 .cw-btn-primary:hover{filter:brightness(1.06)}
 .cw-btn-primary:active{transform:translateY(3px);box-shadow:0 2px 0 var(--cw-red-dark),0 6px 12px rgba(70,25,18,.26)}
 .cw-btn-primary.is-busy{opacity:.55;pointer-events:none;box-shadow:none}
 .cw-btn-secondary{
-  width:100%;padding:9px 10px;border-radius:12px;border:2px solid var(--cw-shell-deep);cursor:pointer;
+  width:100%;padding:9px 10px;border-radius:12px;border:1px solid var(--cw-shell-deep);cursor:pointer;
   background:var(--cw-cream);color:var(--cw-ink2);font-family:inherit;
-  font-size:12px;font-weight:800;
+  font-size:12px;font-weight:600;
 }
 .cw-btn-secondary:disabled{opacity:.4;pointer-events:none}
 
@@ -94,13 +93,13 @@
 .cw-board-area{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;z-index:1}
 .cw-nameplate-row{text-align:center}
 .cw-nameplate{
-  display:inline-block;background:var(--cw-cream);border:2px solid var(--cw-ink);border-radius:6px;
-  padding:3px 12px;font-size:11px;font-weight:900;letter-spacing:.02em;color:var(--cw-ink);
-  transform:rotate(-1.4deg);box-shadow:0 2px 0 rgba(0,0,0,.18);
+  display:inline-block;background:var(--cw-cream);border:1px solid var(--cw-ink);border-radius:6px;
+  padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--cw-ink);
+  transform:rotate(-1.4deg);
 }
 .cw-status{
-  padding:9px 12px;border-radius:11px;font-size:var(--fs-sm);font-weight:800;line-height:1.5;text-align:center;
-  background:var(--cw-cream);border:2px solid var(--cw-shell-deep);color:var(--cw-ink2);
+  padding:9px 12px;border-radius:11px;font-size:var(--fs-sm);font-weight:600;line-height:1.5;text-align:center;
+  background:var(--cw-cream);border:1px solid var(--cw-shell-deep);color:var(--cw-ink2);
   transition:background .2s,border-color .2s,color .2s;
 }
 .cw-status.is-good{background:#EAF4E5;border-color:var(--cw-good);color:#2f5c2d}
@@ -124,8 +123,6 @@
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;
   padding-bottom:5px;font-size:8.5px;font-weight:900;color:var(--cw-ink2);letter-spacing:.01em;text-align:center;line-height:1.2;
 }
-.cw-chute-icon{font-size:16px}
-
 .cw-claw-unit{position:absolute;top:8px;width:1px;display:flex;flex-direction:column;align-items:center}
 .cw-claw-unit.is-transit{transition:left .55s cubic-bezier(.4,0,.2,1)}
 .cw-claw-rope{width:2px;background:linear-gradient(180deg,#e2e8f0,#94a3b8);box-shadow:0 0 3px rgba(0,0,0,.2);transition:height .48s cubic-bezier(.4,0,.2,1)}
@@ -170,7 +167,7 @@
 .cw-gauge-wrap{position:absolute;left:6%;right:20%;bottom:104px;height:26px;border-radius:999px;background:rgba(255,255,255,.55);border:2px solid var(--cw-shell-deep);overflow:hidden;box-shadow:inset 0 2px 5px rgba(70,42,10,.18)}
 .cw-gauge-sweet{position:absolute;top:0;bottom:0;background:rgba(31,138,130,.26);border-left:2px dashed var(--cw-teal);border-right:2px dashed var(--cw-teal)}
 .cw-gauge-needle{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;background:var(--cw-red);box-shadow:0 0 5px rgba(192,57,43,.6);border-radius:2px}
-.cw-gauge-label{position:absolute;top:-20px;left:6%;font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--cw-teal-dark);text-transform:uppercase}
+.cw-gauge-label{position:absolute;top:-20px;left:6%;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--cw-teal-dark);text-transform:uppercase}
 
 .cw-result-overlay{
   position:absolute;inset:0;border-radius:20px;display:flex;align-items:center;justify-content:center;
@@ -183,7 +180,7 @@
   box-shadow:0 20px 40px rgba(60,35,10,.4);animation:cwPopIn .4s cubic-bezier(.175,.885,.32,1.35);
 }
 .cw-result-emoji{font-size:40px;display:block;margin-bottom:6px}
-.cw-result-title{font-family:'Courier New',ui-monospace,monospace;font-size:clamp(22px,5.6vw,30px);font-weight:900;color:var(--cw-red);margin:2px 0 8px}
+.cw-result-title{font-size:clamp(22px,5.6vw,30px);font-weight:800;color:var(--cw-red);margin:2px 0 8px}
 .cw-result-sub{font-size:11.5px;color:var(--cw-ink2);line-height:1.7}
 .cw-result-list{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px}
 @keyframes cwPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
@@ -256,13 +253,13 @@ function _cwPlayFail() {
 // carryKeep: 일단 잡았어도 슈트까지 옮기는 도중 놓치지 않을 확률.
 // ampBase/speedBase: 인형이 좌우로 흔들리는 폭(%p)과 속도 — 클수록 조준이 어려움.
 const _CW_DIFFS = {
-  easy:   { key: 'easy',   label: '쉬움',   emoji: '🟢', speed: 0.024, tolerance: 14, gaugeSpeed: 0.040, sweetWidth: 36, gripBase: 1.00, carryKeep: 0.72, coins: 8, capsuleCount: 6,  ampBase: 2.2, speedBase: 0.09 },
-  normal: { key: 'normal', label: '보통',   emoji: '🟡', speed: 0.036, tolerance: 10, gaugeSpeed: 0.058, sweetWidth: 26, gripBase: 0.92, carryKeep: 0.55, coins: 8, capsuleCount: 8,  ampBase: 3.0, speedBase: 0.13 },
-  hard:   { key: 'hard',   label: '어려움', emoji: '🔴', speed: 0.050, tolerance: 7,  gaugeSpeed: 0.078, sweetWidth: 18, gripBase: 0.80, carryKeep: 0.40, coins: 8, capsuleCount: 10, ampBase: 4.0, speedBase: 0.17 },
+  easy:   { key: 'easy',   label: '쉬움',   dot: '#6B8F71', speed: 0.024, tolerance: 14, gaugeSpeed: 0.040, sweetWidth: 36, gripBase: 1.00, carryKeep: 0.72, coins: 8, capsuleCount: 6,  ampBase: 2.2, speedBase: 0.09 },
+  normal: { key: 'normal', label: '보통',   dot: '#D9973D', speed: 0.036, tolerance: 10, gaugeSpeed: 0.058, sweetWidth: 26, gripBase: 0.92, carryKeep: 0.55, coins: 8, capsuleCount: 8,  ampBase: 3.0, speedBase: 0.13 },
+  hard:   { key: 'hard',   label: '어려움', dot: '#B85C38', speed: 0.050, tolerance: 7,  gaugeSpeed: 0.078, sweetWidth: 18, gripBase: 0.80, carryKeep: 0.40, coins: 8, capsuleCount: 10, ampBase: 4.0, speedBase: 0.17 },
 };
 const _CW_DIFF_ORDER = ['easy', 'normal', 'hard'];
 const _CW_MIN_POOL = 5;
-const _CW_CAP_COLORS = ['#ff3fa4', '#22e5ff', '#ffe14d', '#a78bfa', '#34d399', '#fb923c'];
+const _CW_CAP_COLORS = ['#D9973D', '#B85C38', '#6B8F71', '#5C82A8', '#8B6F96', '#4C9C8E'];
 const _CW_CHUTE_X = 90;      // 슈트(배출구) 가로 위치(%)
 const _CW_IDLE_ROPE = 34;    // 크레인이 쉴 때 로프 길이(px)
 const _CW_T_DESCEND = 480, _CW_T_GRIP = 300, _CW_T_RISE = 480, _CW_T_SLIP = 420, _CW_T_TRANSIT = 560, _CW_T_DROP = 320;
@@ -303,7 +300,7 @@ function _cwDiffBarHTML() {
   return _CW_DIFF_ORDER.map(k => {
     const d = _CW_DIFFS[k];
     const on = st.difficulty === k;
-    return `<button class="cw-diff-pill${on ? ' on' : ''}" onclick="_cwSetDifficulty('${k}')">${d.emoji} ${d.label}</button>`;
+    return `<button class="cw-diff-pill${on ? ' on' : ''}" onclick="_cwSetDifficulty('${k}')"><span class="cw-diff-dot" style="background:${d.dot}"></span>${d.label}</button>`;
   }).join('');
 }
 
@@ -318,7 +315,7 @@ function _cwSaveBest(v, diffKey) {
 
 function _cwEsc(s) { return (typeof escHTML === 'function') ? escHTML(s) : String(s == null ? '' : s); }
 function _cwUrl(u) { return (typeof toHttpsUrl === 'function') ? toHttpsUrl(u) : u; }
-function _cwStatusIcon(tone) { return tone === 'good' ? '✅' : tone === 'bad' ? '❌' : '💬'; }
+
 
 // ─── 선수 풀 구성 ─────────────────────────────────────────────────────────────
 function _cwBuildPool() {
@@ -680,7 +677,7 @@ function _cwSetStatusState(text, tone) {
   st.statusText = text;
   st.statusTone = tone;
   const el = document.getElementById('cw-status');
-  if (el) { el.textContent = _cwStatusIcon(tone) + ' ' + text; el.className = 'cw-status is-' + tone; }
+  if (el) { el.textContent = text; el.className = 'cw-status is-' + tone; }
 }
 function _cwSetRowCapsuleHidden(uid, hidden) {
   const el = document.getElementById('cw-capsule-' + uid);
@@ -691,7 +688,7 @@ function _cwSetCargo(capsule) {
   if (!cargo) return;
   cargo.classList.remove('is-falling', 'is-dropping');
   if (!capsule) { cargo.style.opacity = '0'; cargo.innerHTML = ''; return; }
-  cargo.style.setProperty('--cap-color', capsule.color || '#ff3fa4');
+  cargo.style.setProperty('--cap-color', capsule.color || '#D9973D');
   const initial = _cwEsc(String(capsule.name || '?').trim().slice(0, 1));
   cargo.innerHTML = capsule.photo
     ? `<img src="${_cwEsc(_cwUrl(capsule.photo))}" alt="${_cwEsc(capsule.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="cw-capsule-fallback" style="display:none">${initial}</div>`
@@ -795,12 +792,12 @@ function _cwCoinPipsHTML() {
 
 function _cwActionHTML() {
   const st = window._cwState;
-  if (st.ended) return `<button class="cw-btn-primary" onclick="_cwStart()">🔄 다시하기</button>`;
-  if (st.phase === 'moving') return `<button class="cw-btn-primary" onclick="_cwStopClaw()">🛑 정지!</button>`;
-  if (st.phase === 'gauge') return `<button class="cw-btn-primary" onclick="_cwGrab()">🤏 잡기!</button>`;
-  if (st.phase === 'busy') return `<button class="cw-btn-primary is-busy">⏳ 진행 중...</button>`;
-  if (st.phase === 'result') return `<button class="cw-btn-primary" onclick="_cwNextAttempt()">▶️ 다음 시도 (${st.coins}회 남음)</button>`;
-  return `<button class="cw-btn-primary" onclick="_cwStart()">🚀 시작하기</button>`;
+  if (st.ended) return `<button class="cw-btn-primary" onclick="_cwStart()">다시하기</button>`;
+  if (st.phase === 'moving') return `<button class="cw-btn-primary" onclick="_cwStopClaw()">정지!</button>`;
+  if (st.phase === 'gauge') return `<button class="cw-btn-primary" onclick="_cwGrab()">잡기!</button>`;
+  if (st.phase === 'busy') return `<button class="cw-btn-primary is-busy">진행 중...</button>`;
+  if (st.phase === 'result') return `<button class="cw-btn-primary" onclick="_cwNextAttempt()">다음 시도 (${st.coins}회 남음)</button>`;
+  return `<button class="cw-btn-primary" onclick="_cwStart()">시작하기</button>`;
 }
 
 function _cwGaugeHTML() {
@@ -808,7 +805,7 @@ function _cwGaugeHTML() {
   if (st.phase !== 'gauge') return '';
   const left = Math.max(0, st.sweetCenter - st.sweetHalf);
   const width = st.sweetHalf * 2;
-  return `<div class="cw-gauge-label">🎯 그립 파워</div>
+  return `<div class="cw-gauge-label">그립 파워</div>
     <div class="cw-gauge-wrap">
       <div class="cw-gauge-sweet" style="left:${left}%;width:${width}%"></div>
       <div class="cw-gauge-needle" id="cw-gauge-needle" style="left:${st.power}%"></div>
@@ -829,11 +826,11 @@ function _cwRenderRoot() {
           <span class="cw-title-emoji">🪆</span>
           <div>
             <div class="cw-title">선수 인형뽑기</div>
-            <div class="cw-desc">크레인 타이밍과 그립 파워를 맞춰 선수 인형을 뽑는 게임입니다.</div>
+            <div class="cw-desc">정지 타이밍과 그립 파워, 두 박자를 맞춰야 뽑을 수 있어요.</div>
           </div>
         </div>
-        <div class="cw-empty-note">⚠️ 게임을 만들 만큼 프로필 사진이 등록된 선수가 부족합니다(최소 ${_CW_MIN_POOL}명 필요). 선수 데이터에 사진을 더 등록한 뒤 다시 시도해주세요.</div>
-        <button class="cw-btn-primary" style="max-width:200px" onclick="_cwStart()">🔄 다시 확인</button>
+        <div class="cw-empty-note">프로필 사진이 등록된 선수가 부족합니다(최소 ${_CW_MIN_POOL}명 필요). 사진을 더 등록한 뒤 다시 시도해주세요.</div>
+        <button class="cw-btn-primary" style="max-width:200px" onclick="_cwStart()">다시 확인</button>
       </div>
     </div>`;
     return;
@@ -858,7 +855,7 @@ function _cwRenderRoot() {
           <span class="cw-title-emoji">🪆</span>
           <div>
             <div class="cw-title">선수 인형뽑기</div>
-            <div class="cw-desc">① 정지로 크레인 위치 맞추기 → ② 그립 게이지를 스위트존에서 잡기! 버튼 대신 기계 화면을 직접 클릭해도 되고, 결과가 나온 뒤 화면을 클릭하면 바로 다음 시도로 넘어갑니다. 인형은 계속 움직이고, 잡아도 옮기다 놓칠 수 있어요.</div>
+            <div class="cw-desc">정지! → 잡기! 인형은 계속 흔들리고, 잡아도 옮기다 놓칠 수 있어요. 화면을 직접 클릭해도 됩니다.</div>
           </div>
         </div>
 
@@ -874,22 +871,22 @@ function _cwRenderRoot() {
         </div>
 
         <div class="cw-diff-bar">${_cwDiffBarHTML()}</div>
-        <div class="cw-diff-hint">난이도가 높을수록 인형이 더 빨리 흔들리고, 정지·그립 판정이 좁아지며, 잡아도 옮기다 놓치는 확률(운반 성공률 ${Math.round(diff.carryKeep * 100)}%)이 낮아집니다.</div>
+        <div class="cw-diff-hint">난이도가 높을수록 판정이 좁아지고 빨라져요. 운반 성공률 ${Math.round(diff.carryKeep * 100)}%.</div>
 
         <div class="cw-collected">${_cwCollectedHTML()}</div>
 
         <div class="cw-actions">
           ${_cwActionHTML()}
-          <button class="cw-btn-secondary" onclick="_cwStart()"${isBusy ? ' disabled' : ''}>🔀 새로 시작</button>
+          <button class="cw-btn-secondary" onclick="_cwStart()"${isBusy ? ' disabled' : ''}>새로 시작</button>
         </div>
       </div>
 
       <div class="cw-board-area">
-        <div class="cw-nameplate-row"><span class="cw-nameplate">🪆 문방구 캡슐 뽑기 · 1회 100원</span></div>
-        <div class="cw-status is-${_cwEsc(st.statusTone || 'info')}" id="cw-status">${_cwStatusIcon(st.statusTone)} ${_cwEsc(st.statusText || '')}</div>
+        <div class="cw-nameplate-row"><span class="cw-nameplate">문방구 캡슐 뽑기 · 1회 100원</span></div>
+        <div class="cw-status is-${_cwEsc(st.statusTone || 'info')}" id="cw-status">${_cwEsc(st.statusText || '')}</div>
         <div class="cw-cabinet${(st.phase === 'moving' || st.phase === 'gauge' || (st.phase === 'result' && !st.ended)) ? ' is-clickable' : ''}" onclick="_cwCabinetClick()">
           <div class="cw-track"></div>
-          <div class="cw-chute"><span class="cw-chute-icon">🎁</span>상품 출구</div>
+          <div class="cw-chute">상품 출구</div>
           <div class="cw-claw-unit${clawUnitCls}" id="cw-claw-unit" style="left:${st.clawX}%">
             <div class="cw-claw-rope" id="cw-claw-rope" style="height:${_CW_IDLE_ROPE}px"></div>
             <div class="cw-claw-head"></div>
