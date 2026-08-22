@@ -211,7 +211,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-player-report-data.js?v=20260821-reportcolor2');
   await _loadScriptOnce('js/stats-player-level.js?v=20260802-lvl2');
   await _loadScriptOnce('js/stats-level-rank.js?v=20260802-lvlrank1');
-  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260821-reportcolor1');
+  await _loadScriptOnce('js/stats-player-report-sections.js?v=20260822-noborder1');
   await _loadScriptOnce('js/stats-player-report-entry.js?v=20260821-reportcolor1');
   await _loadScriptOnce('js/stats-player-report-canvas.js?v=20260817-mvprival2');
   await _loadScriptOnce('js/stats-univ-report.js?v=20260821-reportcolor2');

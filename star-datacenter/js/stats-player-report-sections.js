@@ -481,7 +481,7 @@ function _prHeroHTML(p){
   const _prPhotoFxCls = _prFx.photoFx && _prFx.photoFx!=='none' ? ` prfx-photo-${_prFx.photoFx}` : '';
   const _prNameFxCls = _prFx.nameFx && _prFx.nameFx!=='none' ? ` prfx-name-${_prFx.nameFx}` : '';
   return `<div class="pr-hero">
-    <div class="pr-hero-photo${_prPhotoFxCls}" style="box-shadow:0 0 0 3px var(--white),var(--sh2)" onclick="openPlayerModal('${escJS(p.name)}')" title="상세 프로필 보기">${getPlayerPhotoHTML(p.name,'124px','object-fit:cover;object-position:center;')}</div>
+    <div class="pr-hero-photo${_prPhotoFxCls}" style="box-shadow:var(--sh2)" onclick="openPlayerModal('${escJS(p.name)}')" title="상세 프로필 보기">${getPlayerPhotoHTML(p.name,'124px','object-fit:cover;object-position:center;')}</div>
     <div style="flex:1;min-width:200px">
       <div class="pr-hero-name${_prNameFxCls}">${escHTML(p.name)} <span class="rbadge r${p.race||''}">${RACE_KO[p.race]||p.race||''}</span></div>
       <div class="pr-hero-wr-row">
