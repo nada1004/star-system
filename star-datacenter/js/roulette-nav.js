@@ -53,6 +53,7 @@ function rRoulette(C, T) {
     else if (_gcTab === 'quiz') { setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'memory') { setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'mole') { setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'claw') { setTimeout(()=>{ try{ if(typeof _cwInit==='function') _cwInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'omok') { setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'janggi') { setTimeout(()=>{ try{ if(typeof _jgInit==='function') _jgInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'othello') { setTimeout(()=>{ try{ if(typeof _otInit==='function') _otInit(); }catch(e){} }, 60); }
@@ -97,6 +98,8 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'mole') {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'claw') {
+    setTimeout(()=>{ try{ if(typeof _cwInit==='function') _cwInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'omok') {
     setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'janggi') {

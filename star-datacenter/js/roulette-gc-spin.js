@@ -19,6 +19,7 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'quiz' && tab !== 'quiz' && typeof _pqCleanup === 'function') _pqCleanup();
   if (_gcTab === 'memory' && tab !== 'memory' && typeof _mmCleanup === 'function') _mmCleanup();
   if (_gcTab === 'mole' && tab !== 'mole' && typeof _mwCleanup === 'function') _mwCleanup();
+  if (_gcTab === 'claw' && tab !== 'claw' && typeof _cwCleanup === 'function') _cwCleanup();
   if (_gcTab === 'omok' && tab !== 'omok' && typeof _omCleanup === 'function') _omCleanup();
   if (_gcTab === 'janggi' && tab !== 'janggi' && typeof _jgCleanup === 'function') _jgCleanup();
   if (_gcTab === 'othello' && tab !== 'othello' && typeof _otCleanup === 'function') _otCleanup();
@@ -46,6 +47,8 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else if (tab === 'mole') {
     setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
+  } else if (tab === 'claw') {
+    setTimeout(()=>{ try{ if(typeof _cwInit==='function') _cwInit(); }catch(e){} }, 60);
   } else if (tab === 'omok') {
     setTimeout(()=>{ try{ if(typeof _omInit==='function') _omInit(); }catch(e){} }, 60);
   } else if (tab === 'janggi') {

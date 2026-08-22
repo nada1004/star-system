@@ -66,6 +66,7 @@ const _GC_GAME_TABS = [
   { id: 'quiz',      icon: '🖼️',  label: '얼굴맞추기' },
   { id: 'memory',    icon: '🃏',   label: '짝맞추기' },
   { id: 'mole',      icon: '🐹',   label: '두더지' },
+  { id: 'claw',      icon: '🪆',   label: '인형뽑기' },
   { id: 'omok',      icon: '⚫⚪', label: '오목' },
   { id: 'janggi',    icon: '♟️',  label: '장기' },
   { id: 'othello',   icon: '🟢',   label: '오델로' }

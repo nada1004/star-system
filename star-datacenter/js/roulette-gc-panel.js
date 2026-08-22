@@ -138,6 +138,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isQuiz = _gcTab === 'quiz';
   const isMemory = _gcTab === 'memory';
   const isMole = _gcTab === 'mole';
+  const isClaw = _gcTab === 'claw';
   const isOmok = _gcTab === 'omok';
   const isJanggi = _gcTab === 'janggi';
   const isOthello = _gcTab === 'othello';
@@ -308,6 +309,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div id="mw-root"></div>
+</div>`;
+  }
+
+  // 🪆 인형뽑기 탭: 별도 레이아웃 (내용은 claw-machine-game.js가 #cw-root에 채움)
+  if (isClaw) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="cw-root"></div>
 </div>`;
   }
 
