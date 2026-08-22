@@ -16,26 +16,26 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
   s.id='calendar-ui-style';
   s.textContent = [
     '.cal-shell{display:flex;flex-direction:column;gap:14px}',
-    '.cal-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
+    '.cal-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:20px;background:var(--white);border:1px solid rgba(148,163,184,.2);box-shadow:0 4px 10px rgba(15,23,42,.03)}',
     '.cal-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
     '.cal-hero-kicker{font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
     '.cal-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
     '.cal-hero-desc{font-size:var(--fs-base);line-height:1.6;color:var(--text3)}',
     '.cal-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
-    '.cal-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-sm);font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.cal-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--surface);border:1px solid rgba(148,163,184,.18);font-size:var(--fs-sm);font-weight:800;color:var(--text2)}',
     '.cal-toolbar-card{padding:2px 2px 10px;background:transparent;border:none;box-shadow:none;border-bottom:1px dashed rgba(148,163,184,.22)}',
-    '.cal-board-card,.cal-soft-card{padding:12px 14px;border-radius:22px;background:var(--white);border:1px solid rgba(148,163,184,.14);box-shadow:0 8px 18px rgba(15,23,42,.03)}',
+    '.cal-board-card,.cal-soft-card{padding:12px 14px;border-radius:18px;background:var(--white);border:1px solid rgba(148,163,184,.16)}',
     '.cal-toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
     '.cal-nav-group,.cal-view-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
     '.cal-filter-wrap{display:flex;flex-wrap:wrap;gap:6px}',
     '.cal-board-card{padding:14px 16px}',
     '.cal-board-month{background:var(--white);border-radius:var(--r2);border:1px solid rgba(148,163,184,.22);overflow:hidden}',
     '.cal-board-month table{border-collapse:collapse;border-spacing:0;table-layout:fixed;width:100%;background:var(--white)}',
-    '.cal-board-month th{padding:11px 6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);background:rgba(100,116,139,.04);border-bottom:1px solid rgba(148,163,184,.22)}',
-    '.cal-cell-empty{position:relative;background:rgba(148,148,148,.03);border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);min-height:100px;transition:none}',
+    '.cal-board-month th{padding:11px 6px;font-size:var(--fs-caption);font-weight:900;color:#334155;background:rgba(100,116,139,.04);border-bottom:1px solid rgba(148,163,184,.22)}',
+    '.cal-cell-empty{position:relative;background:rgba(148,148,148,.03);border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);min-height:110px;transition:none}',
     '.cal-board-month td:last-child{border-right:none}',
     '.cal-board-month tr:last-child td{border-bottom:none}',
-    '.cal-cell{position:relative;vertical-align:top;padding:9px;min-height:100px;background:#fff;border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);cursor:default}',
+    '.cal-cell{position:relative;vertical-align:top;padding:9px;min-height:110px;background:#fff;border:none;border-right:1px solid rgba(148,163,184,.13);border-bottom:1px solid rgba(148,163,184,.13);cursor:default}',
     '.cal-cell.has-match{cursor:pointer}',
     '.cal-cell>*{position:relative;z-index:1}',
     '.cal-cell::before{content:"";position:absolute;inset:3px;border-radius:12px;background:transparent;box-shadow:none;pointer-events:none;transition:background .16s ease,box-shadow .16s ease;z-index:0}',
@@ -44,10 +44,10 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-cell.has-match:hover::before{background:linear-gradient(180deg,#eff6ff,#e0edff);box-shadow:0 8px 18px rgba(37,99,235,.16)}',
     '.cal-cell.is-today::before{background:linear-gradient(180deg,#eff6ff,#f7fbff);box-shadow:inset 0 0 0 2px #2563eb}',
     '.cal-cell.is-today:hover::before{box-shadow:inset 0 0 0 2px #2563eb;background:linear-gradient(180deg,#e6f0ff,#eef6ff)}',
-    '.cal-cell.is-past:not(.active){opacity:.6}',
-    '.cal-cell.active::before{background:linear-gradient(180deg,#f5f3ff,#faf5ff);box-shadow:inset 0 0 0 2px #7c3aed}',
-    '.cal-cell.active:hover::before{background:linear-gradient(180deg,#f2eeff,#ede9fe);box-shadow:inset 0 0 0 2px #7c3aed}',
-    '.cal-cell.active::after{content:"✓";position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4);transition:transform .15s;z-index:1}',
+    '.cal-cell.is-past:not(.active) .cal-day-num{opacity:1}',
+    '.cal-cell.active::before{background:linear-gradient(180deg,#f5f3ff,#faf5ff);box-shadow:inset 0 0 0 2px #a78bfa}',
+    '.cal-cell.active:hover::before{background:linear-gradient(180deg,#efeaff,#f5f0ff);box-shadow:inset 0 0 0 2px #a78bfa}',
+    '.cal-cell.active::after{content:"✓";position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:50%;background:#a78bfa;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(167,139,250,.4);transition:transform .15s;z-index:1}',
     '.cal-cell.active:hover::after{transform:scale(1.15)}',
     '.cal-board-month.cal-anim-in{animation:calFadeIn .25s ease}',
     '.cal-board-month.cal-anim-in .cal-day-num.today{animation:calTodayPop .3s ease}',
@@ -64,25 +64,26 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-legend-item{cursor:pointer;transition:transform .12s,box-shadow .12s,opacity .12s}',
     '.cal-legend-item:hover{filter:brightness(1.08)}',
     '.cal-legend-item.is-active{outline:2px solid var(--text1);outline-offset:1px}',
-    '.cal-day-num{font-weight:700;font-size:var(--fs-sm);color:var(--text1);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:6px}',
+    '.cal-day-num{font-weight:900;font-size:15px;color:#0f172a;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:6px}',
     '.cal-cell.is-sun .cal-day-num{color:var(--red)}',
-    '.cal-day-num.today{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-weight:900;box-shadow:0 10px 18px rgba(37,99,235,.22)}',
-    '.cal-cell.is-sun .cal-day-num.today{color:#fff}',
+    '.cal-cell.is-sat .cal-day-num{color:#2563eb}',
+    '.cal-day-num.today{color:#2563eb;font-weight:900}',
+    '.cal-cell.is-sun .cal-day-num.today{color:#2563eb}',
     '.cal-week-list{display:flex;flex-direction:column;gap:8px}',
-    '.cal-week-card{position:relative;display:flex;gap:12px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 10px 20px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
-    '.cal-week-card:hover{background:linear-gradient(180deg,#f8fafc,#eef2f7);border-color:rgba(148,163,184,.5);box-shadow:0 8px 16px rgba(15,23,42,.06)}',
+    '.cal-week-card{position:relative;display:flex;gap:12px;padding:12px 14px;border-radius:16px;background:var(--white);border:1px solid rgba(148,163,184,.18);transition:border-color .15s,background .15s}',
+    '.cal-week-card:hover{background:var(--surface);border-color:rgba(148,163,184,.5)}',
     '.cal-week-card.today{background:linear-gradient(180deg,#eff6ff,#dbeafe);border-color:rgba(59,130,246,.35)}',
     '.cal-week-card.today:hover{background:linear-gradient(180deg,#e3efff,#c9e0ff)}',
-    '.cal-week-card.is-past{opacity:.6}',
-    '.cal-week-card.active{border-width:2px;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.16) inset;background:linear-gradient(180deg,#f5f3ff,#faf5ff)}',
-    '.cal-week-card.active:hover{background:linear-gradient(180deg,#f5f3ff,#ede9fe);border-color:#7c3aed}',
-    '.cal-week-card.active::after{content:"✓";position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(124,58,237,.4)}',
-    '.cal-week-card.has-match:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.08);border-color:rgba(59,130,246,.35);background:linear-gradient(180deg,#eff6ff,#e0edff)}',
+    '.cal-week-card.is-past .cal-week-date{opacity:1}',
+    '.cal-week-card.active{border-width:2px;border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.16) inset;background:linear-gradient(180deg,#f5f3ff,#faf5ff)}',
+    '.cal-week-card.active:hover{background:linear-gradient(180deg,#efeaff,#f5f0ff);border-color:#a78bfa}',
+    '.cal-week-card.active::after{content:"✓";position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:#a78bfa;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(167,139,250,.4)}',
+    '.cal-week-card.has-match:hover{border-color:rgba(37,99,235,.4);background:#eff6ff}',
     '.cal-week-count{position:absolute;top:10px;right:14px;font-size:10px;font-weight:900;color:#fff;background:linear-gradient(135deg,#2563eb,#3b82f6);padding:2px 8px;border-radius:999px;box-shadow:0 6px 14px rgba(37,99,235,.25)}',
     '.cal-week-date{min-width:54px;text-align:center}',
     '.cal-week-day{font-size:10px;font-weight:800}',
     '.cal-week-num{font-family:"Noto Sans KR",sans-serif;font-weight:950;font-size:22px;color:var(--text1);line-height:1.1}',
-    '.cal-day-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid rgba(59,130,246,.25);box-shadow:0 14px 28px rgba(37,99,235,.08)}',
+    '.cal-day-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:#eff6ff;border:1px solid rgba(37,99,235,.22)}',
     '.cal-day-summary-title{font-size:var(--fs-lg);font-weight:950;color:var(--blue)}',
     '.cal-day-summary-sub{font-size:var(--fs-sm);color:var(--text3);margin-top:4px}',
     '.cal-day-summary-actions{display:flex;gap:8px;flex-wrap:wrap}',
@@ -90,8 +91,9 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-sched-title{font-weight:900;color:#92400e;font-size:14px}',
     '.cal-inline-time{font-size:var(--fs-caption);background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:999px;padding:3px 8px;color:var(--blue);font-weight:800}',
     '.cal-month-chip-row{display:flex;gap:4px;flex-wrap:wrap}',
-    '.cal-month-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap;box-shadow:0 1px 3px rgba(15,23,42,.18)}',
-    '.cal-match-card{margin-bottom:10px;border-radius:20px;overflow:hidden;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.cal-month-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}',
+    '.cal-month-dot{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 3px;border-radius:999px;font-size:10px;font-weight:900;color:#fff;line-height:1;cursor:default;box-shadow:0 1px 2px rgba(0,0,0,.25)}',
+    '.cal-match-card{margin-bottom:10px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.2);background:var(--white)}',
     '.cal-match-card .rec-sum-header{padding:14px 16px;background:linear-gradient(180deg,rgba(var(--rec-mode-rgb),.04),rgba(255,255,255,.92))}',
     '.cal-match-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:var(--fs-caption);font-weight:900;color:#fff;box-shadow:0 8px 16px rgba(15,23,42,.08)}',
     '.cal-match-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;flex:1}',
@@ -105,11 +107,11 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     '.cal-match-card .rec-detail-area{background:linear-gradient(180deg,rgba(248,250,252,.88),rgba(241,245,249,.92));border-top:1px solid rgba(148,163,184,.18)}',
     '.cal-match-card .btn-detail{border-radius:999px;padding:7px 12px;box-shadow:none}',
     '.cal-day-sections{display:flex;flex-direction:column;gap:16px}',
-    '.cal-day-sec{padding:14px;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.cal-day-sec{padding:14px;border-radius:16px;background:var(--white);border:1px solid rgba(148,163,184,.18)}',
     '.cal-day-sec-title{display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px}',
     '.cal-day-sec-pill{background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:999px}',
-    '.cal-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);font-size:10px;color:var(--gray-l);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.cal-legend-item{color:#fff;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:800}',
+    '.cal-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;border-radius:16px;background:var(--white);border:1px solid rgba(148,163,184,.18);font-size:11px;color:var(--gray-l)}',
+    '.cal-legend-item{color:#fff;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800}',
     '.cal-detail-wrap{margin-top:14px}',
     '.cal-undated{margin-bottom:12px;background:linear-gradient(180deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-radius:18px;padding:12px 14px;box-shadow:0 10px 18px rgba(146,64,14,.08)}',
     '.cal-undated-chips{display:flex;flex-wrap:wrap;gap:6px}',
@@ -122,7 +124,7 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-hero-desc{color:#94a3b8}',
     'body.dark .cal-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
     'body.dark .cal-board-month{border-color:#2d3f55}',
-    'body.dark .cal-board-month th{background:rgba(30,41,59,.6);border-color:#2d3f55}',
+    'body.dark .cal-board-month th{background:rgba(30,41,59,.6);border-color:#2d3f55;color:#e2e8f0}',
     'body.dark .cal-cell,body.dark .cal-week-card,body.dark .cal-day-sec{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .cal-cell{box-shadow:none!important}',
     'body.dark .cal-cell.is-sun::before,body.dark .cal-cell.is-sat::before{background:rgba(148,163,184,.05)}',
@@ -130,10 +132,10 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-cell.has-match:hover::before{background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65));box-shadow:0 8px 18px rgba(0,0,0,.35)}',
     'body.dark .cal-cell.is-today::before{background:linear-gradient(180deg,#17263c,#132033);box-shadow:inset 0 0 0 2px #60a5fa}',
     'body.dark .cal-cell.is-today:hover::before{background:linear-gradient(180deg,#1c3253,#152943);box-shadow:inset 0 0 0 2px #60a5fa}',
-    'body.dark .cal-cell.is-past:not(.active){opacity:.55}',
+    'body.dark .cal-cell.is-past:not(.active) .cal-day-num{opacity:1}',
     'body.dark .cal-cell.active::before{background:linear-gradient(180deg,#2e1f47,#241a38);box-shadow:inset 0 0 0 2px #a78bfa}',
     'body.dark .cal-cell.active:hover::before{background:linear-gradient(180deg,#33224e,#291c3d);box-shadow:inset 0 0 0 2px #a78bfa}',
-    'body.dark .cal-cell.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.35)}',
+    'body.dark .cal-cell.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.4)}',
     'body.dark .cal-cell-empty{background:rgba(100,100,100,.12)}',
     'body.dark .cal-week-card:hover{background:linear-gradient(180deg,rgba(51,65,85,.95),rgba(41,55,75,.9))!important;border-color:rgba(148,163,184,.5)!important}',
     'body.dark .cal-week-card.today{background:linear-gradient(180deg,#17263c,#132033)!important;border-color:rgba(96,165,250,.45)!important}',
@@ -141,7 +143,7 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-week-card.has-match:hover{box-shadow:0 16px 28px rgba(0,0,0,.32);border-color:rgba(96,165,250,.5)!important;background:linear-gradient(180deg,rgba(29,58,95,.85),rgba(30,58,138,.65))!important}',
     'body.dark .cal-week-card.active{border-color:#a78bfa!important;box-shadow:0 0 0 3px rgba(167,139,250,.22) inset;background:linear-gradient(180deg,#2e1f47,#241a38)!important}',
     'body.dark .cal-week-card.active:hover{background:linear-gradient(180deg,#33224e,#291c3d)!important;border-color:#a78bfa!important}',
-    'body.dark .cal-week-card.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.35)}',
+    'body.dark .cal-week-card.active::after{background:#a78bfa;box-shadow:0 4px 10px rgba(167,139,250,.4)}',
     'body.dark .cal-month-jump select,body.dark .cal-day-jump{background:rgba(15,23,42,.7);border-color:#334155;color:#e2e8f0}',
     'body.dark .cal-week-num{color:#f8fafc}',
     'body.dark .cal-day-summary{background:linear-gradient(135deg,#132033,#17263c);border-color:#1d4ed8}',
@@ -155,9 +157,11 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-match-result.is-pending{background:rgba(148,163,184,.16);color:#cbd5e1}',
     'body.dark .cal-match-card .rec-sum-score{background:rgba(148,163,184,.1)}',
     'body.dark .cal-match-card .rec-detail-area{background:linear-gradient(180deg,rgba(2,6,23,.22),rgba(15,23,42,.68));border-top-color:#334155}',
-    'body.dark .cal-day-num{color:#e2e8f0}',
+    'body.dark .cal-day-num{color:#f8fafc}',
+    'body.dark .cal-day-num.today{color:#60a5fa}',
     'body.dark .cal-cell.is-sun .cal-day-num{color:#f87171}',
-    'body.dark .cal-cell.is-sun .cal-day-num.today{color:#fff}',
+    'body.dark .cal-cell.is-sat .cal-day-num{color:#60a5fa}',
+    'body.dark .cal-cell.is-sun .cal-day-num.today{color:#60a5fa}',
     'body.dark .cal-undated{background:linear-gradient(180deg,rgba(120,53,15,.28),rgba(120,53,15,.18));border-color:#92400e}',
     'body.dark .cal-undated-chip{background:rgba(120,53,15,.18);border-color:#92400e;color:#fde68a}',
     '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-cell,.cal-cell-empty{min-height:96px}.cal-month-chip{font-size:9px;padding:1px 5px}}',
@@ -167,7 +171,7 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
 })();
 
 function rCal(C,T){
-  T.textContent='📅 경기 캘린더';
+  T.textContent='경기 캘린더';
   if(typeof calView==='undefined' || !String(calView||'')){
     try{ window.calView = (localStorage.getItem('su_cal_view') || 'month'); }catch(e){ window.calView='month'; }
   }
@@ -240,28 +244,30 @@ function rCal(C,T){
     return (m && m.__calType) || 'comp';
   }
 
+  // 색상 팔레트: 채도/명도를 통일하고 색상환을 고르게 배치(빨강→주황→라임→초록→틸→시안→핑크→마젠타).
+  // 파랑(오늘)·연보라(선택) 대역은 UI 상태색 전용으로 비워둠 — 카테고리 색과 상태 색이 서로 겹치지 않게.
   const TYPE_INFO={
-    sched:{lbl:'📌 예정',   bg:'#92400e', emoji:'📌'},
-    ind:  {lbl:'🎮 개인전',  bg:'#0e7490', emoji:'🎮'},
-    gj:   {lbl:'⚔️ 끝장전', bg:'#dc2626', emoji:'⚔️'},
-    tt:   {lbl:'🎯 티어대회',bg:'#f59e0b', emoji:'🎯'},
-    mini: {lbl:'⚡ 미니대전',bg:'#0d9488', emoji:'⚡'},
-    univm:{lbl:'🏟️ 대학대전',bg:'#16a34a',emoji:'🏟️'},
-    ck:   {lbl:'🤝 대학CK', bg:'#ea580c', emoji:'🤝'},
-    pro:  {lbl:'🏅 프로리그',bg:'#be123c', emoji:'🏅'},
-    comp: {lbl:'🎖️ 대회',   bg:'#ca8a04', emoji:'🎖️'},
+    sched:{lbl:'예정',   bg:'#57534e', short:'예정', dot:'정'}, // 중립(확정 전 일정이라 무채색)
+    gj:   {lbl:'끝장전', bg:'#b91c1c', short:'끝장전', dot:'끝'},
+    tt:   {lbl:'티어대회',bg:'#c2410c', short:'티어', dot:'티'},
+    comp: {lbl:'대회',   bg:'#3f6212', short:'대회', dot:'회'},
+    univm:{lbl:'대학대전',bg:'#15803d',short:'대학전', dot:'대'},
+    mini: {lbl:'미니대전',bg:'#0f766e', short:'미니', dot:'미'},
+    ind:  {lbl:'개인전',  bg:'#0e7490', short:'개인전', dot:'개'},
+    ck:   {lbl:'대학CK', bg:'#be185d', short:'CK', dot:'CK'},
+    pro:  {lbl:'프로리그',bg:'#a21caf', short:'프로', dot:'프'},
   };
 
   function matchLabel(m){
     const type=matchType(m);
     const ti=TYPE_INFO[type];
-    if(type==='sched') return `📌 ${_calEscHTML(m.note||'예정')}`;
-    if(type==='ind'||type==='gj') return `${ti.emoji} ${_calEscHTML(m.wName||'')} vs ${_calEscHTML(m.lName||'')}`;
-    if(type==='tt') return `🎯 ${_calEscHTML(m.compName||'')}`;
-    if(type==='mini') return `⚡ ${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
-    if(type==='univm') return `🏟️ ${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
-    if(type==='ck'||type==='pro') return `${ti.emoji} ${_calEscHTML(m.teamALabel||'A팀')} vs ${_calEscHTML(m.teamBLabel||'B팀')}`;
-    return `🎖️ 대회`;
+    if(type==='sched') return `${_calEscHTML(m.note||'예정')}`;
+    if(type==='ind'||type==='gj') return `${_calEscHTML(m.wName||'')} vs ${_calEscHTML(m.lName||'')}`;
+    if(type==='tt') return `${_calEscHTML(m.compName||'')}`;
+    if(type==='mini') return `${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
+    if(type==='univm') return `${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
+    if(type==='ck'||type==='pro') return `${_calEscHTML(m.teamALabel||'A팀')} vs ${_calEscHTML(m.teamBLabel||'B팀')}`;
+    return `대회`;
   }
 
   function getTeamA(m){
@@ -341,7 +347,6 @@ function rCal(C,T){
   // 달력 셀/주간 리스트를 "요약 칩"으로 단순화
   function calCellChips(ds, matches){
     if(!matches||!matches.length) return '';
-    const chipMode = (localStorage.getItem('su_cal_chip_mode')||'types');
     const byType={};
     matches.forEach(m=>{const t=matchType(m);byType[t]=(byType[t]||0)+1;});
     // 동률/애매함 방지: 타입 우선순위로 타이브레이크
@@ -352,20 +357,20 @@ function rCal(C,T){
         if(dc!==0) return dc;
         return (prio.indexOf(a[0])<0?99:prio.indexOf(a[0])) - (prio.indexOf(b[0])<0?99:prio.indexOf(b[0]));
       });
-    const top=sorted.slice(0,3);
+    // 카테고리는 원형 배지라 자리를 덜 차지하니 2개→4개까지 보여줌
+    const top=sorted.slice(0,4);
     const used=top.reduce((s,[,c])=>s+c,0);
     const restCnt=Math.max(0, matches.length-used);
     const chip=(txt,bg,fg,title)=>`<span class="cal-month-chip"${title?` title="${title}"`:''} style="background:${bg};color:${fg}">${txt}</span>`;
+    const dot=(txt,bg,title)=>`<span class="cal-month-dot" title="${title}" style="background:${bg}">${txt}</span>`;
     const fullBreakdown=sorted.map(([t,c])=>`${(TYPE_INFO[t]||TYPE_INFO.comp).lbl} ${c}건`).join(', ');
-    const totalChip=chip(`총 ${matches.length}`,'var(--blue)','#fff',fullBreakdown);
-    if(chipMode==='total') return `<div class="cal-month-chip-row">${totalChip}</div>`;
     const typeChips=top.map(([t,c])=>{
       const ti=TYPE_INFO[t]||TYPE_INFO.comp;
-      return chip(`${ti.emoji} ${c}`, ti.bg, '#fff');
+      return dot(ti.dot, ti.bg, `${ti.lbl} ${c}건`);
     }).join('');
-    const restBreakdown=sorted.slice(3).map(([t,c])=>`${(TYPE_INFO[t]||TYPE_INFO.comp).lbl} ${c}건`).join(', ');
-    const more=restCnt>0?chip(`+${restCnt}`,'#64748b','#fff',restBreakdown||undefined):'';
-    return `<div class="cal-month-chip-row">${totalChip}${typeChips}${more}</div>`;
+    const restBreakdown=sorted.slice(4).map(([t,c])=>`${(TYPE_INFO[t]||TYPE_INFO.comp).lbl} ${c}건`).join(', ');
+    const more=restCnt>0?chip(`+${restCnt}`,'#94a3b8','#fff',restBreakdown||undefined):'';
+    return `<div class="cal-month-chip-row" title="${fullBreakdown}">${typeChips}${more}</div>`;
   }
 
   if(calView==='month'){
@@ -411,7 +416,7 @@ function rCal(C,T){
     calHTML=`
       <div class="cal-board-month${_calAnimCls}">
       <table>
-        <thead><tr>${weeks.map((w,i)=>`<th style="padding:8px;font-size:var(--fs-caption);color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${w}</th>`).join('')}</tr></thead>
+        <thead><tr>${weeks.map((w,i)=>`<th style="padding:8px;font-size:var(--fs-caption);color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--text)'};font-weight:900">${w}</th>`).join('')}</tr></thead>
         <tbody>${cells}</tbody>
       </table>
       </div>`;
@@ -441,7 +446,7 @@ function rCal(C,T){
         ${matches.length?`onclick="calShowDay('${ds}')"`:''}>
         ${hasMatch?`<span class="cal-week-count">${matches.length}</span>`:''}
         <div class="cal-week-date">
-          <div class="cal-week-day" style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'}">${weeks[i]}</div>
+          <div class="cal-week-day" style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--text)'};font-weight:900">${weeks[i]}</div>
           <div class="cal-week-num" style="color:${isToday?'var(--blue)':(i===0?'var(--red)':'inherit')}">${d.getDate()}</div>
         </div>
         <div style="flex:1;min-width:0">
@@ -471,14 +476,14 @@ function rCal(C,T){
     const _dayWhen=_dayIsToday?'오늘':(calDayDate<todayStr?'지난 날짜':'예정된 날짜');
     const _dayHeadHTML=`<div class="cal-day-summary${_calAnimCls}" style="margin-bottom:14px">
       <div>
-        <div class="cal-day-summary-title">📅 ${_calEscHTML(calDayDate)} (${_dowKo})</div>
+        <div class="cal-day-summary-title">${_calEscHTML(calDayDate)} (${_dowKo})</div>
         <div class="cal-day-summary-sub">${matches.length?`총 ${matches.length}경기`:'경기 없음'} · ${_dayWhen}</div>
       </div>
       ${_li?`<div class="cal-day-summary-actions"><button class="btn btn-b btn-sm no-export" onclick="openCalSchedModal()">+ 예정 추가</button></div>`:''}
     </div>`;
     if(!matches.length){
       calHTML=_dayHeadHTML+`<div class="cal-empty-state">
-        <div style="font-size:40px;margin-bottom:8px">🗓️</div>
+        <div style="font-size:40px;margin-bottom:8px"></div>
         <div>이 날은 등록된 경기·예정이 없습니다.</div>
       </div>`;
     } else {
@@ -501,15 +506,15 @@ function rCal(C,T){
       }
 
       function schedCard(m){
-        const timeStr=m.time?`<span class="cal-inline-time">🕐 ${_calEscHTML(m.time)}</span>`:'';
+        const timeStr=m.time?`<span class="cal-inline-time">${_calEscHTML(m.time)}</span>`:'';
         const sid=_calEscJS(m._id||'');
         return `<div class="cal-sched-card">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span class="cal-sched-title">📌 ${_calEscHTML(m.note||'예정')}</span>
+            <span class="cal-sched-title">${_calEscHTML(m.note||'예정')}</span>
             ${timeStr}
             <div style="margin-left:auto;display:flex;gap:6px" class="no-export">
-              <button class="btn btn-w btn-xs" onclick="calExportSchedIcs('${sid}')">📤 캘린더 추가</button>
-              ${_li?`<button class="btn btn-r btn-xs" onclick="calDeleteSched('${sid}')">🗑️ 삭제</button>`:''}
+              <button class="btn btn-w btn-xs" onclick="calExportSchedIcs('${sid}')">캘린더 추가</button>
+              ${_li?`<button class="btn btn-r btn-xs" onclick="calDeleteSched('${sid}')">삭제</button>`:''}
             </div>
           </div>
         </div>`;
@@ -525,13 +530,13 @@ function rCal(C,T){
         const cb=_isIG?'#64748b':(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
         const aWin=_isIG?!!m.wName:(m.sa??-1)>(m.sb??-1), bWin=_isIG?false:(m.sb??-1)>(m.sa??-1);
         const hasResult=_isIG?!!m.wName:(m.sa!=null&&m.sa!=='');
-        const timeStr=m.time?`<span class="cal-inline-time">🕐 ${_calEscHTML(m.time)}</span>`:'';
+        const timeStr=m.time?`<span class="cal-inline-time">${_calEscHTML(m.time)}</span>`:'';
         const detKey=`calday-${calDayDate}-${mi}`;
         const modeKey=(m && m.__calMode) || matchType(m);
         const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
         const leftCol = hasResult?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
-        const MODE_COL = {ind:'#2563eb',gj:'#dc2626',mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',comp:'#3b82f6'};
-        const _mc = MODE_COL[modeKey] || '#64748b';
+        // 별도 팔레트를 두지 않고 TYPE_INFO 색을 그대로 사용 (카드 배지 색과 상세 글로우 색이 항상 일치하도록)
+        const _mc = (TYPE_INFO[modeKey]||TYPE_INFO.comp).bg;
         const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
         const resultClass=!hasResult?'is-pending':'is-win';
         const resultLabel=hasResult?(aWin?`▶ ${tAH} 승`:bWin?`▶ ${tBH} 승`:'무'):'결과 미입력';
@@ -546,8 +551,8 @@ function rCal(C,T){
             <span class="cal-match-result ${resultClass}">${resultLabel}</span>
             </div>
             <div class="cal-match-actions no-export">
-              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||_li)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>`:'';})()}
-              <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">📂 상세</button>
+              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||_li)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">공유 카드</button>`:'';})()}
+              <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">상세</button>
             </div>
           </div>
           <div id="det-${detKey}" class="rec-detail-area">
@@ -557,9 +562,9 @@ function rCal(C,T){
       }
 
         calHTML = _dayHeadHTML + `<div class="cal-day-sections${_calAnimCls}">` +
-        sec('📌 예정', schedList.length ? schedList.map(x=>schedCard(x.m)).join('') : '') +
-        sec('📜 기록', recList.length ? recList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
-        sec('🏆 대회/리그', tourList.length ? tourList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
+        sec('예정', schedList.length ? schedList.map(x=>schedCard(x.m)).join('') : '') +
+        sec('기록', recList.length ? recList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
+        sec('대회/리그', tourList.length ? tourList.map(x=>matchCard(x.m,x.mi)).join('') : '') +
         `</div>`;
     }
   }
@@ -568,7 +573,7 @@ function rCal(C,T){
   const undatedMatches=allMatches.filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
   const _undatedShowCount=window._calUndatedExpanded?undatedMatches.length:10;
   const undatedHTML=undatedMatches.length?`<div class="cal-undated">
-  <div style="font-size:var(--fs-sm);font-weight:700;color:#92400e;margin-bottom:6px">📋 날짜 미정 경기 (${undatedMatches.length}건)</div>
+  <div style="font-size:var(--fs-sm);font-weight:700;color:#92400e;margin-bottom:6px">날짜 미정 경기 (${undatedMatches.length}건)</div>
   <div class="cal-undated-chips">
   ${undatedMatches.slice(0,_undatedShowCount).map(m=>`<span class="cal-undated-chip">${matchLabel(m)}</span>`).join('')}
   ${undatedMatches.length>_undatedShowCount?`<button class="cal-undated-chip no-export" style="cursor:pointer;border:1px solid #f59e0b;background:#fde68a" onclick="window._calUndatedExpanded=true;render()">... 외 ${undatedMatches.length-_undatedShowCount}건 더보기</button>`:''}
@@ -579,23 +584,23 @@ function rCal(C,T){
   // Feature 2: 타입 필터 버튼 (건수 뱃지 포함)
   const filterBtns=[
     {id:'all',  lbl:'전체'},
-    {id:'mini', lbl:'⚡ 미니'},
-    {id:'univm',lbl:'🏟️ 대학'},
-    {id:'ck',   lbl:'🤝 CK'},
-    {id:'pro',  lbl:'🏅 프로'},
-    {id:'ind',  lbl:'🎮 개인전'},
-    {id:'gj',   lbl:'⚔️ 끝장전'},
-    {id:'tt',   lbl:'🎯 티어대회'},
-    {id:'comp', lbl:'🎖️ 대회'},
-    {id:'sched',lbl:'📌 예정'},
+    {id:'mini', lbl:'미니'},
+    {id:'univm',lbl:'대학'},
+    {id:'ck',   lbl:'CK'},
+    {id:'pro',  lbl:'프로'},
+    {id:'ind',  lbl:'개인전'},
+    {id:'gj',   lbl:'끝장전'},
+    {id:'tt',   lbl:'티어대회'},
+    {id:'comp', lbl:'대회'},
+    {id:'sched',lbl:'예정'},
   ];
   const _filterBtns = (typeof applyTabLabels==='function') ? applyTabLabels('calendar', filterBtns) : filterBtns;
   const filterToggleHTML = _enableSubFilter
-    ? `<button class="pill no-export ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">🔍 필터 ${window._calFilterOpen?'▲':'▼'}</button>`
+    ? `<button class="pill no-export ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">필터 ${window._calFilterOpen?'▲':'▼'}</button>`
     : '';
   const filterHTML = (_enableSubFilter ? window._calFilterOpen : true)
     ? `<div class="no-export" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-        <input id="cal-search-input" type="text" placeholder="🔍 팀/선수 이름 검색" value="${String(window._calSearchQ||'').replace(/"/g,'&quot;')}"
+        <input id="cal-search-input" type="text" placeholder="팀/선수 이름 검색" value="${String(window._calSearchQ||'').replace(/"/g,'&quot;')}"
           oninput="window._searchFocusId='cal-search-input';window._calSearchQ=this.value;render()"
           onfocus="window._searchFocusId='cal-search-input'"
           style="max-width:260px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)">
@@ -616,7 +621,7 @@ function rCal(C,T){
     <section class="cal-hero">
       <div class="cal-hero-copy">
         <div class="cal-hero-kicker">${_todayKicker}</div>
-        <div class="cal-hero-title">📅 경기 캘린더</div>
+        <div class="cal-hero-title">경기 캘린더</div>
         <div class="cal-hero-desc">월간, 주간, 일간 화면으로 일정을 빠르게 훑고 선택한 날짜의 경기와 예정 목록을 한눈에 확인할 수 있습니다.</div>
       </div>
       <div class="cal-hero-badges">
