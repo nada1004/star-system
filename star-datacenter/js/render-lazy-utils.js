@@ -226,7 +226,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _ensureStatsLoaded();
 };
 async function _ensureCalendarLoaded(){
-  await _loadScriptOnce('js/calendar.js?v=20260813-split2');
+  await _loadScriptOnce('js/calendar.js?v=20260822-uxrev4');
   await _loadScriptOnce('js/calendar-sched.js?v=20260813-split2');
 }
 try{
