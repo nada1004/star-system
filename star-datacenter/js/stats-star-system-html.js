@@ -49,6 +49,7 @@ function statsStarSystemHTML(){
     .ss-badge.ok{color:#16a34a;border-color:rgba(22,163,74,.25)}
     .ss-badge.promo{color:#7c3aed;border-color:rgba(124,58,237,.25)}
     .ss-badge.danger{color:#dc2626;border-color:rgba(220,38,38,.25)}
+    .ss-badge.paused{color:#0891b2;border-color:rgba(8,145,178,.25)}
   </style>`;
 
   const header = `<div class="ssec">
@@ -96,7 +97,7 @@ function statsStarSystemHTML(){
           <thead><tr><th style="width:60px">순위</th><th style="text-align:left">선수</th><th style="width:90px">점수</th><th style="width:150px">상태</th><th style="width:110px">최근 공식전</th><th style="width:70px">경기수</th></tr></thead>
           <tbody>
             ${arr.map((r,i)=>{
-              const bcls = r.status==='승급 검증'?'promo':(r.status==='강등 위기'?'danger':'ok');
+              const bcls = r.activityStatus ? 'paused' : (r.status==='승급 검증'?'promo':(r.status==='강등 위기'?'danger':'ok'));
               return `<tr>
                 <td>${i+1}</td>
                 <td class="ss-name"><span class="clickable-name" onclick="openPlayerModal('${escJS(r.name)}')">${escHTML(r.name)}</span> <span style="color:${gc(r.univ)};font-size:var(--fs-caption);font-weight:900">${escHTML(r.univ||'')}</span></td>

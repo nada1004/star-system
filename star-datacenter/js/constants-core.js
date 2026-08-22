@@ -33,7 +33,7 @@ function _lsSave(k,obj){
 
 // 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
 const DATA_VERSION = 2;
-try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260821-reportcolor1'; }catch(e){}
+try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260822-awardclean4'; }catch(e){}
 
 // (요청) 특정 탭들은 필터 영역을 기본으로 항상 펼친 상태로 유지
 // - 통계탭, 개인/끝장전, 대학전, 대회/티어, 프로리그, 룰렛/게임

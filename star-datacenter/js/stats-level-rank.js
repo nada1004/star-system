@@ -11,14 +11,17 @@ function _lvlRowHTML(r){
   const p = r.p;
   const rank = r.rank;
   const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
-  return `<tr>
+  const uc = (typeof gc==='function') ? gc(p.univ) : '#6b7280';
+  const safeName = String(p.name||'').replace(/'/g,"\\'");
+  const hoverAttrs = ` onmouseenter="_b2LineupCardHoverEnter(event,this,'${safeName}','${uc}')" onmouseleave="_b2LineupCardHoverLeave()"`;
+  return `<tr class="lvl-rank-row" style="--rowuniv:${uc}">
       <td class="lvl-rank-rankcell">${medal}</td>
-      <td><div class="lvl-rank-namecell">
+      <td><div class="lvl-rank-namecell"${hoverAttrs} style="cursor:pointer">
         ${getPlayerPhotoHTML(p.name,'32px')}
         <span class="lvl-rank-name" onclick="openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}</span>
         <span class="rbadge r${p.race||''}" style="font-size:10px">${RACE_KO_LVL[p.race]||p.race||''}</span>
       </div></td>
-      <td class="lvl-rank-univ">${escHTML(p.univ||'-')}</td>
+      <td class="lvl-rank-univ" style="color:${uc};font-weight:800">${escHTML(p.univ||'-')}</td>
       <td>${(typeof _prLevelBadgeHTML==='function') ? _prLevelBadgeHTML(p) : ''}</td>
       <td class="lvl-rank-wins" style="text-align:right">${Number(p.win)||0}승</td>
     </tr>`;
@@ -51,9 +54,14 @@ function statsLevelRankHTML(){
     .lvl-rank-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
     .lvl-rank-table{width:100%;min-width:560px;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
     .lvl-rank-table thead th{background:var(--surface);color:var(--text2);font-size:11px;font-weight:800;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
-    .lvl-rank-table tbody td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:middle}
+    .lvl-rank-table tbody td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:middle;background:transparent}
+    .lvl-rank-table tbody tr:nth-child(even) td{background:transparent!important}
     .lvl-rank-table tbody tr:last-child td{border-bottom:none}
-    .lvl-rank-table tbody tr:hover{background:var(--surface)}
+    .lvl-rank-row{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#94a3b8) 14%,var(--white)) 0%,var(--white) 65%)}
+    .lvl-rank-row:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#94a3b8) 21%,var(--white)) 0%,#eef6ff 65%)}
+    body.dark .lvl-rank-row{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#64748b) 18%,#0f172a) 0%,#0f172a 65%)}
+    body.dark .lvl-rank-row:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--rowuniv,#64748b) 25%,#0f172a) 0%,#17263c 65%)}
+    body.dark .lvl-rank-table tbody tr:nth-child(even) td{background:transparent!important}
     .lvl-rank-rankcell{font-weight:900;color:var(--text2);width:42px;text-align:center}
     .lvl-rank-namecell{display:flex;align-items:center;gap:8px;min-width:150px}
     .lvl-rank-name{font-weight:800;color:var(--text1);cursor:pointer}

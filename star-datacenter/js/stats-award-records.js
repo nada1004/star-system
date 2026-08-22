@@ -35,40 +35,61 @@ function _statsAwardCalcRange(fromIso, toIso, gender, includeProLeague){
     .sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
 }
 
-function _statsAwardCard(title,p,extra='',color='#2563eb'){
-  if(!p)return`<div class="stats-award-card is-empty"><div style="font-size:28px;margin-bottom:8px">🏆</div><div style="color:var(--gray-l)">기록 없음</div></div>`;
+// 히어로/러너 카드가 공유하는 사진 마크업(이미지 or 대학 아이콘 폴백) 생성.
+function _statsAwardPhotoHTML(p){
   const univColor=gc(p.univ);
   const _univIcons = (typeof UNIV_ICONS!=='undefined' && UNIV_ICONS) ? UNIV_ICONS : (window.UNIV_ICONS||{});
   const _univCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg)) ? univCfg : [];
-  const _gUI = (typeof gUI === 'function') ? gUI : (()=>'');
-  // 대학 아이콘 (gUI 사용 - UNIV_ICONS 또는 univCfg.icon 우선)
   const univIconUrl=(_univIcons && _univIcons[p.univ])||((_univCfg.find(x=>x.name===p.univ)||{}).icon)||'';
   const univIconUrlAttr = (typeof escAttr==='function') ? escAttr(univIconUrl) : escHTML(univIconUrl);
-  // 아이콘: URL 있으면 이미지, 없으면 대학명 첫 글자 표시
   const univIconInner=univIconUrl
-    ? `<img src="${univIconUrlAttr}" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:16px;font-weight:900;color:white>${escHTML(p.univ[0]||'?')}</span>'">`
-    : `<span style="font-size:18px;font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${escHTML(p.univ[0]||'?')}</span>`;
-  return`<div class="stats-award-card" style="background:linear-gradient(135deg,${color}18,${color}08);border:2px solid ${color}44" onclick="openPlayerModal('${escJS(p.name)}')">
-    <div class="stats-award-head" style="color:${color}">${title}</div>
-    <div class="stats-award-body">
-      ${p.photo?(()=>{
-        const _2nd=(typeof _phSwap2ndHTML==='function')?_phSwap2ndHTML(p.secondProfileFile,{style:'border-radius:inherit'}):'';
-        return `<span class="stats-award-avatar${_2nd?' ph-swap':''}" style="position:relative;overflow:hidden;display:flex"><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:2px solid ${univColor};box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">${_2nd}</span>`;
-      })():`<div class="stats-award-avatar" style="background:${univColor};box-shadow:0 2px 8px ${univColor}55">${univIconInner}</div>`}
-      <div style="min-width:0">
-        <div class="stats-award-name">${escHTML(p.name)}</div>
-        <div class="stats-award-meta">
-          <span style="display:inline-flex;align-items:center;gap:3px;background:${univColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700">${_gUI(p.univ,'0.85em')}${escHTML(p.univ)}</span>
-          <span style="font-size:10px;color:var(--gray-l)">${getTierLabel(p.tier||'-')}</span>
-        </div>
+    ? `<img src="${univIconUrlAttr}" style="width:52%;max-width:40px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:min(9vw,26px);font-weight:900;color:white>${escHTML(p.univ[0]||'?')}</span>'">`
+    : `<span style="font-size:min(9vw,26px);font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${escHTML(p.univ[0]||'?')}</span>`;
+  // 호버시 보조 프로필사진 스왑: 조상 요소에 ph-swap 클래스가 있어야 constants-state.js 위임 핸들러가 감지함
+  const _2nd = (p.photo && p.secondProfileFile && typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile,{style:'position:absolute;inset:0;border-radius:inherit'}) : '';
+  return {
+    univColor,
+    hasSwap: !!_2nd,
+    inner: p.photo
+      ? `<img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">${_2nd}`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,${univColor},${univColor}bb)">${univIconInner}</div>`,
+  };
+}
+
+// 1위 히어로 카드 — 큰 사진 + 큰 승률 숫자로 압도적으로 강조.
+function _statsAwardHeroCard(p,color,extra){
+  if(!p)return`<div class="stats-lb-hero is-empty" style="--lb-color:${color}"><span style="font-size:22px">🏆</span><span>기록 없음</span></div>`;
+  const _gUI = (typeof gUI === 'function') ? gUI : (()=>'');
+  const ph=_statsAwardPhotoHTML(p);
+  return`<div class="stats-lb-hero" style="--lb-color:${color}" onclick="openPlayerModal('${escJS(p.name)}')">
+    <span class="stats-lb-hero-rankbadge">1</span>
+    <div class="stats-lb-hero-photo${ph.hasSwap?' ph-swap':''}">${ph.inner}</div>
+    <div class="stats-lb-hero-body">
+      <div class="stats-lb-hero-toprow">
+        <span class="stats-lb-hero-name">${escHTML(p.name)}</span>
+        <span style="display:inline-flex;align-items:center;gap:3px;background:${ph.univColor};color:#fff;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700">${_gUI(p.univ,'0.85em')}${escHTML(p.univ)}</span>
+      </div>
+      <div class="stats-lb-hero-sub">${getTierLabel(p.tier||'-')}${extra?` · ${extra}`:''}</div>
+      <div class="stats-lb-hero-stats">
+        <span class="stats-lb-hero-rate">${p.mrate}%</span>
+        <span class="stats-lb-hero-wl">${p.mw}승 ${p.ml}패</span>
       </div>
     </div>
-    <div class="stats-award-stats">
-      <span class="stats-award-stat" style="background:var(--red)">${p.mw}승</span>
-      <span class="stats-award-stat" style="background:var(--blue)">${p.ml}패</span>
-      <span class="stats-award-stat" style="background:${color}">${p.mrate}%</span>
+  </div>`;
+}
+
+// 2·3위 러너 카드 — 가로형 컴팩트 리스트.
+function _statsAwardRunnerCard(rank,p,color){
+  if(!p)return`<div class="stats-lb-runner is-empty" style="--lb-color:${color}"><span class="stats-lb-runner-rank">${rank}</span><span>기록 없음</span></div>`;
+  const ph=_statsAwardPhotoHTML(p);
+  return`<div class="stats-lb-runner" style="--lb-color:${color}" onclick="openPlayerModal('${escJS(p.name)}')">
+    <span class="stats-lb-runner-rank">${rank}</span>
+    <div class="stats-lb-runner-photo${ph.hasSwap?' ph-swap':''}">${ph.inner}</div>
+    <div class="stats-lb-runner-body">
+      <div class="stats-lb-runner-name">${escHTML(p.name)}<span style="font-size:9px;color:${ph.univColor};font-weight:800">${escHTML(p.univ)}</span></div>
+      <div class="stats-lb-runner-sub">${p.mw}승 ${p.ml}패</div>
     </div>
-    ${extra?`<div style="margin-top:8px;font-size:11px;color:${color};font-weight:600">${extra}</div>`:''}
+    <span class="stats-lb-runner-rate">${p.mrate}%</span>
   </div>`;
 }
 // 브리핑탭 MVP 선정 규칙과 동일: 최소 3경기 이상만 후보, 점수식(_mvpScore) 내림차순 TOP3.
@@ -78,8 +99,10 @@ function _statsAwardPick(list){
   return { top3 };
 }
 
-// 이번(주/달) TOP3(여/남) + 지난 기간 TOP3(여/남) + 전체 순위표(성별 토글) 1개 섹션을 렌더.
+// 이번(주/달) TOP3(여/남) + 전체 순위표(성별 토글, 전기간 대비 트렌드 포함) 1개 섹션을 렌더.
 // 주간/월간 섹션이 이 함수를 공유하고 기간 데이터/라벨/저장키만 다르게 넘긴다.
+// 2026-08-22: "지난 기간 TOP3" 카드 섹션(카드 12장 중복 표시)은 제거 — 동일 정보는 순위표의
+// 전주비/전월비 트렌드 컬럼으로 이미 제공되므로, 카드 개수만 줄이고 데이터 손실은 없음.
 function _statsAwardSectionHTML(o){
   const rankVar=o.rankGenderVar, rankLsKey=o.rankGenderLsKey;
   try{
@@ -95,7 +118,6 @@ function _statsAwardSectionHTML(o){
   const curRankList = _rankGender==='F' ? o.curListF : _rankGender==='M' ? o.curListM : curList;
 
   const aF=_statsAwardPick(o.curListF), aM=_statsAwardPick(o.curListM);
-  const pF=_statsAwardPick(o.prevListF), pM=_statsAwardPick(o.prevListM);
   // 전기간 대비(표시용)는 남녀 합산(전체 기준)으로 계산
   const prevMap=Object.fromEntries([...(o.prevListF||[]), ...(o.prevListM||[])].map(p=>[p.name,p]));
   function trendBadge(p){
@@ -115,32 +137,21 @@ function _statsAwardSectionHTML(o){
       <button class="btn-capture btn-xs no-export" onclick="captureSection('${o.sectionId}','${o.captureType}')">📷 이미지 저장</button>
     </div>
     ${o.noteHTML||''}
-    <div class="stats-award-label" style="color:#db2777">👩 여자</div>
-    <div class="stats-award-grid">
-      ${_statsAwardCard('🥇 1위',aF.top3[0]||null,`${o.periodWord} 승수 1위`,'#db2777')}
-      ${_statsAwardCard('🥈 2위',aF.top3[1]||null,`${o.periodWord} 승수 2위`,'#db2777')}
-      ${_statsAwardCard('🥉 3위',aF.top3[2]||null,`${o.periodWord} 승수 3위`,'#db2777')}
+    <div class="stats-lb-label" style="--lb-color:#db2777">여자부</div>
+    <div class="stats-lb-group">
+      ${_statsAwardHeroCard(aF.top3[0]||null,'#db2777',`${o.periodWord} 승수 1위`)}
+      <div class="stats-lb-runners">
+        ${_statsAwardRunnerCard(2,aF.top3[1]||null,'#db2777')}
+        ${_statsAwardRunnerCard(3,aF.top3[2]||null,'#db2777')}
+      </div>
     </div>
-    <div class="stats-award-label" style="color:#2563eb;margin-top:14px">👨 남자</div>
-    <div class="stats-award-grid">
-      ${_statsAwardCard('🥇 1위',aM.top3[0]||null,`${o.periodWord} 승수 1위`,'#2563eb')}
-      ${_statsAwardCard('🥈 2위',aM.top3[1]||null,`${o.periodWord} 승수 2위`,'#2563eb')}
-      ${_statsAwardCard('🥉 3위',aM.top3[2]||null,`${o.periodWord} 승수 3위`,'#2563eb')}
-    </div>
-  </div>
-  <div class="ssec">
-    <h4 style="margin-bottom:14px">${o.prevEmoji} ${o.prevTitle} <span style="font-size:12px;color:var(--gray-l);font-weight:400">${o.prevLabelHTML}</span></h4>
-    <div class="stats-award-label" style="color:#db2777">👩 여자</div>
-    <div class="stats-award-grid">
-      ${_statsAwardCard('🥇 1위',pF.top3[0]||null,'','#db2777')}
-      ${_statsAwardCard('🥈 2위',pF.top3[1]||null,'','#db2777')}
-      ${_statsAwardCard('🥉 3위',pF.top3[2]||null,'','#db2777')}
-    </div>
-    <div class="stats-award-label" style="color:#2563eb;margin-top:14px">👨 남자</div>
-    <div class="stats-award-grid">
-      ${_statsAwardCard('🥇 1위',pM.top3[0]||null,'','#2563eb')}
-      ${_statsAwardCard('🥈 2위',pM.top3[1]||null,'','#2563eb')}
-      ${_statsAwardCard('🥉 3위',pM.top3[2]||null,'','#2563eb')}
+    <div class="stats-lb-label" style="--lb-color:#2563eb;margin-top:16px">남자부</div>
+    <div class="stats-lb-group">
+      ${_statsAwardHeroCard(aM.top3[0]||null,'#2563eb',`${o.periodWord} 승수 1위`)}
+      <div class="stats-lb-runners">
+        ${_statsAwardRunnerCard(2,aM.top3[1]||null,'#2563eb')}
+        ${_statsAwardRunnerCard(3,aM.top3[2]||null,'#2563eb')}
+      </div>
     </div>
   </div>
   <div class="ssec">
@@ -154,7 +165,7 @@ function _statsAwardSectionHTML(o){
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin:-2px 0 10px;line-height:1.5">현재는 <b>${_rankGender==='F'?'여자':'M'===_rankGender?'남자':'전체'}</b> 기준 순위만 표시됩니다.</div>
     ${curRankList.length===0?'<p style="color:var(--gray-l)">선택한 조건의 경기 기록이 없습니다.</p>':`
-    <table class="stats-rank-table"><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th><th title="${o.trendTitle}">${o.trendLbl}</th></tr></thead><tbody>
+    <table class="stats-rank-table rank-${_rankGender.toLowerCase()}" style="--rank-color:${_rankGender==='F'?'#db2777':_rankGender==='M'?'#2563eb':'#334155'}"><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th><th title="${o.trendTitle}">${o.trendLbl}</th></tr></thead><tbody>
     ${[...curRankList].sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate).map((p,i)=>`<tr class="${i<3?'stats-rank-top':''}">
       <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'위'}</td>
       <td class="stats-rank-player" onclick="openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}</td>
@@ -278,8 +289,8 @@ function statsAwardMonthHTML(){
 ══════════════════════════════════════ */
 function statsAwardHTML(){
   return `<div style="display:flex;flex-direction:column;gap:28px">
-    ${statsAwardWeekHTML()}
-    ${statsAwardMonthHTML()}
+    <div class="stats-award-period stats-award-period-week">${statsAwardWeekHTML()}</div>
+    <div class="stats-award-period stats-award-period-month">${statsAwardMonthHTML()}</div>
   </div>`;
 }
 

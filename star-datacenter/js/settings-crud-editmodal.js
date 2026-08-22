@@ -601,10 +601,25 @@ window.openEP=function(name){
         <input type="checkbox" id="ed-inactive" ${p.inactive?'checked':''} style="width:16px;height:16px;cursor:pointer">
         <span>임시 상태 <span style="font-size:var(--fs-caption);font-weight:400;color:var(--gray-l)">(휴학/활동중단 — 반투명 표시)</span></span>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text2);margin:0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text2);margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <input type="checkbox" id="ed-hide-board" ${p.hideFromBoard?'checked':''} style="width:16px;height:16px;cursor:pointer">
         <span>현황판에서 숨기기 <span style="font-size:var(--fs-caption);font-weight:400;color:var(--gray-l)">(스탯·기록 유지)</span></span>
       </label>
+      <div style="font-size:var(--fs-base);font-weight:600;color:var(--text2);margin-bottom:8px">활동상태 <span style="font-size:var(--fs-caption);font-weight:400;color:var(--gray-l)">(선택 시 스타시스템 강등/미활동 감쇄 대상에서 제외)</span></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--text2)">
+          <input type="radio" name="ed-activity-status" id="ed-activity-normal" value="" ${!p.activityStatus?'checked':''} style="width:15px;height:15px;cursor:pointer">
+          <span>정상</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--text2)">
+          <input type="radio" name="ed-activity-status" id="ed-activity-paused" value="paused" ${p.activityStatus==='paused'?'checked':''} style="width:15px;height:15px;cursor:pointer">
+          <span>⏸ 일시정지</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--text2)">
+          <input type="radio" name="ed-activity-status" id="ed-activity-sick" value="sick" ${p.activityStatus==='sick'?'checked':''} style="width:15px;height:15px;cursor:pointer">
+          <span>🏥 병가</span>
+        </label>
+      </div>
     </div>
     <!-- (요청사항) 크루 소속 항목 제거 -->
     <div id="ep-bgm-sec" class="ep-adv-section" style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">

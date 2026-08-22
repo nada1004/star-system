@@ -18,7 +18,7 @@
  *  (수동으로 이 값을 편집해도 다음 빌드 시 해시 기반 값으로 덮어써진다)
  */
 
-const CACHE_VERSION = 'v20260821-e3d9e81499';
+const CACHE_VERSION = 'v20260822-fc8d6a8932';
 
 const CACHE_NAMES = {
   immutable: `immutable-${CACHE_VERSION}`,  // 번들/버전 쿼리 파일 (장기 캐시)

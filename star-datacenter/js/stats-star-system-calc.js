@@ -124,18 +124,22 @@ function _ssComputeAll(){
     });
 
     const days=_ssDaysAgo(last);
+    // 일시정지/병가 상태면 미활동 감쇄·강등 판정에서 완전히 제외(포인트 감소 없음)
+    const actStatus = (p.activityStatus==='paused'||p.activityStatus==='sick') ? p.activityStatus : '';
     let inactiveNote='';
-    if(myTierNum<=1){
-      if(days>=365){ inactiveNote='비활성(1년+)'; }
-    }else if(myTierNum===2){
-      if(days>=183 && days<365){
-        const months = Math.min(6, Math.max(1, Math.floor((days-183)/30)+1));
-        pts -= (months*3);
-        inactiveNote=`미활동 감쇄 -${months*3}점`;
-      }
-    }else{
-      if(days>=183){
-        inactiveNote='미활동(6개월+) → 강등/말소 대상';
+    if(!actStatus){
+      if(myTierNum<=1){
+        if(days>=365){ inactiveNote='비활성(1년+)'; }
+      }else if(myTierNum===2){
+        if(days>=183 && days<365){
+          const months = Math.min(6, Math.max(1, Math.floor((days-183)/30)+1));
+          pts -= (months*3);
+          inactiveNote=`미활동 감쇄 -${months*3}점`;
+        }
+      }else{
+        if(days>=183){
+          inactiveNote='미활동(6개월+) → 강등/말소 대상';
+        }
       }
     }
 
@@ -143,7 +147,8 @@ function _ssComputeAll(){
       name:p.name, univ:p.univ, race:p.race,
       tier:p.tier, tierNum:myTierNum,
       points:Math.round(pts),
-      status:_ssStatus(pts),
+      status: actStatus==='paused' ? '⏸ 일시정지' : actStatus==='sick' ? '🏥 병가' : _ssStatus(pts),
+      activityStatus: actStatus,
       inactiveNote,
       games,
       last,

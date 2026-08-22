@@ -351,6 +351,8 @@ function savePlayer(){
   p.retired      = _flag('ed-retired');
   p.inactive     = _flag('ed-inactive');
   p.hideFromBoard = _flag('ed-hide-board');
+  // 활동상태(일시정지/병가) — 스타시스템 감쇄/강등 제외용
+  p.activityStatus = (document.querySelector('input[name="ed-activity-status"]:checked')?.value || '') || undefined;
   // 텍스트 필드 일괄 읽기
   const _strVal = (id) => (document.getElementById(id)?.value || '').trim() || undefined;
   const _intVal  = (id, def) => parseInt(document.getElementById(id)?.value || String(def), 10) || def;
