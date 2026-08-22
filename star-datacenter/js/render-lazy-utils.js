@@ -189,7 +189,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260729-sclay1');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260804-darkfix23');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260822-alignfix1');
   await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260804-darkfix23');
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
   await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260804-darkfix23');

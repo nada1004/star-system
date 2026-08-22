@@ -3769,9 +3769,9 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 
 /* 새 경기 라인 UI (mode=comp 전용) */
 .modal--matchdetail .cmd-detail .cmd-game{padding:2px 0;}
-.modal--matchdetail .cmd-detail .cmd-game-row{display:flex;align-items:stretch;gap:4px;}
+.modal--matchdetail .cmd-detail .cmd-game-row{display:grid;grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr);align-items:stretch;gap:4px;position:relative;}
 .modal--matchdetail .cmd-detail .cmd-player{
-  flex:1;min-width:0;
+  min-width:0;
   display:flex;align-items:center;gap:10px;
   padding:5px 7px;
   border-radius:var(--r);

@@ -29,35 +29,37 @@
         const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;position:relative;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}${_winCornerBadge(bW,cb)}</span>`:'';
         const tierA=_tierChip(g.playerA);
         const tierB=_tierChip(g.playerB);
-        return`<div class="share-match-game-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${theme.divider}">
-          <span class="share-match-game-idx" style="color:${theme.textDim};min-width:38px;font-size:10px;text-align:center;flex-shrink:0;font-weight:800">경기${gi+1}</span>
-          <div class="share-match-game-player share-match-game-player--a" style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0;${aW?'':'opacity:.6'}">
-            ${tierA}
-            <span class="share-match-game-name" style="font-weight:${aW?'900':'600'};color:${aW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.playerA||'?'}</span>
-            ${photoA}
-          </div>
-          <span class="share-match-game-vs" style="color:${theme.textDim};font-size:10px;flex-shrink:0;font-weight:900">vs</span>
-          <div class="share-match-game-player share-match-game-player--b" style="flex:1;display:flex;align-items:center;gap:4px;min-width:0;${bW?'':'opacity:.6'}">
-            ${photoB}
-            <span class="share-match-game-name" style="font-weight:${bW?'900':'600'};color:${bW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.playerB||'?'}</span>
-            ${tierB}
-          </div>
-          ${g.map?`<span class="share-match-game-map" style="color:${theme.textDim};font-size:10px;flex-shrink:0;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍${g.map}</span>`:''}
+        return`<div class="share-match-game-row" style="display:grid;grid-template-columns:minmax(28px,1fr) auto minmax(28px,1fr);align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${theme.divider}">
+          <span class="share-match-game-idx" style="color:${theme.textDim};font-size:10px;text-align:left;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">경기${gi+1}</span>
+          <span style="display:grid;grid-template-columns:20px minmax(0,72px) 28px 22px 28px minmax(0,72px) 20px;align-items:center;gap:6px">
+            <span style="display:flex;align-items:center;justify-content:center;${aW?'':'opacity:.6'}">${tierA}</span>
+            <span class="share-match-game-name" style="min-width:0;text-align:center;font-weight:${aW?'900':'600'};color:${aW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${aW?'':'opacity:.6'}">${g.playerA||'?'}</span>
+            <span style="display:flex;align-items:center;justify-content:center;${aW?'':'opacity:.6'}">${photoA}</span>
+            <span class="share-match-game-vs" style="color:${theme.textDim};font-size:10px;text-align:center;font-weight:900">vs</span>
+            <span style="display:flex;align-items:center;justify-content:center;${bW?'':'opacity:.6'}">${photoB}</span>
+            <span class="share-match-game-name" style="min-width:0;text-align:center;font-weight:${bW?'900':'600'};color:${bW?theme.text:theme.textDim};font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${bW?'':'opacity:.6'}">${g.playerB||'?'}</span>
+            <span style="display:flex;align-items:center;justify-content:center;${bW?'':'opacity:.6'}">${tierB}</span>
+          </span>
+          <span class="share-match-game-map" style="color:${theme.textDim};font-size:10px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.map?`📍${g.map}`:''}</span>
         </div>`;
       }).join('');
       const setBg=isAce?`${theme.accentDark}15`:variant.setBg;
       const setBorder=isAce?`${theme.accentDark}30`:variant.setBorder;
       return`<div style="background:${setBg};border:1px solid ${setBorder};border-radius:var(--r);padding:10px 12px;margin-bottom:8px">
-        <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:${gameList.length?'7':'0'}px">
-          <span style="font-size:var(--fs-caption);font-weight:900;color:${isAce?theme.accentDark:theme.textDim};letter-spacing:.3px;min-width:60px;text-align:center">${sLabel}</span>
-          <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);text-align:center">${dispA}</span>
-          <span style="font-weight:900;font-size:16px;letter-spacing:2px;min-width:48px;text-align:center">
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-bottom:${gameList.length?'7':'0'}px">
+          <span style="display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0;overflow:hidden">
+            <span style="font-size:var(--fs-caption);font-weight:900;color:${isAce?theme.accentDark:theme.textDim};letter-spacing:.3px;white-space:nowrap">${sLabel}</span>
+            <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0">${dispA}</span>
+          </span>
+          <span style="font-weight:900;font-size:16px;letter-spacing:2px;text-align:center;white-space:nowrap">
             <span style="color:${sAW?ca:theme.textDim}">${swA}</span>
             <span style="color:${theme.textDim};font-size:var(--fs-sm);margin:0 4px">:</span>
             <span style="color:${sBW?cb:theme.textDim}">${swB}</span>
           </span>
-          <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);text-align:center">${dispB}</span>
-          <span style="font-size:var(--fs-caption);color:${theme.textDim};white-space:nowrap;font-weight:800">${sAW?'▶ '+a:sBW?'▶ '+b:'무승부'}</span>
+          <span style="display:flex;align-items:center;justify-content:flex-start;gap:6px;min-width:0;overflow:hidden">
+            <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0">${dispB}</span>
+            <span style="font-size:var(--fs-caption);color:${theme.textDim};white-space:nowrap;font-weight:800;overflow:hidden;text-overflow:ellipsis">${sAW?'▶ '+a:sBW?'▶ '+b:'무승부'}</span>
+          </span>
         </div>
         ${games}
       </div>`;

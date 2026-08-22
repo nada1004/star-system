@@ -117,7 +117,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const univLogoB='';
     const photoA=!isTeamGame&&pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+sideBaseA+';box-shadow:0 1px 6px '+sideBaseA+'44'):'';
     const photoB=!isTeamGame&&pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+sideBaseB+';box-shadow:0 1px 6px '+sideBaseB+'44'):'';
-    const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
+    const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="position:absolute;top:2px;right:2px;z-index:2" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
     const winA = aIsWinner&&hasWinner;
     const winB = bIsWinner&&hasWinner;
@@ -197,15 +197,19 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const sLabel=isAce?'🎯 에이스전':`${si+1}세트`;
     const swA=set.scoreA||0, swB=set.scoreB||0;
     const setAWin=swA>swB, setBWin=swB>swA;
-    const head=`<div class="cmd-set-head${isAce?' cmd-set-head--ace':''}" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'':'var(--blue-ll)'}">
-      <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:var(--fs-sm)">${sLabel}</span>
-      <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, var(--white))`};color:${setAWin?'#fff':'var(--text2,#334155)'};border-color:${setAWin?ca:ca+'33'};font-size:10px">${labelA}</span>
-      <span style="font-weight:800;font-size:14px">
+    const head=`<div class="cmd-set-head${isAce?' cmd-set-head--ace':''}" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'':'var(--blue-ll)'}">
+      <span style="display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0;overflow:hidden">
+        <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:var(--fs-sm);white-space:nowrap">${sLabel}</span>
+        <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, var(--white))`};color:${setAWin?'#fff':'var(--text2,#334155)'};border-color:${setAWin?ca:ca+'33'};font-size:10px;white-space:nowrap;flex-shrink:0">${labelA}</span>
+      </span>
+      <span style="font-weight:800;font-size:14px;white-space:nowrap">
         <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
         <span style="color:var(--border2)"> : </span>
         <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
       </span>
-      <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, var(--white))`};color:${setBWin?'#fff':'var(--text2,#334155)'};border-color:${setBWin?cb:cb+'33'};font-size:10px">${labelB}</span>
+      <span style="display:flex;align-items:center;justify-content:flex-start;min-width:0;overflow:hidden">
+        <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, var(--white))`};color:${setBWin?'#fff':'var(--text2,#334155)'};border-color:${setBWin?cb:cb+'33'};font-size:10px;white-space:nowrap;flex-shrink:0">${labelB}</span>
+      </span>
     </div>`;
     const gamesArr=[];
     if(set.games&&set.games.length){
